@@ -26,7 +26,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   CPUS=$(sysctl -n hw.ncpu)
   # ensure development environment is set correctly for clang
   $SUDO xcode-select -switch /Library/Developer/CommandLineTools
-  brew install llvm@14 googletest lcov make wget cmake
+  brew install llvm@14 googletest lcov make wget cmake python@3.10
   CLANG_TIDY=/usr/local/bin/clang-tidy
   if [ ! -L "$CLANG_TIDY" ]; then
     $SUDO ln -s $(brew --prefix)/opt/llvm@14/bin/clang-tidy /usr/local/bin/clang-tidy
@@ -39,14 +39,39 @@ fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   apt update
-  apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync
+  apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync unzip python3 python3-pip
 
   wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | $SUDO apt-key add -
   $SUDO add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
+  $SUDO add-apt-repository -r "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-14 main"
   $SUDO apt install -y clang-format-14 clang-tidy-14
   $SUDO ln -s -f $(which clang-format-14) /usr/local/bin/clang-format
   $SUDO ln -s -f $(which clang-tidy-14) /usr/local/bin/clang-tidy
 fi
+
+CURL_VERSION="7.83.1"
+wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz
+rm -rf curl-${CURL_VERSION}
+tar xzvf curl-${CURL_VERSION}.tar.gz
+rm -rf curl-${CURL_VERSION}.tar.gz
+mkdir -p curl-${CURL_VERSION}/build
+cd curl-${CURL_VERSION}/build
+../configure --disable-shared --without-ssl --without-libpsl --without-libidn2 --without-brotli --without-zstd
+make -j$CPUS
+$SUDO make install
+cd ../..
+
+JSONCPP_VERSION="1.9.5"
+wget https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/${JSONCPP_VERSION}.tar.gz
+rm -rf jsoncpp-${JSONCPP_VERSION}
+tar xzvf ${JSONCPP_VERSION}.tar.gz
+rm -rf ${JSONCPP_VERSION}.tar.gz
+mkdir -p jsoncpp-${JSONCPP_VERSION}/build
+cd jsoncpp-${JSONCPP_VERSION}/build
+cmake .. -DBUILD_SHARED_LIBS=NO -DBUILD_STATIC_LIBS=YES -DJSONCPP_WITH_TESTS=OFF -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
+make -j$CPUS
+$SUDO make install
+cd ../..
 
 LEVELDB_VERSION="1.23"
 echo -e "${green}Building LevelDB from sources...${end}"
@@ -95,3 +120,68 @@ if [ ! -f "${PYTHON_TIDY}" ]; then
   wget https://raw.githubusercontent.com/llvm/llvm-project/e837ce2a32369b2e9e8e5d60270c072c7dd63827/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py
   $SUDO mv run-clang-tidy.py /usr/local/bin
 fi
+
+wget https://www.lua.org/ftp/lua-5.4.3.tar.gz
+rm -rf lua-5.4.3
+tar zxf lua-5.4.3.tar.gz
+rm -rf lua-5.4.3.tar.gz
+cd lua-5.4.3
+make -j$CPUS
+$SUDO make install
+cd ..
+
+wget https://raw.githubusercontent.com/llvm/llvm-project/e837ce2a32369b2e9e8e5d60270c072c7dd63827/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py
+$SUDO mv run-clang-tidy.py /usr/local/bin
+
+wget https://github.com/ethereum/evmc/archive/eda05c6866ac06bd93d62b605cbec5839d85c221.zip
+rm -rf evmc-eda05c6866ac06bd93d62b605cbec5839d85c221
+unzip eda05c6866ac06bd93d62b605cbec5839d85c221.zip
+rm eda05c6866ac06bd93d62b605cbec5839d85c221.zip
+cd evmc-eda05c6866ac06bd93d62b605cbec5839d85c221
+mkdir build
+cd build
+cmake ..
+make -j$CPUS
+$SUDO make install
+cd ../..
+
+wget https://github.com/ethereum/evmone/archive/be870917e8cefd2b125bd27375dd9d2409ff1f68.zip
+rm -rf evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
+unzip be870917e8cefd2b125bd27375dd9d2409ff1f68.zip
+rm be870917e8cefd2b125bd27375dd9d2409ff1f68.zip
+cd evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
+rm -rf evmc
+mv ../evmc-eda05c6866ac06bd93d62b605cbec5839d85c221 ./evmc
+mkdir ./evmc/.git
+cmake -S . -B build -DBUILD_SHARED_LIBS=OFF
+cmake --build build --parallel
+cd build
+$SUDO make install
+cd ../..
+rm -rf evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
+
+wget https://github.com/chfast/ethash/archive/e3e002ecc25ca699349aa62fa38e7b7cc5f653af.zip
+rm -rf ethash-e3e002ecc25ca699349aa62fa38e7b7cc5f653af
+unzip e3e002ecc25ca699349aa62fa38e7b7cc5f653af.zip
+rm e3e002ecc25ca699349aa62fa38e7b7cc5f653af.zip
+cd ethash-e3e002ecc25ca699349aa62fa38e7b7cc5f653af
+mkdir build
+cd build
+cmake -DETHASH_BUILD_ETHASH=OFF -DETHASH_BUILD_TESTS=OFF ..
+cmake --build . --parallel
+$SUDO cp ./lib/keccak/libkeccak.a /usr/local/lib
+$SUDO cp -r ../include/ethash /usr/local/include
+cd ../..
+
+wget https://gnu.askapache.com/libmicrohttpd/libmicrohttpd-0.9.75.tar.gz
+rm -rf libmicrohttpd-0.9.75
+tar xzvf libmicrohttpd-0.9.75.tar.gz
+rm libmicrohttpd-0.9.75.tar.gz
+cd libmicrohttpd-0.9.75
+mkdir build
+cd build
+../configure --disable-curl --disable-examples --disable-doc --disable-shared --disable-https
+make -j $CPUS
+$SUDO make install
+cd ../../
+rm -rf libmicrohttpd-0.9.75

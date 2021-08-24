@@ -37,6 +37,11 @@ CMakeCache.txt
 
 leveldb*/
 NuRaft*/
+lua-*/
+ethash-*/
+evmone-*/
+curl-*/
+jsoncpp-*/
 benchmark-results/
 CMakeFiles/
 plots/
@@ -62,4 +67,6 @@ cmake-build-*/
 *.xml
 build/gcov_data
 build/tests
+test-output/
 
+scripts/telemetry-processor/telemetry

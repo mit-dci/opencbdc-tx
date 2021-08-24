@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+
+  db:
+    container_name: opencbdc-tx-telemetry-db
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: telemetry
+    networks:
+      - telemetry
+    ports:
+      - "5432:5432"
+
+networks:
+  telemetry:
+    name: telemetry

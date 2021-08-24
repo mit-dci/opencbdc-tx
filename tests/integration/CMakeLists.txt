@@ -13,9 +13,7 @@ add_executable(run_integration_tests mock_system.cpp
 
 target_compile_options(run_integration_tests PRIVATE -ftest-coverage -fprofile-arcs)
 target_link_options(run_integration_tests PRIVATE --coverage)
-target_link_libraries(run_integration_tests ${GTEST_LIBRARY}
-                                            ${GTEST_MAIN_LIBRARY}
-                                            util
+target_link_libraries(run_integration_tests util
                                             client
                                             atomizer_raft
                                             atomizer
@@ -37,4 +35,6 @@ target_link_libraries(run_integration_tests ${GTEST_LIBRARY}
                                             secp256k1
                                             ${LEVELDB_LIBRARY}
                                             ${NURAFT_LIBRARY}
-                                            ${CMAKE_THREAD_LIBS_INIT})
+                                            ${CMAKE_THREAD_LIBS_INIT}
+                                            ${GTEST_LIBRARY}
+                                            ${GTEST_MAIN_LIBRARY})

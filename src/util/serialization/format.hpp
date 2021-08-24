@@ -449,6 +449,49 @@ namespace cbdc {
         }
         return deser;
     }
+
+    /// Serializes the count of key-value pairs, and then each key and value,
+    /// statically-casted.
+    /// \see \ref cbdc::operator<<(serializer&, T)
+    template<typename K, typename V, typename... Ts>
+    auto operator<<(serializer& ser, const std::map<K, V, Ts...>& map)
+        -> serializer& {
+        auto len = static_cast<uint64_t>(map.size());
+        ser << len;
+        for(const auto& it : map) {
+            ser << static_cast<K>(it.first);
+            ser << static_cast<V>(it.second);
+        }
+        return ser;
+    }
+
+    /// Deserializes an unordered map of key-value pairs.
+    /// \see \ref cbdc::operator<<(serializer&, const std::map<K, V, Ts...>&)
+    template<typename K, typename V, typename... Ts>
+    auto operator>>(serializer& deser, std::map<K, V, Ts...>& map)
+        -> serializer& {
+        static_assert(sizeof(K) + sizeof(V) <= config::maximum_reservation,
+                      "Unordered Map element size too large");
+        auto len = uint64_t();
+        if(!(deser >> len)) {
+            return deser;
+        }
+
+        for(uint64_t i = 0; i < len; i++) {
+            auto key = K();
+            if(!(deser >> key)) {
+                return deser;
+            }
+
+            auto val = V();
+            if(!(deser >> val)) {
+                return deser;
+            }
+
+            map.emplace(std::move(key), std::move(val));
+        }
+        return deser;
+    }
 }
 
 #endif // OPENCBDC_TX_SRC_SERIALIZATION_FORMAT_H_

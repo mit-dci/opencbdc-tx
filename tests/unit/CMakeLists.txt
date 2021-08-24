@@ -1,5 +1,7 @@
 project(unit)
 
+add_subdirectory(3pc)
+
 add_executable(run_unit_tests archiver_test.cpp
                               atomizer/messages_test.cpp
                               atomizer_test.cpp
@@ -31,9 +33,7 @@ add_executable(run_unit_tests archiver_test.cpp
 
 target_compile_options(run_unit_tests PRIVATE -ftest-coverage -fprofile-arcs)
 target_link_options(run_unit_tests PRIVATE --coverage)
-target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
-                                     ${GTEST_MAIN_LIBRARY}
-                                     util
+target_link_libraries(run_unit_tests util
                                      client
                                      atomizer
                                      atomizer_raft
@@ -45,6 +45,15 @@ target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
                                      watchtower
                                      coordinator
                                      locking_shard
+                                     3pc_unit_tests
+                                     runtime_locking_shard
+                                     ticket_machine
+                                     broker
+                                     agent
+                                     evm_runner
+                                     lua_runner
+                                     runners
+                                     directory
                                      raft
                                      rpc
                                      transaction
@@ -53,6 +62,11 @@ target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
                                      serialization
                                      crypto
                                      secp256k1
+                                     ${EVMC_HEX_LIBRARY}
+                                     ${EVMC_INSTRUCTIONS_LIBRARY}
                                      ${LEVELDB_LIBRARY}
                                      ${NURAFT_LIBRARY}
-                                     ${CMAKE_THREAD_LIBS_INIT})
+                                     ${LUA_LIBRARY}
+                                     ${CMAKE_THREAD_LIBS_INIT}
+                                     ${GTEST_LIBRARY}
+                                     ${GTEST_MAIN_LIBRARY})

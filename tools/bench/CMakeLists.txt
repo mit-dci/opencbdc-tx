@@ -1,6 +1,6 @@
 project(bench)
 
-include_directories(../../src ../../3rdparty ../../3rdparty/secp256k1/include)
+include_directories(../../src ../../3rdparty ../../3rdparty/secp256k1/include ../../src/phase_two)
 
 add_executable(twophase-gen twophase_gen.cpp)
 target_link_libraries(twophase-gen sentinel
@@ -31,3 +31,5 @@ target_link_libraries(atomizer-cli-watchtower watchtower
                                               secp256k1
                                               ${NURAFT_LIBRARY}
                                               ${CMAKE_THREAD_LIBS_INIT})
+
+add_subdirectory(3pc)

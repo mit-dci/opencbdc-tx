@@ -74,6 +74,14 @@ namespace cbdc {
         return ret.str();
     }
 
+    auto buffer::to_hex_prefixed(const std::string& prefix) const
+        -> std::string {
+        auto res = std::string();
+        res.append(prefix);
+        res.append(to_hex());
+        return res;
+    }
+
     auto buffer::from_hex(const std::string& hex) -> std::optional<buffer> {
         constexpr auto max_size = 102400;
         if(hex.empty() || ((hex.size() % 2) != 0) || (hex.size() > max_size)) {
@@ -86,7 +94,8 @@ namespace cbdc {
             unsigned int v{};
             std::stringstream s;
             // TODO: This function is likely very slow. At some point this
-            //       could be converted to lookup table that we make ourselves.
+            //       could be converted to lookup table that we make
+            //       ourselves.
             s << std::hex << hex.substr(i, 2);
             if(!(s >> v)) {
                 return std::nullopt;
@@ -95,5 +104,19 @@ namespace cbdc {
         }
 
         return ret;
+    }
+
+    auto buffer::from_hex_prefixed(const std::string& hex,
+                                   const std::string& prefix)
+        -> std::optional<buffer> {
+        size_t offset = 0;
+        if(hex.rfind(prefix, 0) == 0) {
+            offset = prefix.size();
+        }
+        auto hex_str = hex.substr(offset);
+        if(hex_str.size() % 2 != 0) {
+            hex_str.insert(0, "0");
+        }
+        return from_hex(hex_str);
     }
 }

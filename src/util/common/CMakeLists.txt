@@ -6,4 +6,5 @@ add_library(common buffer.cpp
                    keys.cpp
                    config.cpp
                    logging.cpp
-                   random_source.cpp)
+                   random_source.cpp
+                   thread_pool.cpp)
