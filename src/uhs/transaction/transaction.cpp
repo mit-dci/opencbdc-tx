@@ -41,7 +41,7 @@ namespace cbdc::transaction {
         return !(*this == rhs);
     }
 
-    auto input::hash() const -> hash_t {
+    auto input::to_uhs_element() const -> uhs_element {
         return uhs_id_from_output(m_prevout.m_tx_id,
                                   m_prevout.m_index,
                                   m_prevout_data);
@@ -94,7 +94,7 @@ namespace cbdc::transaction {
 
     auto uhs_id_from_output(const hash_t& entropy,
                             uint64_t i,
-                            const output& output) -> hash_t {
+                            const output& output) -> uhs_element {
         CSHA256 sha;
         sha.Write(entropy.data(), entropy.size());
         std::array<unsigned char, sizeof(i)> index_arr{};
@@ -114,7 +114,7 @@ namespace cbdc::transaction {
 
         auto ret = hash_t();
         sha.Finalize(ret.data());
-        return ret;
+        return {ret, nested_hash, output.m_value};
     }
 
     auto compact_tx::operator==(const compact_tx& tx) const noexcept -> bool {
@@ -124,7 +124,7 @@ namespace cbdc::transaction {
     compact_tx::compact_tx(const full_tx& tx) {
         m_id = tx_id(tx);
         for(const auto& inp : tx.m_inputs) {
-            m_inputs.push_back(inp.hash());
+            m_inputs.push_back(inp.to_uhs_element());
         }
         for(uint64_t i = 0; i < tx.m_outputs.size(); i++) {
             m_uhs_outputs.push_back(
@@ -182,5 +182,10 @@ namespace cbdc::transaction {
         }
 
         return true;
+    }
+
+    auto uhs_element::operator==(const uhs_element& rhs) const -> bool {
+        return std::tie(m_id, m_data, m_value)
+            == std::tie(rhs.m_id, rhs.m_data, rhs.m_value);
     }
 }

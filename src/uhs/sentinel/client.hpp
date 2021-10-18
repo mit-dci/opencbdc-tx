@@ -47,8 +47,8 @@ namespace cbdc::sentinel::rpc {
         auto execute_transaction(transaction::full_tx tx)
             -> execute_result_type override;
 
-        /// Send a transaction to the sentinel and return the response via a
-        /// callback function asynchronously.
+        /// Send a transaction to the sentinel for execution and return the
+        /// response via a callback function asynchronously.
         /// \param tx transaction to send to the sentinel.
         /// \param result_callback callback function to call with the result.
         /// \return true if the request was sent successfully.

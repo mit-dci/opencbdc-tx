@@ -344,7 +344,7 @@ auto main(int argc, char** argv) -> int {
             cbdc::transaction::compact_tx ctx{mint_tx};
             watchtower_client->request_status_update(
                 cbdc::watchtower::status_update_request{
-                    {{ctx.m_id, {ctx.m_uhs_outputs[0]}}}});
+                    {{ctx.m_id, {ctx.m_uhs_outputs[0].m_id}}}});
             static constexpr auto mint_retry_delay
                 = std::chrono::milliseconds(1000);
             std::this_thread::sleep_for(mint_retry_delay);
@@ -399,8 +399,12 @@ auto main(int argc, char** argv) -> int {
                 key_uhs_ids.reserve(pending_txs.size());
                 for(const auto& it : pending_txs) {
                     cbdc::transaction::compact_tx ctx{it.second};
-                    key_uhs_ids.emplace(
-                        std::make_pair(ctx.m_id, ctx.m_uhs_outputs));
+                    auto ids = std::vector<cbdc::hash_t>();
+                    ids.reserve(ctx.m_uhs_outputs.size());
+                    for(auto& out : ctx.m_uhs_outputs) {
+                        ids.push_back(out.m_id);
+                    }
+                    key_uhs_ids.emplace(std::make_pair(ctx.m_id, ids));
                 }
             }
             watchtower_client->request_status_update(
@@ -532,8 +536,12 @@ auto main(int argc, char** argv) -> int {
                 key_uhs_ids.reserve(pending_txs.size());
                 for(const auto& it : pending_txs) {
                     cbdc::transaction::compact_tx ctx{it.second};
-                    key_uhs_ids.emplace(
-                        std::make_pair(ctx.m_id, ctx.m_uhs_outputs));
+                    auto ids = std::vector<cbdc::hash_t>();
+                    ids.reserve(ctx.m_uhs_outputs.size());
+                    for(auto& out : ctx.m_uhs_outputs) {
+                        ids.push_back(out.m_id);
+                    }
+                    key_uhs_ids.emplace(std::make_pair(ctx.m_id, ids));
                 }
             }
 

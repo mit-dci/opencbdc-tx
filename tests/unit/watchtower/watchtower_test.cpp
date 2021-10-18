@@ -14,11 +14,11 @@ class WatchtowerTest : public ::testing::Test {
         cbdc::atomizer::block b0;
         b0.m_height = m_best_height;
         b0.m_transactions.push_back(
-            cbdc::test::simple_tx({'A'}, {{'b'}, {'C'}}, {{'d'}}));
+            cbdc::test::simple_tx({'A'}, {{{'b'}}, {{'C'}}}, {{{'d'}}}));
         b0.m_transactions.push_back(
-            cbdc::test::simple_tx({'E'}, {{'d'}, {'f'}}, {{'G'}}));
+            cbdc::test::simple_tx({'E'}, {{{'d'}}, {{'f'}}}, {{{'G'}}}));
         b0.m_transactions.push_back(
-            cbdc::test::simple_tx({'h'}, {{'i'}, {'j'}}, {{'k'}}));
+            cbdc::test::simple_tx({'h'}, {{{'i'}}, {{'j'}}}, {{{'k'}}}));
         m_watchtower.add_block(std::move(b0));
     }
 
