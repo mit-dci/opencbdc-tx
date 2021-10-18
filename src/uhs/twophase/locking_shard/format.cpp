@@ -49,4 +49,16 @@ namespace cbdc {
                     locking_shard::rpc::uhs_status_request& p) -> serializer& {
         return packet >> p.m_uhs_id;
     }
+
+    auto operator<<(serializer& ser,
+                    const locking_shard::locking_shard::uhs_element& p)
+        -> serializer& {
+        return ser << p.m_data << p.m_value;
+    }
+
+    auto operator>>(serializer& deser,
+                    locking_shard::locking_shard::uhs_element& p)
+        -> serializer& {
+        return deser >> p.m_data >> p.m_value;
+    }
 }

@@ -124,6 +124,14 @@ namespace cbdc::locking_shard {
         [[nodiscard]] auto check_tx_id(const hash_t& tx_id)
             -> std::optional<bool> final;
 
+        /// UHS element as stored by the locking shard.
+        struct uhs_element {
+            /// Nested hash containing outpoint and witness program commitment.
+            hash_t m_data{};
+            /// Value of the UHS element.
+            uint64_t m_value{};
+        };
+
       private:
         auto read_preseed_file(const std::string& preseed_file) -> bool;
         auto check_and_lock_tx(const tx& t) -> bool;
@@ -132,12 +140,13 @@ namespace cbdc::locking_shard {
             std::vector<tx> m_txs;
             std::vector<bool> m_results;
         };
+
         std::atomic_bool m_running{true};
 
         std::shared_ptr<logging::log> m_logger;
         mutable std::shared_mutex m_mut;
-        std::unordered_set<hash_t, hashing::null> m_uhs;
-        std::unordered_set<hash_t, hashing::null> m_locked;
+        std::unordered_map<hash_t, uhs_element, hashing::null> m_uhs;
+        std::unordered_map<hash_t, uhs_element, hashing::null> m_locked;
         std::unordered_map<hash_t, prepared_dtx, hashing::null>
             m_prepared_dtxs;
         std::unordered_set<hash_t, hashing::null> m_applied_dtxs;

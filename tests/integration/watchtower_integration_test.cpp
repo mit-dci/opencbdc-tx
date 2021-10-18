@@ -42,8 +42,8 @@ class watchtower_integration_test : public ::testing::Test {
         b0.m_height = m_best_height;
         b0.m_transactions.push_back(
             cbdc::test::simple_tx({'t', 'x', 'a'},
-                                  {{'s', 'b'}, {'s', 'c'}},
-                                  {{'u', 'd'}}));
+                                  {{{'s', 'b'}}, {{'s', 'c'}}},
+                                  {{{'u', 'd'}}}));
 
         auto pkt = std::make_shared<cbdc::buffer>();
         auto ser = cbdc::buffer_serializer(*pkt);

@@ -76,7 +76,7 @@ namespace cbdc {
     void client::register_pending_tx(const transaction::full_tx& tx) {
         // Mark all inputs as pending spend
         for(const auto& in : tx.m_inputs) {
-            m_pending_spend.insert({in.hash(), in});
+            m_pending_spend.insert({in.to_uhs_element().m_id, in});
         }
 
         save();
@@ -224,7 +224,8 @@ namespace cbdc {
             // Add the used inputs back to the wallet if they are still
             // pending and not used in any other pending transaction.
             for(auto& i : tx.m_inputs) {
-                const auto ps_it = m_pending_spend.find(i.hash());
+                const auto ps_it
+                    = m_pending_spend.find(i.to_uhs_element().m_id);
                 if(ps_it != m_pending_spend.end()) {
                     auto pending = check_pending(i);
                     if(!pending) {
@@ -249,7 +250,8 @@ namespace cbdc {
         if(it != m_pending_txs.end()) {
             m_wallet.confirm_transaction(it->second);
             for(auto& i : it->second.m_inputs) {
-                const auto ps_it = m_pending_spend.find(i.hash());
+                const auto ps_it
+                    = m_pending_spend.find(i.to_uhs_element().m_id);
                 if(ps_it != m_pending_spend.end()) {
                     m_pending_spend.erase(ps_it);
                 }
