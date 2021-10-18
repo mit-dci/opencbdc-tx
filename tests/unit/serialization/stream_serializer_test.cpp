@@ -31,8 +31,8 @@ class stream_serializer_test : public ::testing::Test {
 
     cbdc::test::compact_transaction m_tx{
         cbdc::test::simple_tx({'a', 'b', 'c'},
-                              {{'d', 'e', 'f'}, {'g', 'h', 'i'}},
-                              {{'x', 'y', 'z'}, {'z', 'z', 'z'}})};
+                              {{{'d', 'e', 'f'}}, {{'g', 'h', 'i'}}},
+                              {{{'x', 'y', 'z'}}, {{'z', 'z', 'z'}}})};
 
     static constexpr auto m_test_file = "stream_test_file.dat";
 };

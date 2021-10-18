@@ -5,6 +5,7 @@
 
 #include "locking_shard.hpp"
 
+#include "format.hpp"
 #include "messages.hpp"
 #include "uhs/transaction/validation.hpp"
 #include "util/common/config.hpp"
@@ -113,8 +114,8 @@ namespace cbdc::locking_shard {
         }
         if(success) {
             for(const auto& uhs_id : t.m_tx.m_inputs) {
-                if(hash_in_shard_range(uhs_id)
-                   && m_uhs.find(uhs_id) == m_uhs.end()) {
+                if(hash_in_shard_range(uhs_id.m_id)
+                   && m_uhs.find(uhs_id.m_id) == m_uhs.end()) {
                     success = false;
                     break;
                 }
@@ -122,10 +123,11 @@ namespace cbdc::locking_shard {
         }
         if(success) {
             for(const auto& uhs_id : t.m_tx.m_inputs) {
-                if(hash_in_shard_range(uhs_id)) {
-                    auto n = m_uhs.extract(uhs_id);
-                    assert(!n.empty());
-                    m_locked.emplace(uhs_id);
+                if(hash_in_shard_range(uhs_id.m_id)) {
+                    auto it = m_uhs.find(uhs_id.m_id);
+                    assert(it != m_uhs.end());
+                    m_locked.emplace(uhs_id.m_id, it->second);
+                    m_uhs.erase(uhs_id.m_id);
                 }
             }
         }
@@ -162,15 +164,18 @@ namespace cbdc::locking_shard {
             }
 
             for(auto&& uhs_id : tx.m_tx.m_uhs_outputs) {
-                if(hash_in_shard_range(uhs_id) && complete_txs[i]) {
-                    m_uhs.emplace(uhs_id);
+                if(hash_in_shard_range(uhs_id.m_id) && complete_txs[i]) {
+                    m_uhs.emplace(uhs_id.m_id,
+                                  uhs_element{uhs_id.m_data, uhs_id.m_value});
                 }
             }
             for(auto&& uhs_id : tx.m_tx.m_inputs) {
-                if(hash_in_shard_range(uhs_id)) {
-                    auto was_locked = m_locked.erase(uhs_id);
+                if(hash_in_shard_range(uhs_id.m_id)) {
+                    auto was_locked = m_locked.erase(uhs_id.m_id);
                     if(!complete_txs[i] && (was_locked != 0U)) {
-                        m_uhs.emplace(uhs_id);
+                        m_uhs.emplace(
+                            uhs_id.m_id,
+                            uhs_element{uhs_id.m_data, uhs_id.m_value});
                     }
                 }
             }

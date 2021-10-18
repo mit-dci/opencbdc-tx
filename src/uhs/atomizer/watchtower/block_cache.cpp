@@ -18,10 +18,10 @@ namespace cbdc::watchtower {
             auto& old_blk = m_blks.front();
             for(auto& tx : old_blk.m_transactions) {
                 for(auto& in : tx.m_inputs) {
-                    m_spent_ids.erase(in);
+                    m_spent_ids.erase(in.m_id);
                 }
                 for(auto& out : tx.m_uhs_outputs) {
-                    m_unspent_ids.erase(out);
+                    m_unspent_ids.erase(out.m_id);
                 }
             }
             m_blks.pop();
@@ -32,13 +32,13 @@ namespace cbdc::watchtower {
         auto blk_height = m_blks.back().m_height;
         for(auto& tx : m_blks.back().m_transactions) {
             for(auto& in : tx.m_inputs) {
-                m_unspent_ids.erase(in);
+                m_unspent_ids.erase(in.m_id);
                 m_spent_ids.insert(
-                    {{in, std::make_pair(blk_height, tx.m_id)}});
+                    {{in.m_id, std::make_pair(blk_height, tx.m_id)}});
             }
             for(auto& out : tx.m_uhs_outputs) {
                 m_unspent_ids.insert(
-                    {{out, std::make_pair(blk_height, tx.m_id)}});
+                    {{out.m_id, std::make_pair(blk_height, tx.m_id)}});
             }
         }
         m_best_blk_height = std::max(m_best_blk_height, blk_height);

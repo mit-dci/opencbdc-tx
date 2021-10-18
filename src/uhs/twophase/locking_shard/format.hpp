@@ -30,6 +30,13 @@ namespace cbdc {
         -> serializer&;
     auto operator>>(serializer& packet,
                     locking_shard::rpc::uhs_status_request& p) -> serializer&;
+
+    auto operator<<(serializer& ser,
+                    const locking_shard::locking_shard::uhs_element& p)
+        -> serializer&;
+    auto operator>>(serializer& deser,
+                    locking_shard::locking_shard::uhs_element& p)
+        -> serializer&;
 }
 
 #endif // OPENCBDC_TX_SRC_LOCKING_SHARD_MESSAGES_H_
