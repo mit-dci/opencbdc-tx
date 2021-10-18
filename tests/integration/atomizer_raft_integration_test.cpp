@@ -122,9 +122,9 @@ TEST_F(atomizer_raft_integration_test, basic) {
     cbdc::test::block want_block;
     want_block.m_height = 1;
     want_block.m_transactions.push_back(
-        cbdc::test::simple_tx({'a'}, {{'b'}, {'c'}}, {{'d'}}));
+        cbdc::test::simple_tx({'a'}, {{{'b'}}, {{'c'}}}, {{{'d'}}}));
     want_block.m_transactions.push_back(
-        cbdc::test::simple_tx({'e'}, {{'f'}, {'g'}}, {{'h'}}));
+        cbdc::test::simple_tx({'e'}, {{{'f'}}, {{'g'}}}, {{{'h'}}}));
     expect_block(want_block);
 }
 
@@ -154,6 +154,6 @@ TEST_F(atomizer_raft_integration_test, error_inputs_spent) {
     cbdc::test::block want_block;
     want_block.m_height = 1;
     want_block.m_transactions.push_back(
-        cbdc::test::simple_tx({'a'}, {{'B'}, {'c'}}, {{'d'}}));
+        cbdc::test::simple_tx({'a'}, {{{'B'}}, {{'c'}}}, {{{'d'}}}));
     expect_block(want_block);
 }

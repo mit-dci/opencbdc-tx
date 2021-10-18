@@ -123,6 +123,17 @@ namespace cbdc {
     auto operator<<(serializer& packet,
                     const transaction::validation::witness_error& e)
         -> serializer&;
+
+    /// \brief Serializes a UHS element.
+    ///
+    /// Serializes the UHS ID, nested hash and value.
+    auto operator<<(serializer& ser, const transaction::uhs_element& e)
+        -> serializer&;
+
+    /// Deserializes a UHS element.
+    /// \see \ref cbdc::operator<<(serializer&, const transaction::uhs_element&)
+    auto operator>>(serializer& deser, transaction::uhs_element& e)
+        -> serializer&;
 }
 
 #endif // OPENCBDC_TX_SRC_TRANSACTION_MESSAGES_H_

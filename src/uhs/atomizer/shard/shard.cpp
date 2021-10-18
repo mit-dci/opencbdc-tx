@@ -5,6 +5,8 @@
 
 #include "shard.hpp"
 
+#include "uhs/transaction/messages.hpp"
+
 #include <utility>
 
 namespace cbdc::shard {
@@ -65,20 +67,20 @@ namespace cbdc::shard {
         for(const auto& tx : blk.m_transactions) {
             // Add new outputs
             for(const auto& out : tx.m_uhs_outputs) {
-                if(is_output_on_shard(out)) {
-                    std::array<char, sizeof(out)> out_arr{};
-                    std::memcpy(out_arr.data(), out.data(), out.size());
-                    leveldb::Slice OutPointKey(out_arr.data(), out.size());
+                if(is_output_on_shard(out.m_id)) {
+                    auto out_buf = cbdc::make_buffer(out);
+                    leveldb::Slice OutPointKey(out_buf.c_str(),
+                                               out_buf.size());
                     batch.Put(OutPointKey, leveldb::Slice());
                 }
             }
 
             // Delete spent inputs
             for(const auto& inp : tx.m_inputs) {
-                if(is_output_on_shard(inp)) {
-                    std::array<char, sizeof(inp)> inp_arr{};
-                    std::memcpy(inp_arr.data(), inp.data(), inp.size());
-                    leveldb::Slice OutPointKey(inp_arr.data(), inp.size());
+                if(is_output_on_shard(inp.m_id)) {
+                    auto inp_buf = cbdc::make_buffer(inp);
+                    leveldb::Slice OutPointKey(inp_buf.c_str(),
+                                               inp_buf.size());
                     batch.Delete(OutPointKey);
                 }
             }
@@ -135,18 +137,17 @@ namespace cbdc::shard {
         for(uint64_t i = 0; i < tx.m_inputs.size(); i++) {
             const auto& inp = tx.m_inputs[i];
             // Only check for inputs/outputs relevant to this shard
-            if(!is_output_on_shard(inp)) {
+            if(!is_output_on_shard(inp.m_id)) {
                 continue;
             }
 
-            std::array<char, sizeof(inp)> inp_arr{};
-            std::memcpy(inp_arr.data(), inp.data(), inp.size());
-            leveldb::Slice OutPointKey(inp_arr.data(), inp.size());
+            auto inp_buf = cbdc::make_buffer(inp);
+            leveldb::Slice OutPointKey(inp_buf.c_str(), inp_buf.size());
             std::string op;
 
             const auto& res = m_db->Get(read_options, OutPointKey, &op);
             if(res.IsNotFound()) {
-                dne_inputs.push_back(inp);
+                dne_inputs.push_back(inp.m_id);
             } else {
                 attestations.insert(i);
             }

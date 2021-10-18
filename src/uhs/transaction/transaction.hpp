@@ -59,6 +59,19 @@ namespace cbdc::transaction {
         output() = default;
     };
 
+    /// UHS element as represented in compact transactions.
+    struct uhs_element {
+        /// UHS ID.
+        hash_t m_id{};
+        /// Nested hash committing to the outpoit and witness program
+        /// commitment.
+        hash_t m_data{};
+        /// Value of the output.
+        uint64_t m_value{};
+
+        auto operator==(const uhs_element& rhs) const -> bool;
+    };
+
     /// \brief An input for a new transaction
     ///
     /// An \ref out_point and associated \ref output which a client intends to
@@ -75,7 +88,9 @@ namespace cbdc::transaction {
         auto operator==(const input& rhs) const -> bool;
         auto operator!=(const input& rhs) const -> bool;
 
-        [[nodiscard]] auto hash() const -> hash_t;
+        /// Converts an input to a UHS element.
+        /// \return UHS element.
+        [[nodiscard]] auto to_uhs_element() const -> uhs_element;
 
         input() = default;
     };
@@ -118,11 +133,11 @@ namespace cbdc::transaction {
         /// The hash of the full transaction returned by \ref tx_id
         hash_t m_id{};
 
-        /// The set of hashes of the transaction's inputs
-        std::vector<hash_t> m_inputs;
+        /// The set of UHS elements to be used as the transaction's inputs
+        std::vector<uhs_element> m_inputs;
 
-        /// The set of hashes of the new outputs created in the transaction
-        std::vector<hash_t> m_uhs_outputs;
+        /// The set of new UHS elements to be created by the transaction
+        std::vector<uhs_element> m_uhs_outputs;
 
         /// Signatures from sentinels attesting the compact TX is valid.
         std::unordered_map<pubkey_t, signature_t, hashing::null>
@@ -134,6 +149,10 @@ namespace cbdc::transaction {
 
         compact_tx() = default;
 
+        /// Constructor. Generates a compact transaction from a full
+        /// transaction.
+        /// \param tx full transaction from which to generate a compact
+        ///           transaction.
         explicit compact_tx(const full_tx& tx);
 
         /// Sign the compact transaction and return the signature.
@@ -193,9 +212,15 @@ namespace cbdc::transaction {
     auto input_from_output(const full_tx& tx, size_t i)
         -> std::optional<input>;
 
+    /// Calculate a UHS ID from an output and outpoint.
+    /// \param entropy unique randomness to generate a collision-free UHS ID.
+    ///                Currently a TX ID.
+    /// \param i index of the output in the transaction.
+    /// \param output output for the UHS ID.
+    /// \return UHS element.
     auto uhs_id_from_output(const hash_t& entropy,
                             uint64_t i,
-                            const output& output) -> hash_t;
+                            const output& output) -> uhs_element;
 }
 
 #endif // OPENCBDC_TX_SRC_TRANSACTION_TRANSACTION_H_

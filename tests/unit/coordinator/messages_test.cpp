@@ -19,8 +19,8 @@ class coordinator_messages_test : public ::testing::Test {
 
     cbdc::test::compact_transaction m_tx{
         cbdc::test::simple_tx({'a', 'b', 'c'},
-                              {{'d', 'e', 'f'}, {'g', 'h', 'i'}},
-                              {{'x', 'y', 'z'}, {'z', 'z', 'z'}})};
+                              {{{'d', 'e', 'f'}}, {{'g', 'h', 'i'}}},
+                              {{{'x', 'y', 'z'}}, {{'z', 'z', 'z'}}})};
 };
 
 TEST_F(coordinator_messages_test, command_header) {

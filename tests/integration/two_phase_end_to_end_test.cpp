@@ -230,7 +230,7 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
     // still marked as unspent on the shard
     for(size_t i = 0; i < tx2.value().m_inputs.size() - 1; i++) {
         auto inp = tx2.value().m_inputs[i];
-        auto res4 = m_sender->check_unspent(inp.hash());
+        auto res4 = m_sender->check_unspent(inp.to_uhs_element().m_id);
         ASSERT_TRUE(res4.has_value());
         ASSERT_TRUE(res4.value());
     }

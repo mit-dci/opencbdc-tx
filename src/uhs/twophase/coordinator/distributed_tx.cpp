@@ -154,14 +154,14 @@ namespace cbdc::coordinator {
                 active = true;
             } else {
                 for(const auto& inp : tx.m_inputs) {
-                    if(shard->hash_in_shard_range(inp)) {
+                    if(shard->hash_in_shard_range(inp.m_id)) {
                         active = true;
                         break;
                     }
                 }
                 if(!active) {
                     for(const auto& out : tx.m_uhs_outputs) {
-                        if(shard->hash_in_shard_range(out)) {
+                        if(shard->hash_in_shard_range(out.m_id)) {
                             active = true;
                             break;
                         }

@@ -203,33 +203,34 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
     std::this_thread::sleep_for(m_block_wait_interval);
 
     auto ctx = cbdc::transaction::compact_tx(tx.value());
-    auto wc_res = wc.request_status_update(
-        cbdc::watchtower::status_update_request{{{ctx.m_id,
-                                                  {
-                                                      ctx.m_inputs[0],
-                                                      ctx.m_inputs[1],
-                                                      ctx.m_uhs_outputs[0],
-                                                      ctx.m_uhs_outputs[1],
-                                                  }}}});
+    auto wc_res
+        = wc.request_status_update(cbdc::watchtower::status_update_request{
+            {{ctx.m_id,
+              {
+                  ctx.m_inputs[0].m_id,
+                  ctx.m_inputs[1].m_id,
+                  ctx.m_uhs_outputs[0].m_id,
+                  ctx.m_uhs_outputs[1].m_id,
+              }}}});
 
     auto want = cbdc::watchtower::status_request_check_success{
         {{ctx.m_id,
           {cbdc::watchtower::status_update_state{
                cbdc::watchtower::search_status::spent,
                bbh,
-               ctx.m_inputs[0]},
+               ctx.m_inputs[0].m_id},
            cbdc::watchtower::status_update_state{
                cbdc::watchtower::search_status::spent,
                bbh,
-               ctx.m_inputs[1]},
+               ctx.m_inputs[1].m_id},
            cbdc::watchtower::status_update_state{
                cbdc::watchtower::search_status::unspent,
                bbh,
-               ctx.m_uhs_outputs[0]},
+               ctx.m_uhs_outputs[0].m_id},
            cbdc::watchtower::status_update_state{
                cbdc::watchtower::search_status::unspent,
                bbh,
-               ctx.m_uhs_outputs[1]}}}}};
+               ctx.m_uhs_outputs[1].m_id}}}}};
     ASSERT_EQ(*wc_res, want);
 }
 
@@ -262,33 +263,34 @@ TEST_F(atomizer_end_to_end_test, invalid_transaction) {
 
     auto bbh = wc.request_best_block_height()->height();
     auto ctx = cbdc::transaction::compact_tx(tx.value());
-    auto wc_res = wc.request_status_update(
-        cbdc::watchtower::status_update_request{{{ctx.m_id,
-                                                  {
-                                                      ctx.m_inputs[0],
-                                                      ctx.m_inputs[1],
-                                                      ctx.m_uhs_outputs[0],
-                                                      ctx.m_uhs_outputs[1],
-                                                  }}}});
+    auto wc_res
+        = wc.request_status_update(cbdc::watchtower::status_update_request{
+            {{ctx.m_id,
+              {
+                  ctx.m_inputs[0].m_id,
+                  ctx.m_inputs[1].m_id,
+                  ctx.m_uhs_outputs[0].m_id,
+                  ctx.m_uhs_outputs[1].m_id,
+              }}}});
 
     auto want = cbdc::watchtower::status_request_check_success{
         {{ctx.m_id,
           {cbdc::watchtower::status_update_state{
                cbdc::watchtower::search_status::no_history,
                bbh,
-               ctx.m_inputs[0]},
+               ctx.m_inputs[0].m_id},
            cbdc::watchtower::status_update_state{
                cbdc::watchtower::search_status::no_history,
                bbh,
-               ctx.m_inputs[1]},
+               ctx.m_inputs[1].m_id},
            cbdc::watchtower::status_update_state{
                cbdc::watchtower::search_status::no_history,
                bbh,
-               ctx.m_uhs_outputs[0]},
+               ctx.m_uhs_outputs[0].m_id},
            cbdc::watchtower::status_update_state{
                cbdc::watchtower::search_status::no_history,
                bbh,
-               ctx.m_uhs_outputs[1]}}}}};
+               ctx.m_uhs_outputs[1].m_id}}}}};
 
     ASSERT_EQ(*wc_res, want);
 }
