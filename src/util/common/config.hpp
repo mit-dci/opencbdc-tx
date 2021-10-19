@@ -63,6 +63,7 @@ namespace cbdc::config {
         static constexpr size_t output_count{2};
         static constexpr double fixed_tx_rate{1.0};
         static constexpr size_t attestation_threshold{1};
+        static constexpr uint64_t shard_audit_interval{100};
 
         static constexpr auto log_level = logging::log_level::warn;
     }
@@ -124,6 +125,8 @@ namespace cbdc::config {
     static constexpr auto private_key_postfix = "private_key";
     static constexpr auto public_key_postfix = "public_key";
     static constexpr auto attestation_threshold_key = "attestation_threshold";
+    static constexpr auto audit_log_postfix = "audit_log";
+    static constexpr auto shard_audit_interval_key = "audit_interval";
 
     /// [start, end] inclusive.
     using shard_range_t = std::pair<uint8_t, uint8_t>;
@@ -188,6 +191,10 @@ namespace cbdc::config {
         /// List of shard UHS ID ranges by shard ID. Each shard range is
         /// inclusive of the start and end of the range.
         std::vector<shard_range_t> m_shard_ranges;
+        /// Number of blocks between which to perform an audit.
+        uint64_t m_shard_audit_interval{defaults::shard_audit_interval};
+        /// List of shard audit log files.
+        std::vector<std::string> m_shard_audit_logs;
 
         /// private key used for initial seed.
         std::optional<privkey_t> m_seed_privkey;

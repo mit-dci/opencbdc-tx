@@ -49,7 +49,8 @@ namespace cbdc::shard {
                         sizeof(this->m_best_block_height));
         }
 
-        update_snapshot();
+        auto snp = get_snapshot();
+        update_snapshot(std::move(snp));
 
         return std::nullopt;
     }
@@ -119,7 +120,8 @@ namespace cbdc::shard {
         // Commit the changes atomically
         this->m_db->Write(this->m_write_options, &batch);
 
-        update_snapshot();
+        auto snp = get_snapshot();
+        update_snapshot(std::move(snp));
 
         return true;
     }
@@ -196,13 +198,49 @@ namespace cbdc::shard {
         return config::hash_in_shard_range(m_prefix_range, uhs_hash);
     }
 
-    void shard::update_snapshot() {
+    void shard::update_snapshot(std::shared_ptr<const leveldb::Snapshot> snp) {
         std::unique_lock<std::shared_mutex> l(m_snp_mut);
         m_snp_height = m_best_block_height;
-        m_snp = std::shared_ptr<const leveldb::Snapshot>(
+        m_snp = std::move(snp);
+    }
+
+    auto shard::audit(const std::shared_ptr<const leveldb::Snapshot>& snp)
+        -> std::optional<uint64_t> {
+        auto opts = leveldb::ReadOptions();
+        opts.snapshot = snp.get();
+        auto it = std::shared_ptr<leveldb::Iterator>(m_db->NewIterator(opts));
+        it->SeekToFirst();
+        // Skip best block height key
+        it->Next();
+        uint64_t tot{};
+        for(; it->Valid(); it->Next()) {
+            auto key = it->key();
+            auto buf = cbdc::buffer();
+            buf.extend(key.size());
+            std::memcpy(buf.data(), key.data(), key.size());
+            auto maybe_uhs_element
+                = cbdc::from_buffer<transaction::uhs_element>(buf);
+            if(!maybe_uhs_element.has_value()) {
+                return std::nullopt;
+            }
+            auto& uhs_element = maybe_uhs_element.value();
+            if(transaction::calculate_uhs_id(uhs_element.m_data,
+                                             uhs_element.m_value)
+               != uhs_element.m_id) {
+                return std::nullopt;
+            }
+            tot += uhs_element.m_value;
+        }
+
+        return tot;
+    }
+
+    auto shard::get_snapshot() -> std::shared_ptr<const leveldb::Snapshot> {
+        auto snp = std::shared_ptr<const leveldb::Snapshot>(
             m_db->GetSnapshot(),
             [&](const leveldb::Snapshot* p) {
                 m_db->ReleaseSnapshot(p);
             });
+        return snp;
     }
 }
