@@ -59,6 +59,12 @@ namespace cbdc::transaction {
         output() = default;
     };
 
+    /// Calculate UHS ID from output nested hash and value.
+    /// \param nested_hash hash of outpoint and witness program commitment.
+    /// \param value value of the output.
+    /// \return UHS ID.
+    auto calculate_uhs_id(hash_t nested_hash, uint64_t value) -> hash_t;
+
     /// UHS element as represented in compact transactions.
     struct uhs_element {
         /// UHS ID.
