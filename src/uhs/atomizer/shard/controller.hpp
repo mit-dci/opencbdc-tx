@@ -60,11 +60,15 @@ namespace cbdc::shard {
         blocking_queue<network::message_t> m_request_queue;
         std::vector<std::thread> m_handler_threads;
 
+        std::ofstream m_audit_log;
+        std::thread m_audit_thread;
+
         auto server_handler(cbdc::network::message_t&& pkt)
             -> std::optional<cbdc::buffer>;
         auto atomizer_handler(cbdc::network::message_t&& pkt)
             -> std::optional<cbdc::buffer>;
         void request_consumer();
+        void audit();
     };
 }
 
