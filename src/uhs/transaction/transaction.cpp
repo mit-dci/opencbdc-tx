@@ -92,6 +92,20 @@ namespace cbdc::transaction {
         return input_from_output(tx, i, id);
     }
 
+    auto calculate_uhs_id(hash_t nested_hash, uint64_t value) -> hash_t {
+        auto sha = CSHA256();
+        std::array<unsigned char, sizeof(value)> value_arr{};
+        std::memcpy(value_arr.data(), &value, sizeof(value));
+
+        sha.Write(nested_hash.data(), nested_hash.size());
+        sha.Write(value_arr.data(), value_arr.size());
+
+        auto ret = hash_t();
+        sha.Finalize(ret.data());
+
+        return ret;
+    }
+
     auto uhs_id_from_output(const hash_t& entropy,
                             uint64_t i,
                             const output& output) -> uhs_element {
@@ -105,15 +119,8 @@ namespace cbdc::transaction {
         auto nested_hash = hash_t();
         sha.Finalize(nested_hash.data());
 
-        std::array<unsigned char, sizeof(output.m_value)> value_arr{};
-        std::memcpy(value_arr.data(), &output.m_value, sizeof(output.m_value));
+        auto ret = calculate_uhs_id(nested_hash, output.m_value);
 
-        sha.Reset();
-        sha.Write(nested_hash.data(), nested_hash.size());
-        sha.Write(value_arr.data(), value_arr.size());
-
-        auto ret = hash_t();
-        sha.Finalize(ret.data());
         return {ret, nested_hash, output.m_value};
     }
 
