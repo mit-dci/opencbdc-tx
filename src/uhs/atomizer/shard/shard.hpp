@@ -64,11 +64,25 @@ namespace cbdc::shard {
         /// \return the best block height.
         [[nodiscard]] auto best_block_height() const -> uint64_t;
 
+        /// Returns a LevelDB snapshot of the current state of the shard's
+        /// database.
+        /// \return LevelDB snapshot.
+        auto get_snapshot() -> std::shared_ptr<const leveldb::Snapshot>;
+
+        /// Audit the supply of coins in this shard's UHS and check UHS IDs
+        /// match the nested data and value stored in the UHS.
+        /// \param snp LevelDB snapshot upon which to calculate the audit.
+        /// \return total value of all UHS elements in the snapshot or
+        ///         std::nullopt if any of the UHS elements do not match their
+        ///         UHS ID.
+        auto audit(const std::shared_ptr<const leveldb::Snapshot>& snp)
+            -> std::optional<uint64_t>;
+
       private:
         [[nodiscard]] auto is_output_on_shard(const hash_t& uhs_hash) const
             -> bool;
 
-        void update_snapshot();
+        void update_snapshot(std::shared_ptr<const leveldb::Snapshot> snp);
 
         std::unique_ptr<leveldb::DB> m_db;
         leveldb::ReadOptions m_read_options;
@@ -80,7 +94,7 @@ namespace cbdc::shard {
         uint64_t m_snp_height{};
         std::shared_mutex m_snp_mut;
 
-        const std::string m_best_block_height_key = "bestBlockHeight";
+        const std::string m_best_block_height_key;
 
         std::pair<uint8_t, uint8_t> m_prefix_range;
     };
