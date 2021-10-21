@@ -94,6 +94,7 @@ namespace cbdc::locking_shard {
         for(auto&& tx : txs) {
             auto success = check_and_lock_tx(tx);
             ret.push_back(success);
+            m_highest_epoch = std::max(m_highest_epoch, tx.m_epoch);
         }
         auto p = prepared_dtx();
         p.m_results = ret;
@@ -159,26 +160,7 @@ namespace cbdc::locking_shard {
         }
         for(size_t i{0}; i < dtx.size(); i++) {
             auto&& tx = dtx[i];
-            if(hash_in_shard_range(tx.m_tx.m_id)) {
-                m_completed_txs.add(tx.m_tx.m_id);
-            }
-
-            for(auto&& uhs_id : tx.m_tx.m_uhs_outputs) {
-                if(hash_in_shard_range(uhs_id.m_id) && complete_txs[i]) {
-                    m_uhs.emplace(uhs_id.m_id,
-                                  uhs_element{uhs_id.m_data, uhs_id.m_value});
-                }
-            }
-            for(auto&& uhs_id : tx.m_tx.m_inputs) {
-                if(hash_in_shard_range(uhs_id.m_id)) {
-                    auto was_locked = m_locked.erase(uhs_id.m_id);
-                    if(!complete_txs[i] && (was_locked != 0U)) {
-                        m_uhs.emplace(
-                            uhs_id.m_id,
-                            uhs_element{uhs_id.m_data, uhs_id.m_value});
-                    }
-                }
-            }
+            apply_tx(tx, complete_txs[i]);
         }
 
         m_prepared_dtxs.erase(dtx_id);
@@ -200,5 +182,107 @@ namespace cbdc::locking_shard {
     auto locking_shard::check_tx_id(const hash_t& tx_id)
         -> std::optional<bool> {
         return m_completed_txs.contains(tx_id);
+    }
+
+    void locking_shard::apply_tx(const tx& t, bool complete) {
+        if(hash_in_shard_range(t.m_tx.m_id)) {
+            m_completed_txs.add(t.m_tx.m_id);
+        }
+        for(auto&& uhs_id : t.m_tx.m_uhs_outputs) {
+            if(!(hash_in_shard_range(uhs_id.m_id) && complete)) {
+                continue;
+            }
+            m_uhs.emplace(
+                uhs_id.m_id,
+                uhs_element{uhs_id.m_data, uhs_id.m_value, t.m_epoch});
+        }
+        for(auto&& uhs_id : t.m_tx.m_inputs) {
+            if(!hash_in_shard_range(uhs_id.m_id)) {
+                continue;
+            }
+            auto it = m_locked.find(uhs_id.m_id);
+            if(it == m_locked.end()) {
+                continue;
+            }
+            auto elem = it->second;
+            if(!complete) {
+                m_uhs.emplace(uhs_id.m_id, elem);
+            } else {
+                elem.m_deletion_epoch = t.m_epoch;
+                m_spent.emplace(uhs_id.m_id, elem);
+            }
+            m_locked.erase(uhs_id.m_id);
+        }
+    }
+
+    auto locking_shard::audit(uint64_t epoch) const
+        -> std::optional<uint64_t> {
+        auto uhs = decltype(m_uhs)();
+        auto locked = decltype(m_locked)();
+        auto spent = decltype(m_spent)();
+        {
+            std::shared_lock l(m_mut);
+            uhs = m_uhs;
+            locked = m_locked;
+            spent = m_spent;
+        }
+
+        auto check_uhs
+            = [epoch](
+                  const std::unordered_map<hash_t, uhs_element, hashing::null>&
+                      uhs_map) -> std::optional<uint64_t> {
+            uint64_t tot{};
+            for(const auto& [id, elem] : uhs_map) {
+                if(elem.m_creation_epoch <= epoch
+                   && (!elem.m_deletion_epoch.has_value()
+                       || (elem.m_deletion_epoch.value() > epoch))) {
+                    auto uhs_id = transaction::calculate_uhs_id(elem.m_data,
+                                                                elem.m_value);
+                    if(uhs_id != id) {
+                        return std::nullopt;
+                    }
+                    tot += elem.m_value;
+                }
+            }
+            return tot;
+        };
+
+        uint64_t tot{};
+        auto uhs_tot = check_uhs(uhs);
+        if(!uhs_tot.has_value()) {
+            return std::nullopt;
+        }
+        tot += uhs_tot.value();
+
+        auto locked_tot = check_uhs(locked);
+        if(!locked_tot.has_value()) {
+            return std::nullopt;
+        }
+        tot += locked_tot.value();
+
+        auto spent_tot = check_uhs(spent);
+        if(!spent_tot.has_value()) {
+            return std::nullopt;
+        }
+        tot += spent_tot.value();
+
+        return tot;
+    }
+
+    auto locking_shard::highest_epoch() const -> uint64_t {
+        std::shared_lock l(m_mut);
+        return m_highest_epoch;
+    }
+
+    void locking_shard::prune(uint64_t epoch) {
+        std::unique_lock l(m_mut);
+        for(auto it = m_spent.begin(); it != m_spent.end();) {
+            auto& elem = it->second;
+            if(elem.m_deletion_epoch.value() < epoch) {
+                it = m_spent.erase(it);
+            } else {
+                it++;
+            }
+        }
     }
 }
