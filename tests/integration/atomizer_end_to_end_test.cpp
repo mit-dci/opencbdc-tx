@@ -88,7 +88,7 @@ class atomizer_end_to_end_test : public ::testing::Test {
             audit_entries.emplace_back(epoch, value);
         }
         ASSERT_FALSE(audit_entries.empty());
-        ASSERT_EQ(audit_entries.back().second, 100ul);
+        ASSERT_EQ(audit_entries.back().second, 100UL);
 
         std::filesystem::remove_all("archiver0_db");
         std::filesystem::remove_all("atomizer_raft_log_0");

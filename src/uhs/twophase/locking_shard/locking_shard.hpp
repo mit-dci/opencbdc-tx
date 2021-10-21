@@ -130,11 +130,33 @@ namespace cbdc::locking_shard {
             hash_t m_data{};
             /// Value of the UHS element.
             uint64_t m_value{};
+            /// Epoch in which the UHS element was created.
+            uint64_t m_creation_epoch{};
+            /// Epoch in which the UHS element was spent, or std::nullopt if
+            /// the UHS element is unspent.
+            std::optional<uint64_t> m_deletion_epoch{};
         };
+
+        /// Takes a snapshot of the UHS and calculates the supply of coins at
+        /// the given epoch. Checks the UHS IDs match the value and nested data
+        /// included in the UHS element.
+        /// \param epoch the epoch to audit the supply at.
+        /// \return total value of coins in this shard's UHS, or std::nullopt
+        ///         if any of the UHS elements do not match their UHS ID.
+        auto audit(uint64_t epoch) const -> std::optional<uint64_t>;
+
+        /// Prunes any spent UHS elements spent prior to the given epoch.
+        /// \param epoch epoch to prune prior to.
+        void prune(uint64_t epoch);
+
+        /// Returns the highest epoch seen by the shard so far.
+        /// \return highest epoch.
+        auto highest_epoch() const -> uint64_t;
 
       private:
         auto read_preseed_file(const std::string& preseed_file) -> bool;
         auto check_and_lock_tx(const tx& t) -> bool;
+        void apply_tx(const tx& t, bool complete);
 
         struct prepared_dtx {
             std::vector<tx> m_txs;
@@ -147,11 +169,13 @@ namespace cbdc::locking_shard {
         mutable std::shared_mutex m_mut;
         std::unordered_map<hash_t, uhs_element, hashing::null> m_uhs;
         std::unordered_map<hash_t, uhs_element, hashing::null> m_locked;
+        std::unordered_map<hash_t, uhs_element, hashing::null> m_spent;
         std::unordered_map<hash_t, prepared_dtx, hashing::null>
             m_prepared_dtxs;
         std::unordered_set<hash_t, hashing::null> m_applied_dtxs;
         cbdc::cache_set<hash_t, hashing::null> m_completed_txs;
         config::options m_opts;
+        uint64_t m_highest_epoch{};
     };
 }
 

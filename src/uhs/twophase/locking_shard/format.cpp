@@ -11,11 +11,11 @@
 namespace cbdc {
     auto operator<<(serializer& packet, const locking_shard::tx& tx)
         -> serializer& {
-        return packet << tx.m_tx;
+        return packet << tx.m_tx << tx.m_epoch;
     }
 
     auto operator>>(serializer& packet, locking_shard::tx& tx) -> serializer& {
-        return packet >> tx.m_tx;
+        return packet >> tx.m_tx >> tx.m_epoch;
     }
 
     auto operator<<(serializer& packet, const locking_shard::rpc::request& p)
@@ -53,12 +53,14 @@ namespace cbdc {
     auto operator<<(serializer& ser,
                     const locking_shard::locking_shard::uhs_element& p)
         -> serializer& {
-        return ser << p.m_data << p.m_value;
+        return ser << p.m_data << p.m_value << p.m_creation_epoch
+                   << p.m_deletion_epoch;
     }
 
     auto operator>>(serializer& deser,
                     locking_shard::locking_shard::uhs_element& p)
         -> serializer& {
-        return deser >> p.m_data >> p.m_value;
+        return deser >> p.m_data >> p.m_value >> p.m_creation_epoch
+            >> p.m_deletion_epoch;
     }
 }
