@@ -169,7 +169,7 @@ auto main(int argc, char** argv) -> int {
                            && output_hash[0] <= shard_end) {
                             auto uhs = ctx.m_uhs_outputs[0];
                             auto s_uhs = cbdc::locking_shard::locking_shard::
-                                uhs_element{uhs.m_data, uhs.m_value};
+                                uhs_element{uhs.m_data, uhs.m_value, 0};
                             ser << uhs.m_id << s_uhs;
                             count++;
                         }
