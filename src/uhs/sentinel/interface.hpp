@@ -46,17 +46,31 @@ namespace cbdc::sentinel {
     auto to_string(tx_status status) -> std::string;
 
     /// Sentinel request message.
-    using request = transaction::full_tx;
+    struct execute_request : public transaction::full_tx {};
 
     /// Sentinel response message.
-    struct response {
+    struct execute_response {
         /// Transaction execution status.
         cbdc::sentinel::tx_status m_tx_status{};
         /// Transaction validation error if static validation failed.
         std::optional<transaction::validation::tx_error> m_tx_error;
 
-        auto operator==(const response& rhs) const -> bool;
+        auto operator==(const execute_response& rhs) const -> bool;
     };
+
+    /// Request type for transaction validation and attestation. A full
+    /// transaction to be validated.
+    struct validate_request : transaction::full_tx {};
+    /// Response type from transaction validation, a sentinel attestation on
+    /// the given transaction.
+    using validate_response = transaction::sentinel_attestation;
+
+    /// Sentinel RPC request type. Either a transaction execution or validation
+    /// request.
+    using request = std::variant<execute_request, validate_request>;
+    /// Sentinel RPC response type. Either a transaction execution or
+    /// validation response.
+    using response = std::variant<execute_response, validate_response>;
 
     /// Interface for a sentinel.
     class interface {
@@ -76,7 +90,15 @@ namespace cbdc::sentinel {
         /// \return the response from the sentinel or std::nullopt if
         ///         processing failed.
         virtual auto execute_transaction(transaction::full_tx tx)
-            -> std::optional<cbdc::sentinel::response> = 0;
+            -> std::optional<execute_response> = 0;
+
+        /// Validate transaction and generate a sentinel attestation if the
+        /// transaction is valid.
+        /// \param tx transaction to validate and attest to.
+        /// \return sentinel attestation for the given transaction, or
+        ///         std::nullopt if the transaction is invalid.
+        virtual auto validate_transaction(transaction::full_tx tx)
+            -> std::optional<validate_response> = 0;
     };
 }
 

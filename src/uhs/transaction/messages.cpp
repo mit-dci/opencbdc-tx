@@ -52,12 +52,14 @@ namespace cbdc {
 
     auto operator<<(serializer& packet, const transaction::compact_tx& tx)
         -> serializer& {
-        return packet << tx.m_id << tx.m_inputs << tx.m_uhs_outputs;
+        return packet << tx.m_id << tx.m_inputs << tx.m_uhs_outputs
+                      << tx.m_attestations;
     }
 
     auto operator>>(serializer& packet, transaction::compact_tx& tx)
         -> serializer& {
-        return packet >> tx.m_id >> tx.m_inputs >> tx.m_uhs_outputs;
+        return packet >> tx.m_id >> tx.m_inputs >> tx.m_uhs_outputs
+            >> tx.m_attestations;
     }
 
     auto operator>>(serializer& packet,

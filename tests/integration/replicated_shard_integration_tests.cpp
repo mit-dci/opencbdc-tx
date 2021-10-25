@@ -70,6 +70,7 @@ TEST_F(replicated_shard_integration_tests,
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
     auto spend_tx = cbdc::test::simple_tx({'d'}, {{'c'}}, {{'e'}});
+    cbdc::test::sign_tx(spend_tx, m_opts.m_sentinel_private_keys[0]);
 
     std::vector<std::future<cbdc::atomizer::request>> res;
     res.reserve(m_shard_count);

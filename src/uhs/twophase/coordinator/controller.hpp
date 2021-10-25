@@ -16,6 +16,8 @@
 #include "util/network/connection_manager.hpp"
 #include "util/raft/node.hpp"
 
+#include <secp256k1.h>
+
 namespace cbdc::coordinator {
     /// Replicated coordinator node. Participates in a raft cluster with
     /// other replicated coordinators. When acting as the leader, listens

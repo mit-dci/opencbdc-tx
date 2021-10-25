@@ -104,6 +104,10 @@ namespace cbdc::transaction {
         full_tx() = default;
     };
 
+    /// Sentinel attestation type. Public key of the sentinel and signature of
+    /// a compact transaction hash.
+    using sentinel_attestation = std::pair<pubkey_t, signature_t>;
+
     /// \brief A condensed, hash-only transaction representation
     ///
     /// The minimum amount of data necessary for the transaction processor to
@@ -120,11 +124,43 @@ namespace cbdc::transaction {
         /// The set of hashes of the new outputs created in the transaction
         std::vector<hash_t> m_uhs_outputs;
 
+        /// Signatures from sentinels attesting the compact TX is valid.
+        std::unordered_map<pubkey_t, signature_t, hashing::null>
+            m_attestations;
+
+        /// Equality of two compact transactions. Only compares the transaction
+        /// IDs.
         auto operator==(const compact_tx& tx) const noexcept -> bool;
 
         compact_tx() = default;
 
         explicit compact_tx(const full_tx& tx);
+
+        /// Sign the compact transaction and return the signature.
+        /// \param ctx secp256k1 context with which to sign the transaction.
+        /// \param key private key with which to sign the transaction.
+        /// \return sentinel attestation containing the signature and
+        ///         associated public key.
+        [[nodiscard]] auto sign(secp256k1_context* ctx,
+                                const privkey_t& key) const
+            -> sentinel_attestation;
+
+        /// Verify the given attestation contains a valid signature that
+        /// matches the compact transaction.
+        /// \param ctx secp256k1 contact with which to validate the signature.
+        /// \param att sentinel attestation containing a public key and
+        ///            signature.
+        /// \return true if the given attestation is valid for this compact
+        ///         transaction.
+        [[nodiscard]] auto verify(secp256k1_context* ctx,
+                                  const sentinel_attestation& att) const
+            -> bool;
+
+        /// Return the hash of the compact transaction, without the sentinel
+        /// attestations included. Used as the message which is signed in
+        /// sentinel attestations.
+        /// \return
+        [[nodiscard]] auto hash() const -> hash_t;
     };
 
     struct compact_tx_hasher {

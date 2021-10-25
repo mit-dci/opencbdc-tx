@@ -152,6 +152,18 @@ namespace cbdc::transaction::validation {
         -> std::optional<output_error_code>;
     auto get_p2pk_witness_commitment(const pubkey_t& payee) -> hash_t;
     auto to_string(const tx_error& err) -> std::string;
+
+    /// Validates the sentinel attestations attached to a compact transaction.
+    /// \param tx compact transaction to validate.
+    /// \param pubkeys set of public keys whose attestations will be accepted.
+    /// \param threshold number of attestations required for a transaction to
+    ///                  be considered valid.
+    /// \return true if the required number of unique attestations are attached
+    ///         to the compact transaction.
+    auto check_attestations(
+        const transaction::compact_tx& tx,
+        const std::unordered_set<pubkey_t, hashing::null>& pubkeys,
+        size_t threshold) -> bool;
 }
 
 #endif // OPENCBDC_TX_SRC_TRANSACTION_VALIDATION_H_

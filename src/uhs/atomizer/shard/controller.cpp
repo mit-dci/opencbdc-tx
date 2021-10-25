@@ -91,6 +91,15 @@ namespace cbdc::shard {
 
         m_logger->info("Digesting transaction", to_string(tx.m_id), "...");
 
+        if(!transaction::validation::check_attestations(
+               tx,
+               m_opts.m_sentinel_public_keys,
+               m_opts.m_attestation_threshold)) {
+            m_logger->warn("Received invalid compact transaction",
+                           to_string(tx.m_id));
+            return std::nullopt;
+        }
+
         auto res = m_shard.digest_transaction(std::move(tx));
 
         auto res_handler = overloaded{

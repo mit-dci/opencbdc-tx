@@ -6,7 +6,7 @@
 #ifndef OPENCBDC_TX_SRC_SENTINEL_2PC_SERVER_H_
 #define OPENCBDC_TX_SRC_SENTINEL_2PC_SERVER_H_
 
-#include "interface.hpp"
+#include "uhs/sentinel/async_interface.hpp"
 #include "uhs/transaction/messages.hpp"
 #include "util/rpc/async_server.hpp"
 #include "util/rpc/format.hpp"

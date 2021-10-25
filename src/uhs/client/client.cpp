@@ -96,7 +96,7 @@ namespace cbdc {
 
     auto client::send(uint32_t value, const pubkey_t& payee)
         -> std::pair<std::optional<transaction::full_tx>,
-                     std::optional<cbdc::sentinel::response>> {
+                     std::optional<cbdc::sentinel::execute_response>> {
         static constexpr auto null_return
             = std::make_pair(std::nullopt, std::nullopt);
 
@@ -116,7 +116,7 @@ namespace cbdc {
 
     auto client::fan(uint32_t count, uint32_t value, const pubkey_t& payee)
         -> std::pair<std::optional<transaction::full_tx>,
-                     std::optional<cbdc::sentinel::response>> {
+                     std::optional<cbdc::sentinel::execute_response>> {
         static constexpr auto null_return
             = std::make_pair(std::nullopt, std::nullopt);
 
@@ -137,7 +137,7 @@ namespace cbdc {
     }
 
     auto client::send_transaction(const transaction::full_tx& tx)
-        -> std::optional<cbdc::sentinel::response> {
+        -> std::optional<cbdc::sentinel::execute_response> {
         import_transaction(tx);
 
         auto res = m_sentinel_client.execute_transaction(tx);

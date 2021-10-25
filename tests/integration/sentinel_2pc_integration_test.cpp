@@ -62,8 +62,8 @@ TEST_F(sentinel_2pc_integration_test, valid_signed_tx) {
     auto err = m_sys->expect<cbdc::transaction::compact_tx>(
         cbdc::test::mock_system_module::coordinator);
 
-    cbdc::sentinel::response want{cbdc::sentinel::tx_status::confirmed,
-                                  std::nullopt};
+    cbdc::sentinel::execute_response want{cbdc::sentinel::tx_status::confirmed,
+                                          std::nullopt};
 
     std::thread client_thread([&]() {
         auto got = m_client->execute_transaction(tx.value());

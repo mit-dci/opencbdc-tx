@@ -13,6 +13,7 @@
 #define OPENCBDC_TX_SRC_COMMON_CONFIG_H_
 
 #include "hash.hpp"
+#include "hashmap.hpp"
 #include "keys.hpp"
 #include "logging.hpp"
 #include "util/network/socket.hpp"
@@ -20,6 +21,8 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -60,6 +63,7 @@ namespace cbdc::config {
         static constexpr size_t input_count{2};
         static constexpr size_t output_count{2};
         static constexpr double fixed_tx_rate{1.0};
+        static constexpr size_t attestation_threshold{1};
 
         static constexpr auto log_level = logging::log_level::warn;
     }
@@ -118,6 +122,9 @@ namespace cbdc::config {
     static constexpr auto shard_completed_txs_cache_size
         = "shard_completed_txs_cache_size";
     static constexpr auto wait_for_followers_key = "wait_for_followers";
+    static constexpr auto private_key_postfix = "private_key";
+    static constexpr auto public_key_postfix = "public_key";
+    static constexpr auto attestation_threshold_key = "attestation_threshold";
 
     /// [start, end] inclusive.
     using shard_range_t = std::pair<uint8_t, uint8_t>;
@@ -248,6 +255,15 @@ namespace cbdc::config {
         /// Flag for whether the raft leader should re-attempt to join
         /// followers to the cluster until successful.
         bool m_wait_for_followers{defaults::wait_for_followers};
+
+        /// Private keys for sentinels.
+        std::unordered_map<size_t, privkey_t> m_sentinel_private_keys;
+
+        /// Public keys for sentinels.
+        std::unordered_set<pubkey_t, hashing::null> m_sentinel_public_keys;
+
+        /// Number of sentinel attestations needed for a compact transaction.
+        size_t m_attestation_threshold{defaults::attestation_threshold};
     };
 
     /// Read options from the given config file without checking invariants.
