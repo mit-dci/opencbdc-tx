@@ -79,10 +79,21 @@ auto main(int argc, char** argv) -> int {
         auto mint_tx = wallet.mint_new_coins(cfg.m_initial_mint_count,
                                              cfg.m_initial_mint_value);
 
+        auto compact_mint_tx = cbdc::transaction::compact_tx(mint_tx);
+        auto secp = std::unique_ptr<secp256k1_context,
+                                    decltype(&secp256k1_context_destroy)>{
+            secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
+            &secp256k1_context_destroy};
+        for(size_t i = 0; i < cfg.m_attestation_threshold; i++) {
+            auto att = compact_mint_tx.sign(secp.get(),
+                                            cfg.m_sentinel_private_keys[i]);
+            compact_mint_tx.m_attestations.insert(att);
+        }
+
         auto mint_successful = std::promise<bool>();
         auto mint_successful_fut = mint_successful.get_future();
         auto send_successful = coordinator_client.execute_transaction(
-            cbdc::transaction::compact_tx(mint_tx),
+            compact_mint_tx,
             [&](std::optional<bool> resp) {
                 if(!resp.has_value()) {
                     mint_successful.set_value(false);
@@ -236,38 +247,39 @@ auto main(int argc, char** argv) -> int {
                                  .time_since_epoch()
                                  .count();
 
-            auto res_cb = [&, txn = tx.value(), send_time = send_time](
-                              cbdc::sentinel::rpc::client::result_type res) {
-                auto tx_id = cbdc::transaction::tx_id(txn);
-                if(!res.has_value()) {
-                    logger->warn("Failure response from sentinel for",
-                                 cbdc::to_string(tx_id));
-                    wallet.confirm_inputs(txn.m_inputs);
-                    return;
-                }
-                auto& sent_resp = res.value();
-                if(sent_resp.m_tx_status
-                   == cbdc::sentinel::tx_status::confirmed) {
-                    wallet.confirm_transaction(txn);
-                    second_conf_queue.push(tx_id);
-                    auto now = std::chrono::high_resolution_clock::now()
-                                   .time_since_epoch()
-                                   .count();
-                    const auto tx_delay = now - send_time;
-                    latency_log << now << " " << tx_delay << "\n";
-                    constexpr auto max_invalid = 100000;
-                    if(cfg.m_invalid_rate > 0.0) {
-                        std::lock_guard<std::mutex> l(confirmed_txs_mut);
-                        if(confirmed_txs.size() < max_invalid) {
-                            confirmed_txs.push(txn);
-                        }
-                    }
-                } else {
-                    logger->warn(cbdc::to_string(tx_id), "had error");
-                    wallet.confirm_inputs(txn.m_inputs);
-                    // TODO: in some cases we should retry the TX here
-                }
-            };
+            auto res_cb
+                = [&, txn = tx.value(), send_time = send_time](
+                      cbdc::sentinel::rpc::client::execute_result_type res) {
+                      auto tx_id = cbdc::transaction::tx_id(txn);
+                      if(!res.has_value()) {
+                          logger->warn("Failure response from sentinel for",
+                                       cbdc::to_string(tx_id));
+                          wallet.confirm_inputs(txn.m_inputs);
+                          return;
+                      }
+                      auto& sent_resp = res.value();
+                      if(sent_resp.m_tx_status
+                         == cbdc::sentinel::tx_status::confirmed) {
+                          wallet.confirm_transaction(txn);
+                          second_conf_queue.push(tx_id);
+                          auto now = std::chrono::high_resolution_clock::now()
+                                         .time_since_epoch()
+                                         .count();
+                          const auto tx_delay = now - send_time;
+                          latency_log << now << " " << tx_delay << "\n";
+                          constexpr auto max_invalid = 100000;
+                          if(cfg.m_invalid_rate > 0.0) {
+                              std::lock_guard<std::mutex> l(confirmed_txs_mut);
+                              if(confirmed_txs.size() < max_invalid) {
+                                  confirmed_txs.push(txn);
+                              }
+                          }
+                      } else {
+                          logger->warn(cbdc::to_string(tx_id), "had error");
+                          wallet.confirm_inputs(txn.m_inputs);
+                          // TODO: in some cases we should retry the TX here
+                      }
+                  };
 
             if(!sentinel_client.execute_transaction(tx.value(),
                                                     std::move(res_cb))) {

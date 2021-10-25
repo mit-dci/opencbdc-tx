@@ -6,8 +6,8 @@
 #include "interface.hpp"
 
 namespace cbdc::sentinel {
-    auto response::operator==(const cbdc::sentinel::response& rhs) const
-        -> bool {
+    auto execute_response::operator==(
+        const cbdc::sentinel::execute_response& rhs) const -> bool {
         return std::tie(m_tx_status, m_tx_error)
             == std::tie(rhs.m_tx_status, rhs.m_tx_error);
     }

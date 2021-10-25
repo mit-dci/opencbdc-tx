@@ -18,10 +18,12 @@ class config_validation_test : public ::testing::Test {
         m_atomizer_opts.m_archiver_endpoints.emplace_back();
         m_atomizer_opts.m_watchtower_client_endpoints.emplace_back();
         m_atomizer_opts.m_sentinel_endpoints.emplace_back();
+        m_atomizer_opts.m_sentinel_public_keys.emplace();
         m_atomizer_opts.m_shard_endpoints.emplace_back();
 
         m_twophase_opts.m_twophase_mode = true;
         m_twophase_opts.m_sentinel_endpoints.emplace_back();
+        m_twophase_opts.m_sentinel_public_keys.emplace();
         m_twophase_opts.m_locking_shard_endpoints.emplace_back();
         m_twophase_opts.m_coordinator_endpoints.emplace_back();
 

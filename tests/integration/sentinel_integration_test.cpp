@@ -59,8 +59,8 @@ TEST_F(sentinel_integration_test, valid_signed_tx) {
         cbdc::test::mock_system_module::shard);
 
     auto ctx = cbdc::transaction::compact_tx(tx.value());
-    cbdc::sentinel::response want{cbdc::sentinel::tx_status::pending,
-                                  std::nullopt};
+    cbdc::sentinel::execute_response want{cbdc::sentinel::tx_status::pending,
+                                          std::nullopt};
     auto got = m_client->execute_transaction(tx.value());
     ASSERT_TRUE(got.has_value());
     cbdc::test::print_sentinel_error(got->m_tx_error);

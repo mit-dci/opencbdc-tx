@@ -73,7 +73,7 @@ namespace cbdc {
         ///         generating or transmitting the transaction failed.
         auto send(uint32_t value, const pubkey_t& payee)
             -> std::pair<std::optional<transaction::full_tx>,
-                         std::optional<cbdc::sentinel::response>>;
+                         std::optional<cbdc::sentinel::execute_response>>;
 
         /// \brief Send a specified number of fixed-value outputs from this
         ///        client's wallet to a target address.
@@ -89,7 +89,7 @@ namespace cbdc {
         ///         generating or transmitting the transaction failed.
         auto fan(uint32_t count, uint32_t value, const pubkey_t& payee)
             -> std::pair<std::optional<transaction::full_tx>,
-                         std::optional<cbdc::sentinel::response>>;
+                         std::optional<cbdc::sentinel::execute_response>>;
 
         /// \brief Extracts the transaction data that recipients need from
         ///        senders to confirm pending transfers.
@@ -188,7 +188,7 @@ namespace cbdc {
         /// \param tx the transaction to send.
         /// \return the sentinel's response to the transaction, if any.
         auto send_transaction(const transaction::full_tx& tx)
-            -> std::optional<cbdc::sentinel::response>;
+            -> std::optional<cbdc::sentinel::execute_response>;
 
         /// \brief Abandons a transaction currently awaiting confirmation.
         ///

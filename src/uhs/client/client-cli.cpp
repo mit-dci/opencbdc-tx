@@ -68,9 +68,10 @@ auto decode_address(const std::string& addr_str)
     return pubkey;
 }
 
-void print_tx_result(const std::optional<cbdc::transaction::full_tx>& tx,
-                     const std::optional<cbdc::sentinel::response>& resp,
-                     const cbdc::hash_t& pubkey) {
+void print_tx_result(
+    const std::optional<cbdc::transaction::full_tx>& tx,
+    const std::optional<cbdc::sentinel::execute_response>& resp,
+    const cbdc::hash_t& pubkey) {
     std::cout << "tx_id:" << std::endl
               << cbdc::to_string(cbdc::transaction::tx_id(tx.value()))
               << std::endl;

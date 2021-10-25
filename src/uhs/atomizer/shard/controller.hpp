@@ -13,6 +13,7 @@
 #include "util/network/connection_manager.hpp"
 
 #include <memory>
+#include <secp256k1.h>
 
 namespace cbdc::shard {
     /// Wrapper for the shard executable implementation.

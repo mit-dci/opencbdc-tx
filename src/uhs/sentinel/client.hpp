@@ -6,7 +6,7 @@
 #ifndef OPENCBDC_TX_SRC_SENTINEL_CLIENT_H_
 #define OPENCBDC_TX_SRC_SENTINEL_CLIENT_H_
 
-#include "interface.hpp"
+#include "async_interface.hpp"
 #include "uhs/transaction/transaction.hpp"
 #include "util/common/config.hpp"
 #include "util/network/connection_manager.hpp"
@@ -14,7 +14,7 @@
 
 namespace cbdc::sentinel::rpc {
     /// \brief TCP RPC client for sentinels.
-    class client : public interface {
+    class client : public interface, public async_interface {
       public:
         /// Constructor.
         /// \param endpoints sentinel cluster RPC endpoints.
@@ -35,23 +35,45 @@ namespace cbdc::sentinel::rpc {
         auto init() -> bool;
 
         /// Result type from execute_transaction.
-        using result_type = std::optional<cbdc::sentinel::response>;
+        using execute_result_type
+            = std::optional<cbdc::sentinel::execute_response>;
 
         /// Send a transaction to the sentinel and return the response.
         /// \param tx transaction to send to the sentinel.
         /// \return the response from the sentinel.
         auto execute_transaction(transaction::full_tx tx)
-            -> result_type override;
+            -> execute_result_type override;
 
         /// Send a transaction to the sentinel and return the response via a
         /// callback function asynchronously.
         /// \param tx transaction to send to the sentinel.
         /// \param result_callback callback function to call with the result.
         /// \return true if the request was sent successfully.
-        auto
-        execute_transaction(transaction::full_tx tx,
-                            std::function<void(result_type)> result_callback)
-            -> bool;
+        auto execute_transaction(
+            transaction::full_tx tx,
+            std::function<void(execute_result_type)> result_callback)
+            -> bool override;
+
+        /// Return type from transaction validation.
+        using validate_result_type = std::optional<validate_response>;
+
+        /// Send a transaction to the sentinel for validation and return the
+        /// response.
+        /// \param tx transaction to validate and attest to.
+        /// \return sentinel attestation on the given transaction or
+        ///         std::nullopt if the transaction was invalid.
+        auto validate_transaction(transaction::full_tx tx)
+            -> validate_result_type override;
+
+        /// Send a transaction to the sentinel for validation and return the
+        /// response via a callback function asynchronously.
+        /// \param tx transaction to validate and attest to.
+        /// \param result_callback callback function to call with the result.
+        /// \return true if the request was sent successfully.
+        auto validate_transaction(
+            transaction::full_tx tx,
+            std::function<void(validate_result_type)> result_callback)
+            -> bool override;
 
       private:
         cbdc::config::options m_opts;

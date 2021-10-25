@@ -19,6 +19,7 @@ target_link_libraries(locking-shardd locking_shard
                                      common
                                      serialization
                                      crypto
+                                     secp256k1
                                      ${NURAFT_LIBRARY}
                                      ${LEVELDB_LIBRARY}
                                      ${CMAKE_THREAD_LIBS_INIT})

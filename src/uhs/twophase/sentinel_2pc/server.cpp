@@ -12,9 +12,21 @@ namespace cbdc::sentinel::rpc {
         : m_impl(impl),
           m_srv(std::move(srv)) {
         m_srv->register_handler_callback(
-            [&](request req, async_interface::result_callback_type callback) {
-                return m_impl->execute_transaction(std::move(req),
-                                                   std::move(callback));
+            [&](const request& req,
+                async_interface::result_callback_type callback) {
+                auto res = std::visit(
+                    overloaded{[&](execute_request e_req) {
+                                   return m_impl->execute_transaction(
+                                       std::move(e_req),
+                                       callback);
+                               },
+                               [&](validate_request v_req) {
+                                   return m_impl->validate_transaction(
+                                       std::move(v_req),
+                                       callback);
+                               }},
+                    req);
+                return res;
             });
     }
 }

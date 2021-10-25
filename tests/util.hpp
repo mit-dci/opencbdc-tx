@@ -133,6 +133,8 @@ namespace cbdc::test {
     /// \param opts reference to an options struct in which to place the result.
     void load_config(const std::string& config_file,
                      cbdc::config::options& opts);
+
+    void sign_tx(compact_transaction& tx, const privkey_t& key);
 }
 
 #endif // OPENCBDC_TX_TESTS_UTIL_H_
