@@ -227,6 +227,20 @@ namespace cbdc::config {
         return ss.str();
     }
 
+    auto get_sentinel_private_key_key(size_t sentinel_id) -> std::string {
+        auto ss = std::stringstream();
+        get_sentinel_key_prefix(ss, sentinel_id);
+        ss << private_key_postfix;
+        return ss.str();
+    }
+
+    auto get_sentinel_public_key_key(size_t sentinel_id) -> std::string {
+        auto ss = std::stringstream();
+        get_sentinel_key_prefix(ss, sentinel_id);
+        ss << public_key_postfix;
+        return ss.str();
+    }
+
     auto read_shard_endpoints(options& opts, const parser& cfg)
         -> std::optional<std::string> {
         const auto shard_count = cfg.get_ulong(shard_count_key).value_or(0);
@@ -394,6 +408,10 @@ namespace cbdc::config {
 
     auto read_sentinel_options(options& opts, const parser& cfg)
         -> std::optional<std::string> {
+        opts.m_attestation_threshold
+            = cfg.get_ulong(attestation_threshold_key)
+                  .value_or(opts.m_attestation_threshold);
+
         const auto sentinel_count
             = cfg.get_ulong(sentinel_count_key).value_or(0);
         for(size_t i{0}; i < sentinel_count; i++) {
@@ -410,6 +428,27 @@ namespace cbdc::config {
                 = cfg.get_loglevel(sentinel_loglevel_key)
                       .value_or(defaults::log_level);
             opts.m_sentinel_loglevels.push_back(sentinel_loglevel);
+
+            const auto sentinel_private_key_key
+                = get_sentinel_private_key_key(i);
+            const auto sentinel_private_key
+                = cfg.get_string(sentinel_private_key_key);
+            if(sentinel_private_key.has_value()) {
+                auto key = hash_from_hex(sentinel_private_key.value());
+                opts.m_sentinel_private_keys[i] = key;
+            }
+
+            const auto sentinel_public_key_key
+                = get_sentinel_public_key_key(i);
+            const auto sentinel_public_key
+                = cfg.get_string(sentinel_public_key_key);
+            if(!sentinel_public_key.has_value()) {
+                return "No public key specified for sentinel "
+                     + std::to_string(i) + " (" + sentinel_public_key_key
+                     + ")";
+            }
+            auto key = hash_from_hex(sentinel_public_key.value());
+            opts.m_sentinel_public_keys.insert(key);
         }
         return std::nullopt;
     }
@@ -676,6 +715,11 @@ namespace cbdc::config {
             if(opts.m_seed_value == 0) {
                 return "Seed range defined but value is zero";
             }
+        }
+
+        if(opts.m_sentinel_public_keys.size() < opts.m_attestation_threshold) {
+            return "Not enough sentinel public keys to reach the attestation "
+                   "threshold";
         }
 
         return std::nullopt;

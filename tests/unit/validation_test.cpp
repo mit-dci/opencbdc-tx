@@ -28,6 +28,19 @@ class WalletTxValidationTest : public ::testing::Test {
 
     cbdc::transaction::full_tx m_valid_tx{};
     cbdc::transaction::full_tx m_valid_tx_multi_inp{};
+
+    std::unique_ptr<secp256k1_context, decltype(&secp256k1_context_destroy)>
+        m_secp{secp256k1_context_create(SECP256K1_CONTEXT_SIGN
+                                        | SECP256K1_CONTEXT_VERIFY),
+               &secp256k1_context_destroy};
+    cbdc::privkey_t m_priv0{cbdc::hash_from_hex(
+        "0000000000000001000000000000000000000000000000000000000000000000")};
+    cbdc::pubkey_t m_pub0{cbdc::pubkey_from_privkey(m_priv0, m_secp.get())};
+    cbdc::privkey_t m_priv1{cbdc::hash_from_hex(
+        "1000000000000001000000000000000000000000000000000000000000000000")};
+    cbdc::pubkey_t m_pub1{cbdc::pubkey_from_privkey(m_priv1, m_secp.get())};
+    std::unordered_set<cbdc::pubkey_t, cbdc::hashing::null> m_pubkeys{m_pub0,
+                                                                      m_pub1};
 };
 
 TEST_F(WalletTxValidationTest, valid) {
@@ -299,4 +312,27 @@ TEST_F(WalletTxValidationTest, summation_overflow) {
         res.value(),
         cbdc::transaction::validation::tx_error(
             cbdc::transaction::validation::tx_error_code::value_overflow));
+}
+
+TEST_F(WalletTxValidationTest, sign_verify_compact) {
+    auto ctx = cbdc::transaction::compact_tx(m_valid_tx);
+    auto att0 = ctx.sign(m_secp.get(), m_priv0);
+    auto att1 = ctx.sign(m_secp.get(), m_priv1);
+    ASSERT_TRUE(ctx.verify(m_secp.get(), att0));
+    ASSERT_TRUE(ctx.verify(m_secp.get(), att1));
+
+    ASSERT_FALSE(
+        cbdc::transaction::validation::check_attestations(ctx, m_pubkeys, 2));
+
+    ctx.m_attestations.insert(att0);
+    ASSERT_FALSE(
+        cbdc::transaction::validation::check_attestations(ctx, m_pubkeys, 2));
+
+    ctx.m_attestations.insert(att1);
+    ASSERT_TRUE(
+        cbdc::transaction::validation::check_attestations(ctx, m_pubkeys, 2));
+
+    m_pubkeys.clear();
+    ASSERT_FALSE(
+        cbdc::transaction::validation::check_attestations(ctx, m_pubkeys, 2));
 }

@@ -24,6 +24,17 @@ class sentinel_2pc_test : public ::testing::Test {
         const auto coordinator_ep
             = std::make_pair(cbdc::network::localhost, m_coordinator_port);
         m_opts.m_sentinel_endpoints.push_back(sentinel_ep);
+        constexpr auto sentinel_private_key
+            = "000000000000000100000000000000000000000000000000000000000000000"
+              "0";
+        constexpr auto sentinel_public_key
+            = "eaa649f21f51bdbae7be4ae34ce6e5217a58fdce7f47f9aa7f3b58fa2120e2b"
+              "3";
+        m_opts.m_sentinel_private_keys[0]
+            = cbdc::hash_from_hex(sentinel_private_key);
+        m_opts.m_sentinel_public_keys.insert(
+            cbdc::hash_from_hex(sentinel_public_key));
+
         m_opts.m_coordinator_endpoints.resize(1);
         m_opts.m_coordinator_endpoints[0].push_back(coordinator_ep);
 
@@ -97,7 +108,7 @@ TEST_F(sentinel_2pc_test, digest_invalid_transaction_direct) {
     auto done_fut = done.get_future();
     auto res = m_ctl->execute_transaction(
         m_valid_tx,
-        [&](std::optional<cbdc::sentinel::response> resp) {
+        [&](std::optional<cbdc::sentinel::execute_response> resp) {
             ASSERT_TRUE(resp.has_value());
             ASSERT_TRUE(resp.value().m_tx_error.has_value());
             ASSERT_EQ(resp.value().m_tx_status,
@@ -141,4 +152,20 @@ TEST_F(sentinel_2pc_test, digest_valid_transaction_network) {
     ASSERT_TRUE(resp.has_value());
     ASSERT_FALSE(resp.value().m_tx_error.has_value());
     ASSERT_EQ(resp.value().m_tx_status, cbdc::sentinel::tx_status::confirmed);
+}
+
+TEST_F(sentinel_2pc_test, tx_validation_test) {
+    ASSERT_TRUE(m_ctl->init());
+    auto ctx = cbdc::transaction::compact_tx(m_valid_tx);
+    auto secp = std::unique_ptr<secp256k1_context,
+                                decltype(&secp256k1_context_destroy)>{
+        secp256k1_context_create(SECP256K1_CONTEXT_SIGN
+                                 | SECP256K1_CONTEXT_VERIFY),
+        &secp256k1_context_destroy};
+    auto res
+        = m_ctl->validate_transaction(m_valid_tx, [&](auto validation_res) {
+              ASSERT_TRUE(validation_res.has_value());
+              ASSERT_TRUE(ctx.verify(secp.get(), validation_res.value()));
+          });
+    ASSERT_TRUE(res);
 }

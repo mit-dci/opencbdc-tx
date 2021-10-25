@@ -129,4 +129,56 @@ namespace cbdc::transaction {
                 uhs_id_from_output(m_id, i, tx.m_outputs[i]));
         }
     }
+
+    auto compact_tx::sign(secp256k1_context* ctx, const privkey_t& key) const
+        -> sentinel_attestation {
+        auto payload = hash();
+        auto pubkey = pubkey_from_privkey(key, ctx);
+        secp256k1_keypair keypair{};
+        [[maybe_unused]] const auto ret
+            = secp256k1_keypair_create(ctx, &keypair, key.data());
+        assert(ret == 1);
+
+        auto sig = signature_t();
+        [[maybe_unused]] const auto sign_ret
+            = secp256k1_schnorrsig_sign(ctx,
+                                        sig.data(),
+                                        payload.data(),
+                                        &keypair,
+                                        nullptr,
+                                        nullptr);
+        assert(sign_ret == 1);
+        return {pubkey, sig};
+    }
+
+    auto compact_tx::hash() const -> hash_t {
+        // Don't include the attesations in the hash
+        auto ctx = *this;
+        ctx.m_attestations.clear();
+        auto buf = make_buffer(ctx);
+        auto sha = CSHA256();
+        sha.Write(buf.c_ptr(), buf.size());
+        auto ret = hash_t();
+        sha.Finalize(ret.data());
+        return ret;
+    }
+
+    auto compact_tx::verify(secp256k1_context* ctx,
+                            const sentinel_attestation& att) const -> bool {
+        auto payload = hash();
+        secp256k1_xonly_pubkey pubkey{};
+        if(secp256k1_xonly_pubkey_parse(ctx, &pubkey, att.first.data()) != 1) {
+            return false;
+        }
+
+        if(secp256k1_schnorrsig_verify(ctx,
+                                       att.second.data(),
+                                       payload.data(),
+                                       &pubkey)
+           != 1) {
+            return false;
+        }
+
+        return true;
+    }
 }

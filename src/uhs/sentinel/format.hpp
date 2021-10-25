@@ -9,9 +9,10 @@
 #include "interface.hpp"
 
 namespace cbdc {
-    auto operator<<(serializer& packet, const sentinel::response& r)
+    auto operator<<(serializer& packet, const sentinel::execute_response& r)
         -> serializer&;
-    auto operator>>(serializer& packet, sentinel::response& r) -> serializer&;
+    auto operator>>(serializer& packet, sentinel::execute_response& r)
+        -> serializer&;
 }
 
 #endif // OPENCBDC_TX_SRC_SENTINEL_FORMAT_H_

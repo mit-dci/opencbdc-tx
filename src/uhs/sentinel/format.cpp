@@ -9,12 +9,13 @@
 #include "util/serialization/format.hpp"
 
 namespace cbdc {
-    auto operator<<(serializer& packet, const sentinel::response& r)
+    auto operator<<(serializer& packet, const sentinel::execute_response& r)
         -> serializer& {
         return packet << r.m_tx_status << r.m_tx_error;
     }
 
-    auto operator>>(serializer& packet, sentinel::response& r) -> serializer& {
+    auto operator>>(serializer& packet, sentinel::execute_response& r)
+        -> serializer& {
         return packet >> r.m_tx_status >> r.m_tx_error;
     }
 }

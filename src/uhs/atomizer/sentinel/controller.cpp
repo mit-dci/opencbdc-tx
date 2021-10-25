@@ -20,6 +20,16 @@ namespace cbdc::sentinel {
           m_logger(std::move(logger)) {}
 
     auto controller::init() -> bool {
+        auto skey = m_opts.m_sentinel_private_keys.find(m_sentinel_id);
+        if(skey == m_opts.m_sentinel_private_keys.end()) {
+            m_logger->error("No private key specified");
+            return false;
+        }
+        m_privkey = skey->second;
+
+        auto pubkey = pubkey_from_privkey(m_privkey, m_secp.get());
+        m_logger->info("Sentinel public key:", cbdc::to_string(pubkey));
+
         m_shard_data.reserve(m_opts.m_shard_endpoints.size());
         for(size_t i{0}; i < m_opts.m_shard_endpoints.size(); i++) {
             const auto& shard = m_opts.m_shard_endpoints[i];
@@ -47,6 +57,22 @@ namespace cbdc::sentinel {
         // Shuffle the shards list to spread load between shards
         std::shuffle(m_shard_data.begin(), m_shard_data.end(), rng);
 
+        for(const auto& ep : m_opts.m_sentinel_endpoints) {
+            if(ep == m_opts.m_sentinel_endpoints[m_sentinel_id]) {
+                continue;
+            }
+            auto client = std::make_unique<sentinel::rpc::client>(
+                std::vector<network::endpoint_t>{ep},
+                m_logger);
+            if(!client->init()) {
+                m_logger->error("Failed to start sentinel client");
+                return false;
+            }
+            m_sentinel_clients.emplace_back(std::move(client));
+        }
+
+        m_dist = decltype(m_dist)(0, m_sentinel_clients.size() - 1);
+
         auto rpc_server = std::make_unique<cbdc::rpc::tcp_server<
             cbdc::rpc::blocking_server<request, response>>>(
             m_opts.m_sentinel_endpoints[m_sentinel_id]);
@@ -63,7 +89,7 @@ namespace cbdc::sentinel {
     }
 
     auto controller::execute_transaction(transaction::full_tx tx)
-        -> std::optional<cbdc::sentinel::response> {
+        -> std::optional<cbdc::sentinel::execute_response> {
         const auto res = transaction::validation::check_tx(tx);
         tx_status status{tx_status::pending};
         if(res.has_value()) {
@@ -83,30 +109,81 @@ namespace cbdc::sentinel {
             send_transaction(tx);
         }
 
-        return response{status, res};
+        return execute_response{status, res};
     }
 
     void controller::send_transaction(const transaction::full_tx& tx) {
-        const auto compact_tx = cbdc::transaction::compact_tx(tx);
-        auto ctx_pkt = std::make_shared<cbdc::buffer>();
-        auto ctx_ser = cbdc::buffer_serializer(*ctx_pkt);
-        ctx_ser << compact_tx;
+        auto compact_tx = cbdc::transaction::compact_tx(tx);
+        auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
+        compact_tx.m_attestations.insert(attestation);
+
+        gather_attestations(tx, std::move(compact_tx), {});
+    }
+
+    auto controller::validate_transaction(transaction::full_tx tx)
+        -> std::optional<validate_response> {
+        const auto res = transaction::validation::check_tx(tx);
+        if(res.has_value()) {
+            return std::nullopt;
+        }
+        auto compact_tx = cbdc::transaction::compact_tx(tx);
+        auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
+        return attestation;
+    }
+
+    void
+    controller::validate_result_handler(async_interface::validate_result v_res,
+                                        const transaction::full_tx& tx,
+                                        transaction::compact_tx ctx,
+                                        std::unordered_set<size_t> requested) {
+        if(!v_res.has_value()) {
+            m_logger->error(cbdc::to_string(ctx.m_id),
+                            "invalid according to remote sentinel");
+            return;
+        }
+        ctx.m_attestations.insert(std::move(v_res.value()));
+        gather_attestations(tx, std::move(ctx), std::move(requested));
+    }
+
+    void
+    controller::gather_attestations(const transaction::full_tx& tx,
+                                    transaction::compact_tx ctx,
+                                    std::unordered_set<size_t> requested) {
+        if(ctx.m_attestations.size() < m_opts.m_attestation_threshold) {
+            auto success = false;
+            while(!success) {
+                auto sentinel_id = m_dist(m_rand);
+                if(requested.find(sentinel_id) != requested.end()) {
+                    continue;
+                }
+                success
+                    = m_sentinel_clients[sentinel_id]->validate_transaction(
+                        tx,
+                        [=](async_interface::validate_result v_res) {
+                            auto r = requested;
+                            r.insert(sentinel_id);
+                            validate_result_handler(v_res, tx, ctx, r);
+                        });
+            }
+            return;
+        }
+
+        auto ctx_pkt = std::make_shared<cbdc::buffer>(cbdc::make_buffer(ctx));
 
         auto inputs_sent = std::unordered_set<size_t>();
         for(const auto& [range, pid] : m_shard_data) {
-            if(inputs_sent.size() == compact_tx.m_inputs.size()) {
+            if(inputs_sent.size() == ctx.m_inputs.size()) {
                 break;
             }
             if(!m_shard_network.connected(pid)) {
                 continue;
             }
             auto should_send = false;
-            for(size_t i = 0; i < compact_tx.m_inputs.size(); i++) {
+            for(size_t i = 0; i < ctx.m_inputs.size(); i++) {
                 if(inputs_sent.find(i) != inputs_sent.end()) {
                     continue;
                 }
-                if(!config::hash_in_shard_range(range,
-                                                compact_tx.m_inputs[i])) {
+                if(!config::hash_in_shard_range(range, ctx.m_inputs[i])) {
                     continue;
                 }
                 inputs_sent.insert(i);

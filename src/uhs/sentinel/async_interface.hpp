@@ -25,9 +25,13 @@ namespace cbdc::sentinel {
         async_interface(async_interface&&) = delete;
         auto operator=(async_interface&&) -> async_interface& = delete;
 
-        /// Callback function for transaction execution result.
+        /// Callback function for a sentinel response.
         using result_callback_type
             = std::function<void(std::optional<cbdc::sentinel::response>)>;
+
+        /// Callback function for transaction execution result.
+        using execute_result_callback_type = std::function<void(
+            std::optional<cbdc::sentinel::execute_response>)>;
 
         /// Validate transaction on the sentinel, forward it to the coordinator
         /// network, and return the execution result using a callback function.
@@ -35,8 +39,29 @@ namespace cbdc::sentinel {
         /// \param result_callback function to call with execution result.
         /// \return false if the implementation could not start processing the
         ///         transaction.
-        virtual auto execute_transaction(transaction::full_tx tx,
-                                         result_callback_type result_callback)
+        virtual auto
+        execute_transaction(transaction::full_tx tx,
+                            execute_result_callback_type result_callback)
+            -> bool
+            = 0;
+
+        /// Result of a validation operation. Sentinel attestation for the
+        /// given transaction or std::nullopt if the transaction was invalid.
+        using validate_result
+            = std::optional<cbdc::sentinel::validate_response>;
+        /// Callback function for providing a transaction validation result.
+        using validate_result_callback_type
+            = std::function<void(validate_result)>;
+
+        /// Statically validate the given transaction and generate a sentinel
+        /// attestation if the transaction is valid.
+        /// \param tx transaction to validate and attest to.
+        /// \param result_callback function to call with the validation result.
+        /// \return false if the implementation could not start validating the
+        ///         transaction.
+        virtual auto
+        validate_transaction(transaction::full_tx tx,
+                             validate_result_callback_type result_callback)
             -> bool
             = 0;
     };

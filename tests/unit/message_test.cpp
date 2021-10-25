@@ -381,20 +381,21 @@ TEST_F(PacketIOTest, SentinelResponseInvalidTest) {
         cbdc::transaction::validation::output_error{
             cbdc::transaction::validation::output_error_code::zero_value,
             20}};
-    auto resp
-        = cbdc::sentinel::response{cbdc::sentinel::tx_status::static_invalid,
-                                   tx_err};
+    auto resp = cbdc::sentinel::execute_response{
+        cbdc::sentinel::tx_status::static_invalid,
+        tx_err};
     m_ser << resp;
-    auto resp_deser = cbdc::sentinel::response{};
+    auto resp_deser = cbdc::sentinel::execute_response{};
     m_deser >> resp_deser;
     ASSERT_EQ(resp, resp_deser);
 }
 
 TEST_F(PacketIOTest, SentinelResponsePendingTest) {
-    auto resp = cbdc::sentinel::response{cbdc::sentinel::tx_status::pending,
-                                         std::nullopt};
+    auto resp
+        = cbdc::sentinel::execute_response{cbdc::sentinel::tx_status::pending,
+                                           std::nullopt};
     m_ser << resp;
-    auto resp_deser = cbdc::sentinel::response{};
+    auto resp_deser = cbdc::sentinel::execute_response{};
     m_deser >> resp_deser;
     ASSERT_EQ(resp, resp_deser);
 }

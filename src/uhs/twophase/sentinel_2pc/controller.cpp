@@ -25,10 +25,36 @@ namespace cbdc::sentinel_2pc {
                                                    .size())]) {}
 
     auto controller::init() -> bool {
+        auto skey = m_opts.m_sentinel_private_keys.find(m_sentinel_id);
+        if(skey == m_opts.m_sentinel_private_keys.end()) {
+            m_logger->error("No private key specified");
+            return false;
+        }
+        m_privkey = skey->second;
+
+        auto pubkey = pubkey_from_privkey(m_privkey, m_secp.get());
+        m_logger->info("Sentinel public key:", cbdc::to_string(pubkey));
+
         if(!m_coordinator_client.init()) {
             m_logger->error("Failed to start coordinator client");
             return false;
         }
+
+        for(const auto& ep : m_opts.m_sentinel_endpoints) {
+            if(ep == m_opts.m_sentinel_endpoints[m_sentinel_id]) {
+                continue;
+            }
+            auto client = std::make_unique<sentinel::rpc::client>(
+                std::vector<network::endpoint_t>{ep},
+                m_logger);
+            if(!client->init()) {
+                m_logger->error("Failed to start sentinel client");
+                return false;
+            }
+            m_sentinel_clients.emplace_back(std::move(client));
+        }
+
+        m_dist = decltype(m_dist)(0, m_sentinel_clients.size() - 1);
 
         auto rpc_server = std::make_unique<cbdc::rpc::tcp_server<
             cbdc::rpc::async_server<cbdc::sentinel::request,
@@ -46,9 +72,9 @@ namespace cbdc::sentinel_2pc {
         return true;
     }
 
-    auto controller::execute_transaction(transaction::full_tx tx,
-                                         result_callback_type result_callback)
-        -> bool {
+    auto controller::execute_transaction(
+        transaction::full_tx tx,
+        execute_result_callback_type result_callback) -> bool {
         const auto validation_err = transaction::validation::check_tx(tx);
         if(validation_err.has_value()) {
             auto tx_id = transaction::tx_id(tx);
@@ -57,39 +83,26 @@ namespace cbdc::sentinel_2pc {
                 transaction::validation::to_string(validation_err.value()),
                 ")",
                 to_string(tx_id));
-            result_callback(cbdc::sentinel::response{
+            result_callback(cbdc::sentinel::execute_response{
                 cbdc::sentinel::tx_status::static_invalid,
                 validation_err});
             return true;
         }
 
         auto compact_tx = cbdc::transaction::compact_tx(tx);
+        auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
+        compact_tx.m_attestations.insert(attestation);
 
-        m_logger->debug("Accepted", to_string(compact_tx.m_id));
-
-        auto cb =
-            [&, res_cb = std::move(result_callback)](std::optional<bool> res) {
-                result_handler(res, res_cb);
-            };
-
-        // TODO: add a "retry" error response to offload sentinels from this
-        //       infinite retry responsibility.
-        while(!m_coordinator_client.execute_transaction(compact_tx, cb)) {
-            // TODO: the network currently doesn't provide a callback for
-            //       reconnection events so we have to sleep here to
-            //       prevent a needless spin. Instead, add such a callback
-            //       or queue to the network to remove this sleep.
-            static constexpr auto retry_delay = std::chrono::milliseconds(100);
-            std::this_thread::sleep_for(retry_delay);
-        };
+        gather_attestations(tx, std::move(result_callback), compact_tx, {});
 
         return true;
     }
 
-    void controller::result_handler(std::optional<bool> res,
-                                    const result_callback_type& res_cb) {
+    void
+    controller::result_handler(std::optional<bool> res,
+                               const execute_result_callback_type& res_cb) {
         if(res.has_value()) {
-            auto resp = cbdc::sentinel::response{
+            auto resp = cbdc::sentinel::execute_response{
                 cbdc::sentinel::tx_status::confirmed,
                 std::nullopt};
             if(!res.value()) {
@@ -99,5 +112,85 @@ namespace cbdc::sentinel_2pc {
         } else {
             res_cb(std::nullopt);
         }
+    }
+
+    auto controller::validate_transaction(
+        transaction::full_tx tx,
+        validate_result_callback_type result_callback) -> bool {
+        const auto validation_err = transaction::validation::check_tx(tx);
+        if(validation_err.has_value()) {
+            result_callback(std::nullopt);
+            return true;
+        }
+        auto compact_tx = cbdc::transaction::compact_tx(tx);
+        auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
+        result_callback(std::move(attestation));
+        return true;
+    }
+
+    void controller::validate_result_handler(
+        validate_result v_res,
+        const transaction::full_tx& tx,
+        execute_result_callback_type result_callback,
+        transaction::compact_tx ctx,
+        std::unordered_set<size_t> requested) {
+        if(!v_res.has_value()) {
+            m_logger->error(to_string(ctx.m_id),
+                            "invalid according to remote sentinel");
+            result_callback(std::nullopt);
+            return;
+        }
+        ctx.m_attestations.insert(std::move(v_res.value()));
+        gather_attestations(tx,
+                            std::move(result_callback),
+                            ctx,
+                            std::move(requested));
+    }
+
+    void controller::gather_attestations(
+        const transaction::full_tx& tx,
+        execute_result_callback_type result_callback,
+        const transaction::compact_tx& ctx,
+        std::unordered_set<size_t> requested) {
+        if(ctx.m_attestations.size() < m_opts.m_attestation_threshold) {
+            auto success = false;
+            while(!success) {
+                auto sentinel_id = m_dist(m_rand);
+                if(requested.find(sentinel_id) != requested.end()) {
+                    continue;
+                }
+                success
+                    = m_sentinel_clients[sentinel_id]->validate_transaction(
+                        tx,
+                        [=](validate_result v_res) {
+                            auto r = requested;
+                            r.insert(sentinel_id);
+                            validate_result_handler(v_res,
+                                                    tx,
+                                                    result_callback,
+                                                    ctx,
+                                                    r);
+                        });
+            }
+            return;
+        }
+
+        m_logger->debug("Accepted", to_string(ctx.m_id));
+
+        auto cb =
+            [&, res_cb = std::move(result_callback)](std::optional<bool> res) {
+                result_handler(res, res_cb);
+            };
+
+        // TODO: add a "retry" error response to offload sentinels from this
+        //       infinite retry responsibility.
+        while(!m_coordinator_client.execute_transaction(ctx, cb)) {
+            // TODO: the network currently doesn't provide a callback for
+            //       reconnection events so we have to sleep here to
+            //       prevent a needless spin. Instead, add such a callback
+            //       or queue to the network to remove this sleep.
+            static constexpr auto retry_delay = std::chrono::milliseconds(100);
+            std::this_thread::sleep_for(retry_delay);
+        };
     }
 }

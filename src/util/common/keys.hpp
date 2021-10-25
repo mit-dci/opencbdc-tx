@@ -25,6 +25,8 @@ namespace cbdc {
     using pubkey_t = std::array<unsigned char, pubkey_len>;
     /// A witness commitment.
     using witness_t = std::vector<std::byte>;
+    /// A signature.
+    using signature_t = std::array<unsigned char, sig_len>;
 
     /// Generates a public key from the specified private key.
     /// \param privkey private key for which to generate the public key.

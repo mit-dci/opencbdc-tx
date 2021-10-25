@@ -658,6 +658,15 @@ namespace cbdc::coordinator {
             return false;
         }
 
+        if(!transaction::validation::check_attestations(
+               tx,
+               m_opts.m_sentinel_public_keys,
+               m_opts.m_attestation_threshold)) {
+            m_logger->warn("Received invalid compact transaction",
+                           to_string(tx.m_id));
+            return false;
+        }
+
         auto added = [&]() {
             // Wait until there's space in the current batch
             std::unique_lock<std::mutex> l(m_batch_mut);

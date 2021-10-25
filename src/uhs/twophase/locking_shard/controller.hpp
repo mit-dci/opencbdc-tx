@@ -38,6 +38,7 @@ namespace cbdc::locking_shard {
         /// Initializes the locking shard by reading the pre-seed file if
         /// applicable, initializing the raft cluster, and starting listeners
         /// on the client and status client endpoints.
+        /// Opens the audit log and starts a periodic supply auditing thread.
         /// \return false if initialization fails.
         auto init() -> bool;
 
