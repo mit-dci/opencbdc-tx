@@ -16,7 +16,7 @@ services:
     networks:
       - 2pc-network
     healthcheck:
-      test: ["CMD", "netstat -ltn | grep -c 5555"]
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 5555"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -33,7 +33,7 @@ services:
     networks:
       - 2pc-network
     healthcheck:
-      test: ["CMD", "netstat -ltn | grep -c 7777"]
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 7777"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -51,7 +51,7 @@ services:
     networks:
       - 2pc-network
     healthcheck:
-      test: ["CMD", "netstat -ltn | grep -c 6666"]
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 6666"]
       interval: 30s
       timeout: 10s
       retries: 5

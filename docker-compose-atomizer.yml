@@ -14,7 +14,7 @@ services:
     networks:
       - atomizer-network
     healthcheck:
-      test: ["CMD", "netstat -ltn | grep -c 8555"]
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 8555"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -31,7 +31,7 @@ services:
     networks:
       - atomizer-network
     healthcheck:
-      test: ["CMD", "netstat -ltn | grep -c 5555"]
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 5555"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -50,7 +50,7 @@ services:
       - atomizer-network
     restart: always
     healthcheck:
-      test: ["CMD", "netstat -ltn | grep -c 4555"]
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 4555"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -70,7 +70,7 @@ services:
       - atomizer-network
     restart: always
     healthcheck:
-      test: ["CMD", "netstat -ltn | grep -c 6555"]
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 6555"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -89,7 +89,7 @@ services:
       - atomizer-network
     restart: always
     healthcheck:
-      test: ["CMD", "netstat -ltn | grep -c 7555"]
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 7555"]
       interval: 30s
       timeout: 10s
       retries: 5
