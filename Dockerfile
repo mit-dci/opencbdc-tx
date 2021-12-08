@@ -11,6 +11,7 @@ RUN apt update && \
       cmake \
       libgtest-dev \
       libgmock-dev \
+      net-tools \
       git
 
 # Args
