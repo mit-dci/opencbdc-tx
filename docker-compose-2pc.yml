@@ -5,6 +5,7 @@ services:
   sentinel0:
     build: .
     image: opencbdc-tx
+    tty: true
     restart: always
     command: ./build/src/sentinel_2pc/sentineld-2pc 2pc-compose.cfg 0
     ports:
@@ -23,6 +24,7 @@ services:
   coordinator0:
     build: .
     image: opencbdc-tx
+    tty: true
     command: ./build/src/coordinator/coordinatord 2pc-compose.cfg 0 0
     expose:
       - "7777"
@@ -40,6 +42,7 @@ services:
   shard0:
     build: .
     image: opencbdc-tx
+    tty: true
     command: ./build/src/locking_shard/locking-shardd 2pc-compose.cfg 0 0
     expose:
       - "6666"
