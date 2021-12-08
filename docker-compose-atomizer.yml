@@ -5,7 +5,8 @@ services:
   watchtower0:
     build: .
     image: opencbdc-tx
-    command: ./build/src/watchtower/watchtowerd atomizer-compose.cfg 0 100
+    tty: true
+    command: ./build/src/watchtower/watchtowerd atomizer-compose.cfg 0
     ports:
       - 8555:8555
     expose:
@@ -21,6 +22,7 @@ services:
   atomizer0:
     build: .
     image: opencbdc-tx
+    tty: true
     command: ./build/src/atomizer/atomizer-raftd atomizer-compose.cfg 0
     expose:
       - "5555"
@@ -37,6 +39,7 @@ services:
   archiver0:
     build: .
     image: opencbdc-tx
+    tty: true
     command: ./build/src/archiver/archiverd atomizer-compose.cfg 0
     expose:
       - "4555"
@@ -55,6 +58,7 @@ services:
   shard0:
     build: .
     image: opencbdc-tx
+    tty: true
     command: ./build/src/shard/shardd atomizer-compose.cfg 0
     expose:
       - "6555"
@@ -74,6 +78,7 @@ services:
   sentinel0:
     build: .
     image: opencbdc-tx
+    tty: true
     command: ./build/src/sentinel/sentineld atomizer-compose.cfg 0
     ports:
       - 7555:7555
