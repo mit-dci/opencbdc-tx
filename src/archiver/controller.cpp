@@ -139,24 +139,27 @@ namespace cbdc::archiver {
 
     auto controller::server_handler(cbdc::network::message_t&& pkt)
         -> std::optional<cbdc::buffer> {
-        request req{};
-        auto deser = cbdc::buffer_serializer(*pkt.m_pkt);
-        deser >> req;
-
-        auto blk = get_block(req);
+        auto req = from_buffer<request>(*pkt.m_pkt);
+        if(!req.has_value()) {
+            m_logger->error("Invalid request packet");
+            return std::nullopt;
+        }
+        auto blk = get_block(req.value());
         return cbdc::make_buffer(blk);
     }
 
     auto controller::atomizer_handler(cbdc::network::message_t&& pkt)
         -> std::optional<cbdc::buffer> {
-        cbdc::atomizer::block blk;
-        auto ser = cbdc::buffer_serializer(*pkt.m_pkt);
-        ser >> blk;
+        auto blk = from_buffer<atomizer::block>(*pkt.m_pkt);
+        if(!blk.has_value()) {
+            m_logger->error("Invalid request packet");
+            return std::nullopt;
+        }
         if((m_max_samples != 0) && (m_samples >= m_max_samples)) {
             m_running = false;
             return std::nullopt;
         }
-        digest_block(blk);
+        digest_block(blk.value());
         return std::nullopt;
     }
 
@@ -201,9 +204,7 @@ namespace cbdc::archiver {
 
             m_logger->trace("Digesting block ", blk.m_height, "... ");
 
-            auto blk_bytes = cbdc::buffer();
-            auto ser = cbdc::buffer_serializer(blk_bytes);
-            ser << blk;
+            auto blk_bytes = make_buffer(blk);
             leveldb::Slice blk_slice(blk_bytes.c_str(), blk_bytes.size());
 
             const auto height_str = std::to_string(blk.m_height);
@@ -269,11 +270,10 @@ namespace cbdc::archiver {
 
         auto buf = cbdc::buffer();
         buf.append(blk_str.data(), blk_str.size());
-        auto deser = cbdc::buffer_serializer(buf);
-        auto blk = cbdc::atomizer::block();
-        deser >> blk;
-        m_logger->trace("found block", height, "-", blk.m_height);
-        return blk;
+        auto blk = from_buffer<atomizer::block>(buf);
+        assert(blk.has_value());
+        m_logger->trace("found block", height, "-", blk.value().m_height);
+        return blk.value();
     }
 
     void controller::request_block(uint64_t height) {

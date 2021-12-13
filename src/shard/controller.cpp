@@ -81,9 +81,13 @@ namespace cbdc::shard {
 
     auto controller::server_handler(cbdc::network::message_t&& pkt)
         -> std::optional<cbdc::buffer> {
-        transaction::compact_tx tx;
-        auto deser = cbdc::buffer_serializer(*pkt.m_pkt);
-        deser >> tx;
+        auto maybe_tx = from_buffer<transaction::compact_tx>(*pkt.m_pkt);
+        if(!maybe_tx.has_value()) {
+            m_logger->error("Invalid transaction packet");
+            return std::nullopt;
+        }
+
+        auto& tx = maybe_tx.value();
 
         m_logger->info("Digesting transaction", to_string(tx.m_id), "...");
 
@@ -119,9 +123,13 @@ namespace cbdc::shard {
 
     auto controller::atomizer_handler(cbdc::network::message_t&& pkt)
         -> std::optional<cbdc::buffer> {
-        cbdc::atomizer::block blk;
-        auto deser = cbdc::buffer_serializer(*pkt.m_pkt);
-        deser >> blk;
+        auto maybe_blk = from_buffer<atomizer::block>(*pkt.m_pkt);
+        if(!maybe_blk.has_value()) {
+            m_logger->error("Invalid block packet");
+            return std::nullopt;
+        }
+
+        auto& blk = maybe_blk.value();
 
         m_logger->info("Digesting block", blk.m_height, "...");
 

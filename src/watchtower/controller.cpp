@@ -93,9 +93,12 @@ auto cbdc::watchtower::controller::init() -> bool {
 
 auto cbdc::watchtower::controller::atomizer_handler(
     cbdc::network::message_t&& pkt) -> std::optional<cbdc::buffer> {
-    cbdc::atomizer::block blk;
-    auto deser = cbdc::buffer_serializer(*pkt.m_pkt);
-    deser >> blk;
+    auto maybe_blk = from_buffer<atomizer::block>(*pkt.m_pkt);
+    if(!maybe_blk.has_value()) {
+        m_logger->error("Invalid block packet");
+        return std::nullopt;
+    }
+    auto& blk = maybe_blk.value();
     m_logger->debug("Received block",
                     blk.m_height,
                     "with",
