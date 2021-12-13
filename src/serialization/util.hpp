@@ -9,6 +9,8 @@
 #include "buffer_serializer.hpp"
 #include "size_serializer.hpp"
 
+#include <memory>
+
 namespace cbdc {
     /// Calculates the serialized size in bytes of the given object when
     /// serialized using \ref serializer. \see \ref size_serializer.
@@ -36,6 +38,18 @@ namespace cbdc {
         auto ser = cbdc::buffer_serializer(pkt);
         ser << obj;
         return pkt;
+    }
+
+    /// Serialize object into std::shared_ptr<cbdc::buffer> using a
+    /// cbdc::buffer_serializer.
+    /// \tparam T type of object to serialize.
+    /// \return a shared_ptr to a serialized buffer of the object.
+    template<typename T>
+    auto make_shared_buffer(const T& obj) -> std::shared_ptr<cbdc::buffer> {
+        auto buf = std::make_shared<cbdc::buffer>();
+        auto ser = cbdc::buffer_serializer(*buf);
+        ser << obj;
+        return buf;
     }
 
     /// Deserialize object of given type from a cbdc::buffer.
