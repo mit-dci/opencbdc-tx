@@ -35,10 +35,12 @@ namespace cbdc::archiver {
             return std::nullopt;
         }
 
-        auto resp = response();
-        auto deser = cbdc::buffer_serializer(resp_pkt);
-        deser >> resp;
+        auto resp = cbdc::from_buffer<response>(resp_pkt);
+        if(!resp.has_value()) {
+            m_logger->error("Invalid response packet");
+            return std::nullopt;
+        }
 
-        return resp;
+        return resp.value();
     }
 }

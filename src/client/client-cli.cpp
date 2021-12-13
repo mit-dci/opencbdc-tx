@@ -180,10 +180,12 @@ auto importinput_command(cbdc::client& client,
         return false;
     }
 
-    auto deser = cbdc::buffer_serializer(buffer.value());
-    auto in = cbdc::transaction::input();
-    deser >> in;
-    client.import_send_input(in);
+    auto in = cbdc::from_buffer<cbdc::transaction::input>(buffer.value());
+    if(!in.has_value()) {
+        std::cout << "Invalid input" << std::endl;
+        return false;
+    }
+    client.import_send_input(in.value());
     return true;
 }
 

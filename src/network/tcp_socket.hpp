@@ -8,6 +8,7 @@
 
 #include "common/buffer.hpp"
 #include "serialization/buffer_serializer.hpp"
+#include "serialization/util.hpp"
 #include "socket.hpp"
 
 #include <atomic>
@@ -55,9 +56,7 @@ namespace cbdc::network {
         /// \return true if the packet was sent successfully.
         template<typename T>
         [[nodiscard]] auto send(const T& data) const -> bool {
-            cbdc::buffer pkt;
-            auto ser = cbdc::buffer_serializer(pkt);
-            ser << data;
+            auto pkt = make_buffer(data);
             return send(pkt);
         }
 
