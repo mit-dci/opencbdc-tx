@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef OPENCBDC_TX_SRC_ATOMIZER_MESSAGES_H_
-#define OPENCBDC_TX_SRC_ATOMIZER_MESSAGES_H_
+#ifndef OPENCBDC_TX_SRC_ATOMIZER_FORMAT_H_
+#define OPENCBDC_TX_SRC_ATOMIZER_FORMAT_H_
 
 #include "atomizer_raft.hpp"
 #include "state_machine.hpp"
@@ -38,4 +38,4 @@ namespace cbdc {
         -> serializer&;
 }
 
-#endif // OPENCBDC_TX_SRC_ATOMIZER_MESSAGES_H_
+#endif // OPENCBDC_TX_SRC_ATOMIZER_FORMAT_H_

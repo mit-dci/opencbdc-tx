@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "archiver/controller.hpp"
-#include "atomizer/messages.hpp"
+#include "atomizer/format.hpp"
 #include "common/logging.hpp"
 #include "serialization/format.hpp"
 

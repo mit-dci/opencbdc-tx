@@ -3,7 +3,7 @@ project(atomizer)
 add_library(atomizer atomizer.cpp
                      block.cpp
                      state_machine.cpp
-                     messages.cpp)
+                     format.cpp)
 
 add_library(atomizer_raft atomizer_raft.cpp
                           controller.cpp

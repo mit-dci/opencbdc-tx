@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "messages.hpp"
+#include "format.hpp"
 
 #include "atomizer_raft.hpp"
 #include "serialization/format.hpp"

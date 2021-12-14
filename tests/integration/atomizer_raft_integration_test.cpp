@@ -5,7 +5,7 @@
 
 #include "atomizer/atomizer_raft.hpp"
 #include "atomizer/controller.hpp"
-#include "atomizer/messages.hpp"
+#include "atomizer/format.hpp"
 #include "mock_system.hpp"
 #include "util.hpp"
 #include "watchtower/tx_error_messages.hpp"

@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "atomizer/controller.hpp"
-#include "atomizer/messages.hpp"
+#include "atomizer/format.hpp"
 #include "common/hashmap.hpp"
 #include "mock_system.hpp"
 #include "util.hpp"

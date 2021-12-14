@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "atomizer/messages.hpp"
+#include "atomizer/format.hpp"
 #include "mock_system.hpp"
 #include "util.hpp"
 #include "watchtower/client.hpp"

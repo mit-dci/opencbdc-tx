@@ -5,7 +5,7 @@
 
 #include "client.hpp"
 
-#include "atomizer/messages.hpp"
+#include "atomizer/format.hpp"
 #include "serialization/format.hpp"
 
 #include <utility>
