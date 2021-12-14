@@ -112,9 +112,9 @@ namespace cbdc::shard {
                 m_logger->info("error for Tx:",
                                to_string(err.tx_id()),
                                err.to_string());
-                auto buf = std::make_shared<cbdc::buffer>();
-                auto ser = cbdc::buffer_serializer(*buf);
-                ser << std::vector<cbdc::watchtower::tx_error>{err};
+                // TODO: batch errors into a single RPC
+                auto data = std::vector<cbdc::watchtower::tx_error>{err};
+                auto buf = make_shared_buffer(data);
                 m_watchtower_network.broadcast(buf);
             }};
         std::visit(res_handler, res);
