@@ -50,7 +50,7 @@ namespace cbdc::shard {
         /// \param tx the transaction to digest.
         /// \return result message to forward.
         auto digest_transaction(transaction::compact_tx tx)
-            -> std::variant<atomizer::tx_notify_message, watchtower::tx_error>;
+            -> std::variant<atomizer::tx_notify_request, watchtower::tx_error>;
 
         /// Updates records to reflect changes from a new, contiguous
         /// transaction block from the atomizer. Deletes spent UTXOs and adds

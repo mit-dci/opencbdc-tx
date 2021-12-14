@@ -89,7 +89,7 @@ namespace cbdc {
 
     auto atomizer_client::send_mint_tx(const transaction::full_tx& mint_tx)
         -> bool {
-        atomizer::tx_notify_message msg;
+        atomizer::tx_notify_request msg;
         msg.m_tx = transaction::compact_tx(mint_tx);
         msg.m_block_height = m_wc.request_best_block_height()->height();
         return m_atomizer_network.send_to_one(msg);

@@ -107,7 +107,7 @@ namespace cbdc::atomizer {
         switch(comm) {
             case cbdc::atomizer::state_machine::command::tx_notify: {
                 deser.reset();
-                auto notif = tx_notify_message();
+                auto notif = tx_notify_request();
                 deser >> notif;
                 m_raft_node.tx_notify(std::move(notif));
                 break;

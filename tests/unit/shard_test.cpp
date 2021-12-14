@@ -64,10 +64,10 @@ TEST_F(shard_test, digest_tx_valid) {
 
     auto res = m_shard.digest_transaction(ctx);
     ASSERT_TRUE(
-        std::holds_alternative<cbdc::atomizer::tx_notify_message>(res));
-    auto got = std::get<cbdc::atomizer::tx_notify_message>(res);
+        std::holds_alternative<cbdc::atomizer::tx_notify_request>(res));
+    auto got = std::get<cbdc::atomizer::tx_notify_request>(res);
 
-    cbdc::atomizer::tx_notify_message want{};
+    cbdc::atomizer::tx_notify_request want{};
     want.m_tx = ctx;
     want.m_attestations = {1, 2};
     want.m_block_height = 1;
@@ -124,10 +124,10 @@ TEST_F(shard_test, digest_block_valid) {
 
     auto valid_res = m_shard.digest_transaction(valid_ctx);
     ASSERT_TRUE(
-        std::holds_alternative<cbdc::atomizer::tx_notify_message>(valid_res));
-    auto valid_got = std::get<cbdc::atomizer::tx_notify_message>(valid_res);
+        std::holds_alternative<cbdc::atomizer::tx_notify_request>(valid_res));
+    auto valid_got = std::get<cbdc::atomizer::tx_notify_request>(valid_res);
 
-    cbdc::atomizer::tx_notify_message valid_want{};
+    cbdc::atomizer::tx_notify_request valid_want{};
     valid_want.m_tx = valid_ctx;
     valid_want.m_attestations = {1, 3};
     valid_want.m_block_height = 2;

@@ -10,23 +10,6 @@
 #include "serialization/util.hpp"
 
 namespace cbdc::atomizer {
-    auto tx_notify_message::operator==(const tx_notify_message& rhs) const
-        -> bool {
-        return (rhs.m_tx == m_tx) && (rhs.m_attestations == m_attestations)
-            && (rhs.m_block_height == m_block_height);
-    }
-
-    auto aggregate_tx_notify::operator==(const aggregate_tx_notify& rhs) const
-        -> bool {
-        return (rhs.m_oldest_attestation == m_oldest_attestation)
-            && (rhs.m_tx == m_tx);
-    }
-
-    auto aggregate_tx_notify_set::operator==(
-        const aggregate_tx_notify_set& rhs) const -> bool {
-        return (rhs.m_cmd == m_cmd) && (rhs.m_agg_txs == m_agg_txs);
-    }
-
     atomizer_raft::atomizer_raft(uint32_t atomizer_id,
                                  const network::endpoint_t& raft_endpoint,
                                  size_t stxo_cache_depth,
@@ -84,7 +67,7 @@ namespace cbdc::atomizer {
         return get_sm()->tx_notify_count();
     }
 
-    void atomizer_raft::tx_notify(tx_notify_message&& notif) {
+    void atomizer_raft::tx_notify(tx_notify_request&& notif) {
         auto it = m_txs.find(notif.m_tx);
         if(it != m_txs.end()) {
             for(auto n : notif.m_attestations) {

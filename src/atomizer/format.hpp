@@ -27,9 +27,9 @@ namespace cbdc {
     auto operator>>(serializer& packet, atomizer::aggregate_tx_notify_set& msg)
         -> serializer&;
 
-    auto operator<<(serializer& packet, const atomizer::tx_notify_message& msg)
+    auto operator<<(serializer& packet, const atomizer::tx_notify_request& msg)
         -> serializer&;
-    auto operator>>(serializer& packet, atomizer::tx_notify_message& msg)
+    auto operator>>(serializer& packet, atomizer::tx_notify_request& msg)
         -> serializer&;
 
     auto operator<<(serializer& packet, const cbdc::atomizer::block& blk)

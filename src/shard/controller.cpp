@@ -94,7 +94,7 @@ namespace cbdc::shard {
         auto res = m_shard.digest_transaction(std::move(tx));
 
         auto res_handler = overloaded{
-            [&](const atomizer::tx_notify_message& msg) {
+            [&](const atomizer::tx_notify_request& msg) {
                 m_logger->info("Digested transaction",
                                to_string(msg.m_tx.m_id));
 
