@@ -132,7 +132,7 @@ TEST_F(replicated_atomizer_integration_tests,
        can_send_message_from_clustered_atomizer) {
     auto tx = cbdc::test::simple_tx({'a'}, {}, {{'c'}});
     ASSERT_TRUE(
-        m_cluster.send_to_one(cbdc::atomizer::tx_notify_message{tx, {}, 0}));
+        m_cluster.send_to_one(cbdc::atomizer::tx_notify_request{tx, {}, 0}));
 
     expect_tx(tx, std::chrono::seconds(5));
 }

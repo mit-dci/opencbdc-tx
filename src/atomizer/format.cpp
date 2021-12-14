@@ -48,14 +48,14 @@ namespace cbdc {
     }
 
     auto operator<<(serializer& packet,
-                    const cbdc::atomizer::tx_notify_message& msg)
+                    const cbdc::atomizer::tx_notify_request& msg)
         -> serializer& {
         packet << atomizer::state_machine::command::tx_notify
                << msg.m_block_height << msg.m_tx << msg.m_attestations;
         return packet;
     }
 
-    auto operator>>(serializer& packet, cbdc::atomizer::tx_notify_message& msg)
+    auto operator>>(serializer& packet, cbdc::atomizer::tx_notify_request& msg)
         -> serializer& {
         atomizer::state_machine::command command_byte{};
         packet >> command_byte >> msg.m_block_height >> msg.m_tx

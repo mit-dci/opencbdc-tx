@@ -24,8 +24,8 @@
 
 auto send_tx_to_atomizer(const cbdc::transaction::compact_tx& tx,
                          const uint32_t height)
-    -> cbdc::atomizer::tx_notify_message {
-    cbdc::atomizer::tx_notify_message msg;
+    -> cbdc::atomizer::tx_notify_request {
+    cbdc::atomizer::tx_notify_request msg;
     msg.m_tx = tx;
     msg.m_block_height = height;
     for(uint32_t i = 0; i < msg.m_tx.m_inputs.size(); i++) {
@@ -308,7 +308,7 @@ auto main(int argc, char** argv) -> int {
         const auto& mint_tx = wal.mint_new_coins(cfg.m_initial_mint_count,
                                                  cfg.m_initial_mint_value);
 
-        cbdc::atomizer::tx_notify_message msg;
+        cbdc::atomizer::tx_notify_request msg;
 
         msg.m_tx = cbdc::transaction::compact_tx(mint_tx);
         msg.m_block_height

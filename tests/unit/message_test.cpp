@@ -92,8 +92,8 @@ TEST_F(PacketIOTest, transaction) {
     ASSERT_EQ(tx, result_tx);
 }
 
-TEST_F(PacketIOTest, ctx_notify_message) {
-    cbdc::atomizer::tx_notify_message tx_notify;
+TEST_F(PacketIOTest, ctx_notify_request) {
+    cbdc::atomizer::tx_notify_request tx_notify;
     tx_notify.m_attestations.insert({'e', 'o', 'm', 'e'});
     tx_notify.m_block_height = 33;
     tx_notify.m_tx.m_inputs.push_back({'a', 'x', 'o', 'p'});
@@ -103,7 +103,7 @@ TEST_F(PacketIOTest, ctx_notify_message) {
 
     m_ser << tx_notify;
 
-    cbdc::atomizer::tx_notify_message result_tx_notify;
+    cbdc::atomizer::tx_notify_request result_tx_notify;
     m_deser >> result_tx_notify;
 
     ASSERT_EQ(tx_notify, result_tx_notify);

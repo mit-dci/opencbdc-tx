@@ -103,7 +103,7 @@ namespace cbdc::shard {
     }
 
     auto shard::digest_transaction(transaction::compact_tx tx)
-        -> std::variant<atomizer::tx_notify_message,
+        -> std::variant<atomizer::tx_notify_request,
                         cbdc::watchtower::tx_error> {
         std::shared_ptr<const leveldb::Snapshot> snp{};
         uint64_t snp_height{};
@@ -158,7 +158,7 @@ namespace cbdc::shard {
                 cbdc::watchtower::tx_error_inputs_dne{dne_inputs}};
         }
 
-        atomizer::tx_notify_message msg;
+        atomizer::tx_notify_request msg;
         msg.m_attestations = std::move(attestations);
         msg.m_tx = std::move(tx);
         msg.m_block_height = snp_height;
