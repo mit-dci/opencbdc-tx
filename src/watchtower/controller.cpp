@@ -128,10 +128,13 @@ auto cbdc::watchtower::controller::atomizer_handler(
 
 auto cbdc::watchtower::controller::internal_server_handler(
     cbdc::network::message_t&& pkt) -> std::optional<cbdc::buffer> {
-    auto deser = cbdc::buffer_serializer(*pkt.m_pkt);
-    std::vector<cbdc::watchtower::tx_error> errs;
-    deser >> errs;
-    m_watchtower.add_errors(std::move(errs));
+    auto maybe_errs
+        = from_buffer<std::vector<cbdc::watchtower::tx_error>>(*pkt.m_pkt);
+    if(!maybe_errs.has_value()) {
+        m_logger->error("Invalid internal request packet");
+        return std::nullopt;
+    }
+    m_watchtower.add_errors(std::move(maybe_errs.value()));
     return std::nullopt;
 }
 
@@ -139,22 +142,22 @@ auto cbdc::watchtower::controller::external_server_handler(
     cbdc::network::message_t&& pkt) -> std::optional<cbdc::buffer> {
     auto deser = cbdc::buffer_serializer(*pkt.m_pkt);
     auto req = request(deser);
-    cbdc::buffer msg;
-    auto ser = cbdc::buffer_serializer(msg);
     auto res_handler = overloaded{
-        [&](const cbdc::watchtower::status_update_request& su_req) {
+        [&](const cbdc::watchtower::status_update_request& su_req)
+            -> cbdc::buffer {
             auto res = m_watchtower.handle_status_update_request(su_req);
-            ser << *res;
             m_logger->info("Received status_update_request with",
                            su_req.uhs_ids().size(),
                            "UHS IDs");
+            return make_buffer(*res);
         },
-        [&](const cbdc::watchtower::best_block_height_request& bbh_req) {
+        [&](const cbdc::watchtower::best_block_height_request& bbh_req)
+            -> cbdc::buffer {
+            auto res = m_watchtower.handle_best_block_height_request(bbh_req);
             m_logger->info("Received request_best_block_height from peer",
                            pkt.m_peer_id);
-            auto res = m_watchtower.handle_best_block_height_request(bbh_req);
-            ser << *res;
+            return make_buffer(*res);
         }};
-    std::visit(res_handler, req.payload());
+    auto msg = std::visit(res_handler, req.payload());
     return msg;
 }

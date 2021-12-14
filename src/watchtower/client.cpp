@@ -43,9 +43,8 @@ namespace cbdc::watchtower {
 
     auto blocking_client::request_best_block_height()
         -> std::shared_ptr<best_block_height_response> {
-        auto pkt = std::make_shared<cbdc::buffer>();
-        auto ser = cbdc::buffer_serializer(*pkt);
-        ser << request{cbdc::watchtower::best_block_height_request{}};
+        auto data = request{cbdc::watchtower::best_block_height_request{}};
+        auto pkt = make_shared_buffer(data);
         m_network.broadcast(pkt);
 
         std::shared_ptr<response> res;
@@ -59,10 +58,8 @@ namespace cbdc::watchtower {
     auto
     blocking_client::request_status_update(const status_update_request& req)
         -> std::shared_ptr<status_request_check_success> {
-        // TODO: simplify after operators move into cbdc namespace.
-        auto pkt = std::make_shared<cbdc::buffer>();
-        auto ser = cbdc::buffer_serializer(*pkt);
-        ser << request{req};
+        auto data = request{req};
+        auto pkt = make_shared_buffer(data);
         m_network.broadcast(pkt);
 
         std::shared_ptr<response> res;
@@ -131,18 +128,15 @@ namespace cbdc::watchtower {
     }
 
     void async_client::request_best_block_height() {
-        // TODO: simplify after operators move into cbdc namespace.
-        auto pkt = std::make_shared<cbdc::buffer>();
-        auto ser = cbdc::buffer_serializer(*pkt);
-        ser << request{cbdc::watchtower::best_block_height_request{}};
+        auto data = request{cbdc::watchtower::best_block_height_request{}};
+        auto pkt = make_shared_buffer(data);
         m_network.broadcast(pkt);
     }
 
     void
     async_client::request_status_update(const status_update_request& req) {
-        auto pkt = std::make_shared<cbdc::buffer>();
-        auto ser = cbdc::buffer_serializer(*pkt);
-        ser << request{req};
+        auto data = request{req};
+        auto pkt = make_shared_buffer(data);
         m_network.broadcast(pkt);
     }
 

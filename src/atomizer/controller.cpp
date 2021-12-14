@@ -203,9 +203,7 @@ namespace cbdc::atomizer {
         std::vector<cbdc::watchtower::tx_error> errs;
         nd >> blk >> errs;
 
-        auto blk_pkt = std::make_shared<cbdc::buffer>();
-        auto bs = cbdc::buffer_serializer(*blk_pkt);
-        bs << blk;
+        auto blk_pkt = make_shared_buffer(blk);
 
         m_atomizer_network.broadcast(blk_pkt);
 
@@ -219,9 +217,7 @@ namespace cbdc::atomizer {
                        m_raft_node.tx_notify_count());
 
         if(!errs.empty()) {
-            auto buf = std::make_shared<cbdc::buffer>();
-            auto ser = cbdc::buffer_serializer(*buf);
-            ser << errs;
+            auto buf = make_shared_buffer(errs);
             m_watchtower_network.broadcast(buf);
         }
     }

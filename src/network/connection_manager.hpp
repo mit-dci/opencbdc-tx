@@ -83,9 +83,7 @@ namespace cbdc::network {
         /// \param data data to serialize and send.
         template<typename Ta>
         void broadcast(const Ta& data) {
-            auto pkt = std::make_shared<buffer>();
-            auto ser = buffer_serializer(*pkt);
-            ser << data;
+            auto pkt = make_shared_buffer(data);
             return broadcast(pkt);
         }
 
@@ -160,9 +158,7 @@ namespace cbdc::network {
         /// \param peer_id ID of the peer to whom to send data.
         template<typename Ta>
         void send(const Ta& data, peer_id_t peer_id) {
-            auto pkt = std::make_shared<buffer>();
-            auto ser = buffer_serializer(*pkt);
-            ser << data;
+            auto pkt = make_shared_buffer(data);
             return send(pkt, peer_id);
         }
 
@@ -187,9 +183,7 @@ namespace cbdc::network {
         /// \return flag to indicate whether the packet was sent to a peer.
         template<typename T>
         [[nodiscard]] auto send_to_one(const T& data) -> bool {
-            auto pkt = std::make_shared<buffer>();
-            auto ser = buffer_serializer(*pkt);
-            ser << data;
+            auto pkt = make_shared_buffer(data);
             return send_to_one(pkt);
         }
 
