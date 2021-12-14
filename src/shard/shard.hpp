@@ -12,7 +12,7 @@
 
 #include "atomizer/atomizer_raft.hpp"
 #include "atomizer/block.hpp"
-#include "atomizer/messages.hpp"
+#include "atomizer/format.hpp"
 #include "common/config.hpp"
 #include "common/logging.hpp"
 #include "network/connection_manager.hpp"

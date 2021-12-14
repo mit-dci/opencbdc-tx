@@ -5,7 +5,7 @@
 
 #include "atomizer_raft.hpp"
 
-#include "messages.hpp"
+#include "format.hpp"
 #include "raft/serialization.hpp"
 #include "serialization/util.hpp"
 

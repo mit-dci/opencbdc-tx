@@ -5,7 +5,7 @@
 
 #include "controller.hpp"
 
-#include "atomizer/messages.hpp"
+#include "atomizer/format.hpp"
 #include "serialization/buffer_serializer.hpp"
 #include "status_update.hpp"
 

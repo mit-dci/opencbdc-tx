@@ -6,7 +6,7 @@
 #include "controller.hpp"
 
 #include "atomizer_raft.hpp"
-#include "messages.hpp"
+#include "format.hpp"
 #include "raft/serialization.hpp"
 #include "serialization/format.hpp"
 

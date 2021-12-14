@@ -5,7 +5,7 @@
 
 #include "atomizer_client.hpp"
 
-#include "atomizer/messages.hpp"
+#include "atomizer/format.hpp"
 #include "watchtower/watchtower.hpp"
 
 namespace cbdc {
