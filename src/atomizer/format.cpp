@@ -50,41 +50,85 @@ namespace cbdc {
     auto operator<<(serializer& packet,
                     const cbdc::atomizer::tx_notify_request& msg)
         -> serializer& {
-        packet << atomizer::state_machine::command::tx_notify
-               << msg.m_block_height << msg.m_tx << msg.m_attestations;
+        packet << msg.m_block_height << msg.m_tx << msg.m_attestations;
         return packet;
     }
 
     auto operator>>(serializer& packet, cbdc::atomizer::tx_notify_request& msg)
         -> serializer& {
-        atomizer::state_machine::command command_byte{};
-        packet >> command_byte >> msg.m_block_height >> msg.m_tx
-            >> msg.m_attestations;
+        packet >> msg.m_block_height >> msg.m_tx >> msg.m_attestations;
         return packet;
     }
 
     auto operator<<(serializer& packet,
-                    const cbdc::atomizer::aggregate_tx_notify& msg)
+                    const cbdc::atomizer::aggregate_tx_notification& msg)
         -> serializer& {
         packet << msg.m_oldest_attestation << msg.m_tx;
         return packet;
     }
 
     auto operator>>(serializer& packet,
-                    cbdc::atomizer::aggregate_tx_notify& msg) -> serializer& {
+                    cbdc::atomizer::aggregate_tx_notification& msg)
+        -> serializer& {
         packet >> msg.m_oldest_attestation >> msg.m_tx;
         return packet;
     }
 
     auto operator<<(serializer& packet,
-                    const cbdc::atomizer::aggregate_tx_notify_set& msg)
+                    const cbdc::atomizer::aggregate_tx_notify_request& msg)
         -> serializer& {
-        return packet << msg.m_cmd << msg.m_agg_txs;
+        return packet << msg.m_agg_txs;
     }
 
     auto operator>>(serializer& packet,
-                    cbdc::atomizer::aggregate_tx_notify_set& msg)
+                    cbdc::atomizer::aggregate_tx_notify_request& msg)
         -> serializer& {
-        return packet >> msg.m_cmd >> msg.m_agg_txs;
+        return packet >> msg.m_agg_txs;
+    }
+
+    auto operator<<(serializer& ser, const atomizer::prune_request& r)
+        -> serializer& {
+        return ser << r.m_block_height;
+    }
+    auto operator>>(serializer& deser, atomizer::prune_request& r)
+        -> serializer& {
+        return deser >> r.m_block_height;
+    }
+
+    auto operator<<(serializer& ser,
+                    const atomizer::make_block_request& /* r */)
+        -> serializer& {
+        return ser;
+    }
+    auto operator>>(serializer& deser, atomizer::make_block_request& /* r */)
+        -> serializer& {
+        return deser;
+    }
+
+    auto operator<<(serializer& ser, const atomizer::get_block_request& r)
+        -> serializer& {
+        return ser << r.m_block_height;
+    }
+    auto operator>>(serializer& deser, atomizer::get_block_request& r)
+        -> serializer& {
+        return deser >> r.m_block_height;
+    }
+
+    auto operator<<(serializer& ser, const atomizer::make_block_response& r)
+        -> serializer& {
+        return ser << r.m_blk << r.m_errs;
+    }
+    auto operator>>(serializer& deser, atomizer::make_block_response& r)
+        -> serializer& {
+        return deser >> r.m_blk >> r.m_errs;
+    }
+
+    auto operator<<(serializer& ser, const atomizer::get_block_response& r)
+        -> serializer& {
+        return ser << r.m_blk;
+    }
+    auto operator>>(serializer& deser, atomizer::get_block_response& r)
+        -> serializer& {
+        return deser >> r.m_blk;
     }
 }

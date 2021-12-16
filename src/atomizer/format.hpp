@@ -17,15 +17,16 @@ namespace cbdc {
         -> serializer&;
 
     auto operator<<(serializer& packet,
-                    const atomizer::aggregate_tx_notify& msg) -> serializer&;
-    auto operator>>(serializer& packet, atomizer::aggregate_tx_notify& msg)
+                    const atomizer::aggregate_tx_notification& msg)
         -> serializer&;
+    auto operator>>(serializer& packet,
+                    atomizer::aggregate_tx_notification& msg) -> serializer&;
 
     auto operator<<(serializer& packet,
-                    const atomizer::aggregate_tx_notify_set& msg)
+                    const atomizer::aggregate_tx_notify_request& msg)
         -> serializer&;
-    auto operator>>(serializer& packet, atomizer::aggregate_tx_notify_set& msg)
-        -> serializer&;
+    auto operator>>(serializer& packet,
+                    atomizer::aggregate_tx_notify_request& msg) -> serializer&;
 
     auto operator<<(serializer& packet, const atomizer::tx_notify_request& msg)
         -> serializer&;
@@ -35,6 +36,31 @@ namespace cbdc {
     auto operator<<(serializer& packet, const cbdc::atomizer::block& blk)
         -> serializer&;
     auto operator>>(serializer& packet, cbdc::atomizer::block& blk)
+        -> serializer&;
+
+    auto operator<<(serializer& ser, const atomizer::prune_request& r)
+        -> serializer&;
+    auto operator>>(serializer& deser, atomizer::prune_request& r)
+        -> serializer&;
+
+    auto operator<<(serializer& ser, const atomizer::make_block_request& r)
+        -> serializer&;
+    auto operator>>(serializer& deser, atomizer::make_block_request& r)
+        -> serializer&;
+
+    auto operator<<(serializer& ser, const atomizer::get_block_request& r)
+        -> serializer&;
+    auto operator>>(serializer& deser, atomizer::get_block_request& r)
+        -> serializer&;
+
+    auto operator<<(serializer& ser, const atomizer::make_block_response& r)
+        -> serializer&;
+    auto operator>>(serializer& deser, atomizer::make_block_response& r)
+        -> serializer&;
+
+    auto operator<<(serializer& ser, const atomizer::get_block_response& r)
+        -> serializer&;
+    auto operator>>(serializer& deser, atomizer::get_block_response& r)
         -> serializer&;
 }
 

@@ -71,10 +71,10 @@ TEST_F(replicated_shard_integration_tests,
 
     auto spend_tx = cbdc::test::simple_tx({'d'}, {{'c'}}, {{'e'}});
 
-    std::vector<std::future<cbdc::atomizer::tx_notify_request>> res;
+    std::vector<std::future<cbdc::atomizer::request>> res;
     res.reserve(m_shard_count);
     for(auto i = 0ULL; i < m_shard_count; ++i) {
-        res.push_back(m_sys->expect<cbdc::atomizer::tx_notify_request>(
+        res.push_back(m_sys->expect<cbdc::atomizer::request>(
             cbdc::test::mock_system_module::atomizer));
     }
 
@@ -84,6 +84,9 @@ TEST_F(replicated_shard_integration_tests,
         auto status = fut.wait_for(std::chrono::seconds(1));
         ASSERT_EQ(status, std::future_status::ready);
         auto msg = fut.get();
-        ASSERT_EQ(msg.m_tx, spend_tx);
+        ASSERT_TRUE(
+            std::holds_alternative<cbdc::atomizer::tx_notify_request>(msg));
+        auto req = std::get<cbdc::atomizer::tx_notify_request>(msg);
+        ASSERT_EQ(req.m_tx, spend_tx);
     }
 }

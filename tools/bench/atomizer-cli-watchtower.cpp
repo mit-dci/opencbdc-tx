@@ -331,7 +331,7 @@ auto main(int argc, char** argv) -> int {
                 log->error("Failed to connect to watchtower.");
                 return -1;
             }
-            if(atomizer_network.send_to_one(msg)) {
+            if(atomizer_network.send_to_one(cbdc::atomizer::request{msg})) {
                 log->info("Sent mint TX to atomizer. ID:",
                           cbdc::to_string(cbdc::transaction::tx_id(mint_tx)),
                           "h:",

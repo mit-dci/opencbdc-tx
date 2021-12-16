@@ -12,14 +12,14 @@ namespace cbdc::atomizer {
             && (rhs.m_block_height == m_block_height);
     }
 
-    auto aggregate_tx_notify::operator==(const aggregate_tx_notify& rhs) const
-        -> bool {
+    auto aggregate_tx_notification::operator==(
+        const aggregate_tx_notification& rhs) const -> bool {
         return (rhs.m_oldest_attestation == m_oldest_attestation)
             && (rhs.m_tx == m_tx);
     }
 
-    auto aggregate_tx_notify_set::operator==(
-        const aggregate_tx_notify_set& rhs) const -> bool {
-        return (rhs.m_cmd == m_cmd) && (rhs.m_agg_txs == m_agg_txs);
+    auto aggregate_tx_notify_request::operator==(
+        const aggregate_tx_notify_request& rhs) const -> bool {
+        return rhs.m_agg_txs == m_agg_txs;
     }
 }

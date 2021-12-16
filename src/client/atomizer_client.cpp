@@ -92,6 +92,6 @@ namespace cbdc {
         atomizer::tx_notify_request msg;
         msg.m_tx = transaction::compact_tx(mint_tx);
         msg.m_block_height = m_wc.request_best_block_height()->height();
-        return m_atomizer_network.send_to_one(msg);
+        return m_atomizer_network.send_to_one(atomizer::request{msg});
     }
 }

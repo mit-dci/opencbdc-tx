@@ -9,6 +9,7 @@
 #include "atomizer_raft.hpp"
 #include "format.hpp"
 #include "raft/serialization.hpp"
+#include "raft/util.hpp"
 #include "serialization/format.hpp"
 #include "serialization/istream_serializer.hpp"
 #include "serialization/ostream_serializer.hpp"
@@ -40,96 +41,62 @@ namespace cbdc::atomizer {
 
     auto state_machine::commit(nuraft::ulong log_idx, nuraft::buffer& data)
         -> nuraft::ptr<nuraft::buffer> {
-        auto ds = cbdc::nuraft_serializer(data);
-
-        uint8_t com{};
-        ds >> com;
-        const auto action = static_cast<command>(com);
-
         m_last_committed_idx = log_idx;
+        auto req = from_buffer<request>(data);
+        assert(req.has_value());
 
-        switch(action) {
-            case command::tx_notify: {
-                std::vector<cbdc::watchtower::tx_error> errs;
-                auto atns = std::vector<aggregate_tx_notify>();
-                ds >> atns;
-                for(auto& msg : atns) {
-                    auto err
-                        = m_atomizer->insert_complete(msg.m_oldest_attestation,
-                                                      std::move(msg.m_tx));
+        auto resp = std::visit(
+            overloaded{
+                [&](aggregate_tx_notify_request& r)
+                    -> std::optional<response> {
+                    auto errs = errors();
+                    for(auto&& msg : r.m_agg_txs) {
+                        auto err = m_atomizer->insert_complete(
+                            msg.m_oldest_attestation,
+                            std::move(msg.m_tx));
 
-                    if(err.has_value()) {
-                        errs.push_back(*err);
+                        if(err.has_value()) {
+                            errs.push_back(*err);
+                        }
+                        m_tx_notify_count++;
                     }
-                    m_tx_notify_count++;
-                }
 
-                if(!errs.empty()) {
-                    auto ret
-                        = nuraft::buffer::alloc(cbdc::serialized_size(errs));
-                    auto es = cbdc::nuraft_serializer(*ret);
-                    es << errs;
-
-                    return ret;
-                }
-
-                return nullptr;
-            }
-
-            case command::make_block: {
-                auto [blk, errs] = m_atomizer->make_block();
-
-                // TODO: convert message to a struct
-                auto sz = cbdc::size_serializer();
-                sz << blk << errs;
-
-                auto ret = nuraft::buffer::alloc(sz.size());
-                auto bs = cbdc::nuraft_serializer(*ret);
-                bs << blk << errs;
-
-                assert(bs.end_of_buffer());
-
-                m_blocks->emplace(blk.m_height, std::move(blk));
-
-                return ret;
-            }
-
-            case command::get_block: {
-                uint64_t height{};
-                ds >> height;
-
-                auto it = m_blocks->find(height);
-                if(it != m_blocks->end()) {
-                    auto ret = nuraft::buffer::alloc(
-                        cbdc::serialized_size(it->second));
-                    auto bs = cbdc::nuraft_serializer(*ret);
-                    bs << it->second;
-
-                    return ret;
-                }
-
-                return nullptr;
-            }
-
-            case command::prune: {
-                uint64_t height{};
-                ds >> height;
-
-                for(auto it = m_blocks->begin(); it != m_blocks->end();) {
-                    if(it->second.m_height < height) {
-                        it = m_blocks->erase(it);
-                    } else {
-                        it++;
+                    if(!errs.empty()) {
+                        return errs;
                     }
-                }
 
-                return nullptr;
-            }
-
-            default: {
-                return nullptr;
-            }
+                    return std::nullopt;
+                },
+                [&](const make_block_request& /* r */)
+                    -> std::optional<response> {
+                    auto [blk, errs] = m_atomizer->make_block();
+                    m_blocks->emplace(blk.m_height, blk);
+                    return make_block_response{blk, errs};
+                },
+                [&](const get_block_request& r) -> std::optional<response> {
+                    auto it = m_blocks->find(r.m_block_height);
+                    if(it != m_blocks->end()) {
+                        return get_block_response{it->second};
+                    }
+                    return std::nullopt;
+                },
+                [&](const prune_request& r) -> std::optional<response> {
+                    for(auto it = m_blocks->begin(); it != m_blocks->end();) {
+                        if(it->second.m_height < r.m_block_height) {
+                            it = m_blocks->erase(it);
+                        } else {
+                            it++;
+                        }
+                    }
+                    return std::nullopt;
+                },
+            },
+            req.value());
+        if(!resp.has_value()) {
+            return nullptr;
         }
+        return make_buffer<response, nuraft::ptr<nuraft::buffer>>(
+            resp.value());
     }
 
     auto
