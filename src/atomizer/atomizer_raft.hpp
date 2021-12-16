@@ -32,26 +32,15 @@ namespace cbdc::atomizer {
                       std::shared_ptr<logging::log> logger,
                       nuraft::cb_func::func_type raft_callback);
 
-        /// Replicate a make block command and call the result function with
-        /// the generated block once available.
-        /// \param result_fn function to call with the serialized block.
-        /// \return true if the command was accepted for replication.
-        [[nodiscard]] auto make_block(const raft::callback_type& result_fn)
-            -> bool;
-
-        /// Replicate the given serialized get block command and return the
-        /// result via a callback function.
-        /// \param pkt serialized get block state machine command.
-        /// \param result_fn function to call with the state machine execution
-        ///                  result once available.
-        /// \return true if the command was accepted for replication.
-        [[nodiscard]] auto get_block(const cbdc::network::message_t& pkt,
-                                     const raft::callback_type& result_fn)
-            -> bool;
-
-        /// Replicate the given serialize prune command.
-        /// \param pkt serialized prune command.
-        void prune(const cbdc::network::message_t& pkt);
+        /// Serialize and replicate the given request in the atomizer raft
+        /// cluster. Return the response asynchonrously via the given result
+        /// function, if provided.
+        /// \param r state machine request to replicate.
+        /// \param result_fn function to call with the response, or nullptr to
+        ///                  ignore the response.
+        /// \return true if the replication was initiated successfully.
+        auto make_request(const state_machine::request& r,
+                          const raft::callback_type& result_fn) -> bool;
 
         /// Return a pointer to the state machine replicated by this raft node.
         /// \return state machine pointer.
@@ -100,7 +89,7 @@ namespace cbdc::atomizer {
                            transaction::compact_tx_hasher>
             m_txs;
         std::mutex m_complete_mut;
-        std::vector<aggregate_tx_notify> m_complete_txs;
+        std::vector<aggregate_tx_notification> m_complete_txs;
     };
 }
 

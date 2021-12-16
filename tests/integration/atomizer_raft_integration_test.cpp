@@ -106,15 +106,17 @@ class atomizer_raft_integration_test : public ::testing::Test {
 };
 
 TEST_F(atomizer_raft_integration_test, basic) {
-    ASSERT_TRUE(m_conn.send(cbdc::atomizer::tx_notify_request{
-        cbdc::test::simple_tx({'a'}, {{{'b'}}, {{'c'}}}, {{{'d'}}}),
-        {0, 1},
-        0}));
+    ASSERT_TRUE(
+        m_conn.send(cbdc::atomizer::request{cbdc::atomizer::tx_notify_request{
+            cbdc::test::simple_tx({'a'}, {{{'b'}}, {{'c'}}}, {{{'d'}}}),
+            {0, 1},
+            0}}));
 
-    ASSERT_TRUE(m_conn.send(cbdc::atomizer::tx_notify_request{
-        cbdc::test::simple_tx({'e'}, {{{'f'}}, {{'g'}}}, {{{'h'}}}),
-        {0, 1},
-        0}));
+    ASSERT_TRUE(
+        m_conn.send(cbdc::atomizer::request{cbdc::atomizer::tx_notify_request{
+            cbdc::test::simple_tx({'e'}, {{{'f'}}, {{'g'}}}, {{{'h'}}}),
+            {0, 1},
+            0}}));
 
     cbdc::test::block want_block;
     want_block.m_height = 1;
@@ -129,15 +131,17 @@ TEST_F(atomizer_raft_integration_test, error_inputs_spent) {
     auto got_err = m_sys->expect<std::vector<cbdc::watchtower::tx_error>>(
         cbdc::test::mock_system_module::watchtower);
 
-    ASSERT_TRUE(m_conn.send(cbdc::atomizer::tx_notify_request{
-        cbdc::test::simple_tx({'a'}, {{{'B'}}, {{'c'}}}, {{{'d'}}}),
-        {0, 1},
-        0}));
+    ASSERT_TRUE(
+        m_conn.send(cbdc::atomizer::request{cbdc::atomizer::tx_notify_request{
+            cbdc::test::simple_tx({'a'}, {{{'B'}}, {{'c'}}}, {{{'d'}}}),
+            {0, 1},
+            0}}));
 
-    ASSERT_TRUE(m_conn.send(cbdc::atomizer::tx_notify_request{
-        cbdc::test::simple_tx({'E'}, {{{'B'}}, {{'f'}}}, {{{{'g'}}}}),
-        {0, 1},
-        0}));
+    ASSERT_TRUE(
+        m_conn.send(cbdc::atomizer::request{cbdc::atomizer::tx_notify_request{
+            cbdc::test::simple_tx({'E'}, {{{'B'}}, {{'f'}}}, {{{'g'}}}),
+            {0, 1},
+            0}}));
 
     auto status = got_err.wait_for(std::chrono::seconds(10));
     ASSERT_EQ(status, std::future_status::ready);

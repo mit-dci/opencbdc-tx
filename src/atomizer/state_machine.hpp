@@ -7,6 +7,7 @@
 #define OPENCBDC_TX_SRC_ATOMIZER_STATE_MACHINE_H_
 
 #include "atomizer.hpp"
+#include "messages.hpp"
 
 #include <libnuraft/nuraft.hxx>
 #include <shared_mutex>
@@ -25,18 +26,15 @@ namespace cbdc::atomizer {
         ///                     Will create the directory if it doesn't exist.
         state_machine(size_t stxo_cache_depth, std::string snapshot_dir);
 
-        /// Set of commands accepted by the state machine.
-        enum class command : uint8_t {
-            /// Submit a transaction notification with a complete set of
-            /// attesations.
-            tx_notify = 0,
-            /// Make a new block.
-            make_block = 1,
-            /// Prune blocks below a given height.
-            prune = 2,
-            /// Retrieve the block with a given height.
-            get_block = 3
-        };
+        /// Atomizer state machine request.
+        using request = std::variant<aggregate_tx_notify_request,
+                                     make_block_request,
+                                     get_block_request,
+                                     prune_request>;
+
+        /// Atomizer state machine response.
+        using response
+            = std::variant<make_block_response, get_block_response, errors>;
 
         /// Executes the commited the raft log entry at the given index and
         /// return the state machine execution result.

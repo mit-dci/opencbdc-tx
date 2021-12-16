@@ -8,6 +8,7 @@
 #include "atomizer_raft.hpp"
 #include "format.hpp"
 #include "raft/serialization.hpp"
+#include "raft/util.hpp"
 #include "serialization/format.hpp"
 
 #include <utility>
@@ -100,57 +101,48 @@ namespace cbdc::atomizer {
             return std::nullopt;
         }
 
-        auto deser = cbdc::buffer_serializer(*pkt.m_pkt);
-        cbdc::atomizer::state_machine::command comm{};
-        deser >> comm;
-
-        switch(comm) {
-            case cbdc::atomizer::state_machine::command::tx_notify: {
-                deser.reset();
-                auto notif = tx_notify_request();
-                deser >> notif;
-                m_raft_node.tx_notify(std::move(notif));
-                break;
-            }
-
-            case cbdc::atomizer::state_machine::command::get_block: {
-                const auto peer_id = pkt.m_peer_id;
-                auto result_fn
-                    = [&, peer_id](raft::result_type& r,
-                                   nuraft::ptr<std::exception>& err) {
-                          if(err) {
-                              m_logger->error("Exception handling log entry:",
-                                              err->what());
-                              return;
-                          }
-
-                          const auto res = r.get();
-                          if(!res) {
-                              m_logger->error("Requested block not found.");
-                              return;
-                          }
-
-                          auto resp_pkt = std::make_shared<cbdc::buffer>();
-                          resp_pkt->append(res->data_begin(), res->size());
-                          m_atomizer_network.send(resp_pkt, peer_id);
-                      };
-                if(!m_raft_node.get_block(pkt, result_fn)) {
-                    m_logger->error("Dropping failed get_block request.");
-                }
-                break;
-            }
-
-            case cbdc::atomizer::state_machine::command::prune: {
-                m_raft_node.prune(pkt);
-                break;
-            }
-
-            default: {
-                m_logger->error("Unknown atomizer operation",
-                                std::to_string(static_cast<int>(comm)));
-                break;
-            }
+        auto maybe_req = from_buffer<request>(*pkt.m_pkt);
+        if(!maybe_req.has_value()) {
+            m_logger->error("Invalid request packet");
+            return std::nullopt;
         }
+
+        std::visit(
+            overloaded{
+                [&](tx_notify_request& notif) {
+                    m_raft_node.tx_notify(std::move(notif));
+                },
+                [&](const prune_request& p) {
+                    m_raft_node.make_request(p, nullptr);
+                },
+                [&](const get_block_request& g) {
+                    auto result_fn = [&, peer_id = pkt.m_peer_id](
+                                         raft::result_type& r,
+                                         nuraft::ptr<std::exception>& err) {
+                        if(err) {
+                            m_logger->error("Exception handling log entry:",
+                                            err->what());
+                            return;
+                        }
+
+                        const auto res = r.get();
+                        if(!res) {
+                            m_logger->error("Requested block not found.");
+                            return;
+                        }
+
+                        auto maybe_resp
+                            = from_buffer<state_machine::response>(*res);
+                        assert(maybe_resp.has_value());
+                        assert(std::holds_alternative<get_block_response>(
+                            maybe_resp.value()));
+                        auto& resp
+                            = std::get<get_block_response>(maybe_resp.value());
+                        m_atomizer_network.send(resp.m_blk, peer_id);
+                    };
+                    m_raft_node.make_request(g, result_fn);
+                }},
+            maybe_req.value());
 
         return std::nullopt;
     }
@@ -179,10 +171,13 @@ namespace cbdc::atomizer {
             last_time = std::chrono::high_resolution_clock::now();
 
             if(m_raft_node.is_leader()) {
-                auto res = m_raft_node.make_block([&](auto&& r, auto&& err) {
-                    raft_result_handler(std::forward<decltype(r)>(r),
-                                        std::forward<decltype(err)>(err));
-                });
+                auto req = make_block_request();
+                auto res
+                    = m_raft_node.make_request(req, [&](auto&& r, auto&& err) {
+                          raft_result_handler(
+                              std::forward<decltype(r)>(r),
+                              std::forward<decltype(err)>(err));
+                      });
                 if(!res) {
                     m_logger->error("Failed to make block at time",
                                     last_time.time_since_epoch().count());
@@ -198,26 +193,28 @@ namespace cbdc::atomizer {
         }
 
         const auto res = r.get();
-        auto nd = cbdc::nuraft_serializer(*res);
-        cbdc::atomizer::block blk;
-        std::vector<cbdc::watchtower::tx_error> errs;
-        nd >> blk >> errs;
+        assert(res);
+        auto maybe_resp = from_buffer<state_machine::response>(*res);
+        assert(maybe_resp.has_value());
+        assert(
+            std::holds_alternative<make_block_response>(maybe_resp.value()));
+        auto& resp = std::get<make_block_response>(maybe_resp.value());
 
-        auto blk_pkt = make_shared_buffer(blk);
+        auto blk_pkt = make_shared_buffer(resp.m_blk);
 
         m_atomizer_network.broadcast(blk_pkt);
 
         m_logger->info("Block h:",
-                       blk.m_height,
+                       resp.m_blk.m_height,
                        ", nTXs:",
-                       blk.m_transactions.size(),
+                       resp.m_blk.m_transactions.size(),
                        ", log idx:",
                        m_raft_node.last_log_idx(),
                        ", notifications:",
                        m_raft_node.tx_notify_count());
 
-        if(!errs.empty()) {
-            auto buf = make_shared_buffer(errs);
+        if(!resp.m_errs.empty()) {
+            auto buf = make_shared_buffer(resp.m_errs);
             m_watchtower_network.broadcast(buf);
         }
     }
@@ -232,9 +229,11 @@ namespace cbdc::atomizer {
 
         const auto res = r.get();
         if(res) {
-            auto pkt = std::make_shared<cbdc::buffer>();
-            pkt->append(res->data_begin(), res->size());
-            m_watchtower_network.broadcast(pkt);
+            auto maybe_resp = from_buffer<state_machine::response>(*res);
+            assert(maybe_resp.has_value());
+            assert(std::holds_alternative<errors>(maybe_resp.value()));
+            auto& resp = std::get<errors>(maybe_resp.value());
+            m_watchtower_network.broadcast(resp);
         }
     }
 

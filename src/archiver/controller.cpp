@@ -278,9 +278,8 @@ namespace cbdc::archiver {
 
     void controller::request_block(uint64_t height) {
         m_logger->trace("Requesting block", height);
-        auto pkt = std::make_shared<cbdc::buffer>();
-        auto ser = cbdc::buffer_serializer(*pkt);
-        ser << cbdc::atomizer::state_machine::command::get_block << height;
+        auto req = atomizer::get_block_request{height};
+        auto pkt = make_shared_buffer(atomizer::request{req});
         if(!m_atomizer_network.send_to_one(pkt)) {
             m_logger->error("Failed to request block", height);
         }
@@ -288,9 +287,8 @@ namespace cbdc::archiver {
 
     void controller::request_prune(uint64_t height) {
         m_logger->trace("Requesting prune h <", height);
-        auto pkt = std::make_shared<cbdc::buffer>();
-        auto ser = cbdc::buffer_serializer(*pkt);
-        ser << cbdc::atomizer::state_machine::command::prune << height;
+        auto req = atomizer::prune_request{height};
+        auto pkt = make_shared_buffer(atomizer::request{req});
         if(!m_atomizer_network.send_to_one(pkt)) {
             m_logger->error("Failed to request prune", height);
         }

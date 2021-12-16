@@ -420,24 +420,23 @@ TEST_F(PacketIOTest, optional_test) {
     ASSERT_EQ(opt, resp_opt);
 }
 
-TEST_F(PacketIOTest, aggregate_tx_notify) {
-    auto atn = cbdc::atomizer::aggregate_tx_notify();
+TEST_F(PacketIOTest, aggregate_tx_notification) {
+    auto atn = cbdc::atomizer::aggregate_tx_notification();
     atn.m_oldest_attestation = 77;
     atn.m_tx = cbdc::test::simple_tx({'t', 'x', 'a'},
                                      {{'a'}, {'b'}},
                                      {{'c'}, {'d'}});
     m_ser << atn;
 
-    auto atn_deser = cbdc::atomizer::aggregate_tx_notify();
+    auto atn_deser = cbdc::atomizer::aggregate_tx_notification();
     m_deser >> atn_deser;
     ASSERT_EQ(atn, atn_deser);
 }
 
-TEST_F(PacketIOTest, aggregate_tx_notify_set) {
-    auto atns = cbdc::atomizer::aggregate_tx_notify_set();
-    atns.m_cmd = cbdc::atomizer::state_machine::command::tx_notify;
+TEST_F(PacketIOTest, aggregate_tx_notify_request) {
+    auto atns = cbdc::atomizer::aggregate_tx_notify_request();
 
-    auto atn = cbdc::atomizer::aggregate_tx_notify();
+    auto atn = cbdc::atomizer::aggregate_tx_notification();
     atn.m_oldest_attestation = 77;
     atn.m_tx = cbdc::test::simple_tx({'t', 'x', 'a'},
                                      {{'a'}, {'b'}},
@@ -447,7 +446,7 @@ TEST_F(PacketIOTest, aggregate_tx_notify_set) {
 
     m_ser << atns;
 
-    auto atns_deser = cbdc::atomizer::aggregate_tx_notify_set();
+    auto atns_deser = cbdc::atomizer::aggregate_tx_notify_request();
     m_deser >> atns_deser;
     ASSERT_EQ(atns, atns_deser);
 }

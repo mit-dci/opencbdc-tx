@@ -103,7 +103,7 @@ namespace cbdc::shard {
                                 "/",
                                 msg.m_tx.m_inputs.size(),
                                 "attestations...");
-                if(!m_atomizer_network.send_to_one(msg)) {
+                if(!m_atomizer_network.send_to_one(atomizer::request{msg})) {
                     m_logger->error("Failed to transmit tx to atomizer. ID:",
                                     to_string(msg.m_tx.m_id));
                 }
