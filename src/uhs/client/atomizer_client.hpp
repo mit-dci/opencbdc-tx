@@ -63,6 +63,11 @@ namespace cbdc {
         cbdc::watchtower::blocking_client m_wc;
         std::shared_ptr<logging::log> m_logger;
         cbdc::config::options m_opts;
+
+        std::unique_ptr<secp256k1_context,
+                        decltype(&secp256k1_context_destroy)>
+            m_secp{secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
+                   &secp256k1_context_destroy};
     };
 }
 

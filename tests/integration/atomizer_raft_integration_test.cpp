@@ -21,6 +21,7 @@ class atomizer_raft_integration_test : public ::testing::Test {
   protected:
     void SetUp() override {
         cbdc::test::load_config(m_shard_cfg_path, m_opts);
+        m_opts.m_attestation_threshold = 0;
         m_ctl = std::make_unique<cbdc::atomizer::controller>(0,
                                                              m_opts,
                                                              m_logger);

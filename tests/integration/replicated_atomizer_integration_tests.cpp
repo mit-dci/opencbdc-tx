@@ -17,6 +17,7 @@ class replicated_atomizer_integration_tests : public ::testing::Test {
   protected:
     void SetUp() override {
         cbdc::test::load_config(m_atomizer_cfg_path, m_opts);
+        m_opts.m_attestation_threshold = 0;
         m_atomizer_count = m_opts.m_atomizer_endpoints.size();
         for(auto i = 0ULL; i < m_atomizer_count; ++i) {
             m_ctls.push_back(
