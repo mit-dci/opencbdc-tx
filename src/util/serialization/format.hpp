@@ -7,6 +7,7 @@
 #define OPENCBDC_TX_SRC_SERIALIZATION_FORMAT_H_
 
 #include "serializer.hpp"
+#include "util/common/buffer.hpp"
 #include "util/common/config.hpp"
 #include "util/common/variant_overloaded.hpp"
 
@@ -33,6 +34,17 @@ namespace cbdc {
     ///
     /// \see \ref cbdc::operator<<(serializer&, std::byte)
     auto operator>>(serializer& packet, std::byte& b) -> serializer&;
+
+    /// \brief Serializes a raw byte buffer.
+    ///
+    /// Writes the size of the buffer as a 64-bit uint, followed by the actual
+    /// buffer data.
+    ///
+    /// \see \ref cbdc::operator>>(serializer&, buffer&)
+    auto operator<<(serializer& ser, const buffer& b) -> serializer&;
+
+    /// \brief Deserializes a raw byte buffer.
+    auto operator>>(serializer& deser, buffer& b) -> serializer&;
 
     /// Serializes nothing if `T` is an empty type.
     /// \tparam T an empty type

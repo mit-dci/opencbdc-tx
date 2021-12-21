@@ -20,4 +20,18 @@ namespace cbdc {
 
         return packet;
     }
+
+    auto operator<<(serializer& ser, const buffer& b) -> serializer& {
+        ser << static_cast<uint64_t>(b.size());
+        ser.write(b.data(), b.size());
+        return ser;
+    }
+
+    auto operator>>(serializer& deser, buffer& b) -> serializer& {
+        uint64_t sz{};
+        deser >> sz;
+        b.extend(sz);
+        deser.read(b.data(), sz);
+        return deser;
+    }
 }
