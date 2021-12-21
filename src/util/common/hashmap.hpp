@@ -6,6 +6,7 @@
 #ifndef OPENCBDC_TX_SRC_COMMON_HASHMAP_H_
 #define OPENCBDC_TX_SRC_COMMON_HASHMAP_H_
 
+#include "buffer.hpp"
 #include "crypto/siphash.h"
 #include "hash.hpp"
 
@@ -33,6 +34,20 @@ namespace cbdc::hashing {
             std::array<unsigned char, sizeof(tx)> tx_arr{};
             std::memcpy(tx_arr.data(), &tx, sizeof(tx));
             hasher.Write(tx_arr.data(), sizeof(tx));
+            return hasher.Finalize();
+        }
+    };
+
+    template<>
+    struct const_sip_hash<buffer> {
+        auto operator()(const buffer& buf) const noexcept -> size_t {
+            // TODO: pick the initialization key at random.
+            static constexpr std::array<uint64_t, 2> siphash_key{0x1337,
+                                                                 0x1337};
+            CSipHasher hasher(siphash_key[0], siphash_key[1]);
+            std::vector<unsigned char> arr(buf.size());
+            std::memcpy(arr.data(), buf.data(), buf.size());
+            hasher.Write(arr.data(), arr.size());
             return hasher.Finalize();
         }
     };
