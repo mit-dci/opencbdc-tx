@@ -379,6 +379,8 @@ namespace cbdc::config {
 
         std::map<std::string, value_t> m_options;
     };
+
+    auto parse_ip_port(const std::string& in_str) -> network::endpoint_t;
 }
 
 #endif // OPENCBDC_TX_SRC_COMMON_CONFIG_H_
