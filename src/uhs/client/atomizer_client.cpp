@@ -90,7 +90,13 @@ namespace cbdc {
     auto atomizer_client::send_mint_tx(const transaction::full_tx& mint_tx)
         -> bool {
         atomizer::tx_notify_request msg;
-        msg.m_tx = transaction::compact_tx(mint_tx);
+        auto ctx = transaction::compact_tx(mint_tx);
+        for(size_t i = 0; i < m_opts.m_attestation_threshold; i++) {
+            auto att
+                = ctx.sign(m_secp.get(), m_opts.m_sentinel_private_keys[i]);
+            ctx.m_attestations.insert(att);
+        }
+        msg.m_tx = std::move(ctx);
         msg.m_block_height = m_wc.request_best_block_height()->height();
         return m_atomizer_network.send_to_one(atomizer::request{msg});
     }

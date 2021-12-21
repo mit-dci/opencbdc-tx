@@ -6,6 +6,7 @@
 #include "atomizer_raft.hpp"
 
 #include "format.hpp"
+#include "uhs/transaction/validation.hpp"
 #include "util/raft/serialization.hpp"
 #include "util/raft/util.hpp"
 #include "util/serialization/util.hpp"
@@ -15,6 +16,7 @@ namespace cbdc::atomizer {
                                  const network::endpoint_t& raft_endpoint,
                                  size_t stxo_cache_depth,
                                  std::shared_ptr<logging::log> logger,
+                                 config::options opts,
                                  nuraft::cb_func::func_type raft_callback,
                                  bool wait_for_followers)
         : node(static_cast<int>(atomizer_id),
@@ -25,9 +27,11 @@ namespace cbdc::atomizer {
                    stxo_cache_depth,
                    "atomizer_snps_" + std::to_string(atomizer_id)),
                0,
-               std::move(logger),
+               logger,
                std::move(raft_callback),
-               wait_for_followers) {}
+               wait_for_followers),
+          m_log(std::move(logger)),
+          m_opts(std::move(opts)) {}
 
     auto atomizer_raft::get_sm() -> state_machine* {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -50,6 +54,14 @@ namespace cbdc::atomizer {
     }
 
     void atomizer_raft::tx_notify(tx_notify_request&& notif) {
+        if(!transaction::validation::check_attestations(
+               notif.m_tx,
+               m_opts.m_sentinel_public_keys,
+               m_opts.m_attestation_threshold)) {
+            m_log->warn("Received invalid compact transaction",
+                        to_string(notif.m_tx.m_id));
+            return;
+        }
         auto it = m_txs.find(notif.m_tx);
         if(it != m_txs.end()) {
             for(auto n : notif.m_attestations) {
