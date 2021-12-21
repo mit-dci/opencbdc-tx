@@ -18,7 +18,6 @@ namespace cbdc::locking_shard {
     }
 
     auto tx::operator==(const tx& rhs) const -> bool {
-        return std::tie(m_tx_id, m_creating, m_spending)
-            == std::tie(rhs.m_tx_id, rhs.m_creating, rhs.m_spending);
+        return m_tx == rhs.m_tx;
     }
 }
