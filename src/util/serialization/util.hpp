@@ -32,9 +32,9 @@ namespace cbdc {
     template<typename T, typename B = buffer>
     auto make_buffer(const T& obj)
         -> std::enable_if_t<std::is_same_v<B, buffer>, cbdc::buffer> {
-        // TODO: we could use serialized_size to preallocate the buffer which
-        //       could improve performance.
+        auto sz = serialized_size(obj);
         auto pkt = cbdc::buffer();
+        pkt.extend(sz);
         auto ser = cbdc::buffer_serializer(pkt);
         ser << obj;
         return pkt;
@@ -46,7 +46,9 @@ namespace cbdc {
     /// \return a shared_ptr to a serialized buffer of the object.
     template<typename T>
     auto make_shared_buffer(const T& obj) -> std::shared_ptr<cbdc::buffer> {
+        auto sz = serialized_size(obj);
         auto buf = std::make_shared<cbdc::buffer>();
+        buf->extend(sz);
         auto ser = cbdc::buffer_serializer(*buf);
         ser << obj;
         return buf;
