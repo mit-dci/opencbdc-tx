@@ -51,10 +51,12 @@ namespace cbdc::locking_shard {
         ///                                 before evicting the oldest TX ID.
         /// \param preseed_file path to file containing shard pre-seeding data
         ///                     or empty string to disable pre-seeding.
+        /// \param opts configuration options.
         locking_shard(const std::pair<uint8_t, uint8_t>& output_range,
                       std::shared_ptr<logging::log> logger,
                       size_t completed_txs_cache_size,
-                      const std::string& preseed_file);
+                      const std::string& preseed_file,
+                      config::options opts);
         locking_shard() = delete;
 
         /// \brief Attempts to lock the input hashes for the given batch of
@@ -124,6 +126,8 @@ namespace cbdc::locking_shard {
 
       private:
         auto read_preseed_file(const std::string& preseed_file) -> bool;
+        auto check_and_lock_tx(const tx& t) -> bool;
+
         struct prepared_dtx {
             std::vector<tx> m_txs;
             std::vector<bool> m_results;
@@ -138,6 +142,7 @@ namespace cbdc::locking_shard {
             m_prepared_dtxs;
         std::unordered_set<hash_t, hashing::null> m_applied_dtxs;
         cbdc::cache_set<hash_t, hashing::null> m_completed_txs;
+        config::options m_opts;
     };
 }
 

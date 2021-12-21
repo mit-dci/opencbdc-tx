@@ -10,7 +10,15 @@
 #include <queue>
 #include <random>
 
-class TwoPhaseTest : public ::testing::Test {};
+class TwoPhaseTest : public ::testing::Test {
+  public:
+    TwoPhaseTest() {
+        m_opts.m_attestation_threshold = 0;
+    }
+
+  protected:
+    cbdc::config::options m_opts{};
+};
 
 TEST_F(TwoPhaseTest, test_one_shard) {
     auto logger = std::make_shared<cbdc::logging::log>(
@@ -18,14 +26,15 @@ TEST_F(TwoPhaseTest, test_one_shard) {
     auto shard = cbdc::locking_shard::locking_shard(std::make_pair(0, 255),
                                                     logger,
                                                     10000000,
-                                                    "");
+                                                    "",
+                                                    m_opts);
 
     auto txs = std::vector<cbdc::locking_shard::tx>();
     for(size_t i{0}; i < 1000; i++) {
         auto tx = cbdc::locking_shard::tx();
         auto uhs_id = cbdc::hash_t();
         std::memcpy(uhs_id.data(), &i, sizeof(i));
-        tx.m_creating.push_back(uhs_id);
+        tx.m_tx.m_uhs_outputs.push_back(uhs_id);
         txs.push_back(tx);
     }
 
@@ -46,12 +55,14 @@ TEST_F(TwoPhaseTest, test_two_shards) {
         std::make_pair(0, 127),
         logger,
         10000000,
-        "");
+        "",
+        m_opts);
     auto shard1 = std::make_shared<cbdc::locking_shard::locking_shard>(
         std::make_pair(128, 255),
         logger,
         10000000,
-        "");
+        "",
+        m_opts);
     auto shards = std::vector<std::shared_ptr<cbdc::locking_shard::interface>>(
         {shard0, shard1});
 
@@ -83,7 +94,8 @@ TEST_F(TwoPhaseTest, test_one_shard_random) {
     auto shard = cbdc::locking_shard::locking_shard(std::make_pair(0, 255),
                                                     logger,
                                                     10000000,
-                                                    "");
+                                                    "",
+                                                    m_opts);
 
     auto e = std::default_random_engine();
     auto rnd = std::uniform_int_distribution<uint64_t>();
@@ -103,8 +115,8 @@ TEST_F(TwoPhaseTest, test_one_shard_random) {
             const auto val = rnd(e);
             std::memcpy(&output1[j * 8], &val, sizeof(val));
         }
-        tx.m_creating.push_back(output0);
-        tx.m_creating.push_back(output1);
+        tx.m_tx.m_uhs_outputs.push_back(output0);
+        tx.m_tx.m_uhs_outputs.push_back(output1);
         outputs.push(output0);
         outputs.push(output1);
         txs.push_back(tx);
@@ -132,11 +144,11 @@ TEST_F(TwoPhaseTest, test_one_shard_random) {
             const auto val = rnd(e);
             std::memcpy(&output1[j * 8], &val, sizeof(val));
         }
-        tx.m_creating.push_back(output0);
-        tx.m_creating.push_back(output1);
-        tx.m_spending.push_back(outputs.front());
+        tx.m_tx.m_uhs_outputs.push_back(output0);
+        tx.m_tx.m_uhs_outputs.push_back(output1);
+        tx.m_tx.m_inputs.push_back(outputs.front());
         outputs.pop();
-        tx.m_spending.push_back(outputs.front());
+        tx.m_tx.m_inputs.push_back(outputs.front());
         outputs.pop();
         txs.push_back(tx);
     }
@@ -158,12 +170,14 @@ TEST_F(TwoPhaseTest, test_two_shards_random) {
         std::make_pair(0, 127),
         logger,
         10000000,
-        "");
+        "",
+        m_opts);
     auto shard1 = std::make_shared<cbdc::locking_shard::locking_shard>(
         std::make_pair(128, 255),
         logger,
         10000000,
-        "");
+        "",
+        m_opts);
     auto shards = std::vector<std::shared_ptr<cbdc::locking_shard::interface>>(
         {shard0, shard1});
 
@@ -252,12 +266,14 @@ TEST_F(TwoPhaseTest, test_two_shards_conflicting) {
         std::make_pair(0, 127),
         logger,
         10000000,
-        "");
+        "",
+        m_opts);
     auto shard1 = std::make_shared<cbdc::locking_shard::locking_shard>(
         std::make_pair(128, 255),
         logger,
         10000000,
-        "");
+        "",
+        m_opts);
     auto shards = std::vector<std::shared_ptr<cbdc::locking_shard::interface>>(
         {shard0, shard1});
 

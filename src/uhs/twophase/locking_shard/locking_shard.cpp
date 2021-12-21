@@ -6,6 +6,7 @@
 #include "locking_shard.hpp"
 
 #include "messages.hpp"
+#include "uhs/transaction/validation.hpp"
 #include "util/common/config.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/istream_serializer.hpp"
@@ -24,10 +25,12 @@ namespace cbdc::locking_shard {
         const std::pair<uint8_t, uint8_t>& output_range,
         std::shared_ptr<logging::log> logger,
         size_t completed_txs_cache_size,
-        const std::string& preseed_file)
+        const std::string& preseed_file,
+        config::options opts)
         : interface(output_range),
           m_logger(std::move(logger)),
-          m_completed_txs(completed_txs_cache_size) {
+          m_completed_txs(completed_txs_cache_size),
+          m_opts(std::move(opts)) {
         m_uhs.max_load_factor(std::numeric_limits<float>::max());
         m_applied_dtxs.max_load_factor(std::numeric_limits<float>::max());
         m_prepared_dtxs.max_load_factor(std::numeric_limits<float>::max());
@@ -88,28 +91,45 @@ namespace cbdc::locking_shard {
         auto ret = std::vector<bool>();
         ret.reserve(txs.size());
         for(auto&& tx : txs) {
-            bool success{true};
-            for(const auto& uhs_id : tx.m_spending) {
-                if(hash_in_shard_range(uhs_id)
-                   && m_uhs.find(uhs_id) == m_uhs.end()) {
-                    success = false;
-                    break;
-                }
-            }
-            if(success) {
-                for(const auto& uhs_id : tx.m_spending) {
-                    m_uhs.erase(uhs_id);
-                    m_locked.emplace(uhs_id);
-                }
-            }
+            auto success = check_and_lock_tx(tx);
             ret.push_back(success);
         }
         auto p = prepared_dtx();
         p.m_results = ret;
         p.m_txs = std::move(txs);
         m_prepared_dtxs.emplace(dtx_id, std::move(p));
-
         return ret;
+    }
+
+    auto locking_shard::check_and_lock_tx(const tx& t) -> bool {
+        bool success{true};
+        if(!transaction::validation::check_attestations(
+               t.m_tx,
+               m_opts.m_sentinel_public_keys,
+               m_opts.m_attestation_threshold)) {
+            m_logger->warn("Received invalid compact transaction",
+                           to_string(t.m_tx.m_id));
+            success = false;
+        }
+        if(success) {
+            for(const auto& uhs_id : t.m_tx.m_inputs) {
+                if(hash_in_shard_range(uhs_id)
+                   && m_uhs.find(uhs_id) == m_uhs.end()) {
+                    success = false;
+                    break;
+                }
+            }
+        }
+        if(success) {
+            for(const auto& uhs_id : t.m_tx.m_inputs) {
+                if(hash_in_shard_range(uhs_id)) {
+                    auto n = m_uhs.extract(uhs_id);
+                    assert(!n.empty());
+                    m_locked.emplace(uhs_id);
+                }
+            }
+        }
+        return success;
     }
 
     auto locking_shard::apply_outputs(std::vector<bool>&& complete_txs,
@@ -137,16 +157,16 @@ namespace cbdc::locking_shard {
         }
         for(size_t i{0}; i < dtx.size(); i++) {
             auto&& tx = dtx[i];
-            if(tx.m_tx_id && hash_in_shard_range(*tx.m_tx_id)) {
-                m_completed_txs.add(*tx.m_tx_id);
+            if(hash_in_shard_range(tx.m_tx.m_id)) {
+                m_completed_txs.add(tx.m_tx.m_id);
             }
 
-            for(auto&& uhs_id : tx.m_creating) {
+            for(auto&& uhs_id : tx.m_tx.m_uhs_outputs) {
                 if(hash_in_shard_range(uhs_id) && complete_txs[i]) {
                     m_uhs.emplace(uhs_id);
                 }
             }
-            for(auto&& uhs_id : tx.m_spending) {
+            for(auto&& uhs_id : tx.m_tx.m_inputs) {
                 if(hash_in_shard_range(uhs_id)) {
                     auto was_locked = m_locked.erase(uhs_id);
                     if(!complete_txs[i] && (was_locked != 0U)) {

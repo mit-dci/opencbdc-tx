@@ -148,21 +148,24 @@ namespace cbdc::coordinator {
         for(size_t i{0}; i < m_shards.size(); i++) {
             const auto& shard = m_shards[i];
             auto stx = locking_shard::tx();
+            stx.m_tx = tx;
             bool active{false};
             if(shard->hash_in_shard_range(tx.m_id)) {
-                stx.m_tx_id = tx.m_id;
                 active = true;
-            }
-            for(const auto& inp : tx.m_inputs) {
-                if(shard->hash_in_shard_range(inp)) {
-                    stx.m_spending.push_back(inp);
-                    active = true;
+            } else {
+                for(const auto& inp : tx.m_inputs) {
+                    if(shard->hash_in_shard_range(inp)) {
+                        active = true;
+                        break;
+                    }
                 }
-            }
-            for(const auto& out : tx.m_uhs_outputs) {
-                if(shard->hash_in_shard_range(out)) {
-                    stx.m_creating.push_back(out);
-                    active = true;
+                if(!active) {
+                    for(const auto& out : tx.m_uhs_outputs) {
+                        if(shard->hash_in_shard_range(out)) {
+                            active = true;
+                            break;
+                        }
+                    }
                 }
             }
             if(active) {
