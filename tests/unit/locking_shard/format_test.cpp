@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "uhs/twophase/locking_shard/format.hpp"
+#include "util.hpp"
 
 #include <gtest/gtest.h>
 
@@ -13,9 +14,10 @@ class locking_shard_format_test : public ::testing::Test {
     cbdc::buffer_serializer m_ser{m_target_packet};
     cbdc::buffer_serializer m_deser{m_target_packet};
 
-    cbdc::locking_shard::tx m_tx{std::optional<cbdc::hash_t>({'a', 'b', 'c'}),
-                                 {{'d', 'e', 'f'}, {'g', 'h', 'i'}},
-                                 {{'x', 'y', 'z'}, {'z', 'z', 'z'}}};
+    cbdc::locking_shard::tx m_tx{
+        cbdc::test::simple_tx({'a', 'b', 'c'},
+                              {{{'d', 'e', 'f'}}, {{'g', 'h', 'i'}}},
+                              {{{'x', 'y', 'z'}}, {{'z', 'z', 'z'}}})};
 };
 
 TEST_F(locking_shard_format_test, tx) {

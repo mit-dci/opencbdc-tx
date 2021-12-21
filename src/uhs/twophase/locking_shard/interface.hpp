@@ -6,6 +6,7 @@
 #ifndef OPENCBDC_TX_SRC_LOCKING_SHARD_LOCKING_SHARD_INTERFACE_H_
 #define OPENCBDC_TX_SRC_LOCKING_SHARD_LOCKING_SHARD_INTERFACE_H_
 
+#include "uhs/transaction/transaction.hpp"
 #include "util/common/hash.hpp"
 
 #include <optional>
@@ -15,12 +16,8 @@
 namespace cbdc::locking_shard {
     /// Transaction type processed by locking shards.
     struct tx {
-        /// The TX ID of the transaction, if provided.
-        std::optional<hash_t> m_tx_id{};
-        /// Vector of input hashes for the shard to process as spent.
-        std::vector<hash_t> m_spending{};
-        /// Vector of output hashes to create on the shard.
-        std::vector<hash_t> m_creating{};
+        /// Compact TX.
+        transaction::compact_tx m_tx;
 
         auto operator==(const tx& rhs) const -> bool;
     };

@@ -5,16 +5,17 @@
 
 #include "format.hpp"
 
+#include "uhs/transaction/messages.hpp"
 #include "util/serialization/format.hpp"
 
 namespace cbdc {
     auto operator<<(serializer& packet, const locking_shard::tx& tx)
         -> serializer& {
-        return packet << tx.m_tx_id << tx.m_spending << tx.m_creating;
+        return packet << tx.m_tx;
     }
 
     auto operator>>(serializer& packet, locking_shard::tx& tx) -> serializer& {
-        return packet >> tx.m_tx_id >> tx.m_spending >> tx.m_creating;
+        return packet >> tx.m_tx;
     }
 
     auto operator<<(serializer& packet, const locking_shard::rpc::request& p)

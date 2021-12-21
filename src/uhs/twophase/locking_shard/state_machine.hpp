@@ -30,10 +30,12 @@ namespace cbdc::locking_shard {
         ///                                 before evicting the oldest TX ID.
         /// \param preseed_file path to file containing shard pre-seeding data
         ///                     or empty string to disable pre-seeding.
+        /// \param opts configuration options.
         state_machine(const std::pair<uint8_t, uint8_t>& output_range,
                       std::shared_ptr<logging::log> logger,
                       size_t completed_txs_cache_size,
-                      const std::string& preseed_file);
+                      const std::string& preseed_file,
+                      config::options opts);
 
         /// Commit the given raft log entry at the given log index, and return
         /// the result.

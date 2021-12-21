@@ -32,7 +32,8 @@ namespace cbdc::locking_shard {
               m_opts.m_shard_ranges[m_shard_id],
               m_logger,
               m_opts.m_shard_completed_txs_cache_size,
-              m_preseed_dir)),
+              m_preseed_dir,
+              m_opts)),
           m_shard(m_state_machine->get_shard_instance()),
           m_raft_serv(std::make_shared<raft::node>(
               static_cast<int>(node_id),
