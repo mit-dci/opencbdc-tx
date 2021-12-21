@@ -11,6 +11,7 @@
 
 namespace cbdc::config {
     auto parse_ip_port(const std::string& in_str) -> network::endpoint_t {
+        // TODO: error handling for string parsing
         std::istringstream ss(in_str);
 
         std::string host;
