@@ -25,6 +25,7 @@ namespace cbdc::atomizer {
               opts.m_atomizer_raft_endpoints[atomizer_id].value(),
               m_opts.m_stxo_cache_depth,
               m_logger,
+              opts,
               [&](auto&& type, auto&& param) {
                   return raft_callback(std::forward<decltype(type)>(type),
                                        std::forward<decltype(param)>(param));

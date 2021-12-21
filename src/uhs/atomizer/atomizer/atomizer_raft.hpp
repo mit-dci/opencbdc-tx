@@ -25,6 +25,7 @@ namespace cbdc::atomizer {
         /// \param raft_endpoint endpoint for raft communications.
         /// \param stxo_cache_depth number of blocks in the spent output cache.
         /// \param logger log instance.
+        /// \param opts configuration options.
         /// \param raft_callback NuRaft callback for raft events.
         /// \param wait_for_followers true if the leader raft node should
         ///                           re-attempt to add all followers to the
@@ -33,6 +34,7 @@ namespace cbdc::atomizer {
                       const network::endpoint_t& raft_endpoint,
                       size_t stxo_cache_depth,
                       std::shared_ptr<logging::log> logger,
+                      config::options opts,
                       nuraft::cb_func::func_type raft_callback,
                       bool wait_for_followers);
 
@@ -94,6 +96,8 @@ namespace cbdc::atomizer {
             m_txs;
         std::mutex m_complete_mut;
         std::vector<aggregate_tx_notification> m_complete_txs;
+        std::shared_ptr<logging::log> m_log;
+        config::options m_opts;
     };
 }
 
