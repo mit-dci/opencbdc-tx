@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - trunk
+  push:
+    branches:
+      - trunk
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  BUILD_DIR: x86_64
+
+jobs:
+  build-release:
+    name: Build Release Candidate
+    runs-on: ubuntu-20.04
+    env:
+      BUILD_RELEASE: 1
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Configure
+        run: sudo ./scripts/configure.sh
+      - name: Build
+        run: scripts/build.sh
+  lint:
+    name: Lint
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Configure
+        run: sudo ./scripts/configure.sh
+      - name: Build
+        run: scripts/build.sh
+      - name: Lint
+        run: scripts/lint.sh
+  unit-and-integration-test:
+    name: Unit and Integration Tests
+    runs-on: ubuntu-20.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Configure
+        run: sudo ./scripts/configure.sh
+      - name: Build
+        run: scripts/build.sh
+      - name: Run Unit Tests
+        run: scripts/test.sh
+      - name: Shorten SHA
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+      - uses: actions/upload-artifact@v2
+        if: ${{ !env.ACT }}
+        name: Archive Test Results
+        with:
+          name: Test Results for ${{ steps.vars.outputs.sha_short }}
+          path: |
+            ${{env.BUILD_DIR}}/unit_tests_coverage/output/*
+            ${{env.BUILD_DIR}}/integration_tests_coverage/output/*
+          retention-days: 7
+  doxygen:
+    name: doxygen
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen graphviz
+      - name: Run Doxygen
+        run: doxygen Doxyfile
+      - name: Upload Docs artifacts
+        if: ${{ !env.ACT }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: OpenCBDC Transaction Processor docs for ${{ steps.vars.outputs.sha_short }}
+          path: ./doxygen_generated/html/*
+          retention-days: 7

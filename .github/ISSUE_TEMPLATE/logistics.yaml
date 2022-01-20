@@ -1,0 +1,51 @@
+name: Logistical Change
+description: >
+  Submit a proposal to modify the project's governance or model
+  of collaboration.
+title: "[A short, descriptive title]"
+labels:
+  - feedback/logistics
+assignees:
+  - halosghost
+body:
+  - type: textarea
+    id: abstract
+    attributes:
+      label: Abstract
+      description: >
+        Give a brief (200 words or less) summary of the changes you are
+        proposing.
+      placeholder: ex. This proposal officially recognizes a new Working Group…
+    validations:
+      required: true
+  - type: textarea
+    id: Description
+    attributes:
+      label: Description
+      description: >
+        Flesh out any specifics that could not fit in the abstract as well as
+        the reason for the changes proposed.
+
+        If relevant, include possible alternative solutions to the problem
+        being solved and why you feel your proposed changes are the best course
+        of action.
+
+        Include any possible draw-backs you can foresee and how they may be
+        avoided.
+        Additionally, if any of the changes you propose have possible conflicts
+        with the project's
+        [principles](https://github.com/mit-dci/opencbdc-tx/tree/trunk/docs/contributing.md#OpenCBDCs-Guiding-Principles),
+        walk through them here.
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: >
+        By submitting this proposal, you agree to follow the project's
+        [Code of Conduct](https://github.com/mit-dci/opencbdc-tx/tree/trunk/docs/code_of_conduct.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+

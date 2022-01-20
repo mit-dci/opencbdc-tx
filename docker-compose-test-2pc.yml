@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+
+  test-2pc:
+    build: .
+    image: opencbdc-tx
+    command: sh ./scripts/test-transaction.sh 2pc-compose.cfg
+    networks:
+      - 2pc-network

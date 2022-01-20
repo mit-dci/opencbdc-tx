@@ -1,0 +1,4 @@
+[submodule "secp256k1"]
+	path = 3rdparty/secp256k1
+	url = https://github.com/bitcoin-core/secp256k1.git
+	ignore = dirty
