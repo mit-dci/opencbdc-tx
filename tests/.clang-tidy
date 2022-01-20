@@ -1,0 +1,2 @@
+Checks: '-cppcoreguidelines-*,-readability-magic-numbers,-readability-function-cognitive-complexity'
+InheritParentConfig: true

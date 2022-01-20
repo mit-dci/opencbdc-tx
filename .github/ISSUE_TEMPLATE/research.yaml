@@ -1,0 +1,85 @@
+name: Research Proposal
+description: >
+  Submit a proposal to research a potential solution for a given
+  question or problem.
+title: "[A short, descriptive title]"
+labels:
+  - feedback/proposal
+assignees:
+  - halosghost
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: Give a concise (100 words or less) summary of a question about CBDCs.
+      placeholder: ex. Could a CBDC offer support for <some feature> and still perform at-scale?
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Benefit
+      description: >
+        Even if it feels obvious, offer an explanation of the benefits of answering this question.
+
+        For example, would it clarify the practical potential of CBDCs to solve problems,
+        or offer more concrete information for policymakers to consider when planning implementation?
+      placeholder: ex. Answering this question could help policymakers determine if the proposed design is practical.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: >
+        An ideal proposal will include a potential avenue that could be followed
+        to find an answer.
+        Walk through options you have identified (even if they are not fully-formed).
+
+        For example, answering your question may require creating new designs,
+        implementing some feature, designing a representative benchmark, etc.
+
+        Any specifics that you know in-advance should be written out here.
+    validations:
+      required: false
+  - type: textarea
+    id: challenges
+    attributes:
+      label: Possible Difficulties
+      description: >
+        Answering a research question is not always easy.
+
+        If you can forsee any possible pitfalls or difficulties, mention them
+        here; if possible, include how they may be avoided.
+
+        Additionally, if answering your question would involve possible conflicts
+        with the project's
+        [principles](https://github.com/mit-dci/opencbdc-tx/tree/trunk/docs/contributing.md#OpenCBDCs-Guiding-Principles),
+        walk through them here.
+    validations:
+      required: false
+  - type: textarea
+    id: prior
+    attributes:
+      label: Prior Work
+      description: >
+        If you referred to any published material in the creation of this proposal,
+        reference it here (e.g., papers which explored similar questions, projects
+        which inspired the proposed solution, etc.).
+
+        Where possible, please offer a very short description of how the reference
+        contributed to the formation of this proposal.
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: >
+        By submitting this proposal, you agree to follow the project's
+        [Code of Conduct](https://github.com/mit-dci/opencbdc-tx/tree/trunk/docs/code_of_conduct.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+

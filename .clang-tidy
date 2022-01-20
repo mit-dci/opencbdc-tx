@@ -1,0 +1,15 @@
+# TODO: Renable bugprone-easily-swappable-parameters
+Checks: '
+clang-analyzer-*,
+bugprone-*,
+-bugprone-easily-swappable-parameters,
+modernize-*,
+performance-*,
+portability-*,
+cppcoreguidelines-*,
+-cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+readability-*,
+google-explicit-constructor'
+WarningsAsErrors: '*'
+FormatStyle: 'file'
+HeaderFilterRegex: 'hpp'

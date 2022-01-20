@@ -1,0 +1,2 @@
+Checks: '-readability-function-cognitive-complexity'
+InheritParentConfig: true

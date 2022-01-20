@@ -1,0 +1,65 @@
+# Generated files
+atomizerd
+sentineld
+shardd
+shard-cli
+atomizer-cli
+benchmark-makeblock
+client-cli
+tests/run_unit_tests
+tools/txtester/tx-generator
+tools/txtester/tx-player
+archiverd
+
+# ignore generated docs
+doxygen_generated
+
+# Default build folder
+build/
+
+# 3rd party generated files
+3rdparty/secp256k1_genctx
+3rdparty/src/ecmult_static_context.h
+
+Makefile
+CMakeCache.txt
+
+.*.swp
+*.*~*
+*.bak
+*.rej
+*.orig
+*.pyc
+*.o
+*.o-*
+*.a
+*.log
+
+leveldb*/
+NuRaft*/
+benchmark-results/
+CMakeFiles/
+plots/
+.deps/
+.libs/
+
+# Database
+blocks.dat
+test_db
+
+
+# System files
+.DS_Store
+.dirstamp
+
+# IDE support
+.vscode/
+.idea/
+cmake-build-*/
+
+# Regtest output files
+*.gcov
+*.xml
+build/gcov_data
+build/tests
+

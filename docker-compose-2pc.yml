@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+
+  sentinel0:
+    build: .
+    image: opencbdc-tx
+    restart: always
+    command: ./build/src/sentinel_2pc/sentineld-2pc 2pc-compose.cfg 0
+    ports:
+      - 5555:5555
+    depends_on:
+      - "coordinator0"
+      - "shard0"
+    networks:
+      - 2pc-network
+    healthcheck:
+      test: ["CMD", "netstat -ltn | grep -c 5555"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  coordinator0:
+    build: .
+    image: opencbdc-tx
+    command: ./build/src/coordinator/coordinatord 2pc-compose.cfg 0 0
+    expose:
+      - "7777"
+    depends_on:
+      - "shard0"
+    networks:
+      - 2pc-network
+    healthcheck:
+      test: ["CMD", "netstat -ltn | grep -c 7777"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  shard0:
+    build: .
+    image: opencbdc-tx
+    command: ./build/src/locking_shard/locking-shardd 2pc-compose.cfg 0 0
+    expose:
+      - "6666"
+    ports:
+      - 6767:6767
+    networks:
+      - 2pc-network
+    healthcheck:
+      test: ["CMD", "netstat -ltn | grep -c 6666"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  2pc-network:
+    name: 2pc-network

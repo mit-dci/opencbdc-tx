@@ -1,0 +1,56 @@
+name: Bug Report
+description: >
+  Report undesirable/unexpected behavior in the code.
+title: "[A short, descriptive title]"
+labels:
+  - fix/bug
+assignees:
+  - halosghost
+body:
+  - type: textarea
+    id: branch
+    attributes:
+      label: Affected Branch
+      description: >
+        What branch of the code is affected by the issue?
+      placeholder: trunk
+    validations:
+      required: true
+  - type: checkboxes
+    id: latest
+    attributes:
+      label: Basic Diagnostics
+      options:
+        - label: >
+            I've pulled the latest changes on the affected branch and the
+            issue is still present.
+          required: true
+        - label: The issue is reproducible in docker
+  - type: textarea
+    id: Description
+    attributes:
+      label: Description
+      description: >
+        Tell us as much about the problem as you can.
+        Include steps-to-reproduce, any relevant errors/logs/tracebacks, as
+        well as links to any related commits/issues/resources that you've found
+        so far.
+      value: |
+        In order to reproduce the issue, follow these steps:
+
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: >
+        By submitting this bug report, you agree to follow the project's
+        [Code of Conduct](https://github.com/mit-dci/opencbdc-tx/tree/trunk/docs/code_of_conduct.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
+

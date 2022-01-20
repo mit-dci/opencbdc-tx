@@ -1,0 +1,94 @@
+version: '3'
+
+services:
+
+  watchtower0:
+    build: .
+    image: opencbdc-tx
+    command: ./build/src/watchtower/watchtowerd atomizer-compose.cfg 0 100
+    ports:
+      - 8555:8555
+    expose:
+      - "8556"
+    networks:
+      - atomizer-network
+    healthcheck:
+      test: ["CMD", "netstat -ltn | grep -c 8555"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  atomizer0:
+    build: .
+    image: opencbdc-tx
+    command: ./build/src/atomizer/atomizer-raftd atomizer-compose.cfg 0
+    expose:
+      - "5555"
+    depends_on:
+      - "watchtower0"
+    networks:
+      - atomizer-network
+    healthcheck:
+      test: ["CMD", "netstat -ltn | grep -c 5555"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  archiver0:
+    build: .
+    image: opencbdc-tx
+    command: ./build/src/archiver/archiverd atomizer-compose.cfg 0
+    expose:
+      - "4555"
+    depends_on:
+      - "watchtower0"
+      - "atomizer0"
+    networks:
+      - atomizer-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "netstat -ltn | grep -c 4555"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  shard0:
+    build: .
+    image: opencbdc-tx
+    command: ./build/src/shard/shardd atomizer-compose.cfg 0
+    expose:
+      - "6555"
+    depends_on:
+      - "watchtower0"
+      - "archiver0"
+      - "atomizer0"
+    networks:
+      - atomizer-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "netstat -ltn | grep -c 6555"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  sentinel0:
+    build: .
+    image: opencbdc-tx
+    command: ./build/src/sentinel/sentineld atomizer-compose.cfg 0
+    ports:
+      - 7555:7555
+    depends_on:
+      - "watchtower0"
+      - "shard0"
+    networks:
+      - atomizer-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "netstat -ltn | grep -c 7555"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  atomizer-network:
+    name: atomizer-network

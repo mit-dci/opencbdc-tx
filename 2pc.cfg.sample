@@ -1,0 +1,16 @@
+2pc=1
+sentinel_count=1
+sentinel0_endpoint="127.0.0.1:5557"
+sentinel0_loglevel="WARN"
+shard_count=1
+shard0_count=1
+shard0_loglevel="INFO"
+shard0_0_endpoint="127.0.0.1:8888"
+shard0_0_raft_endpoint="127.0.0.1:8889"
+shard0_0_readonly_endpoint="127.0.0.1:8989"
+coordinator_count=1
+coordinator0_count=1
+coordinator0_loglevel="INFO"
+coordinator0_0_endpoint="127.0.0.1:8888"
+coordinator0_0_raft_endpoint="127.0.0.1:8889"
+coordinator_max_threads=100
