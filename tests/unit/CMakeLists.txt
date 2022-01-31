@@ -39,6 +39,7 @@ target_link_libraries(run_unit_tests ${GTEST_BOTH_LIBRARIES}
                                      shard
                                      sentinel
                                      sentinel_2pc
+                                     sentinel_interface
                                      watchtower
                                      coordinator
                                      locking_shard

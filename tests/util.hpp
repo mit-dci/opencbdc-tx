@@ -6,13 +6,13 @@
 #ifndef OPENCBDC_TX_TESTS_UTIL_H_
 #define OPENCBDC_TX_TESTS_UTIL_H_
 
-#include "atomizer/block.hpp"
-#include "common/config.hpp"
-#include "common/hash.hpp"
-#include "network/connection_manager.hpp"
-#include "serialization/format.hpp"
-#include "transaction/transaction.hpp"
-#include "transaction/validation.hpp"
+#include "uhs/atomizer/atomizer/block.hpp"
+#include "uhs/transaction/transaction.hpp"
+#include "uhs/transaction/validation.hpp"
+#include "util/common/config.hpp"
+#include "util/common/hash.hpp"
+#include "util/network/connection_manager.hpp"
+#include "util/serialization/format.hpp"
 
 #include <future>
 #include <gtest/gtest.h>

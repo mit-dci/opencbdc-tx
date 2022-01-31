@@ -5,9 +5,9 @@
 
 #include "util.hpp"
 
-#include "common/hash.hpp"
-#include "common/hashmap.hpp"
-#include "transaction/messages.hpp"
+#include "uhs/transaction/messages.hpp"
+#include "util/common/hash.hpp"
+#include "util/common/hashmap.hpp"
 
 namespace cbdc::test {
     auto compact_transaction::operator==(

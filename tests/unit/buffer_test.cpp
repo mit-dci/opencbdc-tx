@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "common/buffer.hpp"
+#include "util/common/buffer.hpp"
 
 #include <cstring>
 #include <gtest/gtest.h>

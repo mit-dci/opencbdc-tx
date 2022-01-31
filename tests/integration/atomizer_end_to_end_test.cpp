@@ -3,15 +3,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "archiver/controller.hpp"
-#include "atomizer/controller.hpp"
-#include "client/atomizer_client.hpp"
 #include "mock_system.hpp"
-#include "sentinel/controller.hpp"
-#include "shard/controller.hpp"
+#include "uhs/atomizer/archiver/controller.hpp"
+#include "uhs/atomizer/atomizer/controller.hpp"
+#include "uhs/atomizer/sentinel/controller.hpp"
+#include "uhs/atomizer/shard/controller.hpp"
+#include "uhs/atomizer/watchtower/controller.hpp"
+#include "uhs/atomizer/watchtower/tx_error_messages.hpp"
+#include "uhs/client/atomizer_client.hpp"
 #include "util.hpp"
-#include "watchtower/controller.hpp"
-#include "watchtower/tx_error_messages.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>

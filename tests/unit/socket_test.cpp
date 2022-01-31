@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "network/socket_selector.hpp"
-#include "network/tcp_listener.hpp"
+#include "util/network/socket_selector.hpp"
+#include "util/network/tcp_listener.hpp"
 
 #include <array>
 #include <gtest/gtest.h>

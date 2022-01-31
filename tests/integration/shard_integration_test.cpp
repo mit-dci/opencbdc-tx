@@ -4,10 +4,10 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "mock_system.hpp"
-#include "shard/controller.hpp"
-#include "transaction/messages.hpp"
+#include "uhs/atomizer/shard/controller.hpp"
+#include "uhs/atomizer/watchtower/tx_error_messages.hpp"
+#include "uhs/transaction/messages.hpp"
 #include "util.hpp"
-#include "watchtower/tx_error_messages.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>

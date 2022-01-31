@@ -3,17 +3,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "common/hash.hpp"
-#include "common/logging.hpp"
-#include "raft/console_logger.hpp"
-#include "raft/log_store.hpp"
-#include "raft/messages.hpp"
-#include "raft/node.hpp"
-#include "raft/serialization.hpp"
-#include "raft/state_manager.hpp"
-#include "raft/util.hpp"
-#include "serialization/format.hpp"
-#include "serialization/util.hpp"
+#include "util/common/hash.hpp"
+#include "util/common/logging.hpp"
+#include "util/raft/console_logger.hpp"
+#include "util/raft/log_store.hpp"
+#include "util/raft/messages.hpp"
+#include "util/raft/node.hpp"
+#include "util/raft/serialization.hpp"
+#include "util/raft/state_manager.hpp"
+#include "util/raft/util.hpp"
+#include "util/serialization/format.hpp"
+#include "util/serialization/util.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>

@@ -3,9 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "network/connection_manager.hpp"
-#include "serialization/buffer_serializer.hpp"
 #include "util.hpp"
+#include "util/network/connection_manager.hpp"
+#include "util/serialization/buffer_serializer.hpp"
 
 #include <gtest/gtest.h>
 

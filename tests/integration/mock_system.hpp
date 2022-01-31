@@ -11,10 +11,10 @@
 #ifndef OPENCBDC_TX_TESTS_INTEGRATION_MOCK_SYSTEM_H_
 #define OPENCBDC_TX_TESTS_INTEGRATION_MOCK_SYSTEM_H_
 
-#include "common/config.hpp"
-#include "network/connection_manager.hpp"
-#include "serialization/buffer_serializer.hpp"
-#include "serialization/format.hpp"
+#include "util/common/config.hpp"
+#include "util/network/connection_manager.hpp"
+#include "util/serialization/buffer_serializer.hpp"
+#include "util/serialization/format.hpp"
 
 #include <future>
 #include <type_traits>

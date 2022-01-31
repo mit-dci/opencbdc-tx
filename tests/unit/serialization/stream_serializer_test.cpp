@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "serialization/istream_serializer.hpp"
-#include "serialization/ostream_serializer.hpp"
-#include "transaction/messages.hpp"
+#include "uhs/transaction/messages.hpp"
 #include "util.hpp"
+#include "util/serialization/istream_serializer.hpp"
+#include "util/serialization/ostream_serializer.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>

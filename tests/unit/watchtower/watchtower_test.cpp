@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "uhs/atomizer/watchtower/watchtower.hpp"
 #include "util.hpp"
-#include "watchtower/watchtower.hpp"
 
 #include <gtest/gtest.h>
 

@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "raft/serialization.hpp"
-#include "serialization/buffer_serializer.hpp"
-#include "serialization/format.hpp"
-#include "serialization/size_serializer.hpp"
+#include "util/raft/serialization.hpp"
+#include "util/serialization/buffer_serializer.hpp"
+#include "util/serialization/format.hpp"
+#include "util/serialization/size_serializer.hpp"
 
 #include <gtest/gtest.h>
 #include <utility>

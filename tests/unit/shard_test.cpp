@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "shard/shard.hpp"
-#include "transaction/wallet.hpp"
+#include "uhs/atomizer/shard/shard.hpp"
+#include "uhs/transaction/wallet.hpp"
 #include "util.hpp"
 
 #include <filesystem>

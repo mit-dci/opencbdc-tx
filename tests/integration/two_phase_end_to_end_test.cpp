@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "client/twophase_client.hpp"
-#include "coordinator/controller.hpp"
-#include "locking_shard/controller.hpp"
-#include "network/socket.hpp"
-#include "sentinel_2pc/controller.hpp"
+#include "uhs/client/twophase_client.hpp"
+#include "uhs/twophase/coordinator/controller.hpp"
+#include "uhs/twophase/locking_shard/controller.hpp"
+#include "uhs/twophase/sentinel_2pc/controller.hpp"
 #include "util.hpp"
+#include "util/network/socket.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>
