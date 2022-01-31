@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpc/async_server.hpp"
-#include "rpc/blocking_server.hpp"
-#include "rpc/tcp_client.hpp"
-#include "rpc/tcp_server.hpp"
-#include "serialization/format.hpp"
+#include "util/rpc/async_server.hpp"
+#include "util/rpc/blocking_server.hpp"
+#include "util/rpc/tcp_client.hpp"
+#include "util/rpc/tcp_server.hpp"
+#include "util/serialization/format.hpp"
 
 #include <gtest/gtest.h>
 #include <variant>

@@ -3,16 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "atomizer/format.hpp"
-#include "coordinator/format.hpp"
-#include "sentinel/format.hpp"
-#include "serialization/format.hpp"
-#include "transaction/messages.hpp"
+#include "uhs/atomizer/atomizer/format.hpp"
+#include "uhs/atomizer/watchtower/messages.hpp"
+#include "uhs/atomizer/watchtower/status_update_messages.hpp"
+#include "uhs/atomizer/watchtower/tx_error_messages.hpp"
+#include "uhs/atomizer/watchtower/watchtower.hpp"
+#include "uhs/sentinel/format.hpp"
+#include "uhs/transaction/messages.hpp"
+#include "uhs/twophase/coordinator/format.hpp"
 #include "util.hpp"
-#include "watchtower/messages.hpp"
-#include "watchtower/status_update_messages.hpp"
-#include "watchtower/tx_error_messages.hpp"
-#include "watchtower/watchtower.hpp"
+#include "util/serialization/format.hpp"
 
 #include <gtest/gtest.h>
 

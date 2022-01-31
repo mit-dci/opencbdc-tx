@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "coordinator/format.hpp"
-#include "raft/serialization.hpp"
-#include "serialization/util.hpp"
-#include "transaction/messages.hpp"
+#include "uhs/transaction/messages.hpp"
+#include "uhs/twophase/coordinator/format.hpp"
 #include "util.hpp"
+#include "util/raft/serialization.hpp"
+#include "util/serialization/util.hpp"
 
 #include <gtest/gtest.h>
 

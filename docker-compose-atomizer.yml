@@ -6,7 +6,7 @@ services:
     build: .
     image: opencbdc-tx
     tty: true
-    command: ./build/src/watchtower/watchtowerd atomizer-compose.cfg 0
+    command: ./build/src/uhs/atomizer/watchtower/watchtowerd atomizer-compose.cfg 0
     ports:
       - 8555:8555
     expose:
@@ -23,7 +23,7 @@ services:
     build: .
     image: opencbdc-tx
     tty: true
-    command: ./build/src/atomizer/atomizer-raftd atomizer-compose.cfg 0
+    command: ./build/src/uhs/atomizer/atomizer/atomizer-raftd atomizer-compose.cfg 0
     expose:
       - "5555"
     depends_on:
@@ -40,7 +40,7 @@ services:
     build: .
     image: opencbdc-tx
     tty: true
-    command: ./build/src/archiver/archiverd atomizer-compose.cfg 0
+    command: ./build/src/uhs/atomizer/archiver/archiverd atomizer-compose.cfg 0
     expose:
       - "4555"
     depends_on:
@@ -59,7 +59,7 @@ services:
     build: .
     image: opencbdc-tx
     tty: true
-    command: ./build/src/shard/shardd atomizer-compose.cfg 0
+    command: ./build/src/uhs/atomizer/shard/shardd atomizer-compose.cfg 0
     expose:
       - "6555"
     depends_on:
@@ -79,7 +79,7 @@ services:
     build: .
     image: opencbdc-tx
     tty: true
-    command: ./build/src/sentinel/sentineld atomizer-compose.cfg 0
+    command: ./build/src/uhs/atomizer/sentinel/sentineld atomizer-compose.cfg 0
     ports:
       - 7555:7555
     depends_on:

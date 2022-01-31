@@ -3,16 +3,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "common/config.hpp"
-#include "common/logging.hpp"
-#include "coordinator/client.hpp"
-#include "locking_shard/status_client.hpp"
-#include "network/connection_manager.hpp"
-#include "sentinel/client.hpp"
-#include "sentinel/format.hpp"
-#include "serialization/format.hpp"
-#include "transaction/messages.hpp"
-#include "transaction/wallet.hpp"
+#include "uhs/sentinel/client.hpp"
+#include "uhs/sentinel/format.hpp"
+#include "uhs/transaction/messages.hpp"
+#include "uhs/transaction/wallet.hpp"
+#include "uhs/twophase/coordinator/client.hpp"
+#include "uhs/twophase/locking_shard/status_client.hpp"
+#include "util/common/config.hpp"
+#include "util/common/logging.hpp"
+#include "util/network/connection_manager.hpp"
+#include "util/serialization/format.hpp"
 
 #include <csignal>
 #include <iostream>

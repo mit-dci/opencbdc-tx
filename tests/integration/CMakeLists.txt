@@ -23,6 +23,7 @@ target_link_libraries(run_integration_tests ${GTEST_BOTH_LIBRARIES}
                                             archiver
                                             sentinel
                                             sentinel_2pc
+                                            sentinel_interface
                                             watchtower
                                             coordinator
                                             locking_shard

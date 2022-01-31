@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "common/config.hpp"
-#include "serialization/buffer_serializer.hpp"
-#include "serialization/format.hpp"
-#include "serialization/ostream_serializer.hpp"
-#include "transaction/transaction.hpp"
-#include "transaction/wallet.hpp"
+#include "uhs/transaction/transaction.hpp"
+#include "uhs/transaction/wallet.hpp"
+#include "util/common/config.hpp"
+#include "util/serialization/buffer_serializer.hpp"
+#include "util/serialization/format.hpp"
+#include "util/serialization/ostream_serializer.hpp"
 
 #include <algorithm>
 #include <chrono>

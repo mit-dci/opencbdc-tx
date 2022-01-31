@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "atomizer/controller.hpp"
-#include "atomizer/format.hpp"
-#include "common/hashmap.hpp"
 #include "mock_system.hpp"
+#include "uhs/atomizer/atomizer/controller.hpp"
+#include "uhs/atomizer/atomizer/format.hpp"
 #include "util.hpp"
+#include "util/common/hashmap.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>

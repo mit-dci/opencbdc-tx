@@ -3,12 +3,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "coordinator/controller.hpp"
-#include "coordinator/format.hpp"
-#include "sentinel/client.hpp"
-#include "sentinel_2pc/controller.hpp"
-#include "serialization/util.hpp"
-#include "transaction/wallet.hpp"
+#include "uhs/sentinel/client.hpp"
+#include "uhs/transaction/wallet.hpp"
+#include "uhs/twophase/coordinator/controller.hpp"
+#include "uhs/twophase/coordinator/format.hpp"
+#include "uhs/twophase/sentinel_2pc/controller.hpp"
+#include "util/serialization/util.hpp"
 
 #include <gtest/gtest.h>
 

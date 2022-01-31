@@ -7,7 +7,7 @@ services:
     image: opencbdc-tx
     tty: true
     restart: always
-    command: ./build/src/sentinel_2pc/sentineld-2pc 2pc-compose.cfg 0
+    command: ./build/src/uhs/twophase/sentinel_2pc/sentineld-2pc 2pc-compose.cfg 0
     ports:
       - 5555:5555
     depends_on:
@@ -25,7 +25,7 @@ services:
     build: .
     image: opencbdc-tx
     tty: true
-    command: ./build/src/coordinator/coordinatord 2pc-compose.cfg 0 0
+    command: ./build/src/uhs/twophase/coordinator/coordinatord 2pc-compose.cfg 0 0
     expose:
       - "7777"
     depends_on:
@@ -43,7 +43,7 @@ services:
     build: .
     image: opencbdc-tx
     tty: true
-    command: ./build/src/locking_shard/locking-shardd 2pc-compose.cfg 0 0
+    command: ./build/src/uhs/twophase/locking_shard/locking-shardd 2pc-compose.cfg 0 0
     expose:
       - "6666"
     ports:

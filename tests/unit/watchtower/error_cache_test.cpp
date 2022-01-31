@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "watchtower/error_cache.hpp"
-#include "watchtower/tx_error_messages.hpp"
+#include "uhs/atomizer/watchtower/error_cache.hpp"
+#include "uhs/atomizer/watchtower/tx_error_messages.hpp"
 
 #include <gtest/gtest.h>
 

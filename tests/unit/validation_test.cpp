@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "transaction/validation.hpp"
-#include "transaction/wallet.hpp"
+#include "uhs/transaction/validation.hpp"
+#include "uhs/transaction/wallet.hpp"
 
 #include <gtest/gtest.h>
 #include <variant>

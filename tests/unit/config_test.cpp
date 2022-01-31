@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "common/config.hpp"
+#include "util/common/config.hpp"
 
 #include <gtest/gtest.h>
 #include <string>

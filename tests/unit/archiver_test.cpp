@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "archiver/controller.hpp"
-#include "atomizer/format.hpp"
-#include "common/logging.hpp"
-#include "serialization/format.hpp"
+#include "uhs/atomizer/archiver/controller.hpp"
+#include "uhs/atomizer/atomizer/format.hpp"
+#include "util/common/logging.hpp"
+#include "util/serialization/format.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>

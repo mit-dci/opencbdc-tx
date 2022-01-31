@@ -4,11 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "mock_system.hpp"
-#include "sentinel/client.hpp"
-#include "sentinel/controller.hpp"
-#include "sentinel/format.hpp"
-#include "transaction/messages.hpp"
-#include "transaction/wallet.hpp"
+#include "uhs/atomizer/sentinel/controller.hpp"
+#include "uhs/sentinel/client.hpp"
+#include "uhs/sentinel/format.hpp"
+#include "uhs/transaction/messages.hpp"
+#include "uhs/transaction/wallet.hpp"
 #include "util.hpp"
 
 #include <gtest/gtest.h>

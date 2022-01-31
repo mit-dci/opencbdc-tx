@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "coordinator/distributed_tx.hpp"
-#include "locking_shard/locking_shard.hpp"
+#include "uhs/twophase/coordinator/distributed_tx.hpp"
+#include "uhs/twophase/locking_shard/locking_shard.hpp"
 
 #include <gtest/gtest.h>
 #include <queue>

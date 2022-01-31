@@ -3,18 +3,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "atomizer/atomizer_raft.hpp"
-#include "atomizer/block.hpp"
-#include "atomizer/format.hpp"
-#include "common/config.hpp"
-#include "common/logging.hpp"
-#include "network/connection_manager.hpp"
-#include "sentinel/client.hpp"
-#include "serialization/format.hpp"
-#include "transaction/messages.hpp"
-#include "transaction/wallet.hpp"
-#include "watchtower/client.hpp"
-#include "watchtower/watchtower.hpp"
+#include "uhs/atomizer/atomizer/atomizer_raft.hpp"
+#include "uhs/atomizer/atomizer/block.hpp"
+#include "uhs/atomizer/atomizer/format.hpp"
+#include "uhs/atomizer/watchtower/client.hpp"
+#include "uhs/atomizer/watchtower/watchtower.hpp"
+#include "uhs/sentinel/client.hpp"
+#include "uhs/transaction/messages.hpp"
+#include "uhs/transaction/wallet.hpp"
+#include "util/common/config.hpp"
+#include "util/common/logging.hpp"
+#include "util/network/connection_manager.hpp"
+#include "util/serialization/format.hpp"
 
 #include <atomic>
 #include <csignal>
