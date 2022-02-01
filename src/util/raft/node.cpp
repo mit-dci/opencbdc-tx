@@ -82,30 +82,37 @@ namespace cbdc::raft {
 
         for(const auto& srv_data : srvs) {
             nuraft::srv_config srv(srv_data.first, srv_data.second);
-            std::cout << "Adding raft server: " << srv.get_id() << ", "
-                      << srv.get_endpoint() << std::flush;
 
-            auto ret = m_raft_instance->add_srv(srv);
-            if(!ret->get_accepted()) {
-                std::cout << "Failed to add raft server: " << srv.get_id()
-                          << ", " << srv.get_endpoint()
-                          << ", error: " << ret->get_result_str() << std::endl;
-                return false;
-            }
+            for(;;) {
+                std::cout << "Adding raft server: " << srv.get_id() << ", "
+                          << srv.get_endpoint() << std::flush;
 
-            nuraft::ptr<nuraft::srv_config> srv_conf;
-            int attempts{0};
-            const auto max_retries = 200;
-            do {
-                srv_conf = m_raft_instance->get_srv_config(srv_data.first);
-                std::cout << "." << std::flush;
-                attempts++;
-                std::this_thread::sleep_for(sleep_time);
-            } while(!srv_conf && attempts < max_retries);
+                auto ret = m_raft_instance->add_srv(srv);
+                if(!ret->get_accepted()
+                   && ret->get_result_code()
+                          != nuraft::cmd_result_code::SERVER_IS_JOINING) {
+                    std::cout << "Failed to add raft server: " << srv.get_id()
+                              << ", " << srv.get_endpoint()
+                              << ", error: " << ret->get_result_str()
+                              << std::endl;
+                    return false;
+                }
 
-            if(!srv_conf) {
-                std::cout << "timed out" << std::endl;
-                return false;
+                nuraft::ptr<nuraft::srv_config> srv_conf;
+                int attempts{0};
+                const auto max_retries = 50;
+                do {
+                    srv_conf = m_raft_instance->get_srv_config(srv_data.first);
+                    std::cout << "." << std::flush;
+                    attempts++;
+                    std::this_thread::sleep_for(sleep_time);
+                } while(!srv_conf && attempts < max_retries);
+
+                if(!srv_conf) {
+                    std::cout << "timed out" << std::endl;
+                } else {
+                    break;
+                }
             }
 
             std::cout << "done" << std::endl;
