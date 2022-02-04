@@ -78,7 +78,9 @@ namespace cbdc {
     auto twophase_client::send_mint_tx(const transaction::full_tx& mint_tx)
         -> bool {
         auto ctx = transaction::compact_tx(mint_tx);
-        return m_coordinator_client.execute_transaction(
+        auto done = std::promise<void>();
+        auto done_fut = done.get_future();
+        auto res = m_coordinator_client.execute_transaction(
             ctx,
             [&, tx_id = ctx.m_id](std::optional<bool> success) {
                 if(!success.has_value()) {
@@ -92,6 +94,18 @@ namespace cbdc {
                 }
                 confirm_transaction(tx_id);
                 m_logger->info("Confirmed mint TX");
+                done.set_value();
             });
+        if(!res) {
+            m_logger->error("Failed to send transaction to coordinator");
+            return false;
+        }
+        constexpr auto timeout = std::chrono::seconds(5);
+        auto maybe_timeout = done_fut.wait_for(timeout);
+        if(maybe_timeout == std::future_status::timeout) {
+            m_logger->error("Timed out waiting for mint response");
+            return false;
+        }
+        return res;
     }
 }
