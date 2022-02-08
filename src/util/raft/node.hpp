@@ -52,6 +52,9 @@ namespace cbdc::raft {
         ///                              of cores on the system.
         /// \param logger log instance NuRaft should use.
         /// \param raft_cb NuRaft callback to report raft events.
+        /// \param wait_for_followers true if the leader raft node should
+        ///                           re-attempt to add all followers to the
+        ///                           cluster until success.
         node(int node_id,
              const network::endpoint_t& raft_endpoint,
              const std::string& node_type,
@@ -59,7 +62,8 @@ namespace cbdc::raft {
              nuraft::ptr<nuraft::state_machine> sm,
              size_t asio_thread_pool_size,
              std::shared_ptr<logging::log> logger,
-             nuraft::cb_func::func_type raft_cb);
+             nuraft::cb_func::func_type raft_cb,
+             bool wait_for_followers);
 
         ~node();
 
@@ -128,6 +132,8 @@ namespace cbdc::raft {
 
         nuraft::asio_service::options m_asio_opt;
         nuraft::raft_server::init_options m_init_opts;
+
+        bool m_wait_for_followers;
 
         [[nodiscard]] auto add_cluster_nodes(
             const std::vector<network::endpoint_t>& raft_servers) const
