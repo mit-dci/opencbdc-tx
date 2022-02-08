@@ -43,7 +43,8 @@ namespace cbdc::locking_shard {
               [&](auto&& res, auto&& err) {
                   return raft_callback(std::forward<decltype(res)>(res),
                                        std::forward<decltype(err)>(err));
-              })) {}
+              },
+              m_opts.m_wait_for_followers)) {}
 
     auto controller::init() -> bool {
         auto params = nuraft::raft_params();

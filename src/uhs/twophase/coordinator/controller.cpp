@@ -35,7 +35,8 @@ namespace cbdc::coordinator {
               [&](auto&& res, auto&& err) {
                   return raft_callback(std::forward<decltype(res)>(res),
                                        std::forward<decltype(err)>(err));
-              }),
+              },
+              m_opts.m_wait_for_followers),
           m_shard_endpoints(m_opts.m_locking_shard_endpoints),
           m_shard_ranges(m_opts.m_shard_ranges),
           m_batch_size(m_opts.m_batch_size),

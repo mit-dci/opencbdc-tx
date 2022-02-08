@@ -56,6 +56,7 @@ namespace cbdc::config {
         static constexpr size_t initial_mint_value{100};
         static constexpr size_t watchtower_block_cache_size{100};
         static constexpr size_t watchtower_error_cache_size{1000000};
+        static constexpr bool wait_for_followers{true};
 
         static constexpr auto log_level = logging::log_level::warn;
     }
@@ -113,6 +114,7 @@ namespace cbdc::config {
     static constexpr auto loadgen_count_key = "loadgen_count";
     static constexpr auto shard_completed_txs_cache_size
         = "shard_completed_txs_cache_size";
+    static constexpr auto wait_for_followers_key = "wait_for_followers";
 
     /// [start, end] inclusive.
     using shard_range_t = std::pair<uint8_t, uint8_t>;
@@ -239,6 +241,10 @@ namespace cbdc::config {
 
         /// Number of load generators over which to split pre-seeded UTXOs.
         size_t m_loadgen_count{0};
+
+        /// Flag for whether the raft leader should re-attempt to join
+        /// followers to the cluster until successful.
+        bool m_wait_for_followers{defaults::wait_for_followers};
     };
 
     /// Read options from the given config file without checking invariants.

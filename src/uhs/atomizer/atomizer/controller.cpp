@@ -20,15 +20,16 @@ namespace cbdc::atomizer {
         : m_atomizer_id(atomizer_id),
           m_opts(opts),
           m_logger(std::move(log)),
-          m_raft_node(static_cast<uint32_t>(atomizer_id),
-                      opts.m_atomizer_raft_endpoints[atomizer_id].value(),
-                      m_opts.m_stxo_cache_depth,
-                      m_logger,
-                      [&](auto&& type, auto&& param) {
-                          return raft_callback(
-                              std::forward<decltype(type)>(type),
-                              std::forward<decltype(param)>(param));
-                      }) {}
+          m_raft_node(
+              static_cast<uint32_t>(atomizer_id),
+              opts.m_atomizer_raft_endpoints[atomizer_id].value(),
+              m_opts.m_stxo_cache_depth,
+              m_logger,
+              [&](auto&& type, auto&& param) {
+                  return raft_callback(std::forward<decltype(type)>(type),
+                                       std::forward<decltype(param)>(param));
+              },
+              m_opts.m_wait_for_followers) {}
 
     controller::~controller() {
         m_raft_node.stop();
