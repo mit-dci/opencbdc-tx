@@ -55,26 +55,29 @@ The easiest way to compile the code and run the system locally is using [Docker]
 * [Install Docker](https://docs.docker.com/get-docker/)
 * [Install docker-compose](https://docs.docker.com/compose/install/)
 
-Don't forget to run the docker daemon!
+### Recommended post-install steps
+- [Enable the Docker daemon](https://docs.docker.com/engine/install/linux-postinstall/#configure-docker-to-start-on-boot)
+  - It is recommended to read the other instructions here to customize other features you may find useful
+- [Enable the ability to run docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)
+- Alternatively, advanced users may wish to run Docker in [rootless mode](https://docs.docker.com/engine/security/rootless/)
 
 ## Build the container
 
 ```terminal
-$ cd opencbdc-tx                 # change to the project directory
-$ sudo -s                        # open a root shell (needed for docker)
-# docker build . -t opencbdc-tx  # build the container
+# docker-compose -f docker-compose-2pc.yml build
 ```
 
 ## Launch the System
+**Note:** You will need to both run the system and interact with it. To do this, you should run the system in **detached** mode (in the background), and then you can launch a second container in which to run commands. This is detailed below.
 
-**Note:** You will need to both run the system and interact with it; you can either use two shells, or you can add the `--detach` flag when launching the system (note that it will then remain running till you stop it, e.g., with `docker stop`).
 Additionally, you can start the atomizer architecture by passing `--file docker-compose-atomizer.yml` instead.
 
 1. Run the System
    ```terminal
-   # docker-compose --file docker-compose-2pc.yml up
+   # docker-compose -f docker-compose-2pc.yml up -d
    ```
-1. Launch a container in which to run wallet commands (use `--network atomizer-network` instead of `--network 2pc-network` if using the atomizer architecture)
+   **Note** run `docker-compose -f docker-compose-2pc.yml stop` to stop the container (but leave it to view logs, or start it again later). To stop and delete it, run `docker-compose -f docker-compose-2pc.yml down`.
+2. Launch a container in which to run wallet commands (use `--network atomizer-network` instead of `--network 2pc-network` if using the atomizer architecture)
    ```terminal
    # docker run --network 2pc-network -ti opencbdc-tx /bin/bash
    ```
