@@ -24,12 +24,12 @@ Both architectures handle multiple geo-distributed datacenter outages with a [re
 1. "Atomizer" architecture
     - Materializes a total ordering of all transactions settled by the system in a linear sequence of batches.
     - Requires vertical scaling as peak transaction throughput is limited by the performance of a single system component.
-    - Maximum demonstrated throughput ~100K transactions per second.
-    - Geo-replicated latency ~3 seconds.
+    - Maximum demonstrated throughput ~170K transactions per second.
+    - Geo-replicated latency <2 seconds.
 1. "Two-phase commit" architecture
     - Transaction history is not materialized and only a relative ordering is assigned between directly related transactions.
     - Combines [two-phase commit (2PC)](https://en.wikipedia.org/wiki/Two-phase_commit_protocol) and [conservative two-phase locking (C2PL)](https://en.wikipedia.org/wiki/Conservative_two-phase_locking) to create a system without a single bottlenecked component where peak transaction throughput scales horizontally with the number of nodes.
-    - Maximum demonstrated throughput ~1.2M transactions per second.
+    - Maximum demonstrated throughput ~1.7M transactions per second.
     - Geo-replicated latency <1 second.
 
 Read the [architecture guide](docs/architecture.md) for a detailed description of the system components and implementation of each architecture.
