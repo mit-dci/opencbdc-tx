@@ -17,7 +17,7 @@ RUN apt update && \
 # Args
 ARG CMAKE_BUILD_TYPE="Release"
 ARG LEVELDB_VERSION="1.22"
-ARG NURAFT_VERSION="1.2.0"
+ARG NURAFT_VERSION="1.3.0"
 
 # Install LevelDB
 RUN wget https://github.com/google/leveldb/archive/${LEVELDB_VERSION}.tar.gz && \
