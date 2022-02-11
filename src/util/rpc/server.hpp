@@ -61,7 +61,7 @@ namespace cbdc::rpc {
 
         /// Serialize a response into a buffer.
         /// \tparam type of response payload. Defaults to Response.
-        /// \param request_header header from the corresponsing request.
+        /// \param request_header header from the corresponding request.
         /// \param response_payload payload to include in the response, or
         ///                         std::nullopt if the request failed.
         /// \return serialized response buffer.

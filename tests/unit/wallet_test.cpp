@@ -56,13 +56,13 @@ TEST_F(WalletTest, update_balance_double_credit) {
 TEST_F(WalletTest, export_send_input_basic) {
     cbdc::pubkey_t target_addr = {'a', 'b', 'c', 'd'};
     auto send_tx = m_wallet.send_to(25, target_addr, false).value();
-    auto reciever_inputs
+    auto receiver_inputs
         = cbdc::transaction::wallet::export_send_inputs(send_tx, target_addr);
-    ASSERT_EQ(reciever_inputs.size(), 1);
+    ASSERT_EQ(receiver_inputs.size(), 1);
 
-    ASSERT_EQ(reciever_inputs[0].m_prevout.m_tx_id,
+    ASSERT_EQ(receiver_inputs[0].m_prevout.m_tx_id,
               cbdc::transaction::tx_id(send_tx));
-    ASSERT_EQ(reciever_inputs[0].m_prevout_data.m_value, 25U);
+    ASSERT_EQ(receiver_inputs[0].m_prevout_data.m_value, 25U);
 }
 
 TEST_F(WalletTest, fan_out) {
@@ -75,9 +75,9 @@ TEST_F(WalletTest, fan_out) {
         ASSERT_EQ(out.m_value, 5);
         ASSERT_EQ(out.m_witness_program_commitment, witcom);
     }
-    auto reciever_inputs
+    auto receiver_inputs
         = cbdc::transaction::wallet::export_send_inputs(send_tx, target_addr);
-    ASSERT_EQ(reciever_inputs.size(), 20);
+    ASSERT_EQ(receiver_inputs.size(), 20);
 }
 
 TEST_F(WalletTest, fan_out_change) {
@@ -92,9 +92,9 @@ TEST_F(WalletTest, fan_out_change) {
     }
     ASSERT_EQ(send_tx.m_outputs[0].m_value, 5);
     ASSERT_NE(send_tx.m_outputs[0].m_witness_program_commitment, witcom);
-    auto reciever_inputs
+    auto receiver_inputs
         = cbdc::transaction::wallet::export_send_inputs(send_tx, target_addr);
-    ASSERT_EQ(reciever_inputs.size(), 19);
+    ASSERT_EQ(receiver_inputs.size(), 19);
 }
 
 class WalletTxTest : public ::testing::Test {
@@ -105,18 +105,18 @@ class WalletTxTest : public ::testing::Test {
     }
 
     cbdc::transaction::wallet m_sender{};
-    cbdc::transaction::wallet m_reciever{};
+    cbdc::transaction::wallet m_receiver{};
 };
 
 TEST_F(WalletTxTest, basic) {
-    auto target_key = m_reciever.generate_key();
+    auto target_key = m_receiver.generate_key();
 
     auto send_tx = m_sender.send_to(20, target_key, true).value();
     m_sender.confirm_transaction(send_tx);
-    m_reciever.confirm_transaction(send_tx);
+    m_receiver.confirm_transaction(send_tx);
 
     ASSERT_EQ(m_sender.balance(), uint32_t{80});
-    ASSERT_EQ(m_reciever.balance(), uint32_t{20});
+    ASSERT_EQ(m_receiver.balance(), uint32_t{20});
 }
 
 class WalletMultiTxTest : public ::testing::Test {
