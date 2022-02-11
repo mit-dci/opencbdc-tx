@@ -36,7 +36,7 @@ namespace cbdc::atomizer {
         using response
             = std::variant<make_block_response, get_block_response, errors>;
 
-        /// Executes the commited the raft log entry at the given index and
+        /// Executes the committed the raft log entry at the given index and
         /// return the state machine execution result.
         /// \param log_idx index of the given log entry.
         /// \param data serialized log entry containing state machine command

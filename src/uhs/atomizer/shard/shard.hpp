@@ -61,7 +61,7 @@ namespace cbdc::shard {
         /// \return true if the shard successfully digested the block. False if the block height is not contiguous.
         auto digest_block(const cbdc::atomizer::block& blk) -> bool;
 
-        /// Returns the height of the the most recently digested block.
+        /// Returns the height of the most recently digested block.
         /// \return the best block height.
         [[nodiscard]] auto best_block_height() const -> uint64_t;
 

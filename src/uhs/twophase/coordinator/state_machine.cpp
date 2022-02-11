@@ -55,7 +55,7 @@ namespace cbdc::coordinator {
                 // Remove the dtx from the commit map
                 auto res = m_state.m_commit_txs.erase(comm.m_dtx_id.value());
                 if(res == 0U) {
-                    // If the dtx wasn't in the commit map a bug has occured
+                    // If the dtx wasn't in the commit map a bug has occurred
                     // and we crash
                     m_logger->fatal("Commit not found for discard dtx",
                                     to_string(comm.m_dtx_id.value()));

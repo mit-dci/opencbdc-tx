@@ -24,7 +24,7 @@ namespace cbdc::atomizer {
     /// construction functionality. Keeps track of recently spent UHS IDs and
     /// the block height at which they were spent to enable input attestations
     /// that are not valid as of the most recent block height to still be used.
-    /// This works because inputs covered by attesations with a block height
+    /// This works because inputs covered by attestations with a block height
     /// lower than the most recent block will be in the spent cache if they are
     /// unspendable. Otherwise, the atomizer can be certain the inputs not have
     /// been spent.
@@ -67,7 +67,7 @@ namespace cbdc::atomizer {
         /// \brief Attempts to add the given compact transaction to the list of
         /// complete transactions pending for inclusion in the next block.
         ///
-        /// If the block height of the oldest attestion in the transaction
+        /// If the block height of the oldest attestation in the transaction
         /// precedes the height of the earliest block in the spent UHS ID
         /// cache, discards the transaction and returns a watchtower error. If
         /// the compact transaction attempts to spend a UHS ID matching one in

@@ -26,7 +26,7 @@ class format_test : public ::testing::Test {
     cbdc::buffer_serializer deser;
 };
 
-TEST_F(format_test, inordinant_declared_lengths_are_handled) {
+TEST_F(format_test, inordinate_declared_lengths_are_handled) {
     // manually serialize a vector declaring an obscenely large size
     ser << std::numeric_limits<uint64_t>::max();
     ser << 12LLU;
@@ -220,7 +220,7 @@ TEST_F(format_test, malformed_vectors_cannot_roundtrip) {
     EXPECT_FALSE(deser);
 }
 
-TEST_F(format_test, welformed_unordered_maps_roundtrip) {
+TEST_F(format_test, wellformed_unordered_maps_roundtrip) {
     std::unordered_map<int16_t, uint64_t> m0{};
     ser << m0;
     EXPECT_TRUE(ser);

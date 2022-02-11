@@ -41,7 +41,7 @@ class atomizer_raft_integration_test : public ::testing::Test {
                 deser >> res;
                 {
                     std::unique_lock lk{m_bm};
-                    m_recieved_blocks.insert({res.m_height, res});
+                    m_received_blocks.insert({res.m_height, res});
                 }
                 m_bcv.notify_all();
                 return std::nullopt;
@@ -72,8 +72,8 @@ class atomizer_raft_integration_test : public ::testing::Test {
         std::unique_lock lk{m_bm};
         bool match{true};
         auto res = m_bcv.wait_for(lk, timeout, [&] {
-            auto it = m_recieved_blocks.find(blk.m_height);
-            if(it == m_recieved_blocks.end()) {
+            auto it = m_received_blocks.find(blk.m_height);
+            if(it == m_received_blocks.end()) {
                 return false;
             }
             match = it->second == blk;
@@ -100,7 +100,7 @@ class atomizer_raft_integration_test : public ::testing::Test {
 
     cbdc::network::connection_manager m_block_net;
     std::thread m_block_client_thread;
-    std::unordered_map<uint32_t, cbdc::test::block> m_recieved_blocks;
+    std::unordered_map<uint32_t, cbdc::test::block> m_received_blocks;
     std::mutex m_bm;
     std::condition_variable m_bcv;
 };
