@@ -23,7 +23,9 @@ namespace cbdc {
         /// \return true if the last serialization succeeded.
         virtual explicit operator bool() const = 0;
 
-        /// Moves the serialization cursor foward by the given number of bytes.
+        /// Moves the serialization cursor forward by the given number of
+        /// bytes.
+        ///
         /// \param len number of bytes to advance the cursor by.
         virtual void advance_cursor(size_t len) = 0;
 

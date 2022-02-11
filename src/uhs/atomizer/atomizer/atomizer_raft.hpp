@@ -37,7 +37,7 @@ namespace cbdc::atomizer {
                       bool wait_for_followers);
 
         /// Serialize and replicate the given request in the atomizer raft
-        /// cluster. Return the response asynchonrously via the given result
+        /// cluster. Return the response asynchronously via the given result
         /// function, if provided.
         /// \param r state machine request to replicate.
         /// \param result_fn function to call with the response, or nullptr to

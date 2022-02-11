@@ -29,7 +29,7 @@ namespace cbdc::raft::rpc {
                 });
         }
 
-        // TODO: implement syncronous call method
+        // TODO: implement synchronous call method
 
       private:
         std::shared_ptr<node> m_impl;

@@ -343,7 +343,7 @@ namespace cbdc::transaction::validation {
             case output_error_code::zero_value:
                 return "Output has zero value";
             default:
-                return "Unkown error";
+                return "Unknown error";
         }
     }
 

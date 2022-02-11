@@ -34,7 +34,7 @@ if ! command -v clang-tidy &>/dev/null; then
 fi
 
 if [ -z ${BUILD_DIR+x} ]; then
-  echo "BUILD_DIR environoment variable not found. Assuming default: build"
+  echo "BUILD_DIR environment variable not found. Assuming default: build"
   export BUILD_DIR=build
   if [ ! -d "${BUILD_DIR}" ]; then
     echo "${BUILD_DIR} directory not found. Please set BUILD_DIR or run \`export BUILD_DIR=${BUILD_DIR}; build.sh\` before linting."
