@@ -34,7 +34,6 @@ namespace cbdc::watchtower {
         /// Moves an error into the error cache, evicting the oldest error if
         /// the cache has reached its maximum size.
         /// \param errs the error to move.
-        /// \return true if error was successfully added to cache. False if error is invalid and not added to cache.
         void push_errors(std::vector<tx_error>&& errs);
 
         /// Checks the cache for an error associated with the given Tx ID.

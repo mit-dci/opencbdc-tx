@@ -150,7 +150,6 @@ namespace cbdc::transaction {
         /// \param value the value to use for the seeded outputs.
         /// \param begin_seed the start index to use for the seeded outputs.
         /// \param end_seed the end index to use for the seeded outputs.
-        /// \return true if setting the seed parameters succeeded.
         void seed_readonly(const hash_t& witness_commitment,
                            uint32_t value,
                            size_t begin_seed,
