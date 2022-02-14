@@ -23,6 +23,12 @@ endif()
 find_library(LEVELDB_LIBRARY leveldb REQUIRED)
 find_library(NURAFT_LIBRARY nuraft REQUIRED)
 
+message(STATUS "Checking if host system is Apple macOS")
+if (CMAKE_HOST_APPLE)
+ message(STATUS "macOS detected... Disabling Run Time Type Information (RTTI) features.")
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+endif()
+
 include_directories(3rdparty 3rdparty/secp256k1/include)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
