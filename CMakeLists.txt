@@ -11,6 +11,15 @@ try_compile(USE_STDFS_LIB ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake-tests/t
 check_cxx_compiler_flag(-Wshadow-all W_SHADOW_ALL)
 check_cxx_compiler_flag(-Wnewline-eof W_NEWLINE_EOF)
 
+
+set(SSE41_CXXFLAGS "-msse4.1")
+set(AVX2_CXXFLAGS  "-mavx -mavx2")
+set(SHANI_CXXFLAGS "-msse4 -msha")
+
+try_compile(USE_SSE41 ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake-tests/test-sse41.cpp" COMPILE_DEFINITIONS ${SSE41_CXXFLAGS})
+try_compile(USE_AVX2  ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake-tests/test-avx2.cpp"  COMPILE_DEFINITIONS ${AVX2_CXXFLAGS})
+try_compile(USE_SHANI ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake-tests/test-shani.cpp" COMPILE_DEFINITIONS ${SHANI_CXXFLAGS})
+
 set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
