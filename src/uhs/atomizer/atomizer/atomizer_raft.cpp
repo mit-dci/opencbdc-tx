@@ -30,7 +30,8 @@ namespace cbdc::atomizer {
                wait_for_followers) {}
 
     auto atomizer_raft::get_sm() -> state_machine* {
-        auto* cls = dynamic_cast<state_machine*>(node::get_sm());
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto* cls = reinterpret_cast<state_machine*>(node::get_sm());
         assert(cls != nullptr);
         return cls;
     }
