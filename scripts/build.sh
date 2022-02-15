@@ -17,7 +17,8 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     CPUS=$(grep -c ^processor /proc/cpuinfo)
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     CPUS=$(sysctl -n hw.ncpu)
-    CMAKE_FLAGS+="-DCMAKE_MAKE_PROGRAM=/usr/local/bin/gmake -DCMAKE_C_COMPILER=/usr/local/opt/llvm/bin/clang -DCMAKE_CXX_COMPILER=/usr/local/opt/llvm/bin/clang++ -DCMAKE_CXX_FLAGS=-isystem\ /usr/local/Cellar/SFML/2.5.1/include\ -isystem\ /usr/local/Cellar/leveldb/1.22/include\ -isystem\ /usr/local/include -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+    XCODE_CMDLINE_DIR=$(xcode-select -p)
+    CMAKE_FLAGS+="-DCMAKE_MAKE_PROGRAM=/usr/local/bin/gmake -DCMAKE_C_COMPILER=${XCODE_CMDLINE_DIR}/usr/bin/clang -DCMAKE_CXX_COMPILER=${XCODE_CMDLINE_DIR}/usr/bin/clang++ -DCMAKE_CXX_FLAGS=-isystem\ /usr/local/include -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 fi
 
 CMAKE_BUILD_TYPE="Debug"
