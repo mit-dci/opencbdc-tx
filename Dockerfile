@@ -12,6 +12,7 @@ RUN apt update && \
       libgtest-dev \
       libgmock-dev \
       net-tools \
+      lcov \
       git
 
 # Args
