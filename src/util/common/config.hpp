@@ -57,6 +57,9 @@ namespace cbdc::config {
         static constexpr size_t watchtower_block_cache_size{100};
         static constexpr size_t watchtower_error_cache_size{1000000};
         static constexpr bool wait_for_followers{true};
+        static constexpr size_t input_count{2};
+        static constexpr size_t output_count{2};
+        static constexpr double fixed_tx_rate{1.0};
 
         static constexpr auto log_level = logging::log_level::warn;
     }
@@ -126,13 +129,13 @@ namespace cbdc::config {
         /// Maximum number of unconfirmed transactions in atomizer-cli.
         size_t m_window_size{defaults::window_size};
         /// Number of inputs in fixed-size transactions from atomizer-cli.
-        size_t m_input_count{0};
+        size_t m_input_count{defaults::input_count};
         /// Number of outputs in fixed-size transactions from atomizer-cli.
-        size_t m_output_count{0};
+        size_t m_output_count{defaults::output_count};
         /// Proportion of invalid transactions sent from atomizer-cli.
         double m_invalid_rate{0.0};
         /// Proportion of fixed transactions sent from atomizer-cli.
-        double m_fixed_tx_rate{0.0};
+        double m_fixed_tx_rate{defaults::fixed_tx_rate};
         /// The number of completed transactions that each locking shard (2PC)
         /// keeps in memory for responding to queries through the read-only
         /// endpoint.
