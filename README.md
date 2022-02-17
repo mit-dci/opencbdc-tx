@@ -139,3 +139,16 @@ In each of the below commands, you should pass `atomizer-compose.cfg` instead of
   # ./build/src/uhs/client/client-cli 2pc-compose.cfg mempool1.dat wallet1.dat info
   Balance: $0.30, UTXOs: 1, pending TXs: 0
   ```
+
+## Testing
+
+Running Unit & Integration Tests
+
+1. Build the container
+   ```terminal
+   # docker build . -t opencbdc-tx
+   ```
+2. Run Unit & Integration Tests
+   ```terminal
+   # docker run -ti opencbdc-tx ./scripts/test.sh
+   ```
