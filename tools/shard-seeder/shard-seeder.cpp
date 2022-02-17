@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "uhs/transaction/transaction.hpp"
+#include "uhs/transaction/validation.hpp"
 #include "uhs/transaction/wallet.hpp"
 #include "util/common/config.hpp"
 #include "util/serialization/buffer_serializer.hpp"
@@ -33,26 +34,37 @@ auto get_2pc_uhs_key(const cbdc::hash_t& uhs_id) -> std::string {
 auto main(int argc, char** argv) -> int {
     auto args = cbdc::config::get_args(argc, argv);
     auto logger = cbdc::logging::log(cbdc::logging::log_level::info);
-    static constexpr auto min_arg_count = 5;
+    static constexpr auto min_arg_count = 2;
     if(args.size() < min_arg_count) {
-        std::cout
-            << "Usage: shard-seeder [number of shards] [number of utxos] "
-               "[utxo value] [witness_commitment_hex] [mode]\n\n              "
-               "           where [mode] = 0 (Atomizer), 1 (Two-phase commit)"
-            << std::endl;
+        std::cout << "Usage: shard-seeder [config file]" << std::endl;
         return -1;
     }
 
+    auto cfg_or_err = cbdc::config::load_options(args[1]);
+    if(std::holds_alternative<std::string>(cfg_or_err)) {
+        logger.error("Error loading config file:",
+                     std::get<std::string>(cfg_or_err));
+        return -1;
+    }
+    auto cfg = std::get<cbdc::config::options>(cfg_or_err);
+
     auto start = std::chrono::system_clock::now();
-    ;
-    auto num_shards = std::stoi(args[1]);
-    auto num_utxos = std::stoi(args[2]);
-    auto utxo_val = std::stoi(args[3]);
-    auto witness_commitment_str = args[4];
-    static constexpr auto mode_arg_idx = 5;
-    auto mode = std::stoi(args[mode_arg_idx]);
-    cbdc::hash_t witness_commitment
-        = cbdc::hash_from_hex(witness_commitment_str);
+
+    auto num_shards = cfg.m_shard_ranges.size();
+    auto num_utxos = cfg.m_seed_to - cfg.m_seed_from;
+    auto utxo_val = cfg.m_seed_value;
+    if(!cfg.m_seed_privkey.has_value()) {
+        logger.error("Seed private key not specified");
+        return -1;
+    }
+    auto secp_context = std::unique_ptr<secp256k1_context,
+                                        decltype(&secp256k1_context_destroy)>(
+        secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
+        &secp256k1_context_destroy);
+    auto pubkey = cbdc::pubkey_from_privkey(cfg.m_seed_privkey.value(),
+                                            secp_context.get());
+    auto witness_commitment
+        = cbdc::transaction::validation::get_p2pk_witness_commitment(pubkey);
 
     cbdc::transaction::wallet wal;
     wal.seed_readonly(witness_commitment, utxo_val, 0, num_utxos);
@@ -62,9 +74,9 @@ auto main(int argc, char** argv) -> int {
            + 1)
         / num_shards;
     auto gen_threads = std::vector<std::thread>(num_shards);
-    for(int i = 0; i < num_shards; i++) {
+    for(size_t i = 0; i < num_shards; i++) {
         std::thread t(
-            [&](int shard_idx) {
+            [&](size_t shard_idx) {
                 auto shard_start = shard_idx * shard_range;
                 auto shard_end = (shard_idx + 1) * shard_range - 1;
                 if(shard_idx == num_shards - 1) {
@@ -73,19 +85,19 @@ auto main(int argc, char** argv) -> int {
                 }
 
                 std::stringstream shard_db_dir;
-                if(mode == 1) {
+                if(cfg.m_twophase_mode) {
                     shard_db_dir << "2pc_";
                 }
 
                 shard_db_dir << "shard_preseed_" << num_utxos << "_"
-                             << shard_start << "_" << shard_end;
+                             << shard_idx;
 
                 logger.info("Starting seeding of shard ",
                             shard_idx,
                             " to database ",
                             shard_db_dir.str());
 
-                if(mode == 0) {
+                if(!cfg.m_twophase_mode) {
                     leveldb::Options opt;
                     opt.create_if_missing = true;
                     opt.write_buffer_size = leveldb_buffer_size;
@@ -109,7 +121,7 @@ auto main(int argc, char** argv) -> int {
                     auto tx = wal.create_seeded_transaction(0).value();
                     auto batch_size = 0;
                     leveldb::WriteBatch batch;
-                    for(auto tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
+                    for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
                         tx.m_inputs[0].m_prevout.m_index = tx_idx;
                         cbdc::transaction::compact_tx ctx(tx);
                         const cbdc::hash_t& output_hash = ctx.m_uhs_outputs[0];
@@ -134,7 +146,7 @@ auto main(int argc, char** argv) -> int {
                         db->Write(wopt, &batch);
                     }
                     logger.info("Shard ", shard_idx, " succesfully seeded");
-                } else if(mode == 1) { // 2PC Shard
+                } else if(cfg.m_twophase_mode) { // 2PC Shard
                     auto out
                         = std::ofstream(shard_db_dir.str(), std::ios::binary);
                     size_t count = 0;
@@ -142,7 +154,7 @@ auto main(int argc, char** argv) -> int {
                     auto ser = cbdc::ostream_serializer(out);
                     ser << count;
                     auto tx = wal.create_seeded_transaction(0).value();
-                    for(auto tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
+                    for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
                         tx.m_inputs[0].m_prevout.m_index = tx_idx;
                         cbdc::transaction::compact_tx ctx(tx);
                         const cbdc::hash_t& output_hash = ctx.m_uhs_outputs[0];
@@ -160,7 +172,7 @@ auto main(int argc, char** argv) -> int {
         gen_threads[i] = std::move(t);
     }
 
-    for(int i = 0; i < num_shards; i++) {
+    for(size_t i = 0; i < num_shards; i++) {
         gen_threads[i].join();
     }
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
