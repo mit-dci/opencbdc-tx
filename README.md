@@ -163,7 +163,7 @@ Running in debug mode can be useful for those who want more insights into how th
    ```terminal
    # docker build -t opencbdc-tx:Debug -f Dockerfile.debug .
    ```
-2. Launch the Debug container.  **Note:**  The container exposes two ports, `22` (ssh) and `1234`.  The latter can be used for [gdbserver](https://sourceware.org/gdb/onlinedocs/gdb/Server.html) or [lldb-server](https://lldb.llvm.org/man/lldb-server.html).  Debugging requires running privileged operations so the container needs to be run in [unconfined mode](https://docs.docker.com/engine/security/seccomp/#run-without-the-default-seccomp-profile).  
+2. Launch the Debug container.  **Note:**  The container exposes two ports, `22` (ssh) and `1234`.  The latter can be used for [gdbserver](https://sourceware.org/gdb/onlinedocs/gdb/Server.html) or [lldb-server](https://lldb.llvm.org/man/lldb-server.html).  Debugging requires running privileged operations so the container needs to be run in [unconfined mode](https://docs.docker.com/engine/security/seccomp/#run-without-the-default-seccomp-profile).
    ```terminal
    # docker run -d -p 2222:22 -p 1234:1234 --rm --security-opt seccomp:unconfined --name opencbdc-tx opencbdc-tx:Debug
    ```
