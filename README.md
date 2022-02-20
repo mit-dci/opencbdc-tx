@@ -44,7 +44,9 @@ For more information on how to contribute, please see our [Contribution Guide](d
 
 1. [Install Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 1. Clone the repository (including submodules)
-    - `git clone --recurse-submodules https://github.com/mit-dci/opencbdc-tx`
+   ```
+   git clone --recurse-submodules https://github.com/mit-dci/opencbdc-tx
+   ```
 
 # Run the Code
 
@@ -152,3 +154,18 @@ Running Unit & Integration Tests
    ```terminal
    # docker run -ti opencbdc-tx ./scripts/test.sh
    ```
+
+## Debugging
+
+Running in debug mode can be useful for those who want more insights into how the system works under the covers.  A dedicated container is used for debugging.
+
+1. Build the Debug container
+   ```terminal
+   # docker build -t opencbdc-tx:Debug -f Dockerfile.debug .
+   ```
+2. Launch the Debug container.  **Note:**  The container exposes two ports, `22` (ssh) and `1234`.  The latter can be used for [gdbserver](https://sourceware.org/gdb/onlinedocs/gdb/Server.html) or [lldb-server](https://lldb.llvm.org/man/lldb-server.html).  Debugging requires running privileged operations so the container needs to be run in [unconfined mode](https://docs.docker.com/engine/security/seccomp/#run-without-the-default-seccomp-profile).  
+   ```terminal
+   # docker run -d -p 2222:22 -p 1234:1234 --rm --security-opt seccomp:unconfined --name opencbdc-tx opencbdc-tx:Debug
+   ```
+
+Both the source and build output remain in the container's `/opt/tx-processor` as before.  Use `docker exec` or ssh into the container to start gdb or lldb.  Lastly, configure your favorite IDE as appropriate to make use of the container.
