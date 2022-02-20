@@ -34,6 +34,7 @@ CMakeCache.txt
 *.o-*
 *.a
 *.log
+*log*
 
 leveldb*/
 NuRaft*/
@@ -46,7 +47,6 @@ plots/
 # Database
 blocks.dat
 test_db
-
 
 # System files
 .DS_Store
@@ -62,4 +62,3 @@ cmake-build-*/
 *.xml
 build/gcov_data
 build/tests
-
