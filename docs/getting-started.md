@@ -2,6 +2,7 @@
 * The [Project Readme](/README.md) includes a crash-course for getting setup with the code and running a few tests
 * The [Contribution Guide](contributing.md) includes more thorough discussion of the project's guiding principles, governance model, and how to get involved
 * The [Technical Reference](https://mit-dci.github.io/opencbdc-tx/) includes documentation for the code itself and how it works
+* Code immediately merged may take a few minutes to go live as the docs get generated and page cache is cleared
 * The [Architecture Guide](architecture.md) walks through the data model of transactions and the currently-implemented architectures
 * The [Contribution Lifecycle Guide](lifecycle.md) takes you through what you can expect throughout the process of submitting a contribution to OpenCBDC
 
