@@ -57,22 +57,22 @@ The easiest way to compile the code and run the system locally is using [Docker]
 
 Don't forget to run the docker daemon!
 
-## Build the container
+## Pull a pre-built image
+We publish new docker images for all commits to `trunk`.
+You can find the images [in the Github Container Registry](https://github.com/mit-dci/opencbdc-tx/pkgs/container/opencbdc-tx).
 
-```terminal
-$ cd opencbdc-tx                 # change to the project directory
-$ sudo -s                        # open a root shell (needed for docker)
-# docker build . -t opencbdc-tx  # build the container
-```
 
 ## Launch the System
 
 **Note:** You will need to both run the system and interact with it; you can either use two shells, or you can add the `--detach` flag when launching the system (note that it will then remain running till you stop it, e.g., with `docker stop`).
 Additionally, you can start the atomizer architecture by passing `--file docker-compose-atomizer.yml` instead.
 
+_The below configuration uses the pre-built image from Github Container Registry.
+To run and test your changes to the codebase you can follow the [Development section](#development)._
+
 1. Run the System
    ```terminal
-   # docker-compose --file docker-compose-2pc.yml up
+   # docker compose --file docker-compose-2pc.yml up
    ```
 1. Launch a container in which to run wallet commands (use `--network atomizer-network` instead of `--network 2pc-network` if using the atomizer architecture)
    ```terminal
@@ -152,3 +152,19 @@ Running Unit & Integration Tests
    ```terminal
    # docker run -ti opencbdc-tx ./scripts/test.sh
    ```
+
+# Development
+
+Run the following Docker compose commands below to override with development configuration.
+This will ensure that the local codebase is build and run inside of Docker.
+To rebuild or build every time you can add `--build` to the commands.
+
+## Launch the system in development mode
+```terminal
+# docker compose -f docker-compose-2pc.yml -f docker-compose-dev-2pc.yml up
+```
+
+## Launch the system and rebuild docker image
+```terminal
+# docker compose -f docker-compose-2pc.yml -f docker-compose-dev-2pc.yml up --build
+```

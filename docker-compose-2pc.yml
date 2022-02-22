@@ -3,8 +3,7 @@ version: '3'
 services:
 
   sentinel0:
-    build: .
-    image: opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx
     tty: true
     restart: always
     command: ./build/src/uhs/twophase/sentinel_2pc/sentineld-2pc 2pc-compose.cfg 0
@@ -22,8 +21,7 @@ services:
       retries: 5
 
   coordinator0:
-    build: .
-    image: opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx
     tty: true
     command: ./build/src/uhs/twophase/coordinator/coordinatord 2pc-compose.cfg 0 0
     expose:
@@ -40,8 +38,7 @@ services:
     restart: always
 
   shard0:
-    build: .
-    image: opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx
     tty: true
     command: ./build/src/uhs/twophase/locking_shard/locking-shardd 2pc-compose.cfg 0 0
     expose:

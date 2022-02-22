@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+
+  sentinel0:
+    build: .
+    image: opencbdc-tx
+
+  coordinator0:
+    build: .
+    image: opencbdc-tx
+
+  shard0:
+    build: .
+    image: opencbdc-tx
