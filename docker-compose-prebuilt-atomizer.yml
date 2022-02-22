@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+
+  watchtower0:
+    image: ghcr.io/mit-dci/opencbdc-tx
+
+  atomizer0:
+    image: ghcr.io/mit-dci/opencbdc-tx
+
+  archiver0:
+    image: ghcr.io/mit-dci/opencbdc-tx
+
+  shard0:
+    image: ghcr.io/mit-dci/opencbdc-tx
+
+  sentinel0:
+    image: ghcr.io/mit-dci/opencbdc-tx
