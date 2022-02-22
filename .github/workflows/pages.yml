@@ -1,0 +1,33 @@
+name: Doxygen Deployment
+
+on:
+  push:
+    branches:
+      - trunk
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  gh-pages-deploy:
+    name: Github Pages Deploy
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+          fetch-depth: 0
+      - name: Run Doxygen
+        uses: mattnotmitt/doxygen-action@1.9.3
+        with:
+          working-directory: .
+          doxyfile-path: ./Doxyfile
+          enable-latex: false
+          additional-packages: graphviz
+      - name: Deploy GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doxygen_generated/html
