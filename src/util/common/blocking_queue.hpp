@@ -66,9 +66,8 @@ namespace cbdc {
                     item = std::move(m_buffer.front());
                     m_buffer.pop();
                     popped = true;
+                    m_wake = !m_buffer.empty();
                 }
-
-                m_wake = !m_buffer.empty();
 
                 return popped;
             }

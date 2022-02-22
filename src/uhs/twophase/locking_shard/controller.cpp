@@ -22,10 +22,12 @@ namespace cbdc::locking_shard {
           m_logger(std::move(logger)),
           m_shard_id(shard_id),
           m_node_id(node_id),
-          m_preseed_dir(m_opts.m_seed_from != m_opts.m_seed_to
-                            ? "shard_preseed_" + std::to_string(m_shard_id)
-                                  + "_" + std::to_string(m_node_id)
-                            : ""),
+          m_preseed_dir(
+              m_opts.m_seed_from != m_opts.m_seed_to
+                  ? "2pc_shard_preseed_"
+                        + std::to_string(m_opts.m_seed_to - m_opts.m_seed_from)
+                        + "_" + std::to_string(m_shard_id)
+                  : ""),
           m_state_machine(nuraft::cs_new<state_machine>(
               m_opts.m_shard_ranges[m_shard_id],
               m_logger,
@@ -43,7 +45,8 @@ namespace cbdc::locking_shard {
               [&](auto&& res, auto&& err) {
                   return raft_callback(std::forward<decltype(res)>(res),
                                        std::forward<decltype(err)>(err));
-              })) {}
+              },
+              m_opts.m_wait_for_followers)) {}
 
     auto controller::init() -> bool {
         auto params = nuraft::raft_params();

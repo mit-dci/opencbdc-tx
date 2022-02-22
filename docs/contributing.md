@@ -6,7 +6,7 @@ To get more familiar with the system itself, please read through our [Getting St
 Central banks have traditionally played an integral role in supporting safe, low-cost, and accessible payment systems.
 With the rise of digital payments, cryptocurrency, and various payment innovations enabled by blockchain technology, the world is rethinking how money is (and should be) designed.
 Central Banks are currently considering the potential utility of Central Bank Digital Currencies (CBDCs).
-Some Central Banks have [already](https://ecnydigitalyuan.com/) [started](https://enaira.com/about) [issuing](https://ekrona.com/) CBDCs, and [many others](https://cbdctracker.org/) have begun experiments.
+Some Central Banks have [already started issuing](https://cbdctracker.org/) CBDCs, and many others have begun experiments.
 This project is an opportunity for programmers worldwide to help tackle the most pressing problems and answer the most difficult questions surrounding the development and implementation of CBDCs.
 
 # OpenCBDC's Guiding Principles

@@ -116,6 +116,6 @@ TEST_F(config_validation_test, parsing_validation) {
     EXPECT_TRUE(decimal.has_value());
     EXPECT_EQ(decimal.value(), 13.0);
 
-    auto nonexistant = ex.get_string("lorem ipsum");
-    EXPECT_FALSE(nonexistant.has_value());
+    auto nonexistent = ex.get_string("lorem ipsum");
+    EXPECT_FALSE(nonexistent.has_value());
 }

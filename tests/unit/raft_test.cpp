@@ -134,7 +134,8 @@ class raft_test : public ::testing::Test {
                                                    sm,
                                                    10,
                                                    log,
-                                                   nullptr));
+                                                   nullptr,
+                                                   false));
             sms.emplace_back(sm);
         }
 

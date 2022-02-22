@@ -11,6 +11,7 @@
 
 namespace cbdc::config {
     auto parse_ip_port(const std::string& in_str) -> network::endpoint_t {
+        // TODO: error handling for string parsing
         std::istringstream ss(in_str);
 
         std::string host;
@@ -544,6 +545,10 @@ namespace cbdc::config {
 
         opts.m_batch_size
             = cfg.get_ulong(batch_size_key).value_or(opts.m_batch_size);
+        auto wait_for_followers = cfg.get_ulong(wait_for_followers_key);
+        if(wait_for_followers.has_value()) {
+            opts.m_wait_for_followers = wait_for_followers.value() != 0;
+        }
     }
 
     void read_loadgen_options(options& opts, const parser& cfg) {

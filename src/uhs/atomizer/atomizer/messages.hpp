@@ -36,7 +36,7 @@ namespace cbdc::atomizer {
     /// The atomizer manager ( \ref atomizer_raft ) sends this message to the
     /// atomizer state machine ( \ref state_machine ) once it has received a
     /// full set of input attestations for a given compact transaction. The
-    /// atomizer manager attaches the block height of the oldest attesation
+    /// atomizer manager attaches the block height of the oldest attestation
     /// used to build the full set. The structure is used as an optimization
     /// to remove the need to replicate individual transaction notifications
     /// in the atomizer cluster.

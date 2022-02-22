@@ -80,7 +80,7 @@ namespace cbdc::locking_shard {
         /// Follows confirmation from other shards via the coordinator.
         /// Completes a previous lock operation by deleting the input hashes
         /// and adding the output hashes of confirmed transactions, and
-        /// unlocking the input hashes of aborted transactions. Preceeded by a
+        /// unlocking the input hashes of aborted transactions. Preceded by a
         /// lock operation with the same dtx_id.
         /// \param complete_txs vector of truth values indicating which txs
         ///                     from the previous lock operation the shard

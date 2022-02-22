@@ -281,7 +281,7 @@ auto main(int argc, char** argv) -> int {
             return -1;
         }
     } else {
-        std::cerr << "Unkown command" << std::endl;
+        std::cerr << "Unknown command" << std::endl;
     }
 
     // TODO: check that the send queue has drained before closing

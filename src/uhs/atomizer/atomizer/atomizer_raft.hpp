@@ -26,14 +26,18 @@ namespace cbdc::atomizer {
         /// \param stxo_cache_depth number of blocks in the spent output cache.
         /// \param logger log instance.
         /// \param raft_callback NuRaft callback for raft events.
+        /// \param wait_for_followers true if the leader raft node should
+        ///                           re-attempt to add all followers to the
+        ///                           cluster until success.
         atomizer_raft(uint32_t atomizer_id,
                       const network::endpoint_t& raft_endpoint,
                       size_t stxo_cache_depth,
                       std::shared_ptr<logging::log> logger,
-                      nuraft::cb_func::func_type raft_callback);
+                      nuraft::cb_func::func_type raft_callback,
+                      bool wait_for_followers);
 
         /// Serialize and replicate the given request in the atomizer raft
-        /// cluster. Return the response asynchonrously via the given result
+        /// cluster. Return the response asynchronously via the given result
         /// function, if provided.
         /// \param r state machine request to replicate.
         /// \param result_fn function to call with the response, or nullptr to

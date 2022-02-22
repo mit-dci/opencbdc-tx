@@ -15,7 +15,8 @@ namespace cbdc::atomizer {
                                  const network::endpoint_t& raft_endpoint,
                                  size_t stxo_cache_depth,
                                  std::shared_ptr<logging::log> logger,
-                                 nuraft::cb_func::func_type raft_callback)
+                                 nuraft::cb_func::func_type raft_callback,
+                                 bool wait_for_followers)
         : node(static_cast<int>(atomizer_id),
                raft_endpoint,
                m_node_type,
@@ -25,10 +26,12 @@ namespace cbdc::atomizer {
                    "atomizer_snps_" + std::to_string(atomizer_id)),
                0,
                std::move(logger),
-               std::move(raft_callback)) {}
+               std::move(raft_callback),
+               wait_for_followers) {}
 
     auto atomizer_raft::get_sm() -> state_machine* {
-        auto* cls = dynamic_cast<state_machine*>(node::get_sm());
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto* cls = reinterpret_cast<state_machine*>(node::get_sm());
         assert(cls != nullptr);
         return cls;
     }

@@ -56,6 +56,10 @@ namespace cbdc::config {
         static constexpr size_t initial_mint_value{100};
         static constexpr size_t watchtower_block_cache_size{100};
         static constexpr size_t watchtower_error_cache_size{1000000};
+        static constexpr bool wait_for_followers{true};
+        static constexpr size_t input_count{2};
+        static constexpr size_t output_count{2};
+        static constexpr double fixed_tx_rate{1.0};
 
         static constexpr auto log_level = logging::log_level::warn;
     }
@@ -113,6 +117,7 @@ namespace cbdc::config {
     static constexpr auto loadgen_count_key = "loadgen_count";
     static constexpr auto shard_completed_txs_cache_size
         = "shard_completed_txs_cache_size";
+    static constexpr auto wait_for_followers_key = "wait_for_followers";
 
     /// [start, end] inclusive.
     using shard_range_t = std::pair<uint8_t, uint8_t>;
@@ -124,13 +129,13 @@ namespace cbdc::config {
         /// Maximum number of unconfirmed transactions in atomizer-cli.
         size_t m_window_size{defaults::window_size};
         /// Number of inputs in fixed-size transactions from atomizer-cli.
-        size_t m_input_count{0};
+        size_t m_input_count{defaults::input_count};
         /// Number of outputs in fixed-size transactions from atomizer-cli.
-        size_t m_output_count{0};
+        size_t m_output_count{defaults::output_count};
         /// Proportion of invalid transactions sent from atomizer-cli.
         double m_invalid_rate{0.0};
         /// Proportion of fixed transactions sent from atomizer-cli.
-        double m_fixed_tx_rate{0.0};
+        double m_fixed_tx_rate{defaults::fixed_tx_rate};
         /// The number of completed transactions that each locking shard (2PC)
         /// keeps in memory for responding to queries through the read-only
         /// endpoint.
@@ -239,6 +244,10 @@ namespace cbdc::config {
 
         /// Number of load generators over which to split pre-seeded UTXOs.
         size_t m_loadgen_count{0};
+
+        /// Flag for whether the raft leader should re-attempt to join
+        /// followers to the cluster until successful.
+        bool m_wait_for_followers{defaults::wait_for_followers};
     };
 
     /// Read options from the given config file without checking invariants.
@@ -373,6 +382,8 @@ namespace cbdc::config {
 
         std::map<std::string, value_t> m_options;
     };
+
+    auto parse_ip_port(const std::string& in_str) -> network::endpoint_t;
 }
 
 #endif // OPENCBDC_TX_SRC_COMMON_CONFIG_H_

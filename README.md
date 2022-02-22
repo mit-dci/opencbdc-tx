@@ -17,19 +17,19 @@ The design decisions we made to achieve these goals will help inform policy make
 
 We explored two system architectures for transaction settlement, both based on an [unspent transaction output (UTXO)](https://en.wikipedia.org/wiki/Unspent_transaction_output) data model and transaction format.
 Both architectures implement the same schema representing an [unspent hash set (UHS)](https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-May/015967.html) abstraction.
-One architecture provides [linearizabilty](https://en.wikipedia.org/wiki/linearizability) of transactions, whereas the other only provides [serializability](https://en.wikipedia.org/wiki/Serializability).
+One architecture provides [linearizability](https://en.wikipedia.org/wiki/linearizability) of transactions, whereas the other only provides [serializability](https://en.wikipedia.org/wiki/Serializability).
 By relaxing the ordering constraint, the peak transaction throughput supported by the system scales horizontally with the number of nodes, but the transaction history is unavailable making the system harder to audit retroactively.
 Both architectures handle multiple geo-distributed datacenter outages with a [recovery time objective (RTO)](https://en.wikipedia.org/wiki/Disaster_recovery#Recovery_Time_Objective) of under ten seconds and a [recovery point objective (RPO)](https://en.wikipedia.org/wiki/Disaster_recovery#Recovery_Point_Objective) of zero.
 
 1. "Atomizer" architecture
     - Materializes a total ordering of all transactions settled by the system in a linear sequence of batches.
     - Requires vertical scaling as peak transaction throughput is limited by the performance of a single system component.
-    - Maximum demonstrated throughput ~100K transactions per second.
-    - Geo-replicated latency ~3 seconds.
+    - Maximum demonstrated throughput ~170K transactions per second.
+    - Geo-replicated latency <2 seconds.
 1. "Two-phase commit" architecture
     - Transaction history is not materialized and only a relative ordering is assigned between directly related transactions.
     - Combines [two-phase commit (2PC)](https://en.wikipedia.org/wiki/Two-phase_commit_protocol) and [conservative two-phase locking (C2PL)](https://en.wikipedia.org/wiki/Conservative_two-phase_locking) to create a system without a single bottlenecked component where peak transaction throughput scales horizontally with the number of nodes.
-    - Maximum demonstrated throughput ~1.2M transactions per second.
+    - Maximum demonstrated throughput ~1.7M transactions per second.
     - Geo-replicated latency <1 second.
 
 Read the [architecture guide](docs/architecture.md) for a detailed description of the system components and implementation of each architecture.
@@ -142,3 +142,16 @@ In each of the below commands, you should pass `atomizer-compose.cfg` instead of
   # ./build/src/uhs/client/client-cli 2pc-compose.cfg mempool1.dat wallet1.dat info
   Balance: $0.30, UTXOs: 1, pending TXs: 0
   ```
+
+## Testing
+
+Running Unit & Integration Tests
+
+1. Build the container
+   ```terminal
+   # docker build . -t opencbdc-tx
+   ```
+2. Run Unit & Integration Tests
+   ```terminal
+   # docker run -ti opencbdc-tx ./scripts/test.sh
+   ```

@@ -13,7 +13,8 @@ namespace cbdc::raft {
                nuraft::ptr<nuraft::state_machine> sm,
                size_t asio_thread_pool_size,
                std::shared_ptr<logging::log> logger,
-               nuraft::cb_func::func_type raft_cb)
+               nuraft::cb_func::func_type raft_cb,
+               bool wait_for_followers)
         : m_node_id(static_cast<uint32_t>(node_id)),
           m_blocking(blocking),
           m_port(raft_endpoint.second),
@@ -25,7 +26,8 @@ namespace cbdc::raft {
               node_type + "_raft_config_" + std::to_string(m_node_id) + ".dat",
               node_type + "_raft_state_" + std::to_string(m_node_id)
                   + ".dat")),
-          m_sm(std::move(sm)) {
+          m_sm(std::move(sm)),
+          m_wait_for_followers(wait_for_followers) {
         m_asio_opt.thread_pool_size_ = asio_thread_pool_size;
         m_init_opts.raft_callback_ = std::move(raft_cb);
         if(m_node_id != 0) {
@@ -82,30 +84,40 @@ namespace cbdc::raft {
 
         for(const auto& srv_data : srvs) {
             nuraft::srv_config srv(srv_data.first, srv_data.second);
-            std::cout << "Adding raft server: " << srv.get_id() << ", "
-                      << srv.get_endpoint() << std::flush;
 
-            auto ret = m_raft_instance->add_srv(srv);
-            if(!ret->get_accepted()) {
-                std::cout << "Failed to add raft server: " << srv.get_id()
-                          << ", " << srv.get_endpoint()
-                          << ", error: " << ret->get_result_str() << std::endl;
-                return false;
-            }
+            for(;;) {
+                std::cout << "Adding raft server: " << srv.get_id() << ", "
+                          << srv.get_endpoint() << std::flush;
 
-            nuraft::ptr<nuraft::srv_config> srv_conf;
-            int attempts{0};
-            const auto max_retries = 200;
-            do {
-                srv_conf = m_raft_instance->get_srv_config(srv_data.first);
-                std::cout << "." << std::flush;
-                attempts++;
-                std::this_thread::sleep_for(sleep_time);
-            } while(!srv_conf && attempts < max_retries);
+                auto ret = m_raft_instance->add_srv(srv);
+                if(!ret->get_accepted()
+                   && ret->get_result_code()
+                          != nuraft::cmd_result_code::SERVER_IS_JOINING) {
+                    std::cout << "Failed to add raft server: " << srv.get_id()
+                              << ", " << srv.get_endpoint()
+                              << ", error: " << ret->get_result_str()
+                              << std::endl;
+                    return false;
+                }
 
-            if(!srv_conf) {
-                std::cout << "timed out" << std::endl;
-                return false;
+                nuraft::ptr<nuraft::srv_config> srv_conf;
+                int attempts{0};
+                const auto max_retries = 50;
+                do {
+                    srv_conf = m_raft_instance->get_srv_config(srv_data.first);
+                    std::cout << "." << std::flush;
+                    attempts++;
+                    std::this_thread::sleep_for(sleep_time);
+                } while(!srv_conf && attempts < max_retries);
+
+                if(!srv_conf) {
+                    std::cout << "timed out" << std::endl;
+                    if(!m_wait_for_followers) {
+                        return false;
+                    }
+                } else {
+                    break;
+                }
             }
 
             std::cout << "done" << std::endl;

@@ -37,7 +37,7 @@ namespace cbdc {
         /// the buffer size to fit the new data.
         /// \param data pointer to the start of the bytes to write.
         /// \param len number of bytes to write.
-        /// \return true if the serializer wrote the entirity of the data to
+        /// \return true if the serializer wrote the entirety of the data to
         ///         the buffer.
         auto write(const void* data, size_t len) -> bool final;
 

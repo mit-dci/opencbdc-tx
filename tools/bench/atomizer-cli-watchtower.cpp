@@ -266,7 +266,8 @@ auto main(int argc, char** argv) -> int {
                     for(auto&& tx : retry_txs) {
                         auto resend_pkt
                             = send_tx_to_atomizer(tx, best_watchtower_height);
-                        if(!atomizer_network.send_to_one(resend_pkt)) {
+                        if(!atomizer_network.send_to_one(
+                               cbdc::atomizer::request{resend_pkt})) {
                             log->error("Failed to resend tx to atomizer.");
                         }
                         rebroadcast++;
@@ -510,7 +511,8 @@ auto main(int argc, char** argv) -> int {
             auto send_pkt
                 = send_tx_to_atomizer(cbdc::transaction::compact_tx(pay_tx),
                                       best_height);
-            if(!atomizer_network.send_to_one(send_pkt)) {
+            if(!atomizer_network.send_to_one(
+                   cbdc::atomizer::request{send_pkt})) {
                 log->info("Failed to send pay tx to atomizer. ID:",
                           cbdc::to_string(cbdc::transaction::tx_id(pay_tx)),
                           "h:",
