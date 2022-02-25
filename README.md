@@ -36,7 +36,8 @@ Read the [architecture guide](docs/architecture.md) for a detailed description o
 
 # Contributing
 
-If you are interested in participating in a technical working group, [sign up](https://dci.mit.edu/opencbdc-interest) to receive updates and learn more!
+You can [sign up](https://dci.mit.edu/opencbdc-interest) to receive updates from technical working groups and to learn more about our work.
+If you would like to join our technical discussions and help workshop proposals, you can join our [Zulip chat](https://opencbdc.zulipchat.com/register/).
 
 For more information on how to contribute, please see our [Contribution Guide](docs/contributing.md)!
 
