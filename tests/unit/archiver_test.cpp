@@ -178,14 +178,17 @@ TEST_F(ArchiverTest, archiver_server_init) {
     ASSERT_TRUE(m_archiver->init_archiver_server());
 }
 
-// TODO: cbdc::network::tcp_listener::listen() does not fail to bind to an
-// invalid endpoint, causing this test to fail.
-/*TEST_F(ArchiverTest, archiver_server_init_failure) {
-    cbdc::network::endpoint_t invalid_endpoint = {"invalid-endpoint",5000};
+TEST_F(ArchiverTest, archiver_server_init_failure) {
+    cbdc::network::endpoint_t invalid_endpoint = {"invalid-endpoint", 5000};
     m_config_opts.m_archiver_endpoints.clear();
     m_config_opts.m_archiver_endpoints.emplace_back(invalid_endpoint);
-    ASSERT_FALSE(m_archiver->init_archiver_server());
-}*/
+    std::unique_ptr<cbdc::archiver::controller> m_archiver_invalid_endpoint
+        = std::make_unique<cbdc::archiver::controller>(0,
+                                                       m_config_opts,
+                                                       m_log,
+                                                       0);
+    ASSERT_FALSE(m_archiver_invalid_endpoint->init_archiver_server());
+}
 
 // Test if the archiver properly digests a block
 TEST_F(ArchiverTest, digest_block) {
