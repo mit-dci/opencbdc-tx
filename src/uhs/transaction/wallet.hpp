@@ -172,6 +172,10 @@ namespace cbdc::transaction {
         /// \param tx the transaction whose inputs to sign.
         void sign(full_tx& tx) const;
 
+        /// Checks if the input is spendable by the current wallet.
+        /// \param in the input to check.
+        auto is_spendable(const input& in) const -> bool;
+
         /// Returns the total balance of the wallet, e.g. the sum total value
         /// of all the UTXOs this wallet contains.
         /// \return the wallet balance in the base unit of the currency.
