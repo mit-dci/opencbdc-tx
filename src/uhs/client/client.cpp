@@ -165,8 +165,12 @@ namespace cbdc {
     }
 
     void client::import_send_input(const transaction::input& in) {
-        m_pending_inputs.insert({in.m_prevout.m_tx_id, in});
-        save();
+        if(m_wallet.is_spendable(in)) {
+            m_pending_inputs.insert({in.m_prevout.m_tx_id, in});
+            save();
+        } else {
+            m_logger->warn("Ignoring non-spendable input");
+        }
     }
 
     auto client::new_address() -> pubkey_t {
