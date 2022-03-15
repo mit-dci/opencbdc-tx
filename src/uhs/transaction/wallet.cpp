@@ -532,4 +532,16 @@ namespace cbdc {
         }
         return {{ret, total_amount}};
     }
+
+    auto transaction::wallet::is_spendable(const transaction::input& in) const
+        -> bool {
+        const auto& in_key = in.m_prevout_data.m_witness_program_commitment;
+        bool key_ours = false;
+        {
+            std::shared_lock<std::shared_mutex> sl(m_keys_mut);
+            const auto wit_prog = m_witness_programs.find(in_key);
+            key_ours = wit_prog != m_witness_programs.end();
+        }
+        return key_ours;
+    }
 }
