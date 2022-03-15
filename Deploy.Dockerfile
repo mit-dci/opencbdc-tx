@@ -61,10 +61,22 @@ RUN mkdir build && \
     cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .. && \
     make -j$(nproc)
 
-# Deployment Image
+# Create Deployment Image
 FROM $IMAGE_VERSION AS deploy
 
 WORKDIR /opt/tx-processor
 
-# Copy files
-COPY --from=builder  /opt/tx-processor .
+# Copy All of the ./build directory
+# COPY --from=builder  /opt/tx-processor/build ./build
+
+# Only copy essential binaries
+COPY --from=builder  /opt/tx-processor/build/src/uhs/twophase/sentinel_2pc/sentineld-2pc ./build/src/uhs/twophase/sentinel_2pc/sentineld-2pc
+COPY --from=builder  /opt/tx-processor/build/src/uhs/twophase/coordinator/coordinatord ./build/src/uhs/twophase/coordinator/coordinatord
+COPY --from=builder  /opt/tx-processor/build/src/uhs/twophase/locking_shard/locking-shardd ./build/src/uhs/twophase/locking_shard/locking-shardd
+
+# Copy Client CLI
+COPY --from=builder  /opt/tx-processor/build/src/uhs/client/client-cli ./build/src/uhs/client/client-cli
+
+# Copy config
+COPY --from=builder  /opt/tx-processor/2pc-compose.cfg ./2pc-compose.cfg
+COPY --from=builder  /opt/tx-processor/atomizer-compose.cfg ./atomizer-compose.cfg

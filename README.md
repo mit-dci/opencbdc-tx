@@ -83,6 +83,20 @@ The easiest way to compile the code and run the system locally is using [Docker]
 
 Don't forget to run the docker daemon!
 
+## Build the container
+
+```terminal
+$ cd opencbdc-tx                 # change to the project directory
+$ sudo -s                        # open a root shell (needed for docker)
+# docker build . -t opencbdc-tx  # build the container
+```
+
+For deployment, build the image with only essential binaries
+
+```terminal
+# docker build . -t opencbdc-tx -f Deploy.Dockerfile
+```
+
 ## Launch the System
 
 **Note:** You will need to both run the system and interact with it; you can either use two shells, or you can add the `--detach` flag when launching the system (note that it will then remain running till you stop it, e.g., with `docker stop`).
@@ -183,9 +197,9 @@ In each of the below commands, you should pass `atomizer-compose.cfg` instead of
 
 Running Unit & Integration Tests
 
-1. Build the container
+1. Build the container. Target `builder` stage as the tests need the dependencies.
    ```terminal
-   # docker build . -t opencbdc-tx
+   # docker build --target builder . -t opencbdc-tx
    ```
 2. Run Unit & Integration Tests
    ```terminal
