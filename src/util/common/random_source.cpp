@@ -20,7 +20,8 @@ namespace cbdc {
         assert(m_source.gcount() == static_cast<std::streamsize>(dest.size()));
         std::array<unsigned char, sizeof(dest)> dest_unsigned{};
         std::memcpy(dest_unsigned.data(), dest.data(), dest.size());
-        m_sha.Write(dest_unsigned.data(), dest_unsigned.size());
+        m_sha.Write(Span{static_cast<unsigned char*>(dest_unsigned.data()),
+                         dest_unsigned.size()});
     }
 
     auto random_source::operator()() -> result_type {
@@ -54,8 +55,9 @@ namespace cbdc {
         hash_t ret;
         std::array<unsigned char, sizeof(idx)> idx_arr{};
         std::memcpy(idx_arr.data(), &idx, sizeof(idx));
-        m_sha.Write(idx_arr.data(), sizeof(idx));
-        m_sha.Finalize(ret.data());
+        m_sha.Write(
+            Span{static_cast<unsigned char*>(idx_arr.data()), sizeof(idx)});
+        m_sha.Finalize(ret);
         return ret;
     }
 }

@@ -5,6 +5,7 @@ add_library(crypto sha256_avx2.cpp
                    sha256_sse4.cpp
                    sha256_sse41.cpp
                    sha256.cpp
+                   sha3.cpp
                    siphash.cpp)
 target_include_directories(crypto PRIVATE ".." ".")
 

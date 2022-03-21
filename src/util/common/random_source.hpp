@@ -11,7 +11,7 @@
 #ifndef OPENCBDC_TX_SRC_COMMON_RANDOM_SOURCE_H_
 #define OPENCBDC_TX_SRC_COMMON_RANDOM_SOURCE_H_
 
-#include "crypto/sha256.h"
+#include "crypto/sha3.h"
 #include "hash.hpp"
 
 #include <limits>
@@ -69,7 +69,7 @@ namespace cbdc {
 
         std::queue<unsigned char> m_buf;
 
-        CSHA256 m_sha;
+        SHA3_256 m_sha;
         uint64_t m_counter{};
     };
 }

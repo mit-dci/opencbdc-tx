@@ -5,7 +5,7 @@
 
 #include "hash.hpp"
 
-#include "crypto/sha256.h"
+#include "crypto/sha3.h"
 
 #include <cstring>
 #include <iomanip>
@@ -39,12 +39,12 @@ namespace cbdc {
 
     auto hash_data(const std::byte* data, size_t len) -> hash_t {
         hash_t ret;
-        CSHA256 sha;
+        SHA3_256 sha;
 
         auto data_vec = std::vector<unsigned char>(len);
         std::memcpy(data_vec.data(), data, len);
-        sha.Write(data_vec.data(), len);
-        sha.Finalize(ret.data());
+        sha.Write(Span{static_cast<unsigned char*>(data_vec.data()), len});
+        sha.Finalize(ret);
 
         return ret;
     }

@@ -5,7 +5,7 @@
 
 #include "transaction.hpp"
 
-#include "crypto/sha256.h"
+#include "crypto/sha3.h"
 #include "messages.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/util.hpp"
@@ -44,11 +44,11 @@ namespace cbdc::transaction {
     auto input::hash() const -> hash_t {
         auto buf = cbdc::make_buffer(*this);
 
-        CSHA256 sha;
+        SHA3_256 sha;
         hash_t result;
 
-        sha.Write(buf.c_ptr(), buf.size());
-        sha.Finalize(result.data());
+        sha.Write(Span{static_cast<unsigned char*>(buf.data()), buf.size()});
+        sha.Finalize(result);
 
         return result;
     }
@@ -66,16 +66,18 @@ namespace cbdc::transaction {
     }
 
     auto tx_id(const full_tx& tx) noexcept -> hash_t {
-        CSHA256 sha;
+        SHA3_256 sha;
 
         auto inp_buf = cbdc::make_buffer(tx.m_inputs);
-        sha.Write(inp_buf.c_ptr(), inp_buf.size());
+        sha.Write(
+            Span{static_cast<unsigned char*>(inp_buf.data()), inp_buf.size()});
 
         auto out_buf = cbdc::make_buffer(tx.m_outputs);
-        sha.Write(out_buf.c_ptr(), out_buf.size());
+        sha.Write(
+            Span{static_cast<unsigned char*>(out_buf.data()), out_buf.size()});
 
         hash_t ret;
-        sha.Finalize(ret.data());
+        sha.Finalize(ret);
 
         return ret;
     }
@@ -101,17 +103,17 @@ namespace cbdc::transaction {
     auto uhs_id_from_output(const hash_t& entropy,
                             uint64_t i,
                             const output& output) -> hash_t {
-        CSHA256 sha;
+        SHA3_256 sha;
         hash_t ret;
-        sha.Write(entropy.data(), entropy.size());
+        sha.Write(entropy);
         std::array<unsigned char, sizeof(i)> index_arr{};
         std::memcpy(index_arr.data(), &i, sizeof(i));
-        sha.Write(index_arr.data(), sizeof(i));
+        sha.Write(index_arr);
 
         auto buf = cbdc::make_buffer(output);
+        sha.Write(Span{static_cast<unsigned char*>(buf.data()), buf.size()});
 
-        sha.Write(buf.c_ptr(), buf.size());
-        sha.Finalize(ret.data());
+        sha.Finalize(ret);
         return ret;
     }
 
