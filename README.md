@@ -13,6 +13,10 @@ For higher-level conceptual explanations, as well as findings and conclusions re
 Initially, we focused our work on achieving high transaction throughput, low latency, and resilience against multiple geographical datacenter outages without significant downtime or any data loss.
 The design decisions we made to achieve these goals will help inform policy makers around the world about the spectrum of tradeoffs and available options for CBDC design.
 
+# Important News
+
+**NOTE:** In cases where there are significant changes to the repository that might need manual intervention down-stream (or other important updates), we will [make a NEWS post](NEWS.md).
+
 # Architecture
 
 We explored two system architectures for transaction settlement, both based on an [unspent transaction output (UTXO)](https://en.wikipedia.org/wiki/Unspent_transaction_output) data model and transaction format.
