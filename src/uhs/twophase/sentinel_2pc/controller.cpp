@@ -90,8 +90,11 @@ namespace cbdc::sentinel_2pc {
         }
 
         auto compact_tx = cbdc::transaction::compact_tx(tx);
-        auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
-        compact_tx.m_attestations.insert(attestation);
+
+        if(m_opts.m_attestation_threshold > 0) {
+            auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
+            compact_tx.m_attestations.insert(attestation);
+        }
 
         gather_attestations(tx, std::move(result_callback), compact_tx, {});
 
