@@ -16,6 +16,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <queue>
+#include <random>
 #include <shared_mutex>
 #include <sys/socket.h>
 #include <thread>
@@ -228,6 +229,11 @@ namespace cbdc::network {
         bool m_async_recv_data{false};
 
         socket_selector m_listen_selector;
+
+        std::default_random_engine m_rnd{
+            static_cast<uint32_t>(std::chrono::high_resolution_clock::now()
+                                      .time_since_epoch()
+                                      .count())};
     };
 }
 

@@ -238,7 +238,14 @@ namespace cbdc::network {
         bool sent{false};
         {
             std::shared_lock<std::shared_mutex> l(m_peer_mutex);
-            for(const auto& p : m_peers) {
+            // Start at a random place in the peers vector to balance load
+            // across connections
+            auto dist
+                = std::uniform_int_distribution<size_t>(0, m_peers.size() - 1);
+            auto offset = dist(m_rnd);
+            for(size_t i = 0; i < m_peers.size(); i++) {
+                auto idx = (i + offset) % m_peers.size();
+                const auto& p = m_peers[idx];
                 if(p.m_peer->connected()) {
                     p.m_peer->send(data);
                     sent = true;

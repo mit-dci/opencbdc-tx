@@ -96,14 +96,12 @@ auto main(int argc, char** argv) -> int {
     auto sentinel_client = std::unique_ptr<cbdc::sentinel::rpc::client>();
 
     if(sign_txs) {
-        // TODO: sentinel load balancing
-        const auto our_sentinel = cli_id % cfg.m_sentinel_endpoints.size();
-        const auto sentinel_ep = cfg.m_sentinel_endpoints[our_sentinel];
+        // TODO: load balancing strategies other than round-robin, backpressure
         sentinel_client = std::make_unique<cbdc::sentinel::rpc::client>(
-            std::vector<cbdc::network::endpoint_t>({sentinel_ep}),
+            std::vector<cbdc::network::endpoint_t>(cfg.m_sentinel_endpoints),
             log);
         if(!sentinel_client->init()) {
-            log->error("Error connecting to sentinel");
+            log->error("Error connecting to sentinels");
             return -1;
         }
     }
