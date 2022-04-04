@@ -40,8 +40,6 @@ auto main(int argc, char** argv) -> int {
     auto sha2_impl = SHA256AutoDetect();
     logger->info("using sha2: ", sha2_impl);
 
-    auto our_sentinel = gen_id % cfg.m_sentinel_endpoints.size();
-
     auto engine = std::default_random_engine();
     auto invalid_dist = std::bernoulli_distribution(cfg.m_invalid_rate);
     auto fixed_dist = std::bernoulli_distribution(cfg.m_fixed_tx_rate);
@@ -118,8 +116,7 @@ auto main(int argc, char** argv) -> int {
     }
 
     auto sentinel_client
-        = cbdc::sentinel::rpc::client({cfg.m_sentinel_endpoints[our_sentinel]},
-                                      logger);
+        = cbdc::sentinel::rpc::client(cfg.m_sentinel_endpoints, logger);
     if(!sentinel_client.init()) {
         logger->error("Failed to connect to sentinel");
         return -1;
