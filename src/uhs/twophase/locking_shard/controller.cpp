@@ -169,6 +169,7 @@ namespace cbdc::locking_shard {
                    || audit_epoch <= m_last_audit_epoch) {
                     continue;
                 }
+                m_logger->info("Starting audit for", audit_epoch);
 
                 auto maybe_total = m_shard->audit(audit_epoch);
                 if(!maybe_total.has_value()) {
@@ -186,6 +187,8 @@ namespace cbdc::locking_shard {
                 m_last_audit_epoch = audit_epoch;
 
                 m_shard->prune(audit_epoch);
+
+                m_logger->info("Prune completed for", audit_epoch);
             }
         }
     }
