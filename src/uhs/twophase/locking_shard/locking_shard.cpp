@@ -32,17 +32,12 @@ namespace cbdc::locking_shard {
           m_logger(std::move(logger)),
           m_completed_txs(completed_txs_cache_size),
           m_opts(std::move(opts)) {
-        m_uhs.max_load_factor(std::numeric_limits<float>::max());
         m_applied_dtxs.max_load_factor(std::numeric_limits<float>::max());
         m_prepared_dtxs.max_load_factor(std::numeric_limits<float>::max());
-        m_locked.max_load_factor(std::numeric_limits<float>::max());
 
         static constexpr auto dtx_buckets = 100000;
         m_applied_dtxs.rehash(dtx_buckets);
         m_prepared_dtxs.rehash(dtx_buckets);
-
-        static constexpr auto locked_buckets = 10000000;
-        m_locked.rehash(locked_buckets);
 
         if(!preseed_file.empty()) {
             m_logger->info("Reading preseed file into memory");
@@ -65,12 +60,9 @@ namespace cbdc::locking_shard {
             }
             in.seekg(0, std::ios::beg);
             auto deser = istream_serializer(in);
-            m_uhs.clear();
-            static constexpr auto uhs_size_factor = 2;
-            auto bucket_count = static_cast<unsigned long>(sz / cbdc::hash_size
-                                                           * uhs_size_factor);
-            m_uhs.rehash(bucket_count);
-            deser >> m_uhs;
+            auto uhs = std::map<hash_t, uhs_element>();
+            deser >> uhs;
+            m_uhs = std::move(uhs);
             return true;
         }
         return false;
@@ -215,22 +207,17 @@ namespace cbdc::locking_shard {
         }
     }
 
-    auto locking_shard::audit(uint64_t epoch) const
-        -> std::optional<uint64_t> {
-        auto uhs = decltype(m_uhs)();
-        auto locked = decltype(m_locked)();
-        auto spent = decltype(m_spent)();
+    auto locking_shard::audit(uint64_t epoch) -> std::optional<uint64_t> {
         {
-            std::shared_lock l(m_mut);
-            uhs = m_uhs;
-            locked = m_locked;
-            spent = m_spent;
+            std::unique_lock l(m_mut);
+            m_uhs.snapshot();
+            m_locked.snapshot();
+            m_spent.snapshot();
         }
 
         auto check_uhs
-            = [epoch](
-                  const std::unordered_map<hash_t, uhs_element, hashing::null>&
-                      uhs_map) -> std::optional<uint64_t> {
+            = [epoch](const snapshot_map<hash_t, uhs_element>& uhs_map)
+            -> std::optional<uint64_t> {
             uint64_t tot{};
             for(const auto& [id, elem] : uhs_map) {
                 if(elem.m_creation_epoch <= epoch
@@ -247,24 +234,34 @@ namespace cbdc::locking_shard {
             return tot;
         };
 
+        // TODO: use bignum because tot will probably overflow
         uint64_t tot{};
-        auto uhs_tot = check_uhs(uhs);
-        if(!uhs_tot.has_value()) {
-            return std::nullopt;
+        auto uhs_tot = check_uhs(m_uhs);
+        if(uhs_tot.has_value()) {
+            tot += uhs_tot.value();
         }
-        tot += uhs_tot.value();
 
-        auto locked_tot = check_uhs(locked);
-        if(!locked_tot.has_value()) {
-            return std::nullopt;
+        auto locked_tot = check_uhs(m_locked);
+        if(locked_tot.has_value()) {
+            tot += locked_tot.value();
         }
-        tot += locked_tot.value();
 
-        auto spent_tot = check_uhs(spent);
-        if(!spent_tot.has_value()) {
+        auto spent_tot = check_uhs(m_spent);
+        if(spent_tot.has_value()) {
+            tot += spent_tot.value();
+        }
+
+        {
+            std::unique_lock l(m_mut);
+            m_uhs.release_snapshot();
+            m_locked.release_snapshot();
+            m_spent.release_snapshot();
+        }
+
+        if(!spent_tot.has_value() || !locked_tot.has_value()
+           || !uhs_tot.has_value()) {
             return std::nullopt;
         }
-        tot += spent_tot.value();
 
         return tot;
     }
@@ -277,7 +274,7 @@ namespace cbdc::locking_shard {
     void locking_shard::prune(uint64_t epoch) {
         std::unique_lock l(m_mut);
         for(auto it = m_spent.begin(); it != m_spent.end();) {
-            auto& elem = it->second;
+            const auto& elem = it->second;
             if(elem.m_deletion_epoch.value() < epoch) {
                 it = m_spent.erase(it);
             } else {
