@@ -14,6 +14,7 @@
 #include "util/common/hash.hpp"
 #include "util/common/hashmap.hpp"
 #include "util/common/logging.hpp"
+#include "util/common/snapshot_map.hpp"
 
 #include <filesystem>
 #include <future>
@@ -143,7 +144,7 @@ namespace cbdc::locking_shard {
         /// \param epoch the epoch to audit the supply at.
         /// \return total value of coins in this shard's UHS, or std::nullopt
         ///         if any of the UHS elements do not match their UHS ID.
-        auto audit(uint64_t epoch) const -> std::optional<uint64_t>;
+        auto audit(uint64_t epoch) -> std::optional<uint64_t>;
 
         /// Prunes any spent UHS elements spent prior to the given epoch.
         /// \param epoch epoch to prune prior to.
@@ -167,9 +168,9 @@ namespace cbdc::locking_shard {
 
         std::shared_ptr<logging::log> m_logger;
         mutable std::shared_mutex m_mut;
-        std::unordered_map<hash_t, uhs_element, hashing::null> m_uhs;
-        std::unordered_map<hash_t, uhs_element, hashing::null> m_locked;
-        std::unordered_map<hash_t, uhs_element, hashing::null> m_spent;
+        snapshot_map<hash_t, uhs_element> m_uhs;
+        snapshot_map<hash_t, uhs_element> m_locked;
+        snapshot_map<hash_t, uhs_element> m_spent;
         std::unordered_map<hash_t, prepared_dtx, hashing::null>
             m_prepared_dtxs;
         std::unordered_set<hash_t, hashing::null> m_applied_dtxs;
