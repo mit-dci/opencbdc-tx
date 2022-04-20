@@ -8,6 +8,7 @@
 #include "transaction.hpp"
 
 #include <cassert>
+#include <iostream>
 #include <memory>
 #include <secp256k1.h>
 #include <secp256k1_schnorrsig.h>

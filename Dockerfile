@@ -6,14 +6,15 @@ ENV DEBIAN_FRONTEND noninteractive
 # install base packages
 RUN apt update && \
     apt install -y \
-      build-essential \
-      wget \
-      cmake \
-      libgtest-dev \
-      libgmock-dev \
-      net-tools \
-      lcov \
-      git
+    build-essential \
+    wget \
+    cmake \
+    libgtest-dev \
+    libgmock-dev \
+    net-tools \
+    lcov \
+    git \
+    protobuf-compiler
 
 # Args
 ARG CMAKE_BUILD_TYPE="Release"

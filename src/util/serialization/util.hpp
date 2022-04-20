@@ -31,14 +31,7 @@ namespace cbdc {
     /// \return a serialized buffer of the object.
     template<typename T, typename B = buffer>
     auto make_buffer(const T& obj)
-        -> std::enable_if_t<std::is_same_v<B, buffer>, cbdc::buffer> {
-        auto sz = serialized_size(obj);
-        auto pkt = cbdc::buffer();
-        pkt.extend(sz);
-        auto ser = cbdc::buffer_serializer(pkt);
-        ser << obj;
-        return pkt;
-    }
+        -> std::enable_if_t<std::is_same_v<B, buffer>, cbdc::buffer>;
 
     /// Serialize object into std::shared_ptr<cbdc::buffer> using a
     /// cbdc::buffer_serializer.
@@ -60,14 +53,7 @@ namespace cbdc {
     /// \return deserialized object, or std::nullopt if the deserialization
     ///         failed.
     template<typename T>
-    auto from_buffer(cbdc::buffer& buf) -> std::optional<T> {
-        auto deser = cbdc::buffer_serializer(buf);
-        T ret{};
-        if(!(deser >> ret)) {
-            return std::nullopt;
-        }
-        return ret;
-    }
+    auto from_buffer(cbdc::buffer& buf) -> std::optional<T>;
 }
 
 #endif // OPENCBDC_TX_SRC_SERIALIZATION_UTIL_H_

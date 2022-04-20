@@ -9,6 +9,7 @@
 #include "uhs/twophase/coordinator/format.hpp"
 #include "uhs/twophase/sentinel_2pc/controller.hpp"
 #include "util/serialization/util.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <gtest/gtest.h>
 

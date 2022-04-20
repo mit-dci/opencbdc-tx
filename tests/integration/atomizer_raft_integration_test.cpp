@@ -9,6 +9,7 @@
 #include "uhs/atomizer/atomizer/format.hpp"
 #include "uhs/atomizer/watchtower/tx_error_messages.hpp"
 #include "util.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>

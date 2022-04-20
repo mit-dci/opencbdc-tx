@@ -12,6 +12,7 @@
 #include "uhs/transaction/messages.hpp"
 #include "util/common/config.hpp"
 #include "util/serialization/util.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <future>
 #include <iostream>

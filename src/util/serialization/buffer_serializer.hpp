@@ -7,7 +7,14 @@
 #define OPENCBDC_TX_SRC_SERIALIZATION_BUFFER_SERIALIZER_H_
 
 #include "serializer.hpp"
+#include "uhs/transaction/validation.hpp"
 #include "util/common/buffer.hpp"
+
+namespace cbdc {
+    namespace sentinel {
+        struct response;
+    }
+}
 
 namespace cbdc {
     /// \brief Serializer implementation for \ref buffer.
@@ -54,6 +61,10 @@ namespace cbdc {
         size_t m_cursor{};
         bool m_valid{true};
     };
+
+    auto string_for_response(cbdc::sentinel::response resp) -> std::string;
+    auto string_for_error(cbdc::transaction::validation::tx_error tx_err)
+        -> std::string;
 }
 
 #endif

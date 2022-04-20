@@ -6,6 +6,7 @@
 #include "client.hpp"
 
 #include "util/serialization/util.hpp"
+#include "util/serialization/util2.hpp"
 #include "watchtower.hpp"
 
 #include <utility>

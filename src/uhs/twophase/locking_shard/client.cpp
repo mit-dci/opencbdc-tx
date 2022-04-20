@@ -7,6 +7,7 @@
 
 #include "format.hpp"
 #include "util/serialization/format.hpp"
+#include "util/serialization/util2.hpp"
 
 namespace cbdc::locking_shard::rpc {
     client::client(std::vector<network::endpoint_t> endpoints,

@@ -6,6 +6,7 @@
 #include "status_client.hpp"
 
 #include "format.hpp"
+#include "util/serialization/util2.hpp"
 
 namespace cbdc::locking_shard::rpc {
     status_client::status_client(

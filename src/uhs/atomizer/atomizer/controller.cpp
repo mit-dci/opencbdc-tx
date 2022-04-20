@@ -10,6 +10,7 @@
 #include "util/raft/serialization.hpp"
 #include "util/raft/util.hpp"
 #include "util/serialization/format.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <utility>
 

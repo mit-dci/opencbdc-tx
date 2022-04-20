@@ -7,6 +7,7 @@
 
 #include "uhs/sentinel/format.hpp"
 #include "util/rpc/tcp_server.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <random>
 #include <utility>

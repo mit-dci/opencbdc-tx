@@ -9,6 +9,7 @@
 #include "messages.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/util.hpp"
+#include "util/serialization/util2.hpp"
 
 namespace cbdc::transaction {
     auto out_point::operator==(const out_point& rhs) const -> bool {

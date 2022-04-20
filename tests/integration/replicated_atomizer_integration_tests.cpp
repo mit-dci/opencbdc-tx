@@ -8,6 +8,7 @@
 #include "uhs/atomizer/atomizer/format.hpp"
 #include "util.hpp"
 #include "util/common/hashmap.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>

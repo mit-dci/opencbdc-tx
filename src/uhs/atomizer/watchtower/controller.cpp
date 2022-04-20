@@ -8,6 +8,7 @@
 #include "status_update.hpp"
 #include "uhs/atomizer/atomizer/format.hpp"
 #include "util/serialization/buffer_serializer.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <utility>
 

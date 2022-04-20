@@ -9,6 +9,7 @@
 #include "uhs/transaction/messages.hpp"
 #include "uhs/transaction/wallet.hpp"
 #include "util.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <filesystem>
 #include <gtest/gtest.h>

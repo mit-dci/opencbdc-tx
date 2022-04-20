@@ -6,7 +6,7 @@ add_library(coordinator format.cpp
                         distributed_tx.cpp
                         controller.cpp
                         server.cpp)
-
+                        
 add_executable(coordinatord coordinatord.cpp)
 target_link_libraries(coordinatord coordinator
                                    locking_shard

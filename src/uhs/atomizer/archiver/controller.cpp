@@ -8,6 +8,7 @@
 #include "uhs/atomizer/atomizer/format.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/util.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <leveldb/write_batch.h>
 #include <utility>

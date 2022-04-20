@@ -8,6 +8,7 @@
 #include "uhs/sentinel/format.hpp"
 #include "uhs/transaction/messages.hpp"
 #include "util/serialization/util.hpp"
+#include "util/serialization/util2.hpp"
 
 namespace cbdc::sentinel::rpc {
     client::client(std::vector<network::endpoint_t> endpoints,

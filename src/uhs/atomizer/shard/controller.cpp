@@ -7,6 +7,7 @@
 
 #include "uhs/atomizer/atomizer/atomizer_raft.hpp"
 #include "uhs/transaction/messages.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <utility>
 

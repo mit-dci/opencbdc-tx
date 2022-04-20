@@ -11,6 +11,8 @@
 #include "server.hpp"
 #include "util/network/connection_manager.hpp"
 
+#include <iostream>
+
 namespace cbdc::rpc {
     /// Implements an RPC server over a TCP socket.
     /// \see cbdc::rpc::tcp_client

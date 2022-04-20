@@ -14,6 +14,7 @@
 #include "util/serialization/istream_serializer.hpp"
 #include "util/serialization/ostream_serializer.hpp"
 #include "util/serialization/util.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <filesystem>
 #include <iomanip>

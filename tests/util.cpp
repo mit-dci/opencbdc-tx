@@ -8,6 +8,7 @@
 #include "uhs/transaction/messages.hpp"
 #include "util/common/hash.hpp"
 #include "util/common/hashmap.hpp"
+#include "util/serialization/util2.hpp"
 
 namespace cbdc::test {
     auto compact_transaction::operator==(

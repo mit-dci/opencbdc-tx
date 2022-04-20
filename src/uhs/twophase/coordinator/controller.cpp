@@ -11,6 +11,7 @@
 #include "util/rpc/tcp_server.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/util.hpp"
+#include "util/serialization/util2.hpp"
 
 #include <utility>
 
