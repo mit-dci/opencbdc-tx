@@ -63,17 +63,14 @@ namespace cbdc {
                     case cbdc::transaction::validation::input_error_code::
                         duplicate:
                         return "input_duplicate";
-                        break;
                     case cbdc::transaction::validation::input_error_code::
                         data_error:
                         return "input_data_error";
-                        break;
                 }
                 break;
             }
             case 1: {
                 return "output_zero_value";
-                break;
             }
             case 2: {
                 cbdc::transaction::validation::witness_error err
@@ -109,7 +106,6 @@ namespace cbdc {
                         break;
                 }
                 return ss.str();
-                break;
             }
             case 3: {
                 cbdc::transaction::validation::tx_error_code err
@@ -120,23 +116,18 @@ namespace cbdc {
                     case cbdc::transaction::validation::tx_error_code::
                         no_inputs:
                         return "no_inputs";
-                        break;
                     case cbdc::transaction::validation::tx_error_code::
                         no_outputs:
                         return "no_outputs";
-                        break;
                     case cbdc::transaction::validation::tx_error_code::
                         missing_witness:
                         return "missing_witness";
-                        break;
                     case cbdc::transaction::validation::tx_error_code::
                         asymmetric_values:
                         return "asymmetric_values";
-                        break;
                     case cbdc::transaction::validation::tx_error_code::
                         value_overflow:
                         return "value_overflow";
-                        break;
                 }
                 break;
             }
@@ -151,16 +142,12 @@ namespace cbdc {
             switch(resp.m_tx_status) {
                 case cbdc::sentinel::tx_status::pending:
                     return "pending";
-                    break;
                 case cbdc::sentinel::tx_status::static_invalid:
                     return "static_invalid";
-                    break;
                 case cbdc::sentinel::tx_status::state_invalid:
                     return "state_invalid";
-                    break;
                 case cbdc::sentinel::tx_status::confirmed:
                     return "confirmed";
-                    break;
             }
         }
         return "unknown_status";

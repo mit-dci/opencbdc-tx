@@ -15,8 +15,7 @@
 
 namespace cbdc::sentinel {
     /// Status of the transaction following sentinel processing.
-    enum class tx_status
-    {
+    enum class tx_status {
         /// Statically valid, and the sentinel has submitted
         /// the transaction to the network for processing.
         pending,
