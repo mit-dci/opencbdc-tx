@@ -127,6 +127,10 @@ namespace cbdc::shard {
         while(!m_shard.digest_block(blk)) {
             m_logger->warn("Block", blk.m_height, "not contiguous.");
 
+            if(blk.m_height <= m_shard.best_block_height()) {
+                break;
+            }
+
             // Attempt to catch up to the latest block
             for(uint64_t i = m_shard.best_block_height() + 1; i < blk.m_height;
                 i++) {
@@ -210,10 +214,22 @@ namespace cbdc::shard {
             return;
         }
 
+        auto status = m_audit_fut.wait_for(std::chrono::seconds(0));
+        if(status != std::future_status::ready && m_audit_thread.joinable()) {
+            m_logger->warn(
+                "Previous audit not finished, skipping audit for h:",
+                height);
+            return;
+        }
+
         auto snp = m_shard.get_snapshot();
         if(m_audit_thread.joinable()) {
-            m_audit_thread.join();
+            m_audit_thread.join(); // blocking here
         }
+
+        m_audit_finished = decltype(m_audit_finished)();
+        m_audit_fut = m_audit_finished.get_future();
+
         m_audit_thread = std::thread([this, s = std::move(snp), height]() {
             auto maybe_total = m_shard.audit(s);
             if(!maybe_total.has_value()) {
@@ -224,6 +240,7 @@ namespace cbdc::shard {
                            height,
                            maybe_total.value(),
                            "coins total");
+            m_audit_finished.set_value();
         });
     }
 }
