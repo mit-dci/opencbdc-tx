@@ -7,6 +7,7 @@
 #include "util/serialization/buffer_serializer.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/size_serializer.hpp"
+#include "uhs/atomizer/watchtower/watchtower.hpp"
 
 #include <gtest/gtest.h>
 #include <limits>
@@ -413,4 +414,52 @@ TEST_F(format_test, malformed_unordered_sets_cannot_roundtrip) {
     // attempt to read more items than exist (fails at reading non-existent
     // member)
     EXPECT_FALSE(deser);
+}
+
+TEST_F(format_test, get_variant_default_constructibles) {
+    // empty set
+    using T = typename std::unordered_set<uint64_t>;
+    using V = typename std::variant<T, uint64_t>;
+    T s0;
+    V v0{s0};
+    // how ser and deser are connected?
+    // my answer is the variant
+    ser << v0;
+    auto r0 = cbdc::get_variant<T, uint64_t>(deser);
+    EXPECT_TRUE(deser);
+    ser.reset();
+    deser.reset();
+    EXPECT_TRUE(ser);
+    EXPECT_TRUE(std::holds_alternative<T>(r0));
+
+    // non empty
+    T s1;
+    s1.insert(0);
+    s1.insert(std::numeric_limits<uint64_t>::max());
+    s1.insert(1 << 13);
+    V v1{s1};
+    ser << v1;
+    auto r1 = cbdc::get_variant<T, uint64_t>(deser);
+    EXPECT_TRUE(std::holds_alternative<T>(r1));
+    auto resulted_set = std::get<T>(r1);
+    EXPECT_TRUE(deser);
+    for(const auto& k : resulted_set) {
+        EXPECT_TRUE(s1.find(k) != s1.end());
+    }
+}
+//
+TEST_F(format_test, get_variant_nondefault_constructibles) {
+    using R = typename cbdc::watchtower::request;
+    using H = typename cbdc::watchtower::best_block_height_response;
+    using V = typename std::variant<R, H>;
+    H block_height_0{9};
+    V variant_0{block_height_0};
+    ser << variant_0;
+    auto r0 = cbdc::get_variant<R, H>(deser);
+    EXPECT_TRUE(deser);
+    ser.reset();
+    deser.reset();
+    EXPECT_TRUE(ser);
+    EXPECT_TRUE(std::holds_alternative<H>(r0));
+    EXPECT_TRUE(std::get<H>(r0).height() == block_height_0.height());
 }

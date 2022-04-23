@@ -399,26 +399,38 @@ namespace cbdc {
         return deser;
     }
 
-    /// \brief Deserializes a variant where none of the alternatives are
-    /// default-constructible.
-    ///
-    /// Each alternative type must provide a constructor of the form
+    /// \brief Deserializes a variant where the alternatives are
+    /// all default constructible or all are not default constructible
+    ///  If all alternatives are default constructible ,
+    /// each type must provide a constructor of the form
     /// T(serializer&) which deserializes the type from its argument.
     /// \see \ref cbdc::operator<<(serializer&, const std::variant<Ts...>&)
     template<typename... Ts>
     [[nodiscard]] auto get_variant(serializer& deser) -> std::variant<Ts...> {
-        using S = uint8_t;
         using T = typename std::variant<Ts...>;
+        using S = uint8_t;
         static_assert(std::variant_size_v<T> < std::numeric_limits<S>::max());
-        S idx{};
-        deser >> idx;
-        auto i = static_cast<size_t>(idx);
-        assert(i < std::variant_size_v<T>);
-        static constexpr auto t = std::array{+[](serializer& d) {
-            return T{std::in_place_type<Ts>, d};
-        }...};
-        // TODO: deserialization error handling for variant indexes.
-        return t.at(i)(deser);
+        // Since if the variant holds only default constructiable types
+        // we will be only able to unpack it using >>
+        // thus we can't extract the index value from the deser
+        if constexpr ((std::is_default_constructible_v<Ts> && ...)) {
+            T variants;
+            deser >> variants;
+            return variants;
+        } else {
+            S idx{};
+            deser >> idx;
+            auto i = static_cast<size_t>(idx);
+            assert(i < std::variant_size_v<T>);
+            static constexpr auto t = std::array{+[](serializer& d) {
+                return T{std::in_place_type<Ts>, d};
+            }...};
+            // TODO: deserialization error handling for variant indexes.
+            return t.at(i)(deser);
+
+
+        }
+
     }
 
     // TODO: use std::is_scoped_enum_v and std::to_underlying once C++23 is
