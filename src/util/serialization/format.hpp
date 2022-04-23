@@ -413,7 +413,7 @@ namespace cbdc {
         // Since if the variant holds only default constructiable types
         // we will be only able to unpack it using >>
         // thus we can't extract the index value from the deser
-        if constexpr ((std::is_default_constructible_v<Ts> && ...)) {
+        if constexpr((std::is_default_constructible_v<Ts> && ...)) {
             T variants;
             deser >> variants;
             return variants;
@@ -427,10 +427,7 @@ namespace cbdc {
             }...};
             // TODO: deserialization error handling for variant indexes.
             return t.at(i)(deser);
-
-
         }
-
     }
 
     // TODO: use std::is_scoped_enum_v and std::to_underlying once C++23 is

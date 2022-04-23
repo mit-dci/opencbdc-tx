@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "uhs/atomizer/watchtower/watchtower.hpp"
 #include "util/raft/serialization.hpp"
 #include "util/serialization/buffer_serializer.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/size_serializer.hpp"
-#include "uhs/atomizer/watchtower/watchtower.hpp"
 
 #include <gtest/gtest.h>
 #include <limits>
@@ -453,14 +453,16 @@ TEST_F(format_test, get_variant_nondefault_constructibles) {
         variant_0{block_height_0};
     ser << variant_0;
     auto r0 = cbdc::get_variant<cbdc::watchtower::request,
-                                cbdc::watchtower::best_block_height_response>(deser);
+                                cbdc::watchtower::best_block_height_response>(
+        deser);
     EXPECT_TRUE(deser);
     ser.reset();
     deser.reset();
     EXPECT_TRUE(ser);
     EXPECT_TRUE(
-        std::holds_alternative<cbdc::watchtower::best_block_height_response>(r0));
+        std::holds_alternative<cbdc::watchtower::best_block_height_response>(
+            r0));
     EXPECT_TRUE(
         std::get<cbdc::watchtower::best_block_height_response>(r0).height()
-        ==block_height_0.height());
+        == block_height_0.height());
 }
