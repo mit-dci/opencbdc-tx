@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "uhs/atomizer/watchtower/watchtower.hpp"
 #include "util/raft/serialization.hpp"
 #include "util/serialization/buffer_serializer.hpp"
 #include "util/serialization/format.hpp"
@@ -413,4 +414,55 @@ TEST_F(format_test, malformed_unordered_sets_cannot_roundtrip) {
     // attempt to read more items than exist (fails at reading non-existent
     // member)
     EXPECT_FALSE(deser);
+}
+
+TEST_F(format_test, get_variant_default_constructibles) {
+    // empty set
+    std::unordered_set<uint64_t> s0;
+    std::variant<std::unordered_set<uint64_t>, uint64_t> v0{s0};
+    // how ser and deser are connected?
+    // my answer is the variant
+    ser << v0;
+    auto r0 = cbdc::get_variant<std::unordered_set<uint64_t>, uint64_t>(deser);
+    EXPECT_TRUE(deser);
+    ser.reset();
+    deser.reset();
+    EXPECT_TRUE(ser);
+    EXPECT_TRUE(std::holds_alternative<std::unordered_set<uint64_t>>(r0));
+
+    // non empty
+    std::unordered_set<uint64_t> s1;
+    s1.insert(0);
+    s1.insert(std::numeric_limits<uint64_t>::max());
+    s1.insert(1 << 13);
+    std::variant<std::unordered_set<uint64_t>, uint64_t> v1{s1};
+    ser << v1;
+    auto r1 = cbdc::get_variant<std::unordered_set<uint64_t>, uint64_t>(deser);
+    EXPECT_TRUE(std::holds_alternative<std::unordered_set<uint64_t>>(r1));
+    auto resulted_set = std::get<std::unordered_set<uint64_t>>(r1);
+    EXPECT_TRUE(deser);
+    for(const auto& k : resulted_set) {
+        EXPECT_TRUE(s1.find(k) != s1.end());
+    }
+}
+//
+TEST_F(format_test, get_variant_nondefault_constructibles) {
+    cbdc::watchtower::best_block_height_response block_height_0{9};
+    std::variant<cbdc::watchtower::request,
+                 cbdc::watchtower::best_block_height_response>
+        variant_0{block_height_0};
+    ser << variant_0;
+    auto r0 = cbdc::get_variant<cbdc::watchtower::request,
+                                cbdc::watchtower::best_block_height_response>(
+        deser);
+    EXPECT_TRUE(deser);
+    ser.reset();
+    deser.reset();
+    EXPECT_TRUE(ser);
+    EXPECT_TRUE(
+        std::holds_alternative<cbdc::watchtower::best_block_height_response>(
+            r0));
+    EXPECT_TRUE(
+        std::get<cbdc::watchtower::best_block_height_response>(r0).height()
+        == block_height_0.height());
 }
