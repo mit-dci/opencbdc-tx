@@ -412,15 +412,11 @@ namespace cbdc::transaction::validation {
             return false;
         }
 
-        if(!std::all_of(tx.m_attestations.begin(),
-                        tx.m_attestations.end(),
-                        [&](const auto& att) {
-                            return pubkeys.find(att.first) != pubkeys.end()
-                                && tx.verify(secp_context.get(), att);
-                        })) {
-            return false;
-        }
-
-        return true;
+        return std::all_of(tx.m_attestations.begin(),
+                           tx.m_attestations.end(),
+                           [&](const auto& att) {
+                               return pubkeys.find(att.first) != pubkeys.end()
+                                   && tx.verify(secp_context.get(), att);
+                           });
     }
 }
