@@ -51,11 +51,7 @@ namespace cbdc::sentinel {
             m_logger->info("done");
         }
 
-        auto rng = std::default_random_engine();
-        rng.seed(m_sentinel_id);
-
-        // Shuffle the shards list to spread load between shards
-        std::shuffle(m_shard_data.begin(), m_shard_data.end(), rng);
+        m_shard_dist = decltype(m_shard_dist)(0, m_shard_data.size() - 1);
 
         for(const auto& ep : m_opts.m_sentinel_endpoints) {
             if(ep == m_opts.m_sentinel_endpoints[m_sentinel_id]) {
@@ -174,8 +170,12 @@ namespace cbdc::sentinel {
     void controller::send_compact_tx(const transaction::compact_tx& ctx) {
         auto ctx_pkt = std::make_shared<cbdc::buffer>(cbdc::make_buffer(ctx));
 
+        auto offset = m_shard_dist(m_rand);
         auto inputs_sent = std::unordered_set<size_t>();
-        for(const auto& [range, pid] : m_shard_data) {
+        for(size_t i = 0; i < m_shard_data.size(); i++) {
+            auto idx = (i + offset) % m_shard_data.size();
+            const auto& range = m_shard_data[idx].m_range;
+            const auto& pid = m_shard_data[idx].m_peer_id;
             if(inputs_sent.size() == ctx.m_inputs.size()) {
                 break;
             }
@@ -183,14 +183,14 @@ namespace cbdc::sentinel {
                 continue;
             }
             auto should_send = false;
-            for(size_t i = 0; i < ctx.m_inputs.size(); i++) {
-                if(inputs_sent.find(i) != inputs_sent.end()) {
+            for(size_t j = 0; j < ctx.m_inputs.size(); j++) {
+                if(inputs_sent.find(j) != inputs_sent.end()) {
                     continue;
                 }
                 if(!config::hash_in_shard_range(range, ctx.m_inputs[i])) {
                     continue;
                 }
-                inputs_sent.insert(i);
+                inputs_sent.insert(j);
                 should_send = true;
             }
             if(should_send) {
