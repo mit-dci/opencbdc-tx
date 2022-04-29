@@ -66,14 +66,48 @@ namespace cbdc::transaction {
         return ret;
     }
 
+#include <string>
+
+    auto push_string_to_vec(std::vector<unsigned char>& id, std::string str) {
+        for(unsigned int i = 0; i < str.size(); i++) {
+            id.push_back(str[i]);
+        }
+    }
+
+    auto push_hash_to_vec(std::vector<unsigned char>& id, hash_t hash) {
+        for(unsigned int i = 0; i < cbdc::hash_size; i++) {
+            id.push_back(hash[i]);
+        }
+    }
+
     auto tx_id(const full_tx& tx) noexcept -> hash_t {
         CSHA256 sha;
+        std::vector<unsigned char> id;
 
-        auto inp_buf = cbdc::make_buffer(tx.m_inputs);
-        sha.Write(inp_buf.c_ptr(), inp_buf.size());
+        for(unsigned int i = 0; i < tx.m_inputs.size(); i++) {
+            push_hash_to_vec(id, tx.m_inputs[i].m_prevout.m_tx_id);
+            push_string_to_vec(
+                id,
+                std::to_string(tx.m_inputs[i].m_prevout.m_index));
+            push_hash_to_vec(
+                id,
+                tx.m_inputs[i].m_prevout_data.m_witness_program_commitment);
+            push_string_to_vec(
+                id,
+                std::to_string(tx.m_inputs[i].m_prevout_data.m_value));
+        }
+        for(unsigned int i = 0; i < tx.m_outputs.size(); i++) {
+            push_hash_to_vec(id, tx.m_outputs[i].m_witness_program_commitment);
+            push_string_to_vec(id, std::to_string(tx.m_outputs[i].m_value));
+        }
 
-        auto out_buf = cbdc::make_buffer(tx.m_outputs);
-        sha.Write(out_buf.c_ptr(), out_buf.size());
+        std::cout << "------- TX ID (NOT SHA) -------" << std::endl;
+        for(unsigned int i = 0; i < id.size(); i++) {
+            std::cout << (int)id[i] << ", ";
+        }
+        std::cout << std::endl;
+
+        sha.Write((const unsigned char*)id.data(), id.size());
 
         hash_t ret;
         sha.Finalize(ret.data());

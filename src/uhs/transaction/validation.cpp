@@ -230,6 +230,23 @@ namespace cbdc::transaction::validation {
         std::memcpy(sig_arr.data(),
                     &wit[p2pk_witness_prog_len],
                     sizeof(sig_arr));
+
+        std::cout << "------- PUBLIC KEY IN VERIFY -------" << std::endl;
+        for(unsigned int i = 0; i < pubkey_arr.size(); i++) {
+            std::cout << (int)pubkey_arr[i] << ", ";
+        }
+        std::cout << std::endl;
+        std::cout << "------- SIGNATURE IN VERIFY -------" << std::endl;
+        for(unsigned int i = 0; i < sig_arr.size(); i++) {
+            std::cout << (int)sig_arr[i] << ", ";
+        }
+        std::cout << std::endl;
+        std::cout << "------- TX ID (SHA256) -------" << std::endl;
+        for(unsigned int i = 0; i < sighash.size(); i++) {
+            std::cout << (int)sighash[i] << ", ";
+        }
+        std::cout << std::endl;
+
         if(secp256k1_schnorrsig_verify(secp_context.get(),
                                        sig_arr.data(),
                                        sighash.data(),

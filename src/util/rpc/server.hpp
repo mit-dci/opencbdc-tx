@@ -17,7 +17,8 @@
 namespace cbdc::rpc {
     /// Type to distinguish between servers that implement synchronous versus
     /// asynchronous request handling.
-    enum class handler_type {
+    enum class handler_type
+    {
         blocking,
         async
     };

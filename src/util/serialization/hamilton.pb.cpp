@@ -23,23 +23,20 @@
 
 #include <iostream>
 
-namespace protobuf_transaction_2eproto {
-    extern PROTOBUF_INTERNAL_EXPORT_protobuf_transaction_2eproto ::google::
+namespace protobuf_hamilton_2eproto {
+    extern PROTOBUF_INTERNAL_EXPORT_protobuf_hamilton_2eproto ::google::
         protobuf::internal::SCCInfo<0>
             scc_info_Outpoint;
-    extern PROTOBUF_INTERNAL_EXPORT_protobuf_transaction_2eproto ::google::
+    extern PROTOBUF_INTERNAL_EXPORT_protobuf_hamilton_2eproto ::google::
         protobuf::internal::SCCInfo<0>
             scc_info_Output;
-    extern PROTOBUF_INTERNAL_EXPORT_protobuf_transaction_2eproto ::google::
+    extern PROTOBUF_INTERNAL_EXPORT_protobuf_hamilton_2eproto ::google::
         protobuf::internal::SCCInfo<0>
             scc_info_Witness;
-    extern PROTOBUF_INTERNAL_EXPORT_protobuf_transaction_2eproto ::google::
+    extern PROTOBUF_INTERNAL_EXPORT_protobuf_hamilton_2eproto ::google::
         protobuf::internal::SCCInfo<2>
             scc_info_Input;
-    extern PROTOBUF_INTERNAL_EXPORT_protobuf_transaction_2eproto ::google::
-        protobuf::internal::SCCInfo<3>
-            scc_info_Transaction;
-} // namespace protobuf_transaction_2eproto
+} // namespace protobuf_hamilton_2eproto
 namespace transaction {
     class OutpointDefaultTypeInternal {
       public:
@@ -63,11 +60,6 @@ namespace transaction {
         ::google::protobuf::internal::ExplicitlyConstructed<Transaction>
             _instance;
     } _Transaction_default_instance_;
-    class TransactionRequestDefaultTypeInternal {
-      public:
-        ::google::protobuf::internal::ExplicitlyConstructed<TransactionRequest>
-            _instance;
-    } _TransactionRequest_default_instance_;
     class TransactionResponseDefaultTypeInternal {
       public:
         ::google::protobuf::internal::ExplicitlyConstructed<
@@ -75,7 +67,7 @@ namespace transaction {
             _instance;
     } _TransactionResponse_default_instance_;
 } // namespace transaction
-namespace protobuf_transaction_2eproto {
+namespace protobuf_hamilton_2eproto {
     static void InitDefaultsOutpoint() {
         GOOGLE_PROTOBUF_VERIFY_VERSION;
 
@@ -129,8 +121,8 @@ namespace protobuf_transaction_2eproto {
             2,
             InitDefaultsInput},
            {
-               &protobuf_transaction_2eproto::scc_info_Outpoint.base,
-               &protobuf_transaction_2eproto::scc_info_Output.base,
+               &protobuf_hamilton_2eproto::scc_info_Outpoint.base,
+               &protobuf_hamilton_2eproto::scc_info_Output.base,
            }};
 
     static void InitDefaultsWitness() {
@@ -168,29 +160,9 @@ namespace protobuf_transaction_2eproto {
             3,
             InitDefaultsTransaction},
            {
-               &protobuf_transaction_2eproto::scc_info_Input.base,
-               &protobuf_transaction_2eproto::scc_info_Output.base,
-               &protobuf_transaction_2eproto::scc_info_Witness.base,
-           }};
-
-    static void InitDefaultsTransactionRequest() {
-        GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-        {
-            void* ptr = &::transaction::_TransactionRequest_default_instance_;
-            new(ptr)::transaction::TransactionRequest();
-            ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-        }
-        ::transaction::TransactionRequest::InitAsDefaultInstance();
-    }
-
-    ::google::protobuf::internal::SCCInfo<1> scc_info_TransactionRequest
-        = {{ATOMIC_VAR_INIT(
-                ::google::protobuf::internal::SCCInfoBase::kUninitialized),
-            1,
-            InitDefaultsTransactionRequest},
-           {
-               &protobuf_transaction_2eproto::scc_info_Transaction.base,
+               &protobuf_hamilton_2eproto::scc_info_Input.base,
+               &protobuf_hamilton_2eproto::scc_info_Output.base,
+               &protobuf_hamilton_2eproto::scc_info_Witness.base,
            }};
 
     static void InitDefaultsTransactionResponse() {
@@ -218,12 +190,10 @@ namespace protobuf_transaction_2eproto {
         ::google::protobuf::internal::InitSCC(&scc_info_Witness.base);
         ::google::protobuf::internal::InitSCC(&scc_info_Transaction.base);
         ::google::protobuf::internal::InitSCC(
-            &scc_info_TransactionRequest.base);
-        ::google::protobuf::internal::InitSCC(
             &scc_info_TransactionResponse.base);
     }
 
-    ::google::protobuf::Metadata file_level_metadata[7];
+    ::google::protobuf::Metadata file_level_metadata[6];
 
     const ::google::protobuf::uint32
         TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(
@@ -296,16 +266,6 @@ namespace protobuf_transaction_2eproto {
                 witnesses_),
             ~0u, // no _has_bits_
             GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(
-                ::transaction::TransactionRequest,
-                _internal_metadata_),
-            ~0u, // no _extensions_
-            ~0u, // no _oneof_case_
-            ~0u, // no _weak_field_map_
-            GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(
-                ::transaction::TransactionRequest,
-                transactions_),
-            ~0u, // no _has_bits_
-            GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(
                 ::transaction::TransactionResponse,
                 _internal_metadata_),
             ~0u, // no _extensions_
@@ -323,8 +283,7 @@ namespace protobuf_transaction_2eproto {
             {14, -1, sizeof(::transaction::Input)},
             {21, -1, sizeof(::transaction::Witness)},
             {27, -1, sizeof(::transaction::Transaction)},
-            {35, -1, sizeof(::transaction::TransactionRequest)},
-            {41, -1, sizeof(::transaction::TransactionResponse)},
+            {35, -1, sizeof(::transaction::TransactionResponse)},
     };
 
     static ::google::protobuf::Message const* const file_default_instances[]
@@ -340,14 +299,12 @@ namespace protobuf_transaction_2eproto {
             reinterpret_cast<const ::google::protobuf::Message*>(
                 &::transaction::_Transaction_default_instance_),
             reinterpret_cast<const ::google::protobuf::Message*>(
-                &::transaction::_TransactionRequest_default_instance_),
-            reinterpret_cast<const ::google::protobuf::Message*>(
                 &::transaction::_TransactionResponse_default_instance_),
     };
 
     void protobuf_AssignDescriptors() {
         AddDescriptors();
-        AssignDescriptors("transaction.proto",
+        AssignDescriptors("hamilton.proto",
                           schemas,
                           file_default_instances,
                           TableStruct::offsets,
@@ -366,7 +323,7 @@ namespace protobuf_transaction_2eproto {
         GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
     void protobuf_RegisterTypes(const ::std::string&) {
         protobuf_AssignDescriptorsOnce();
-        ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 7);
+        ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 6);
     }
 
     void AddDescriptorsImpl() {
@@ -374,34 +331,27 @@ namespace protobuf_transaction_2eproto {
         static const char
             descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(
                 protodesc_cold)
-            = {"\n\021transaction.proto\022\013transaction\"1\n\010Outp"
-               "oint\022\026\n\016transaction_id\030\001 "
-               "\001(\014\022\r\n\005index\030\002 "
-               "\001(\004\"+\n\006Output\022\022\n\npublic_key\030\001 "
-               "\001(\014\022\r\n\005val"
-               "ue\030\002 "
-               "\001(\004\"U\n\005Input\022\'\n\010outpoint\030\001 "
-               "\001(\0132\025.tr"
-               "ansaction.Outpoint\022#\n\006output\030\002 \001(\0132\023.tra"
-               "nsaction.Output\"\034\n\007Witness\022\021\n\tsignature\030"
-               "\001 "
-               "\001("
-               "\014\"\200\001\n\013Transaction\022\"\n\006inputs\030\001 "
-               "\003(\0132\022."
-               "transaction.Input\022$\n\007outputs\030\002 \003(\0132\023.tra"
-               "nsaction.Output\022\'\n\twitnesses\030\003 \003(\0132\024.tra"
-               "nsaction.Witness\"D\n\022TransactionRequest\022."
-               "\n\014transactions\030\001 \003(\0132\030.transaction.Trans"
-               "action\"&\n\023TransactionResponse\022\017\n\007message"
-               "\030\001 \001(\t2o\n\022TransactionService\022Y\n\022ExecuteT"
-               "ransaction\022\037.transaction.TransactionRequ"
-               "est\032 .transaction.TransactionResponse\"\000b"
-               "\006proto3"};
+            = {"\n\016hamilton.proto\022\013transaction\"1\n\010Outpoin"
+               "t\022\026\n\016transaction_id\030\001 "
+               "\001(\014\022\r\n\005index\030\002 \001(\004"
+               "\"+\n\006Output\022\022\n\npublic_key\030\001 "
+               "\001(\014\022\r\n\005value\030"
+               "\002 \001(\004\"U\n\005Input\022\'\n\010outpoint\030\001 "
+               "\001(\0132\025.trans"
+               "action.Outpoint\022#\n\006output\030\002 \001(\0132\023.transa"
+               "ction.Output\"\034\n\007Witness\022\021\n\tsignature\030\001 "
+               "\001"
+               "(\014\"\200\001\n\013Transaction\022\"\n\006inputs\030\001 "
+               "\003(\0132\022.tra"
+               "nsaction.Input\022$\n\007outputs\030\002 \003(\0132\023.transa"
+               "ction.Output\022\'\n\twitnesses\030\003 \003(\0132\024.transa"
+               "ction.Witness\"&\n\023TransactionResponse\022\017\n\007"
+               "message\030\001 \001(\tb\006proto3"};
         ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
             descriptor,
-            607);
+            421);
         ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-            "transaction.proto",
+            "hamilton.proto",
             &protobuf_RegisterTypes);
     }
 
@@ -415,7 +365,7 @@ namespace protobuf_transaction_2eproto {
             AddDescriptors();
         }
     } static_descriptor_initializer;
-} // namespace protobuf_transaction_2eproto
+} // namespace protobuf_hamilton_2eproto
 namespace transaction {
 
     // ===================================================================
@@ -430,7 +380,7 @@ namespace transaction {
         : ::google::protobuf::Message(),
           _internal_metadata_(NULL) {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_Outpoint.base);
+            &protobuf_hamilton_2eproto::scc_info_Outpoint.base);
         SharedCtor();
         // @@protoc_insertion_point(constructor:transaction.Outpoint)
     }
@@ -469,15 +419,15 @@ namespace transaction {
         _cached_size_.Set(size);
     }
     const ::google::protobuf::Descriptor* Outpoint::descriptor() {
-        ::protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        ::protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages]
                 .descriptor;
     }
 
     const Outpoint& Outpoint::default_instance() {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_Outpoint.base);
+            &protobuf_hamilton_2eproto::scc_info_Outpoint.base);
         return *internal_default_instance();
     }
 
@@ -735,8 +685,8 @@ namespace transaction {
     }
 
     ::google::protobuf::Metadata Outpoint::GetMetadata() const {
-        protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages];
     }
 
@@ -752,7 +702,7 @@ namespace transaction {
         : ::google::protobuf::Message(),
           _internal_metadata_(NULL) {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_Output.base);
+            &protobuf_hamilton_2eproto::scc_info_Output.base);
         SharedCtor();
         // @@protoc_insertion_point(constructor:transaction.Output)
     }
@@ -791,15 +741,15 @@ namespace transaction {
         _cached_size_.Set(size);
     }
     const ::google::protobuf::Descriptor* Output::descriptor() {
-        ::protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        ::protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages]
                 .descriptor;
     }
 
     const Output& Output::default_instance() {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_Output.base);
+            &protobuf_hamilton_2eproto::scc_info_Output.base);
         return *internal_default_instance();
     }
 
@@ -1055,8 +1005,8 @@ namespace transaction {
     }
 
     ::google::protobuf::Metadata Output::GetMetadata() const {
-        protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages];
     }
 
@@ -1079,7 +1029,7 @@ namespace transaction {
 
     Input::Input() : ::google::protobuf::Message(), _internal_metadata_(NULL) {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_Input.base);
+            &protobuf_hamilton_2eproto::scc_info_Input.base);
         SharedCtor();
         // @@protoc_insertion_point(constructor:transaction.Input)
     }
@@ -1124,15 +1074,15 @@ namespace transaction {
         _cached_size_.Set(size);
     }
     const ::google::protobuf::Descriptor* Input::descriptor() {
-        ::protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        ::protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages]
                 .descriptor;
     }
 
     const Input& Input::default_instance() {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_Input.base);
+            &protobuf_hamilton_2eproto::scc_info_Input.base);
         return *internal_default_instance();
     }
 
@@ -1390,8 +1340,8 @@ namespace transaction {
     }
 
     ::google::protobuf::Metadata Input::GetMetadata() const {
-        protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages];
     }
 
@@ -1406,7 +1356,7 @@ namespace transaction {
         : ::google::protobuf::Message(),
           _internal_metadata_(NULL) {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_Witness.base);
+            &protobuf_hamilton_2eproto::scc_info_Witness.base);
         SharedCtor();
         // @@protoc_insertion_point(constructor:transaction.Witness)
     }
@@ -1443,15 +1393,15 @@ namespace transaction {
         _cached_size_.Set(size);
     }
     const ::google::protobuf::Descriptor* Witness::descriptor() {
-        ::protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        ::protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages]
                 .descriptor;
     }
 
     const Witness& Witness::default_instance() {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_Witness.base);
+            &protobuf_hamilton_2eproto::scc_info_Witness.base);
         return *internal_default_instance();
     }
 
@@ -1663,8 +1613,8 @@ namespace transaction {
     }
 
     ::google::protobuf::Metadata Witness::GetMetadata() const {
-        protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages];
     }
 
@@ -1681,7 +1631,7 @@ namespace transaction {
         : ::google::protobuf::Message(),
           _internal_metadata_(NULL) {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_Transaction.base);
+            &protobuf_hamilton_2eproto::scc_info_Transaction.base);
         SharedCtor();
         // @@protoc_insertion_point(constructor:transaction.Transaction)
     }
@@ -1706,20 +1656,21 @@ namespace transaction {
             cbdc::transaction::output new_output;
             cbdc::transaction::out_point new_outpoint;
             cbdc::transaction::input new_input;
-            std::string witness = input.output()
-                                      .public_key()
-                                      .c_str();
-            std::string tx_id = input.outpoint().transaction_id().c_str();
+            std::string witness = input.output().public_key().c_str();
+            std::string tx_id_str = input.outpoint().transaction_id();
+            std::vector<uint8_t> tx_id(tx_id_str.begin(), tx_id_str.end());
 
             new_output.m_witness_program_commitment
                 = std::array<unsigned char, 32>();
             new_outpoint.m_tx_id = std::array<unsigned char, 32>();
-            for(unsigned long j = 0; j < witness.length(); j++) {
+            for(unsigned long j = 0; j < witness.size(); j++) {
                 new_output.m_witness_program_commitment[j] = witness[j];
             }
-            for(unsigned long j = 0; j < tx_id.length(); j++) {
+            for(unsigned long j = 0; j < tx_id.size(); j++) {
+                std::cout << tx_id[j] << ", ";
                 new_outpoint.m_tx_id[j] = tx_id[j];
             }
+            std::cout << std::endl;
             new_output.m_value = input.output().value();
             new_outpoint.m_index = input.outpoint().index();
             new_input.m_prevout = new_outpoint;
@@ -1730,8 +1681,7 @@ namespace transaction {
         for(int i = 0; i < this->outputs().size(); i++) {
             auto output = this->outputs()[i];
             cbdc::transaction::output new_output;
-            std::string witness
-                = output.public_key().c_str();
+            std::string witness = output.public_key().c_str();
 
             new_output.m_witness_program_commitment
                 = std::array<unsigned char, 32>();
@@ -1775,15 +1725,15 @@ namespace transaction {
         _cached_size_.Set(size);
     }
     const ::google::protobuf::Descriptor* Transaction::descriptor() {
-        ::protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        ::protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages]
                 .descriptor;
     }
 
     const Transaction& Transaction::default_instance() {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_Transaction.base);
+            &protobuf_hamilton_2eproto::scc_info_Transaction.base);
         return *internal_default_instance();
     }
 
@@ -2102,282 +2052,8 @@ namespace transaction {
     }
 
     ::google::protobuf::Metadata Transaction::GetMetadata() const {
-        protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
-            [kIndexInFileMessages];
-    }
-
-    // ===================================================================
-
-    void TransactionRequest::InitAsDefaultInstance() {}
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-    const int TransactionRequest::kTransactionsFieldNumber;
-#endif // !defined(_MSC_VER) || _MSC_VER >= 1900
-
-    TransactionRequest::TransactionRequest()
-        : ::google::protobuf::Message(),
-          _internal_metadata_(NULL) {
-        ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_TransactionRequest.base);
-        SharedCtor();
-        // @@protoc_insertion_point(constructor:transaction.TransactionRequest)
-    }
-    TransactionRequest::TransactionRequest(const TransactionRequest& from)
-        : ::google::protobuf::Message(),
-          _internal_metadata_(NULL),
-          transactions_(from.transactions_) {
-        _internal_metadata_.MergeFrom(from._internal_metadata_);
-        // @@protoc_insertion_point(copy_constructor:transaction.TransactionRequest)
-    }
-
-    void TransactionRequest::SharedCtor() {}
-
-    TransactionRequest::~TransactionRequest() {
-        // @@protoc_insertion_point(destructor:transaction.TransactionRequest)
-        SharedDtor();
-    }
-
-    void TransactionRequest::SharedDtor() {}
-
-    void TransactionRequest::SetCachedSize(int size) const {
-        _cached_size_.Set(size);
-    }
-    const ::google::protobuf::Descriptor* TransactionRequest::descriptor() {
-        ::protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
-            [kIndexInFileMessages]
-                .descriptor;
-    }
-
-    const TransactionRequest& TransactionRequest::default_instance() {
-        ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_TransactionRequest.base);
-        return *internal_default_instance();
-    }
-
-    void TransactionRequest::Clear() {
-        // @@protoc_insertion_point(message_clear_start:transaction.TransactionRequest)
-        ::google::protobuf::uint32 cached_has_bits = 0;
-        // Prevent compiler warnings about cached_has_bits being unused
-        (void)cached_has_bits;
-
-        transactions_.Clear();
-        _internal_metadata_.Clear();
-    }
-
-    bool TransactionRequest::MergePartialFromCodedStream(
-        ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION)                  \
-    if(!GOOGLE_PREDICT_TRUE(EXPRESSION)) \
-    goto failure
-        ::google::protobuf::uint32 tag;
-        // @@protoc_insertion_point(parse_start:transaction.TransactionRequest)
-        for(;;) {
-            ::std::pair<::google::protobuf::uint32, bool> p
-                = input->ReadTagWithCutoffNoLastTag(127u);
-            tag = p.first;
-            if(!p.second)
-                goto handle_unusual;
-            switch(::google::protobuf::internal::WireFormatLite::
-                       GetTagFieldNumber(tag)) {
-                // repeated .transaction.Transaction transactions = 1;
-                case 1: {
-                    if(static_cast<::google::protobuf::uint8>(tag)
-                       == static_cast<::google::protobuf::uint8>(
-                           10u /* 10 & 0xFF */)) {
-                        DO_(::google::protobuf::internal::WireFormatLite::
-                                ReadMessage(input, add_transactions()));
-                    } else {
-                        goto handle_unusual;
-                    }
-                    break;
-                }
-
-                default: {
-                handle_unusual:
-                    if(tag == 0) {
-                        goto success;
-                    }
-                    DO_(::google::protobuf::internal::WireFormat::SkipField(
-                        input,
-                        tag,
-                        _internal_metadata_.mutable_unknown_fields()));
-                    break;
-                }
-            }
-        }
-    success:
-        // @@protoc_insertion_point(parse_success:transaction.TransactionRequest)
-        return true;
-    failure:
-        // @@protoc_insertion_point(parse_failure:transaction.TransactionRequest)
-        return false;
-#undef DO_
-    }
-
-    void TransactionRequest::SerializeWithCachedSizes(
-        ::google::protobuf::io::CodedOutputStream* output) const {
-        // @@protoc_insertion_point(serialize_start:transaction.TransactionRequest)
-        ::google::protobuf::uint32 cached_has_bits = 0;
-        (void)cached_has_bits;
-
-        // repeated .transaction.Transaction transactions = 1;
-        for(unsigned int i
-            = 0,
-            n = static_cast<unsigned int>(this->transactions_size());
-            i < n;
-            i++) {
-            ::google::protobuf::internal::WireFormatLite::
-                WriteMessageMaybeToArray(
-                    1,
-                    this->transactions(static_cast<int>(i)),
-                    output);
-        }
-
-        if((_internal_metadata_.have_unknown_fields()
-            && ::google::protobuf::internal::
-                GetProto3PreserveUnknownsDefault())) {
-            ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-                (::google::protobuf::internal::
-                         GetProto3PreserveUnknownsDefault()
-                     ? _internal_metadata_.unknown_fields()
-                     : _internal_metadata_.default_instance()),
-                output);
-        }
-        // @@protoc_insertion_point(serialize_end:transaction.TransactionRequest)
-    }
-
-    ::google::protobuf::uint8*
-    TransactionRequest::InternalSerializeWithCachedSizesToArray(
-        bool deterministic,
-        ::google::protobuf::uint8* target) const {
-        (void)deterministic; // Unused
-        // @@protoc_insertion_point(serialize_to_array_start:transaction.TransactionRequest)
-        ::google::protobuf::uint32 cached_has_bits = 0;
-        (void)cached_has_bits;
-
-        // repeated .transaction.Transaction transactions = 1;
-        for(unsigned int i
-            = 0,
-            n = static_cast<unsigned int>(this->transactions_size());
-            i < n;
-            i++) {
-            target = ::google::protobuf::internal::WireFormatLite::
-                InternalWriteMessageToArray(
-                    1,
-                    this->transactions(static_cast<int>(i)),
-                    deterministic,
-                    target);
-        }
-
-        if((_internal_metadata_.have_unknown_fields()
-            && ::google::protobuf::internal::
-                GetProto3PreserveUnknownsDefault())) {
-            target = ::google::protobuf::internal::WireFormat::
-                SerializeUnknownFieldsToArray(
-                    (::google::protobuf::internal::
-                             GetProto3PreserveUnknownsDefault()
-                         ? _internal_metadata_.unknown_fields()
-                         : _internal_metadata_.default_instance()),
-                    target);
-        }
-        // @@protoc_insertion_point(serialize_to_array_end:transaction.TransactionRequest)
-        return target;
-    }
-
-    size_t TransactionRequest::ByteSizeLong() const {
-        // @@protoc_insertion_point(message_byte_size_start:transaction.TransactionRequest)
-        size_t total_size = 0;
-
-        if((_internal_metadata_.have_unknown_fields()
-            && ::google::protobuf::internal::
-                GetProto3PreserveUnknownsDefault())) {
-            total_size += ::google::protobuf::internal::WireFormat::
-                ComputeUnknownFieldsSize(
-                    (::google::protobuf::internal::
-                             GetProto3PreserveUnknownsDefault()
-                         ? _internal_metadata_.unknown_fields()
-                         : _internal_metadata_.default_instance()));
-        }
-        // repeated .transaction.Transaction transactions = 1;
-        {
-            unsigned int count
-                = static_cast<unsigned int>(this->transactions_size());
-            total_size += 1UL * count;
-            for(unsigned int i = 0; i < count; i++) {
-                total_size += ::google::protobuf::internal::WireFormatLite::
-                    MessageSize(this->transactions(static_cast<int>(i)));
-            }
-        }
-
-        int cached_size
-            = ::google::protobuf::internal::ToCachedSize(total_size);
-        SetCachedSize(cached_size);
-        return total_size;
-    }
-
-    void
-    TransactionRequest::MergeFrom(const ::google::protobuf::Message& from) {
-        // @@protoc_insertion_point(generalized_merge_from_start:transaction.TransactionRequest)
-        GOOGLE_DCHECK_NE(&from, this);
-        const TransactionRequest* source
-            = ::google::protobuf::internal::DynamicCastToGenerated<
-                const TransactionRequest>(&from);
-        if(source == NULL) {
-            // @@protoc_insertion_point(generalized_merge_from_cast_fail:transaction.TransactionRequest)
-            ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-        } else {
-            // @@protoc_insertion_point(generalized_merge_from_cast_success:transaction.TransactionRequest)
-            MergeFrom(*source);
-        }
-    }
-
-    void TransactionRequest::MergeFrom(const TransactionRequest& from) {
-        // @@protoc_insertion_point(class_specific_merge_from_start:transaction.TransactionRequest)
-        GOOGLE_DCHECK_NE(&from, this);
-        _internal_metadata_.MergeFrom(from._internal_metadata_);
-        ::google::protobuf::uint32 cached_has_bits = 0;
-        (void)cached_has_bits;
-
-        transactions_.MergeFrom(from.transactions_);
-    }
-
-    void
-    TransactionRequest::CopyFrom(const ::google::protobuf::Message& from) {
-        // @@protoc_insertion_point(generalized_copy_from_start:transaction.TransactionRequest)
-        if(&from == this)
-            return;
-        Clear();
-        MergeFrom(from);
-    }
-
-    void TransactionRequest::CopyFrom(const TransactionRequest& from) {
-        // @@protoc_insertion_point(class_specific_copy_from_start:transaction.TransactionRequest)
-        if(&from == this)
-            return;
-        Clear();
-        MergeFrom(from);
-    }
-
-    bool TransactionRequest::IsInitialized() const {
-        return true;
-    }
-
-    void TransactionRequest::Swap(TransactionRequest* other) {
-        if(other == this)
-            return;
-        InternalSwap(other);
-    }
-    void TransactionRequest::InternalSwap(TransactionRequest* other) {
-        using std::swap;
-        CastToBase(&transactions_)
-            ->InternalSwap(CastToBase(&other->transactions_));
-        _internal_metadata_.Swap(&other->_internal_metadata_);
-    }
-
-    ::google::protobuf::Metadata TransactionRequest::GetMetadata() const {
-        protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages];
     }
 
@@ -2392,7 +2068,7 @@ namespace transaction {
         : ::google::protobuf::Message(),
           _internal_metadata_(NULL) {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_TransactionResponse.base);
+            &protobuf_hamilton_2eproto::scc_info_TransactionResponse.base);
         SharedCtor();
         // @@protoc_insertion_point(constructor:transaction.TransactionResponse)
     }
@@ -2429,15 +2105,15 @@ namespace transaction {
         _cached_size_.Set(size);
     }
     const ::google::protobuf::Descriptor* TransactionResponse::descriptor() {
-        ::protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        ::protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages]
                 .descriptor;
     }
 
     const TransactionResponse& TransactionResponse::default_instance() {
         ::google::protobuf::internal::InitSCC(
-            &protobuf_transaction_2eproto::scc_info_TransactionResponse.base);
+            &protobuf_hamilton_2eproto::scc_info_TransactionResponse.base);
         return *internal_default_instance();
     }
 
@@ -2669,8 +2345,8 @@ namespace transaction {
     }
 
     ::google::protobuf::Metadata TransactionResponse::GetMetadata() const {
-        protobuf_transaction_2eproto::protobuf_AssignDescriptorsOnce();
-        return ::protobuf_transaction_2eproto::file_level_metadata
+        protobuf_hamilton_2eproto::protobuf_AssignDescriptorsOnce();
+        return ::protobuf_hamilton_2eproto::file_level_metadata
             [kIndexInFileMessages];
     }
 
@@ -2702,13 +2378,6 @@ namespace google {
         GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::transaction::Transaction*
         Arena::CreateMaybeMessage<::transaction::Transaction>(Arena* arena) {
             return Arena::CreateInternal<::transaction::Transaction>(arena);
-        }
-        template<>
-        GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::transaction::TransactionRequest*
-        Arena::CreateMaybeMessage<::transaction::TransactionRequest>(
-            Arena* arena) {
-            return Arena::CreateInternal<::transaction::TransactionRequest>(
-                arena);
         }
         template<>
         GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::transaction::TransactionResponse*

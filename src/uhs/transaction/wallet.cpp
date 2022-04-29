@@ -11,6 +11,7 @@
 #include "util/serialization/istream_serializer.hpp"
 #include "util/serialization/ostream_serializer.hpp"
 
+#include <iostream>
 #include <secp256k1_schnorrsig.h>
 
 namespace cbdc {
@@ -122,6 +123,7 @@ namespace cbdc {
     }
 
     auto transaction::wallet::generate_key() -> pubkey_t {
+        std::cout << "IN NEW GENERATE_KEY!" << std::endl;
         // Unique lock on m_keys, m_keygen and m_keygen_dist
         {
             // TODO: add config parameter where 0 = never reuse.
@@ -151,6 +153,17 @@ namespace cbdc {
                 {transaction::validation::get_p2pk_witness_commitment(ret),
                  ret});
         }
+
+        std::cout << "------- SECRET KEY -------" << std::endl;
+        for(unsigned int i = 0; i < seckey.size(); i++) {
+            std::cout << (int)seckey[i] << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "------- PUBLIC KEY -------" << std::endl;
+        for(unsigned int i = 0; i < ret.size(); i++) {
+            std::cout << (int)ret[i] << " ";
+        }
+        std::cout << std::endl;
 
         return ret;
     }
@@ -295,9 +308,26 @@ namespace cbdc {
         return balance;
     }
 
+#include <iostream>
+#include <set>
+
     auto transaction::wallet::count() const -> size_t {
         std::shared_lock<std::shared_mutex> lg(m_utxos_mut);
         auto size = m_utxos_set.size();
+
+        for(auto it = m_utxos_set.begin(); it != m_utxos_set.end(); ++it) {
+            input utxo = *it;
+
+            std::cout << "TX ID: ";
+            for(unsigned int i = 0; i < utxo.m_prevout.m_tx_id.size(); i++) {
+                std::cout << (int)utxo.m_prevout.m_tx_id[i] << ", ";
+            }
+            std::cout << std::endl;
+
+            std::cout << "INDEX: " << utxo.m_prevout.m_index << std::endl;
+            std::cout << "VALUE: " << utxo.m_prevout_data.m_value << std::endl;
+        }
+
         if(m_seed_from != m_seed_to) {
             size += (m_seed_to - m_seed_from);
         }

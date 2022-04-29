@@ -6,6 +6,7 @@
 #include "keys.hpp"
 
 #include <cassert>
+#include <iostream>
 #include <secp256k1_schnorrsig.h>
 
 namespace cbdc {
