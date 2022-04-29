@@ -1656,7 +1656,9 @@ namespace transaction {
             cbdc::transaction::output new_output;
             cbdc::transaction::out_point new_outpoint;
             cbdc::transaction::input new_input;
-            std::string witness = input.output().public_key().c_str();
+            std::string witness_str = input.output().public_key();
+            std::vector<uint8_t> witness(witness_str.begin(),
+                                         witness_str.end());
             std::string tx_id_str = input.outpoint().transaction_id();
             std::vector<uint8_t> tx_id(tx_id_str.begin(), tx_id_str.end());
 
@@ -1681,11 +1683,13 @@ namespace transaction {
         for(int i = 0; i < this->outputs().size(); i++) {
             auto output = this->outputs()[i];
             cbdc::transaction::output new_output;
-            std::string witness = output.public_key().c_str();
+            std::string witness_str = output.public_key();
+            std::vector<uint8_t> witness(witness_str.begin(),
+                                         witness_str.end());
 
             new_output.m_witness_program_commitment
                 = std::array<unsigned char, 32>();
-            for(unsigned long j = 0; j < witness.length(); j++) {
+            for(unsigned long j = 0; j < witness.size(); j++) {
                 new_output.m_witness_program_commitment[j] = witness[j];
             }
 
@@ -1696,9 +1700,11 @@ namespace transaction {
         for(int i = 0; i < this->witnesses().size(); i++) {
             auto witness = this->witnesses()[i];
             std::vector<std::byte> new_witness;
-            std::string signature = witness.signature();
+            std::string signature_str = witness.signature();
+            std::vector<uint8_t> signature(signature_str.begin(),
+                                           signature_str.end());
 
-            for(unsigned long j = 0; j < signature.length(); j++) {
+            for(unsigned long j = 0; j < signature.size(); j++) {
                 new_witness.push_back((std::byte)(signature[j]));
             }
             new_witnesses.push_back(new_witness);
