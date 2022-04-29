@@ -43,9 +43,6 @@ namespace cbdc::atomizer {
         std::shared_ptr<logging::log> m_logger;
 
         atomizer_raft m_raft_node;
-        std::mutex m_pending_txnotify_mut;
-        std::condition_variable m_pending_txnotify_cv;
-        std::queue<cbdc::network::message_t> m_pending_txnotify{};
         std::atomic_bool m_running{true};
 
         cbdc::network::connection_manager m_watchtower_network;
@@ -54,6 +51,9 @@ namespace cbdc::atomizer {
         std::thread m_atomizer_server;
         std::thread m_tx_notify_thread;
         std::thread m_main_thread;
+
+        blocking_queue<tx_notify_request> m_notification_queue;
+        std::vector<std::thread> m_notification_threads;
 
         auto server_handler(cbdc::network::message_t&& pkt)
             -> std::optional<cbdc::buffer>;
@@ -66,6 +66,7 @@ namespace cbdc::atomizer {
         auto raft_callback(nuraft::cb_func::Type type,
                            nuraft::cb_func::Param* param)
             -> nuraft::cb_func::ReturnCode;
+        void notification_consumer();
     };
 }
 

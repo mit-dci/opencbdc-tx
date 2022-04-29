@@ -62,46 +62,61 @@ namespace cbdc::atomizer {
                         to_string(notif.m_tx.m_id));
             return;
         }
-        auto it = m_txs.find(notif.m_tx);
-        if(it != m_txs.end()) {
-            for(auto n : notif.m_attestations) {
-                auto p = std::make_pair(n, notif.m_block_height);
-                auto n_it = it->second.find(p);
-                if((n_it != it->second.end()
-                    && n_it->second < notif.m_block_height)
-                   || n_it == it->second.end()) {
-                    it->second.insert(std::move(p));
+
+        auto maybe_tx = [&]() -> std::optional<decltype(m_txs)::node_type> {
+            std::unique_lock l(m_txs_mut);
+            auto it = m_txs.find(notif.m_tx);
+            if(it != m_txs.end()) {
+                for(auto n : notif.m_attestations) {
+                    auto p = std::make_pair(n, notif.m_block_height);
+                    auto n_it = it->second.find(p);
+                    if((n_it != it->second.end()
+                        && n_it->second < notif.m_block_height)
+                       || n_it == it->second.end()) {
+                        it->second.insert(std::move(p));
+                    }
                 }
+            } else {
+                auto attestations = attestation_set();
+                attestations.reserve(notif.m_attestations.size());
+                for(auto n : notif.m_attestations) {
+                    attestations.insert(
+                        std::make_pair(n, notif.m_block_height));
+                }
+                it = m_txs
+                         .insert(std::make_pair(std::move(notif.m_tx),
+                                                std::move(attestations)))
+                         .first;
             }
-        } else {
-            auto attestations = attestation_set();
-            attestations.reserve(notif.m_attestations.size());
-            for(auto n : notif.m_attestations) {
-                attestations.insert(std::make_pair(n, notif.m_block_height));
+
+            // TODO: handle notifications that never spill over due to lack of
+            //       attestations
+            if(it->second.size() != it->first.m_inputs.size()) {
+                return std::nullopt;
             }
-            it = m_txs
-                     .insert(std::make_pair(std::move(notif.m_tx),
-                                            std::move(attestations)))
-                     .first;
+
+            auto tx = m_txs.extract(it);
+            return tx;
+        }();
+
+        if(!maybe_tx.has_value()) {
+            return;
         }
 
-        // TODO: handle notifications that never spill over due to lack of
-        //       attestations
-        if(it->second.size() == it->first.m_inputs.size()) {
-            auto agg = aggregate_tx_notification();
-            auto tx = m_txs.extract(it);
-            agg.m_tx = std::move(tx.key());
-            uint64_t oldest{0};
-            for(const auto& att : tx.mapped()) {
-                if(oldest == 0 || att.second < oldest) {
-                    oldest = att.second;
-                }
+        auto& tx = maybe_tx.value();
+        auto agg = aggregate_tx_notification();
+        agg.m_tx = std::move(tx.key());
+        uint64_t oldest{0};
+        for(const auto& att : tx.mapped()) {
+            if(oldest == 0 || att.second < oldest) {
+                oldest = att.second;
             }
-            agg.m_oldest_attestation = oldest;
-            {
-                std::lock_guard<std::mutex> l(m_complete_mut);
-                m_complete_txs.push_back(std::move(agg));
-            }
+        }
+        agg.m_oldest_attestation = oldest;
+
+        {
+            std::lock_guard<std::mutex> l(m_complete_mut);
+            m_complete_txs.push_back(std::move(agg));
         }
     }
 

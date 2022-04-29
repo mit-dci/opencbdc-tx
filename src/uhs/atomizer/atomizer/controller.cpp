@@ -38,8 +38,6 @@ namespace cbdc::atomizer {
 
         m_running = false;
 
-        m_pending_txnotify_cv.notify_one();
-
         if(m_tx_notify_thread.joinable()) {
             m_tx_notify_thread.join();
         }
@@ -50,6 +48,13 @@ namespace cbdc::atomizer {
 
         if(m_main_thread.joinable()) {
             m_main_thread.join();
+        }
+
+        m_notification_queue.clear();
+        for(auto& t : m_notification_threads) {
+            if(t.joinable()) {
+                t.join();
+            }
         }
     }
 
@@ -92,6 +97,13 @@ namespace cbdc::atomizer {
             main_handler();
         }};
 
+        auto n_threads = std::thread::hardware_concurrency();
+        for(size_t i = 0; i < n_threads; i++) {
+            m_notification_threads.emplace_back([&]() {
+                notification_consumer();
+            });
+        }
+
         return true;
     }
 
@@ -110,7 +122,11 @@ namespace cbdc::atomizer {
         std::visit(
             overloaded{
                 [&](tx_notify_request& notif) {
-                    m_raft_node.tx_notify(std::move(notif));
+                    m_logger->trace("Received transaction notification",
+                                    to_string(notif.m_tx.m_id),
+                                    "with height",
+                                    notif.m_block_height);
+                    m_notification_queue.push(notif);
                 },
                 [&](const prune_request& p) {
                     m_raft_node.make_request(p, nullptr);
@@ -270,5 +286,16 @@ namespace cbdc::atomizer {
             m_atomizer_server = std::move(as.value());
         }
         return nuraft::cb_func::ReturnCode::Ok;
+    }
+
+    void controller::notification_consumer() {
+        while(m_running) {
+            auto notif = tx_notify_request();
+            auto popped = m_notification_queue.pop(notif);
+            if(!popped) {
+                break;
+            }
+            m_raft_node.tx_notify(std::move(notif));
+        }
     }
 }
