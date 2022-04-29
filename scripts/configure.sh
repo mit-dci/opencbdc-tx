@@ -20,10 +20,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   CPUS=$(sysctl -n hw.ncpu)
 fi
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  brew install leveldb llvm@11 googletest lcov make
-  echo -e "${cyan}To run clang-tidy, you must add it to your path. Ex: ln -s /usr/local/opt/llvm@11/bin/clang-tidy /usr/local/bin/clang-tidy${end}"
-else
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   apt update
   apt install -y build-essential wget cmake libgtest-dev libgmock-dev lcov git software-properties-common
 
@@ -79,9 +76,14 @@ else
   cd "NuRaft-${NURAFT_VERSION}-${CMAKE_BUILD_TYPE}/build"
 fi
 
-cp libnuraft.a /usr/local/lib
-cp -r ../include/libnuraft /usr/local/include
+echo -e "${green}Copying nuraft to /usr/local. sudo needed${end}"
+sudo cp libnuraft.a /usr/local/lib
+sudo cp -r ../include/libnuraft /usr/local/include
 
 cd ..
 
-wget https://raw.githubusercontent.com/llvm/llvm-project/e837ce2a32369b2e9e8e5d60270c072c7dd63827/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py -P /usr/local/bin
+PYTHON_TIDY=/usr/local/bin/run-clang-tidy.py
+if [ ! -f "${PYTHON_TIDY}" ]; then
+  echo -e "${green}Copying run-clang-tidy to /usr/local/bin. sudo needed${end}"
+  sudo wget https://raw.githubusercontent.com/llvm/llvm-project/e837ce2a32369b2e9e8e5d60270c072c7dd63827/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py -P /usr/local/bin
+fi
