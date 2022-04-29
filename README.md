@@ -128,6 +128,12 @@ Additionally, you can start the atomizer architecture by passing `--file docker-
 ## Setup test wallets and test them
 
 The following commands are all performed from within the second container we started in the previous step.
+
+* First, make a demo wallet for minting coins
+  ```terminal
+  # ./build/src/uhs/client/client-cli wallet0.dat demowallet
+  ```
+
 In each of the below commands, you should pass `atomizer-compose.cfg` instead of `2pc-compose.cfg` if you started the atomizer architecture.
 
 * Mint new coins (e.g., 10 new UTXOs each with a value of 5 atomic units of currency)

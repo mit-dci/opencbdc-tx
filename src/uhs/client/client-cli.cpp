@@ -10,9 +10,11 @@
 #include "crypto/sha256.h"
 #include "twophase_client.hpp"
 #include "uhs/transaction/messages.hpp"
+#include "uhs/transaction/wallet.hpp"
 #include "util/common/config.hpp"
 #include "util/serialization/util.hpp"
 
+#include <filesystem>
 #include <future>
 #include <iostream>
 
@@ -31,10 +33,50 @@ auto mint_command(cbdc::client& client, const std::vector<std::string>& args)
     const auto n_outputs = std::stoull(args[5]);
     const auto output_val = std::stoul(args[6]);
 
-    const auto mint_tx
+    const auto [tx, resp]
         = client.mint(n_outputs, static_cast<uint32_t>(output_val));
-    std::cout << cbdc::to_string(cbdc::transaction::tx_id(mint_tx))
+    if(!tx.has_value()) {
+        std::cout << "Could not generate valid mint tx." << std::endl;
+        return false;
+    }
+
+    std::cout << "tx_id:" << std::endl
+              << cbdc::to_string(cbdc::transaction::tx_id(tx.value()))
               << std::endl;
+
+    if(resp.has_value()) {
+        std::cout << "Sentinel responded: "
+                  << cbdc::sentinel::to_string(resp.value().m_tx_status)
+                  << std::endl;
+        if(resp.value().m_tx_error.has_value()) {
+            std::cout << "Validation error: "
+                      << cbdc::transaction::validation::to_string(
+                             resp.value().m_tx_error.value())
+                      << std::endl;
+        }
+    }
+
+    return true;
+}
+
+/// Generate a demo wallet for use with demo. It creates a minter public key
+/// to match the value pre-configued in the provided 'cfg' files.
+///
+/// Example use: client-cli 'wallet file name' demowallet
+auto generate_demo_minter_wallet(const std::vector<std::string>& args)
+    -> bool {
+    const auto wallet_file = args[1];
+    if(std::filesystem::exists(wallet_file)) {
+        std::cout << " " << wallet_file << " already exists" << std::endl;
+        return false;
+    }
+    cbdc::transaction::wallet wallet{};
+    const auto pk = wallet.generate_test_minter_key();
+    const auto hexed = cbdc::to_string(pk);
+    wallet.save(wallet_file);
+
+    std::cout << " Created demo wallet. Saved to: " << wallet_file << "\n"
+              << " Minter public key is: " << hexed << std::endl;
     return true;
 }
 
@@ -204,9 +246,45 @@ auto confirmtx_command(cbdc::client& client,
     return true;
 }
 
+auto dispatch_command(const std::string& command,
+                      cbdc::client& client,
+                      const std::vector<std::string>& args) -> bool {
+    if(command == "mint") {
+        return mint_command(client, args);
+    } else if(command == "send") {
+        return send_command(client, args);
+    } else if(command == "fan") {
+        return fan_command(client, args);
+    } else if(command == "sync") {
+        client.sync();
+    } else if(command == "newaddress") {
+        newaddress_command(client);
+    } else if(command == "info") {
+        const auto balance = client.balance();
+        const auto n_txos = client.utxo_count();
+        std::cout << "Balance: " << cbdc::client::print_amount(balance)
+                  << ", UTXOs: " << n_txos
+                  << ", pending TXs: " << client.pending_tx_count()
+                  << std::endl;
+    } else if(command == "importinput") {
+        return importinput_command(client, args);
+    } else if(command == "confirmtx") {
+        return confirmtx_command(client, args);
+    } else {
+        std::cerr << "Unknown command" << std::endl;
+    }
+    return true;
+}
+
 // LCOV_EXCL_START
 auto main(int argc, char** argv) -> int {
     auto args = cbdc::config::get_args(argc, argv);
+
+    // Create a demo wallet
+    if(args.size() == 3 && args[2] == "demowallet") {
+        return generate_demo_minter_wallet(args) ? 0 : -1;
+    }
+
     static constexpr auto min_arg_count = 5;
     if(args.size() < min_arg_count) {
         std::cerr << "Usage: " << args[0]
@@ -215,7 +293,12 @@ auto main(int argc, char** argv) -> int {
         return 0;
     }
 
-    auto cfg_or_err = cbdc::config::load_options(args[1]);
+    const auto config_file = args[1];
+    const auto client_file = args[2];
+    const auto wallet_file = args[3];
+    const auto command = args[4];
+
+    auto cfg_or_err = cbdc::config::load_options(config_file);
     if(std::holds_alternative<std::string>(cfg_or_err)) {
         std::cerr << "Error loading config file: "
                   << std::get<std::string>(cfg_or_err) << std::endl;
@@ -225,9 +308,6 @@ auto main(int argc, char** argv) -> int {
     auto opts = std::get<cbdc::config::options>(cfg_or_err);
 
     SHA256AutoDetect();
-
-    const auto wallet_file = args[3];
-    const auto client_file = args[2];
 
     auto logger = std::make_shared<cbdc::logging::log>(
         cbdc::config::defaults::log_level);
@@ -249,40 +329,8 @@ auto main(int argc, char** argv) -> int {
         return -1;
     }
 
-    const auto command = std::string(args[4]);
-    if(command == "mint") {
-        if(!mint_command(*client, args)) {
-            return -1;
-        }
-    } else if(command == "send") {
-        if(!send_command(*client, args)) {
-            return -1;
-        }
-    } else if(command == "fan") {
-        if(!fan_command(*client, args)) {
-            return -1;
-        }
-    } else if(command == "sync") {
-        client->sync();
-    } else if(command == "newaddress") {
-        newaddress_command(*client);
-    } else if(command == "info") {
-        const auto balance = client->balance();
-        const auto n_txos = client->utxo_count();
-        std::cout << "Balance: " << cbdc::client::print_amount(balance)
-                  << ", UTXOs: " << n_txos
-                  << ", pending TXs: " << client->pending_tx_count()
-                  << std::endl;
-    } else if(command == "importinput") {
-        if(!importinput_command(*client, args)) {
-            return -1;
-        }
-    } else if(command == "confirmtx") {
-        if(!confirmtx_command(*client, args)) {
-            return -1;
-        }
-    } else {
-        std::cerr << "Unknown command" << std::endl;
+    if(!dispatch_command(command, *client, args)) {
+        return -1;
     }
 
     // TODO: check that the send queue has drained before closing

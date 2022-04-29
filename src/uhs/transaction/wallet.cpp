@@ -25,22 +25,55 @@ namespace cbdc {
     auto transaction::wallet::mint_new_coins(const size_t n_outputs,
                                              const uint32_t output_val)
         -> transaction::full_tx {
-        transaction::full_tx ret;
+        transaction::full_tx tx;
+
+        const auto pubkey = generate_minter_key();
 
         for(size_t i = 0; i < n_outputs; i++) {
             transaction::output out;
-
-            const auto pubkey = generate_key();
-
             out.m_witness_program_commitment
                 = transaction::validation::get_p2pk_witness_commitment(pubkey);
-
             out.m_value = output_val;
-
-            ret.m_outputs.push_back(out);
+            tx.m_outputs.push_back(out);
         }
 
-        return ret;
+        const auto sighash = transaction::tx_id(tx);
+        tx.m_witness.resize(n_outputs);
+        const privkey_t seckey = m_keys.at(pubkey);
+
+        // Sign each output
+        for(size_t i = 0; i < n_outputs; i++) {
+            auto& sig = tx.m_witness[i];
+            sig.resize(transaction::validation::p2pk_witness_len);
+            sig[0] = std::byte(
+                transaction::validation::witness_program_type::p2pk);
+            std::memcpy(
+                &sig[sizeof(transaction::validation::witness_program_type)],
+                pubkey.data(),
+                pubkey.size());
+
+            secp256k1_keypair keypair{};
+            [[maybe_unused]] const auto ret
+                = secp256k1_keypair_create(m_secp.get(),
+                                           &keypair,
+                                           seckey.data());
+            assert(ret == 1);
+
+            std::array<unsigned char, sig_len> sig_arr{};
+            [[maybe_unused]] const auto sign_ret
+                = secp256k1_schnorrsig_sign(m_secp.get(),
+                                            sig_arr.data(),
+                                            sighash.data(),
+                                            &keypair,
+                                            nullptr,
+                                            nullptr);
+            std::memcpy(&sig[transaction::validation::p2pk_witness_prog_len],
+                        sig_arr.data(),
+                        sizeof(sig_arr));
+            assert(sign_ret == 1);
+        }
+
+        return tx;
     }
 
     auto transaction::wallet::send_to(const uint32_t amount,
@@ -121,6 +154,35 @@ namespace cbdc {
         return ret;
     }
 
+    auto transaction::wallet::generate_minter_key() -> pubkey_t {
+        if(m_pubkeys.empty()) {
+            // new wallet. create the minter key
+            return generate_key();
+        }
+        // first key is always the minter key
+        return m_pubkeys[0];
+    }
+
+    auto transaction::wallet::generate_test_minter_key() -> pubkey_t {
+        const privkey_t seckey
+            = cbdc::privkey_t{'t', 'e', 's', 't', 'i', 'n', 'g'};
+        pubkey_t ret = pubkey_from_privkey(seckey, m_secp.get());
+        {
+            std::unique_lock<std::shared_mutex> lg(m_keys_mut);
+            m_pubkeys.push_back(ret);
+            m_keys.insert({ret, seckey});
+            m_witness_programs.insert(
+                {transaction::validation::get_p2pk_witness_commitment(ret),
+                 ret});
+        }
+
+        return ret;
+    }
+
+    auto transaction::wallet::minter_pubkey_as_hex() -> std::string {
+        return to_string(generate_minter_key());
+    }
+
     auto transaction::wallet::generate_key() -> pubkey_t {
         // Unique lock on m_keys, m_keygen and m_keygen_dist
         {
@@ -129,7 +191,7 @@ namespace cbdc {
             std::shared_lock<std::shared_mutex> lg(m_keys_mut);
             if(m_keys.size() > max_keys) {
                 std::uniform_int_distribution<size_t> keyshuffle_dist(
-                    0,
+                    1,
                     m_keys.size() - 1);
                 const auto index = keyshuffle_dist(m_shuffle);
                 return m_pubkeys[index];

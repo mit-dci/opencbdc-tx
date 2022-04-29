@@ -81,14 +81,10 @@ TEST_F(shard_test, digest_tx_empty_inputs) {
     ctx.m_inputs = {};
     ctx.m_uhs_outputs = {{'x'}, {'y'}};
 
+    // Txs without inputs are valid mint txs
     auto res = m_shard.digest_transaction(ctx);
-    ASSERT_TRUE(std::holds_alternative<cbdc::watchtower::tx_error>(res));
-    auto got = std::get<cbdc::watchtower::tx_error>(res);
-
-    cbdc::watchtower::tx_error want{{'a'},
-                                    cbdc::watchtower::tx_error_inputs_dne{{}}};
-
-    ASSERT_EQ(got, want);
+    ASSERT_TRUE(
+        std::holds_alternative<cbdc::atomizer::tx_notify_request>(res));
 }
 
 TEST_F(shard_test, digest_tx_inputs_dne) {

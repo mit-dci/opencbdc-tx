@@ -33,8 +33,13 @@ namespace cbdc::transaction::validation {
         return std::tie(m_code, m_idx) == std::tie(rhs.m_code, rhs.m_idx);
     }
 
-    auto check_tx(const cbdc::transaction::full_tx& tx)
+    auto check_tx(const cbdc::transaction::full_tx& tx,
+                  const cbdc::config::options& options)
         -> std::optional<tx_error> {
+        if(tx.m_inputs.empty()) {
+            return check_mint_tx(tx, options);
+        }
+
         const auto structure_err = check_tx_structure(tx);
         if(structure_err) {
             return structure_err;
@@ -64,6 +69,37 @@ namespace cbdc::transaction::validation {
 
         for(size_t idx = 0; idx < tx.m_witness.size(); idx++) {
             const auto witness_err = check_witness(tx, idx);
+            if(witness_err) {
+                return tx_error{witness_error{witness_err.value(), idx}};
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    auto check_mint_tx(const cbdc::transaction::full_tx& tx,
+                       const cbdc::config::options& options)
+        -> std::optional<tx_error> {
+        // ensure there are outputs
+        const auto output_count_err = check_output_count(tx);
+        if(output_count_err) {
+            return output_count_err;
+        }
+        // ensure the number of outputs match the number of witnesses
+        if(tx.m_outputs.size() != tx.m_witness.size()) {
+            return tx_error(tx_error_code::mint_output_witness_mismatch);
+        }
+        // ensure each output has a value >= 1
+        for(size_t idx = 0; idx < tx.m_outputs.size(); idx++) {
+            const auto& out = tx.m_outputs[idx];
+            const auto output_err = check_output_value(out);
+            if(output_err) {
+                return tx_error{output_error{output_err.value(), idx}};
+            }
+        }
+
+        for(size_t idx = 0; idx < tx.m_witness.size(); idx++) {
+            const auto witness_err = check_mint_witness(tx, idx, options);
             if(witness_err) {
                 return tx_error{witness_error{witness_err.value(), idx}};
             }
@@ -418,5 +454,114 @@ namespace cbdc::transaction::validation {
                                return pubkeys.find(att.first) != pubkeys.end()
                                    && tx.verify(secp_context.get(), att);
                            });
+    }
+
+    auto check_mint_witness(const cbdc::transaction::full_tx& tx,
+                            size_t idx,
+                            const cbdc::config::options& options)
+        -> std::optional<witness_error_code> {
+        const auto& witness_program = tx.m_witness[idx];
+        if(witness_program.empty()) {
+            return witness_error_code::missing_witness_program_type;
+        }
+
+        const auto witness_program_type
+            = static_cast<cbdc::transaction::validation::witness_program_type>(
+                witness_program[0]);
+        switch(witness_program_type) {
+            case witness_program_type::p2pk:
+                return check_mint_p2pk_witness(tx, idx, options);
+            default:
+                return witness_error_code::unknown_witness_program_type;
+        }
+    }
+
+    auto check_mint_p2pk_witness(const cbdc::transaction::full_tx& tx,
+                                 size_t idx,
+                                 const cbdc::config::options& options)
+        -> std::optional<witness_error_code> {
+        const auto witness_len_err = check_p2pk_witness_len(tx, idx);
+        if(witness_len_err) {
+            return witness_len_err;
+        }
+
+        const auto witness_commitment_err
+            = check_mint_p2pk_witness_commitment(tx, idx);
+        if(witness_commitment_err) {
+            return witness_commitment_err;
+        }
+
+        const auto witness_sig_err
+            = check_mint_p2pk_witness_signature(tx, idx, options);
+        if(witness_sig_err) {
+            return witness_sig_err;
+        }
+
+        return std::nullopt;
+    }
+
+    auto
+    check_mint_p2pk_witness_commitment(const cbdc::transaction::full_tx& tx,
+                                       size_t idx)
+        -> std::optional<witness_error_code> {
+        const auto& wit = tx.m_witness[idx];
+        const auto witness_program_hash
+            = hash_data(wit.data(), p2pk_witness_prog_len);
+
+        // Differs from normal tx that checks the inputs
+        // Here we make sure the 'payee' in the output is the minter
+        const auto& witness_program_commitment
+            = tx.m_outputs[idx].m_witness_program_commitment;
+
+        if(witness_program_hash != witness_program_commitment) {
+            return witness_error_code::program_mismatch;
+        }
+
+        return std::nullopt;
+    }
+
+    auto
+    check_mint_p2pk_witness_signature(const cbdc::transaction::full_tx& tx,
+                                      size_t idx,
+                                      const cbdc::config::options& options)
+        -> std::optional<witness_error_code> {
+        const auto& wit = tx.m_witness[idx];
+        secp256k1_xonly_pubkey pubkey{};
+
+        // TODO: use C++20 std::span to avoid pointer arithmetic in validation
+        // code
+        pubkey_t pubkey_arr{};
+        std::memcpy(pubkey_arr.data(),
+                    &wit[sizeof(witness_program_type)],
+                    sizeof(pubkey_arr));
+
+        // check if the signer is an authorized minter identified in the
+        // configuration
+        if(options.m_minter_pubkeys.count(pubkey_arr) == 0) {
+            return witness_error_code::invalid_minter_key;
+        }
+
+        if(secp256k1_xonly_pubkey_parse(secp_context.get(),
+                                        &pubkey,
+                                        pubkey_arr.data())
+           != 1) {
+            return witness_error_code::invalid_public_key;
+        }
+
+        const auto sighash = cbdc::transaction::tx_id(tx);
+
+        std::array<unsigned char, sig_len> sig_arr{};
+        std::memcpy(sig_arr.data(),
+                    &wit[p2pk_witness_prog_len],
+                    sizeof(sig_arr));
+        if(secp256k1_schnorrsig_verify(secp_context.get(),
+                                       sig_arr.data(),
+                                       sighash.data(),
+                                       &pubkey)
+           != 1) {
+            return witness_error_code::invalid_signature;
+        }
+
+        return std::nullopt;
     }
 }

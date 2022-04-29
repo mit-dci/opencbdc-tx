@@ -120,10 +120,13 @@ namespace cbdc::shard {
                 cbdc::watchtower::tx_error_sync{}};
         }
 
+        atomizer::tx_notify_request msg;
+
+        // If the tx has no inputs, it's a mint.
         if(tx.m_inputs.empty()) {
-            return cbdc::watchtower::tx_error{
-                tx.m_id,
-                cbdc::watchtower::tx_error_inputs_dne{{}}};
+            msg.m_tx = std::move(tx);
+            msg.m_block_height = best_block_height();
+            return msg;
         }
 
         auto read_options = m_read_options;
@@ -158,7 +161,6 @@ namespace cbdc::shard {
                 cbdc::watchtower::tx_error_inputs_dne{dne_inputs}};
         }
 
-        atomizer::tx_notify_request msg;
         msg.m_attestations = std::move(attestations);
         msg.m_tx = std::move(tx);
         msg.m_block_height = snp_height;

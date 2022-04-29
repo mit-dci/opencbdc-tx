@@ -241,6 +241,12 @@ namespace cbdc::config {
         return ss.str();
     }
 
+    auto get_minter_key(size_t minter_id) -> std::string {
+        std::stringstream ss;
+        ss << minter_prefix << minter_id;
+        return ss.str();
+    }
+
     auto read_shard_endpoints(options& opts, const parser& cfg)
         -> std::optional<std::string> {
         const auto shard_count = cfg.get_ulong(shard_count_key).value_or(0);
@@ -590,6 +596,23 @@ namespace cbdc::config {
         }
     }
 
+    auto read_minter_options(options& opts, const parser& cfg)
+        -> std::optional<std::string> {
+        const auto minter_count = cfg.get_ulong(minter_count_key).value_or(0);
+
+        for(size_t i{0}; i < minter_count; i++) {
+            const auto minter_k = get_minter_key(i);
+            const auto v = cfg.get_string(minter_k);
+            if(!v.has_value()) {
+                return "Missing minter setting: " + std::to_string(i) + " ("
+                     + minter_k + ")";
+            }
+            const auto pubkey = cbdc::hash_from_hex(v.value());
+            opts.m_minter_pubkeys.insert(pubkey);
+        }
+        return std::nullopt;
+    }
+
     void read_loadgen_options(options& opts, const parser& cfg) {
         opts.m_input_count
             = cfg.get_ulong(input_count_key).value_or(opts.m_input_count);
@@ -651,6 +674,11 @@ namespace cbdc::config {
         }
 
         err = read_coordinator_options(opts, cfg);
+        if(err.has_value()) {
+            return err.value();
+        }
+
+        err = read_minter_options(opts, cfg);
         if(err.has_value()) {
             return err.value();
         }

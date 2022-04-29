@@ -51,6 +51,7 @@ TEST_F(sentinel_2pc_integration_test, valid_signed_tx) {
     cbdc::transaction::wallet wallet;
     cbdc::transaction::full_tx m_valid_tx{};
 
+    wallet.generate_test_minter_key();
     auto mint_tx1 = wallet.mint_new_coins(2, 100);
     wallet.confirm_transaction(mint_tx1);
 

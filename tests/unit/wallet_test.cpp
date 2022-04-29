@@ -201,3 +201,17 @@ TEST_F(WalletTest, load_save) {
     ASSERT_EQ(m_wallet.balance(), new_wal.balance());
     ASSERT_EQ(m_wallet.count(), new_wal.count());
 }
+
+TEST_F(WalletTest, minter_key_generation) {
+    // always generates the same key
+    const auto k1 = m_wallet.generate_minter_key();
+    const auto k2 = m_wallet.generate_minter_key();
+    ASSERT_EQ(k1, k2);
+    const auto k3 = cbdc::hash_from_hex(m_wallet.minter_pubkey_as_hex());
+    ASSERT_EQ(k3, k1);
+
+    const auto tkey = m_wallet.generate_test_minter_key();
+    ASSERT_EQ(tkey,
+              cbdc::hash_from_hex("1f05f6173c4f7bef58f7e912c4cb1389097a38f1a9e"
+                                  "24c3674d67a0f142af244"));
+}
