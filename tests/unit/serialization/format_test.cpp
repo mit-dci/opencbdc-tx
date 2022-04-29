@@ -420,8 +420,6 @@ TEST_F(format_test, get_variant_default_constructibles) {
     // empty set
     std::unordered_set<uint64_t> s0;
     std::variant<std::unordered_set<uint64_t>, uint64_t> v0{s0};
-    // how ser and deser are connected?
-    // my answer is the variant
     ser << v0;
     auto r0 = cbdc::get_variant<std::unordered_set<uint64_t>, uint64_t>(deser);
     EXPECT_TRUE(deser);
