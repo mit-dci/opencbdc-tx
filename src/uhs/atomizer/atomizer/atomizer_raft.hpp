@@ -98,6 +98,8 @@ namespace cbdc::atomizer {
         std::vector<aggregate_tx_notification> m_complete_txs;
         std::shared_ptr<logging::log> m_log;
         config::options m_opts;
+
+        std::mutex m_txs_mut;
     };
 }
 
