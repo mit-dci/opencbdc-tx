@@ -83,11 +83,9 @@ namespace cbdc::atomizer {
             return false;
         }
 
-        if(m_opts.m_batch_size > 1) {
-            m_tx_notify_thread = std::thread{[&] {
-                tx_notify_handler();
-            }};
-        }
+        m_tx_notify_thread = std::thread{[&] {
+            tx_notify_handler();
+        }};
 
         m_main_thread = std::thread{[&] {
             main_handler();
