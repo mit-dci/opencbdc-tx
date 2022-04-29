@@ -30,6 +30,13 @@ namespace cbdc::shard {
         if(m_atomizer_client.joinable()) {
             m_atomizer_client.join();
         }
+
+        m_request_queue.clear();
+        for(auto& t : m_handler_threads) {
+            if(t.joinable()) {
+                t.join();
+            }
+        }
     }
 
     auto controller::init() -> bool {
@@ -76,57 +83,19 @@ namespace cbdc::shard {
 
         m_shard_server = std::move(ss.value());
 
+        auto n_threads = std::thread::hardware_concurrency();
+        for(size_t i = 0; i < n_threads; i++) {
+            m_handler_threads.emplace_back([&]() {
+                request_consumer();
+            });
+        }
+
         return true;
     }
 
     auto controller::server_handler(cbdc::network::message_t&& pkt)
         -> std::optional<cbdc::buffer> {
-        auto maybe_tx = from_buffer<transaction::compact_tx>(*pkt.m_pkt);
-        if(!maybe_tx.has_value()) {
-            m_logger->error("Invalid transaction packet");
-            return std::nullopt;
-        }
-
-        auto& tx = maybe_tx.value();
-
-        m_logger->info("Digesting transaction", to_string(tx.m_id), "...");
-
-        if(!transaction::validation::check_attestations(
-               tx,
-               m_opts.m_sentinel_public_keys,
-               m_opts.m_attestation_threshold)) {
-            m_logger->warn("Received invalid compact transaction",
-                           to_string(tx.m_id));
-            return std::nullopt;
-        }
-
-        auto res = m_shard.digest_transaction(std::move(tx));
-
-        auto res_handler = overloaded{
-            [&](const atomizer::tx_notify_request& msg) {
-                m_logger->info("Digested transaction",
-                               to_string(msg.m_tx.m_id));
-
-                m_logger->debug("Sending",
-                                msg.m_attestations.size(),
-                                "/",
-                                msg.m_tx.m_inputs.size(),
-                                "attestations...");
-                if(!m_atomizer_network.send_to_one(atomizer::request{msg})) {
-                    m_logger->error("Failed to transmit tx to atomizer. ID:",
-                                    to_string(msg.m_tx.m_id));
-                }
-            },
-            [&](const cbdc::watchtower::tx_error& err) {
-                m_logger->info("error for Tx:",
-                               to_string(err.tx_id()),
-                               err.to_string());
-                // TODO: batch errors into a single RPC
-                auto data = std::vector<cbdc::watchtower::tx_error>{err};
-                auto buf = make_shared_buffer(data);
-                m_watchtower_network.broadcast(buf);
-            }};
-        std::visit(res_handler, res);
+        m_request_queue.push(pkt);
         return std::nullopt;
     }
 
@@ -165,5 +134,59 @@ namespace cbdc::shard {
 
         m_logger->info("Digested block", blk.m_height);
         return std::nullopt;
+    }
+
+    void controller::request_consumer() {
+        auto pkt = network::message_t();
+        while(m_request_queue.pop(pkt)) {
+            auto maybe_tx = from_buffer<transaction::compact_tx>(*pkt.m_pkt);
+            if(!maybe_tx.has_value()) {
+                m_logger->error("Invalid transaction packet");
+                continue;
+            }
+
+            auto& tx = maybe_tx.value();
+
+            m_logger->info("Digesting transaction", to_string(tx.m_id), "...");
+
+            if(!transaction::validation::check_attestations(
+                   tx,
+                   m_opts.m_sentinel_public_keys,
+                   m_opts.m_attestation_threshold)) {
+                m_logger->warn("Received invalid compact transaction",
+                               to_string(tx.m_id));
+                continue;
+            }
+
+            auto res = m_shard.digest_transaction(std::move(tx));
+
+            auto res_handler = overloaded{
+                [&](const atomizer::tx_notify_request& msg) {
+                    m_logger->info("Digested transaction",
+                                   to_string(msg.m_tx.m_id));
+
+                    m_logger->debug("Sending",
+                                    msg.m_attestations.size(),
+                                    "/",
+                                    msg.m_tx.m_inputs.size(),
+                                    "attestations...");
+                    if(!m_atomizer_network.send_to_one(
+                           atomizer::request{msg})) {
+                        m_logger->error(
+                            "Failed to transmit tx to atomizer. ID:",
+                            to_string(msg.m_tx.m_id));
+                    }
+                },
+                [&](const cbdc::watchtower::tx_error& err) {
+                    m_logger->info("error for Tx:",
+                                   to_string(err.tx_id()),
+                                   err.to_string());
+                    // TODO: batch errors into a single RPC
+                    auto data = std::vector<cbdc::watchtower::tx_error>{err};
+                    auto buf = make_shared_buffer(data);
+                    m_watchtower_network.broadcast(buf);
+                }};
+            std::visit(res_handler, res);
+        }
     }
 }
