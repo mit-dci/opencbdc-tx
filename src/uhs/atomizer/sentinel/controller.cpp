@@ -69,8 +69,8 @@ namespace cbdc::sentinel {
 
         m_dist = decltype(m_dist)(0, m_sentinel_clients.size() - 1);
 
-        auto rpc_server = std::make_unique<cbdc::rpc::tcp_server<
-            cbdc::rpc::blocking_server<request, response>>>(
+        auto rpc_server = std::make_unique<
+            cbdc::rpc::tcp_server<cbdc::rpc::async_server<request, response>>>(
             m_opts.m_sentinel_endpoints[m_sentinel_id]);
         if(!rpc_server->init()) {
             m_logger->error("Failed to start sentinel RPC server");
@@ -148,7 +148,10 @@ namespace cbdc::sentinel {
         if(ctx.m_attestations.size() < m_opts.m_attestation_threshold) {
             auto success = false;
             while(!success) {
-                auto sentinel_id = m_dist(m_rand);
+                auto sentinel_id = [&]() {
+                    std::unique_lock l(m_rand_mut);
+                    return m_dist(m_rand);
+                }();
                 if(requested.find(sentinel_id) != requested.end()) {
                     continue;
                 }
@@ -170,7 +173,10 @@ namespace cbdc::sentinel {
     void controller::send_compact_tx(const transaction::compact_tx& ctx) {
         auto ctx_pkt = std::make_shared<cbdc::buffer>(cbdc::make_buffer(ctx));
 
-        auto offset = m_shard_dist(m_rand);
+        auto offset = [&]() {
+            std::unique_lock l(m_rand_mut);
+            return m_shard_dist(m_rand);
+        }();
         auto inputs_sent = std::unordered_set<size_t>();
         for(size_t i = 0; i < m_shard_data.size(); i++) {
             auto idx = (i + offset) % m_shard_data.size();

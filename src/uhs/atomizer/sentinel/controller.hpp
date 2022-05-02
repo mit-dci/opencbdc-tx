@@ -79,6 +79,7 @@ namespace cbdc::sentinel {
         std::default_random_engine m_rand{m_r()};
         std::uniform_int_distribution<size_t> m_dist{};
         std::uniform_int_distribution<size_t> m_shard_dist{};
+        std::mutex m_rand_mut;
 
         privkey_t m_privkey{};
 
