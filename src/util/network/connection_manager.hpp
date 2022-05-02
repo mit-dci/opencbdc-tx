@@ -33,7 +33,7 @@ namespace cbdc::network {
         /// Packet data.
         std::shared_ptr<buffer> m_pkt;
         /// Peer ID that sent packet.
-        peer_id_t m_peer_id;
+        peer_id_t m_peer_id{};
     };
 
     /// \brief Function type for packet handler callbacks.
@@ -230,10 +230,8 @@ namespace cbdc::network {
 
         socket_selector m_listen_selector;
 
-        std::default_random_engine m_rnd{
-            static_cast<uint32_t>(std::chrono::high_resolution_clock::now()
-                                      .time_since_epoch()
-                                      .count())};
+        std::random_device m_r;
+        std::default_random_engine m_rnd{m_r()};
     };
 }
 

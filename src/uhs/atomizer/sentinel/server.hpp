@@ -8,7 +8,7 @@
 
 #include "uhs/sentinel/interface.hpp"
 #include "uhs/transaction/messages.hpp"
-#include "util/rpc/blocking_server.hpp"
+#include "util/rpc/async_server.hpp"
 #include "util/rpc/format.hpp"
 
 namespace cbdc::sentinel::rpc {
@@ -22,12 +22,26 @@ namespace cbdc::sentinel::rpc {
         server(
             interface* impl, // TODO: convert sentinel::controller to
                              //       contain a shared_ptr to an implementation
-            std::unique_ptr<cbdc::rpc::blocking_server<request, response>>
-                srv);
+            std::unique_ptr<cbdc::rpc::async_server<request, response>> srv);
+
+        ~server();
+
+        server(const server&) = delete;
+        auto operator=(const server&) -> server& = delete;
+        server(server&&) = delete;
+        auto operator=(server&&) -> server& = delete;
 
       private:
+        using callback_type = std::function<void(std::optional<response>)>;
+        using request_type = std::pair<request, callback_type>;
+
         interface* m_impl;
-        std::unique_ptr<cbdc::rpc::blocking_server<request, response>> m_srv;
+        std::unique_ptr<cbdc::rpc::async_server<request, response>> m_srv;
+        blocking_queue<request_type> m_queue;
+
+        std::vector<std::thread> m_threads;
+
+        auto handle_request() -> bool;
     };
 }
 
