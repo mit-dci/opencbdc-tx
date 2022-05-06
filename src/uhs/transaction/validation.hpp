@@ -55,6 +55,24 @@ namespace cbdc::transaction::validation {
         uint64_t m_idx{};
     };
 
+    /// A proof verification error
+    enum class proof_error_code : uint8_t {
+        invalid_auxiliary, ///< deserializing the auxiliary commitment failed
+        invalid_uhs_id, ///< deserializing the UHS ID failed
+        invalid_signature_key, ///< constructing consistency key failed
+        inconsistent_value, ///< consistency proof did not verify
+        out_of_range,  ///< range proof did not verify
+        wrong_sum, ///< auxiliaries did not sum as-required
+    };
+
+    /// An error that may occur when verifying transaction proof
+    struct proof_error {
+        auto operator==(const proof_error& rhs) const -> bool;
+
+        /// The type of proof error
+        proof_error_code m_code{};
+    };
+
     /// Types of errors that may occur when sentinels validate witness
     /// commitments
     enum class witness_error_code : uint8_t {

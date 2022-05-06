@@ -32,6 +32,21 @@ namespace cbdc::transaction {
         return !(*this == rhs);
     }
 
+    compact_output::compact_output(const hash_t& id, const commitment_t& aux,
+        const rangeproof_t<>& range, const signature_t& consist)
+        : m_id(id), m_auxiliary(aux), m_range(range), m_consistency(consist) {}
+
+    auto compact_output::operator==(const compact_output& rhs) const -> bool {
+        return m_id == rhs.m_id
+            && m_auxiliary == rhs.m_auxiliary
+            && m_range == rhs.m_range
+            && m_consistency == rhs.m_consistency;
+    }
+
+    auto compact_output::operator!=(const compact_output& rhs) const -> bool {
+        return !(*this == rhs);
+    }
+
     auto input::operator==(const input& rhs) const -> bool {
         return m_prevout == rhs.m_prevout
             && m_prevout_data == rhs.m_prevout_data;
