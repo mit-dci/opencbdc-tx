@@ -256,10 +256,24 @@ namespace cbdc::transaction {
         /// \returns the generated input to use in a transaction.
         auto create_seeded_input(size_t seed_idx) -> std::optional<input>;
 
+        struct GensDeleter {
+            GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
+
+            void operator()(secp256k1_bulletproofs_generators* gens) {
+                secp256k1_bulletproofs_generators_destroy(m_ctx, gens);
+            }
+
+            secp256k1_context* m_ctx;
+        };
+
+        std::unique_ptr<secp256k1_bulletproofs_generators, GensDeleter>
+            m_generators{secp256k1_bulletproofs_generators_create(m_secp.get(),
+                128), GensDeleter(m_secp.get())};
+
         static const inline auto m_secp
             = std::unique_ptr<secp256k1_context,
                               decltype(&secp256k1_context_destroy)>(
-                secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
+                secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY),
                 &secp256k1_context_destroy);
 
         static const inline auto m_random_source
