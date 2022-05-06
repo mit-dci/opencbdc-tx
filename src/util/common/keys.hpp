@@ -10,6 +10,8 @@
 #include <cstring>
 #include <vector>
 
+#include <secp256k1_bulletproofs.h>
+
 struct secp256k1_context_struct;
 using secp256k1_context = struct secp256k1_context_struct;
 
@@ -18,6 +20,8 @@ namespace cbdc {
     static constexpr size_t pubkey_len = 32;
     /// Size of signatures used throughout the system, in bytes.
     static constexpr size_t sig_len = 64;
+    /// Size of a standard, compressed EC Point
+    static constexpr size_t point_len = 33;
 
     /// A private key of a public/private keypair.
     using privkey_t = std::array<unsigned char, pubkey_len>;
@@ -27,6 +31,14 @@ namespace cbdc {
     using witness_t = std::vector<std::byte>;
     /// A signature.
     using signature_t = std::array<unsigned char, sig_len>;
+    /// A Pedersen Commitment.
+    using commitment_t = std::array<unsigned char, point_len>;
+
+    /// A range-proof
+    /// \tparam N the size (in bytes) of the proof (dependent on the range
+    ///           being proven.
+    template <size_t N = SECP256K1_BULLETPROOFS_RANGEPROOF_UNCOMPRESSED_MAX_LENGTH_>
+    using rangeproof_t = std::array<unsigned char, N>;
 
     /// Generates a public key from the specified private key.
     /// \param privkey private key for which to generate the public key.
