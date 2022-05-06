@@ -10,6 +10,8 @@
 #include "uhs/transaction/validation.hpp"
 #include "uhs/transaction/wallet.hpp"
 
+#include <secp256k1_bulletproofs.h>
+
 namespace cbdc {
     namespace address {
         static constexpr auto bits_per_byte = 8;
@@ -308,6 +310,26 @@ namespace cbdc {
         void save();
 
         void register_pending_tx(const transaction::full_tx& tx);
+
+      protected:
+        std::unique_ptr<secp256k1_context,
+                        decltype(&secp256k1_context_destroy)>
+            m_secp{secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
+                   &secp256k1_context_destroy};
+
+        struct GensDeleter {
+            GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
+
+            void operator()(secp256k1_bulletproofs_generators* gens) {
+                secp256k1_bulletproofs_generators_destroy(m_ctx, gens);
+            }
+
+            secp256k1_context* m_ctx;
+        };
+
+        std::unique_ptr<secp256k1_bulletproofs_generators, GensDeleter>
+            m_generators{secp256k1_bulletproofs_generators_create(m_secp.get(),
+                128), GensDeleter(m_secp.get())};
     };
 }
 
