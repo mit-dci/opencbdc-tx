@@ -210,6 +210,21 @@ namespace cbdc::transaction {
         auto operator()(compact_tx const& tx) const noexcept -> size_t;
     };
 
+    /// \brief Roll auxiliary cryptographic commitments
+    ///
+    /// \warning Mostly, direct use should be avoided (instead leveraging the
+    /// higher-level `add_proof` method).
+    ///
+    /// \param ctx a secp256k1_context initialized for signing and commitment
+    /// \param rng a random_source for generating nonces
+    /// \param blinds the blinding factors, one per-input (in order)
+    /// \param out_spend_data the additional spend data (in output order)
+    /// \return the created commitments (in output order)
+    auto roll_auxiliaries(secp256k1_context* ctx, random_source& rng,
+        const std::vector<hash_t>& blinds,
+        std::vector<spend_data>& out_spend_data)
+    -> std::vector<secp256k1_pedersen_commitment>;
+
     /// \brief Calculates the unique hash of a full transaction
     ///
     /// Returns a cryptographic hash of the inputs concatenated with the

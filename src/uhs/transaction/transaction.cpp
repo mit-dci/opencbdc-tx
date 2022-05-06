@@ -130,6 +130,59 @@ namespace cbdc::transaction {
         return ret;
     }
 
+    auto roll_auxiliaries(secp256k1_context* ctx, random_source& rng,
+        const std::vector<hash_t>& blinds,
+        std::vector<spend_data>& out_spend_data)
+    -> std::vector<secp256k1_pedersen_commitment> {
+
+        const auto make_public = blinds.size() == 0;
+        const hash_t empty{};
+
+        std::vector<secp256k1_pedersen_commitment> auxiliaries{};
+
+        std::vector<hash_t> new_blinds{};
+        for(uint64_t i = 0; i < out_spend_data.size() - 1; ++i) {
+            while(true) {
+                auto rprime = make_public ? empty : rng.random_hash();
+                auto commitment = commit(ctx, out_spend_data[i].m_value, rprime);
+                if(commitment.has_value()) {
+                    auxiliaries.push_back(commitment.value());
+                    new_blinds.push_back(rprime);
+                    out_spend_data[i].m_blind = rprime;
+                    break;
+                }
+            }
+        }
+
+        if(!make_public) {
+            std::vector<hash_t> allblinds{blinds};
+            std::copy(new_blinds.begin(), new_blinds.end(),
+                std::back_inserter(allblinds));
+
+            std::vector<const unsigned char *> blind_ptrs;
+            blind_ptrs.reserve(allblinds.size());
+            for(const auto& b : allblinds) {
+                blind_ptrs.push_back(b.data());
+            }
+
+            hash_t last_blind{};
+            [[maybe_unused]] auto ret = secp256k1_pedersen_blind_sum(ctx,
+                last_blind.data(), blind_ptrs.data(), allblinds.size(),
+                blinds.size());
+            assert(ret == 1);
+            auxiliaries.push_back(commit(ctx, out_spend_data.back().m_value,
+                last_blind).value());
+            out_spend_data.back().m_blind = last_blind;
+        } else {
+            auxiliaries.push_back(commit(ctx, out_spend_data.back().m_value,
+                empty).value());
+            new_blinds.push_back(empty);
+            out_spend_data.back().m_blind = empty;
+        }
+
+        return auxiliaries;
+    }
+
     auto compact_tx::operator==(const compact_tx& tx) const noexcept -> bool {
         return m_id == tx.m_id;
     }
