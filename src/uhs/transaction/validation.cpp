@@ -33,6 +33,10 @@ namespace cbdc::transaction::validation {
         return std::tie(m_code, m_idx) == std::tie(rhs.m_code, rhs.m_idx);
     }
 
+    auto proof_error::operator==(const proof_error& rhs) const -> bool {
+        return m_code == rhs.m_code;
+    }
+
     auto check_tx(const cbdc::transaction::full_tx& tx)
         -> std::optional<tx_error> {
         const auto structure_err = check_tx_structure(tx);
@@ -355,6 +359,35 @@ namespace cbdc::transaction::validation {
             ret += ", Data error: " + to_string(err.m_data_err.value());
         }
         return ret;
+    }
+
+    auto to_string(const cbdc::transaction::validation::proof_error& err)
+        -> std::string {
+        switch(err.m_code) {
+            case cbdc::transaction::validation::proof_error_code
+                ::invalid_auxiliary:
+                return "One or more auxiliary commitments were malformed";
+            case cbdc::transaction::validation::proof_error_code
+                ::invalid_uhs_id:
+                return "One or more UHS ID commitments were malformed";
+            case cbdc::transaction::validation::proof_error_code
+                ::invalid_signature_key:
+                return "Constructing the consistency-proof "
+                       "verification key failed";
+            case cbdc::transaction::validation::proof_error_code
+                ::inconsistent_value:
+                return "The values committed to by a UHS ID commitment and "
+                       "its auxiliary commitment are not equal";
+            case cbdc::transaction::validation::proof_error_code
+                ::out_of_range:
+                return "One or more output values lay outside their proven "
+                       "range";
+            case cbdc::transaction::validation::proof_error_code
+                ::wrong_sum:
+                return "Input values do not equal output values";
+            default:
+                return "Unknown error";
+        }
     }
 
     auto to_string(cbdc::transaction::validation::witness_error_code err)

@@ -6,14 +6,19 @@
 #ifndef OPENCBDC_TX_SRC_TRANSACTION_TRANSACTION_H_
 #define OPENCBDC_TX_SRC_TRANSACTION_TRANSACTION_H_
 
+#include "util/common/random_source.hpp"
+#include "util/common/commitment.hpp"
 #include "crypto/sha256.h"
 #include "util/common/hash.hpp"
 #include "util/common/keys.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/util.hpp"
 
+#include <secp256k1_schnorrsig.h>
+
 #include <cstdint>
 #include <optional>
+#include <utility>
 
 namespace cbdc::transaction {
     /// \brief The unique identifier of a specific \ref output from
@@ -59,6 +64,14 @@ namespace cbdc::transaction {
         output() = default;
     };
 
+    /// \brief Additional information a spender needs to spend an input
+    struct spend_data {
+        /// The blinding factor for the auxiliary commitment
+        hash_t m_blind{};
+        /// The value of the associated output
+        uint64_t m_value{0};
+    };
+
     /// \brief An input for a new transaction
     ///
     /// An \ref out_point and associated \ref output which a client intends to
@@ -78,6 +91,12 @@ namespace cbdc::transaction {
         [[nodiscard]] auto hash() const -> hash_t;
 
         input() = default;
+    };
+
+    struct transaction_proof {
+        /// The signatures (one per input, in-order) on the nonces used for
+        /// compressing UHS IDs
+        std::vector<signature_t> m_noncesigs;
     };
 
     /// \brief A complete transaction
@@ -107,6 +126,30 @@ namespace cbdc::transaction {
     /// Sentinel attestation type. Public key of the sentinel and signature of
     /// a compact transaction hash.
     using sentinel_attestation = std::pair<pubkey_t, signature_t>;
+
+    /// \brief A compacted output of a transaction
+    ///
+    /// Contains all (and only) the information necessecary for the UHS
+    /// to be updated and for the system to perform audits.
+    ///
+    /// \see \ref cbdc::operator<<(serializer&, const transaction::compact_output&)
+    struct compact_output {
+        /// The UHS ID for the output
+        hash_t m_id{};
+        /// The nonce used to compress the Pedersen Commitment to 32 bytes
+        commitment_t m_auxiliary{};
+        /// The rangeproof guaranteeing that the output is greater than 0
+        rangeproof_t<> m_range{};
+        /// The signature proving consistency
+        signature_t m_consistency{};
+
+        compact_output(const hash_t& id, const commitment_t& aux,
+            const rangeproof_t<>& range, const signature_t& consist);
+        compact_output() = default;
+
+        auto operator==(const compact_output& rhs) const -> bool;
+        auto operator!=(const compact_output& rhs) const -> bool;
+    };
 
     /// \brief A condensed, hash-only transaction representation
     ///
