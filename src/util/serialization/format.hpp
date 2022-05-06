@@ -18,6 +18,7 @@
 #include <limits>
 #include <optional>
 #include <set>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
@@ -230,6 +231,50 @@ namespace cbdc {
 
         vec.shrink_to_fit();
         return packet;
+    }
+
+    /// Serializes the count of key-value pairs, and then each key and value,
+    /// statically-casted.
+    /// \see \ref cbdc::operator<<(serializer&, T)
+    template<typename K, typename V>
+    auto operator<<(serializer& ser,
+                    const std::map<K, V>& map)
+        -> serializer& {
+        auto len = static_cast<uint64_t>(map.size());
+        ser << len;
+        for(const auto& it : map) {
+            ser << static_cast<K>(it.first);
+            ser << static_cast<V>(it.second);
+        }
+        return ser;
+    }
+
+    /// Deserializes a map of key-value pairs.
+    /// \see \ref cbdc::operator<<(serializer&, const std::map<K, V>&)
+    template<typename K, typename V>
+    auto operator>>(serializer& deser,
+                    std::map<K, V>& map)
+        -> serializer& {
+        auto len = uint64_t();
+        if(!(deser >> len)) {
+            return deser;
+        }
+
+        while(len-- > 0) {
+            auto key = K();
+            if(!(deser >> key)) {
+                return deser;
+            }
+
+            auto val = V();
+            if(!(deser >> val)) {
+                return deser;
+            }
+
+            map.emplace(std::move(key), std::move(val));
+        }
+
+        return deser;
     }
 
     /// Serializes the count of key-value pairs, and then each key and value,
