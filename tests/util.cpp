@@ -13,13 +13,13 @@ namespace cbdc::test {
     auto compact_transaction::operator==(
         const transaction::compact_tx& tx) const noexcept -> bool {
         return m_id == tx.m_id && (m_inputs == tx.m_inputs)
-            && (m_uhs_outputs == tx.m_uhs_outputs);
+            && (m_outputs == tx.m_outputs);
     }
 
     compact_transaction::compact_transaction(
         const transaction::compact_tx& tx) {
         m_id = tx.m_id;
-        m_uhs_outputs = tx.m_uhs_outputs;
+        m_outputs = tx.m_outputs;
         m_inputs = tx.m_inputs;
     }
 
@@ -44,7 +44,12 @@ namespace cbdc::test {
         compact_transaction tx{};
         tx.m_id = id;
         tx.m_inputs = ins;
-        tx.m_uhs_outputs = outs;
+        std::vector<transaction::compact_output> proofs{};
+        std::transform(outs.begin(), outs.end(), std::back_inserter(proofs),
+                       [](hash_t h) -> transaction::compact_output {
+                        return {h, {}, {}, {}};
+                       });
+        tx.m_outputs = proofs;
         return tx;
     }
 

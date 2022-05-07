@@ -10,6 +10,7 @@
 #include <cassert>
 #include <memory>
 #include <secp256k1.h>
+#include <secp256k1_generator.h>
 #include <secp256k1_schnorrsig.h>
 #include <set>
 
@@ -17,8 +18,23 @@ namespace cbdc::transaction::validation {
     static const auto secp_context
         = std::unique_ptr<secp256k1_context,
                           decltype(&secp256k1_context_destroy)>(
-            secp256k1_context_create(SECP256K1_CONTEXT_VERIFY),
+            secp256k1_context_create(SECP256K1_CONTEXT_SIGN 
+                | SECP256K1_CONTEXT_VERIFY),
             &secp256k1_context_destroy);
+
+    struct GensDeleter {
+        GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
+
+        void operator()(secp256k1_bulletproofs_generators* gens) {
+            secp256k1_bulletproofs_generators_destroy(m_ctx, gens);
+        }
+
+        secp256k1_context* m_ctx;
+    };
+
+    std::unique_ptr<secp256k1_bulletproofs_generators, GensDeleter>
+        generators{secp256k1_bulletproofs_generators_create(
+            secp_context.get(), 128), GensDeleter(secp_context.get())};
 
     auto input_error::operator==(const input_error& rhs) const -> bool {
         return std::tie(m_code, m_data_err, m_idx)
@@ -44,33 +60,17 @@ namespace cbdc::transaction::validation {
             return structure_err;
         }
 
-        for(size_t idx = 0; idx < tx.m_inputs.size(); idx++) {
-            const auto& inp = tx.m_inputs[idx];
-            const auto input_err = check_input_structure(inp);
-            if(input_err) {
-                auto&& [code, data] = input_err.value();
-                return tx_error{input_error{code, data, idx}};
-            }
-        }
-
-        for(size_t idx = 0; idx < tx.m_outputs.size(); idx++) {
-            const auto& out = tx.m_outputs[idx];
-            const auto output_err = check_output_value(out);
-            if(output_err) {
-                return tx_error{output_error{output_err.value(), idx}};
-            }
-        }
-
-        const auto in_out_set_error = check_in_out_set(tx);
-        if(in_out_set_error) {
-            return in_out_set_error;
-        }
-
         for(size_t idx = 0; idx < tx.m_witness.size(); idx++) {
             const auto witness_err = check_witness(tx, idx);
             if(witness_err) {
                 return tx_error{witness_error{witness_err.value(), idx}};
             }
+        }
+
+        const cbdc::transaction::compact_tx ctx(tx);
+        const auto proof_error = check_proof(ctx);
+        if(proof_error) {
+            return proof_error;
         }
 
         return std::nullopt;
@@ -96,42 +96,6 @@ namespace cbdc::transaction::validation {
         const auto input_set_err = check_input_set(tx);
         if(input_set_err) {
             return input_set_err;
-        }
-
-        return std::nullopt;
-    }
-
-    auto check_input_structure(const cbdc::transaction::input& inp)
-        -> std::optional<
-            std::pair<input_error_code, std::optional<output_error_code>>> {
-        const auto data_err = check_output_value(inp.m_prevout_data);
-        if(data_err) {
-            return {{input_error_code::data_error, data_err}};
-        }
-
-        return std::nullopt;
-    }
-
-    auto check_in_out_set(const cbdc::transaction::full_tx& tx)
-        -> std::optional<tx_error> {
-        uint64_t input_total{0};
-        for(const auto& inp : tx.m_inputs) {
-            if(input_total + inp.m_prevout_data.m_value <= input_total) {
-                return tx_error(tx_error_code::value_overflow);
-            }
-            input_total += inp.m_prevout_data.m_value;
-        }
-
-        uint64_t output_total{0};
-        for(const auto& out : tx.m_outputs) {
-            if(output_total + out.m_value <= output_total) {
-                return tx_error(tx_error_code::value_overflow);
-            }
-            output_total += out.m_value;
-        }
-
-        if(input_total != output_total) {
-            return tx_error(tx_error_code::asymmetric_values);
         }
 
         return std::nullopt;
@@ -289,13 +253,101 @@ namespace cbdc::transaction::validation {
         return std::nullopt;
     }
 
-    auto check_output_value(const cbdc::transaction::output& out)
-        -> std::optional<output_error_code> {
-        if(out.m_value < 1) {
-            return output_error_code::zero_value;
+    auto check_proof(const compact_tx& tx) -> std::optional<proof_error> {
+        auto ctx = secp_context.get();
+        secp256k1_scratch_space * scratch = secp256k1_scratch_space_create(ctx,
+            100 * 1024);
+        std::vector<secp256k1_pedersen_commitment> auxiliaries{};
+        for (size_t i = 0; i < tx.m_outputs.size(); ++i) {
+            const auto& proof = tx.m_outputs[i];
+
+            std::array<secp256k1_pubkey, 2> points{};
+
+            auto maybe_aux = deserialize_commitment(ctx, proof.m_auxiliary);
+            if(!maybe_aux.has_value()) {
+                return proof_error{proof_error_code::invalid_auxiliary};
+            }
+            auto aux = maybe_aux.value();
+            auxiliaries.push_back(aux);
+
+            secp256k1_pedersen_commitment_as_key(&aux, &points[0]);
+            auto ret = secp256k1_ec_pubkey_negate(ctx, &points[0]);
+            assert(ret == 1);
+
+            auto maybe_comm = expand_xonly_commitment(ctx, proof.m_id);
+            if(!maybe_comm.has_value()) {
+                return proof_error{proof_error_code::invalid_uhs_id};
+            }
+            auto comm = maybe_comm.value();
+
+            secp256k1_pedersen_commitment_as_key(&comm, &points[1]);
+
+            const secp256k1_pubkey * pks [2];
+            pks[0] = &points[0];
+            pks[1] = &points[1];
+
+            secp256k1_pubkey fullepk{};
+            ret = secp256k1_ec_pubkey_combine(ctx, &fullepk, pks, 2);
+            if(ret != 1) {
+                return proof_error{proof_error_code::invalid_signature_key};
+            }
+
+            secp256k1_xonly_pubkey epk{};
+            [[maybe_unused]] int parity{};
+            ret = secp256k1_xonly_pubkey_from_pubkey(ctx, &epk, &parity,
+                &fullepk);
+            if(ret != 1) {
+                return proof_error{proof_error_code::invalid_signature_key};
+            }
+
+            unsigned char consist_contents [32] = "consistent proof";
+            ret = secp256k1_schnorrsig_verify(ctx, proof.m_consistency.data(),
+                    consist_contents, &epk);
+            if(ret != 1) {
+                return proof_error{proof_error_code::inconsistent_value};
+            }
+
+            ret = secp256k1_bulletproofs_rangeproof_uncompressed_verify(ctx,
+                scratch, generators.get(), secp256k1_generator_h,
+                proof.m_range.data(),
+                proof.m_range.size(),
+                0, // minimum
+                &aux,
+                nullptr, // extra commit
+                0 // extra commit length
+            );
+
+            if(ret != 1) {
+                return proof_error{proof_error_code::out_of_range};
+            }
+        }
+
+        if(!check_commitment_sum(auxiliaries, 0)) {
+            return proof_error{proof_error_code::wrong_sum};
         }
 
         return std::nullopt;
+    }
+
+    auto check_commitment_sum(
+        const std::vector<secp256k1_pedersen_commitment>& auxiliaries,
+        uint64_t minted) -> bool {
+
+        std::vector<const secp256k1_pedersen_commitment *> aux_ptrs{};
+        aux_ptrs.reserve(auxiliaries.size());
+        for(const auto aux : auxiliaries) {
+            aux_ptrs.push_back(&aux);
+        }
+
+        // non-standard-tx additional auxiliary
+        auto minting_aux = commit(secp_context.get(), minted, hash_t{});
+        if(minted != 0) {
+            aux_ptrs.push_back(&minting_aux.value());
+        }
+
+        return secp256k1_pedersen_verify_tally(secp_context.get(),
+            aux_ptrs.data(), auxiliaries.size() - 1,
+            &aux_ptrs.back(), 1) == 1;
     }
 
     auto get_p2pk_witness_commitment(const pubkey_t& payee) -> hash_t {

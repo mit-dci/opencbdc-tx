@@ -161,9 +161,11 @@ namespace cbdc::locking_shard {
                 m_completed_txs.add(tx.m_tx.m_id);
             }
 
-            for(auto&& uhs_id : tx.m_tx.m_uhs_outputs) {
+            for(auto&& proof : tx.m_creating) {
+                auto uhs_id = proof.m_id;
                 if(hash_in_shard_range(uhs_id) && complete_txs[i]) {
                     m_uhs.emplace(uhs_id);
+                    m_proofs.emplace(uhs_id, proof);
                 }
             }
             for(auto&& uhs_id : tx.m_tx.m_inputs) {

@@ -8,6 +8,7 @@
 
 #include "uhs/transaction/transaction.hpp"
 #include "util/common/hash.hpp"
+#include "uhs/transaction/transaction.hpp"
 
 #include <optional>
 #include <variant>
@@ -16,8 +17,12 @@
 namespace cbdc::locking_shard {
     /// Transaction type processed by locking shards.
     struct tx {
-        /// Compact TX.
-        transaction::compact_tx m_tx;
+        /// The TX ID of the transaction, if provided.
+        std::optional<hash_t> m_tx_id{};
+        /// Vector of input hashes for the shard to process as spent.
+        std::vector<hash_t> m_spending{};
+        /// Vector of output hashes to create on the shard.
+        std::vector<transaction::compact_output> m_creating{};
 
         auto operator==(const tx& rhs) const -> bool;
     };

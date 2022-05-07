@@ -14,7 +14,6 @@
 #include "uhs/atomizer/atomizer/block.hpp"
 #include "uhs/atomizer/atomizer/format.hpp"
 #include "uhs/atomizer/watchtower/tx_error_messages.hpp"
-#include "uhs/transaction/transaction.hpp"
 #include "util/common/config.hpp"
 #include "util/common/logging.hpp"
 #include "util/network/connection_manager.hpp"

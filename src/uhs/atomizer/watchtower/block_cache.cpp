@@ -20,8 +20,8 @@ namespace cbdc::watchtower {
                 for(auto& in : tx.m_inputs) {
                     m_spent_ids.erase(in);
                 }
-                for(auto& out : tx.m_uhs_outputs) {
-                    m_unspent_ids.erase(out);
+                for(auto& out : tx.m_outputs) {
+                    m_unspent_ids.erase(out.m_id);
                 }
             }
             m_blks.pop();
@@ -36,9 +36,9 @@ namespace cbdc::watchtower {
                 m_spent_ids.insert(
                     {{in, std::make_pair(blk_height, tx.m_id)}});
             }
-            for(auto& out : tx.m_uhs_outputs) {
+            for(auto& out : tx.m_outputs) {
                 m_unspent_ids.insert(
-                    {{out, std::make_pair(blk_height, tx.m_id)}});
+                    {{out.m_id, std::make_pair(blk_height, tx.m_id)}});
             }
         }
         m_best_blk_height = std::max(m_best_blk_height, blk_height);
