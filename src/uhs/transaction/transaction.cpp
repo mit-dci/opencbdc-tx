@@ -130,6 +130,64 @@ namespace cbdc::transaction {
         return ret;
     }
 
+    auto output_preimage(const out_point& point, const output& put)
+    -> std::array<unsigned char, sizeof(compact_tx::m_id) +
+        sizeof(out_point::m_index) +
+        sizeof(output::m_witness_program_commitment)> {
+        std::array<unsigned char, sizeof(compact_tx::m_id) +
+            sizeof(out_point::m_index) +
+            sizeof(output::m_witness_program_commitment)> buf{};
+
+        auto bptr = buf.data();
+        std::memcpy(bptr, point.m_tx_id.data(), point.m_tx_id.size());
+        bptr += sizeof(compact_tx::m_id);
+        std::memcpy(bptr, &point.m_index, sizeof(point.m_index));
+        bptr += sizeof(out_point::m_index);
+        std::memcpy(bptr, put.m_witness_program_commitment.data(),
+            put.m_witness_program_commitment.size());
+
+        return buf;
+    }
+
+    auto output_randomness(std::array<unsigned char, sizeof(compact_tx::m_id) +
+        sizeof(out_point::m_index) +
+        sizeof(output::m_witness_program_commitment)> buf, const hash_t& nonce)
+    -> hash_t {
+        const auto bufsize = buf.size();
+
+        CSHA256 sha;
+        sha.Write(buf.data(), bufsize);
+        sha.Write(nonce.data(), nonce.size());
+        hash_t candidate{};
+        sha.Finalize(candidate.data());
+
+        return candidate;
+    }
+
+    auto calculate_uhs_id(secp256k1_context* ctx, random_source& rng,
+        std::array<unsigned char, sizeof(compact_tx::m_id) +
+        sizeof(out_point::m_index) +
+        sizeof(output::m_witness_program_commitment)> buf, uint64_t value)
+    -> std::pair<hash_t, hash_t> {
+        while ( true ) {
+            auto t = rng.random_hash();
+            auto candidate = output_randomness(buf, t);
+            auto c = make_xonly_commitment(ctx, value, candidate);
+            if ( c.has_value() ) {
+                return std::make_pair(c.value(), t);
+            }
+        }
+
+        __builtin_unreachable();
+    }
+
+    auto calculate_uhs_id(secp256k1_context* ctx, random_source& rng,
+        const out_point& point, const output& put, uint64_t value)
+    -> std::pair<hash_t, hash_t> {
+        auto buf = output_preimage(point, put);
+        return calculate_uhs_id(ctx, rng, buf, value);
+    }
+
     auto roll_auxiliaries(secp256k1_context* ctx, random_source& rng,
         const std::vector<hash_t>& blinds,
         std::vector<spend_data>& out_spend_data)
