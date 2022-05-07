@@ -64,6 +64,23 @@ namespace cbdc::transaction {
         output() = default;
     };
 
+    /// \brief Calculate a pedersen commitment for use as a UHS ID
+    ///
+    /// The commitment is serialized into 32 bytes (via compression similar to
+    /// x-only public keys), and commits to the value, outpoint, encumbrance,
+    /// and a random nonce.
+    ///
+    /// \param ctx secp256k1 context initialized for signing and verification
+    /// \param rng random source capable of generating secure nonces
+    /// \param point the \ref out_point disambiguating the origin of the
+    ///              output to-be-spent
+    /// \param put the \ref output to-be-spent
+    /// \returns a pair of the commitment, and the random nonce that was
+    ///          committed to
+    auto calculate_uhs_id(secp256k1_context* ctx, random_source& rng,
+        const out_point& point, const output& put)
+        -> std::pair<hash_t, hash_t>;
+
     /// \brief Additional information a spender needs to spend an input
     struct spend_data {
         /// The blinding factor for the auxiliary commitment
