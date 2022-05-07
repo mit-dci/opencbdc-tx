@@ -16,9 +16,9 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
+#include <map>
 #include <optional>
 #include <set>
-#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
@@ -237,8 +237,7 @@ namespace cbdc {
     /// statically-casted.
     /// \see \ref cbdc::operator<<(serializer&, T)
     template<typename K, typename V>
-    auto operator<<(serializer& ser,
-                    const std::map<K, V>& map)
+    auto operator<<(serializer& ser, const std::map<K, V>& map)
         -> serializer& {
         auto len = static_cast<uint64_t>(map.size());
         ser << len;
@@ -252,9 +251,7 @@ namespace cbdc {
     /// Deserializes a map of key-value pairs.
     /// \see \ref cbdc::operator<<(serializer&, const std::map<K, V>&)
     template<typename K, typename V>
-    auto operator>>(serializer& deser,
-                    std::map<K, V>& map)
-        -> serializer& {
+    auto operator>>(serializer& deser, std::map<K, V>& map) -> serializer& {
         auto len = uint64_t();
         if(!(deser >> len)) {
             return deser;

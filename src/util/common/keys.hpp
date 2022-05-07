@@ -8,9 +8,8 @@
 
 #include <array>
 #include <cstring>
-#include <vector>
-
 #include <secp256k1_bulletproofs.h>
+#include <vector>
 
 struct secp256k1_context_struct;
 using secp256k1_context = struct secp256k1_context_struct;
@@ -37,7 +36,8 @@ namespace cbdc {
     /// A range-proof
     /// \tparam N the size (in bytes) of the proof (dependent on the range
     ///           being proven.
-    template <size_t N = SECP256K1_BULLETPROOFS_RANGEPROOF_UNCOMPRESSED_MAX_LENGTH_>
+    template<size_t N
+             = SECP256K1_BULLETPROOFS_RANGEPROOF_UNCOMPRESSED_MAX_LENGTH_>
     using rangeproof_t = std::array<unsigned char, N>;
 
     /// Generates a public key from the specified private key.

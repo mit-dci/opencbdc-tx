@@ -23,8 +23,8 @@ namespace cbdc {
     auto operator<<(serializer& packet, const transaction::output& out)
         -> serializer& {
         return packet << out.m_witness_program_commitment << out.m_id
-            << out.m_nonce << out.m_auxiliary << out.m_range
-            << out.m_consistency;
+                      << out.m_nonce << out.m_auxiliary << out.m_range
+                      << out.m_consistency;
     }
 
     auto operator>>(serializer& packet, transaction::output& out)
@@ -37,7 +37,7 @@ namespace cbdc {
     auto operator<<(serializer& packet, const transaction::compact_output& out)
         -> serializer& {
         return packet << out.m_id << out.m_auxiliary << out.m_range
-            << out.m_consistency;
+                      << out.m_consistency;
     }
 
     auto operator>>(serializer& packet, transaction::compact_output& out)
@@ -59,7 +59,7 @@ namespace cbdc {
     auto operator<<(serializer& packet, const transaction::input& inp)
         -> serializer& {
         return packet << inp.m_prevout << inp.m_prevout_data
-            << inp.m_spend_data;
+                      << inp.m_spend_data;
     }
 
     auto operator>>(serializer& packet, transaction::input& inp)
@@ -71,7 +71,7 @@ namespace cbdc {
     auto operator<<(serializer& packet, const transaction::full_tx& tx)
         -> serializer& {
         return packet << tx.m_inputs << tx.m_outputs << tx.m_witness
-            << tx.m_tx_proofs << tx.m_out_spend_data;
+                      << tx.m_tx_proofs << tx.m_out_spend_data;
     }
 
     auto operator>>(serializer& packet, transaction::full_tx& tx)
@@ -81,12 +81,13 @@ namespace cbdc {
     }
 
     auto operator<<(serializer& packet,
-        const transaction::transaction_proof& proof) -> serializer& {
+                    const transaction::transaction_proof& proof)
+        -> serializer& {
         return packet << proof.m_noncesigs;
     }
 
-    auto operator>>(serializer& packet,
-        transaction::transaction_proof& proof) -> serializer& {
+    auto operator>>(serializer& packet, transaction::transaction_proof& proof)
+        -> serializer& {
         return packet >> proof.m_noncesigs;
     }
 

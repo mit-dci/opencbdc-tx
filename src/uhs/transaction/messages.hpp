@@ -102,14 +102,15 @@ namespace cbdc {
     /// \see \ref cbdc::operator<<(serializer&, const std::array<T, len>&)
     /// \see \ref cbdc::operator<<(serializer&, const std::vector<T>&)
     auto operator<<(serializer& packet,
-        const transaction::transaction_proof& proof) -> serializer&;
+                    const transaction::transaction_proof& proof)
+        -> serializer&;
 
     /// \brief Deserializes transaction-wide cryptographic proofs
     ///
     /// Deserializes the vector of signatures on the UHS-ID compression nonces.
     /// \see \ref cbdc::operator<<(serializer&, const transaction::transaction_proof&)
-    auto operator>>(serializer& packet,
-        transaction::transaction_proof& proof) -> serializer&;
+    auto operator>>(serializer& packet, transaction::transaction_proof& proof)
+        -> serializer&;
 
     /// \brief Serializes a compact transaction.
     ///

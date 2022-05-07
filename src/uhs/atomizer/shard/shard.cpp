@@ -67,24 +67,30 @@ namespace cbdc::shard {
             for(const auto& out : tx.m_outputs) {
                 if(is_output_on_shard(out.m_id)) {
                     std::array<char, sizeof(out.m_id)> out_arr{};
-                    std::memcpy(out_arr.data(), out.m_id.data(), out.m_id.size());
-                    leveldb::Slice OutPointKey(out_arr.data(), out.m_id.size());
+                    std::memcpy(out_arr.data(),
+                                out.m_id.data(),
+                                out.m_id.size());
+                    leveldb::Slice OutPointKey(out_arr.data(),
+                                               out.m_id.size());
 
-                    std::array<char, sizeof(out.m_auxiliary) +
-                                     sizeof(out.m_range) +
-                                     sizeof(out.m_consistency)> proofs_arr{};
-                    auto pptr = proofs_arr.data();
+                    static constexpr auto aux_size = sizeof(out.m_auxiliary);
+                    static constexpr auto rng_size = sizeof(out.m_range);
+                    static constexpr auto cst_size = sizeof(out.m_consistency);
 
-                    std::memcpy(pptr, out.m_auxiliary.data(),
-                        out.m_auxiliary.size());
-                    pptr += out.m_auxiliary.size();
-                    std::memcpy(pptr, out.m_range.data(), out.m_range.size());
-                    pptr += out.m_range.size();
-                    std::memcpy(pptr, out.m_consistency.data(),
-                        out.m_consistency.size());
+                    std::array<char, aux_size + rng_size + cst_size>
+                        proofs_arr{};
+                    std::memcpy(proofs_arr.data(),
+                                out.m_auxiliary.data(),
+                                aux_size);
+                    std::memcpy(proofs_arr.data() + aux_size,
+                                out.m_range.data(),
+                                out.m_range.size());
+                    std::memcpy(proofs_arr.data() + aux_size + rng_size,
+                                out.m_consistency.data(),
+                                cst_size);
 
                     leveldb::Slice ProofVal(proofs_arr.data(),
-                        proofs_arr.size());
+                                            proofs_arr.size());
                     batch.Put(OutPointKey, ProofVal);
                 }
             }
