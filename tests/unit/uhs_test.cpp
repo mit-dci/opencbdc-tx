@@ -3,15 +3,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "uhs/transaction/transaction.hpp"
 #include "util/common/hash.hpp"
 #include "util/common/hashmap.hpp"
-#include "uhs/transaction/transaction.hpp"
-
-#include <leveldb/db.h>
-#include <unordered_map>
 
 #include <filesystem>
 #include <gtest/gtest.h>
+#include <leveldb/db.h>
+#include <unordered_map>
 
 class uhs_test : public ::testing::Test {
   protected:
@@ -35,18 +34,18 @@ class uhs_test : public ::testing::Test {
     leveldb::WriteOptions m_write_options;
 
     std::unordered_map<cbdc::hash_t,
-        cbdc::transaction::compact_output, cbdc::hashing::null> m_proofs{};
+                       cbdc::transaction::compact_output,
+                       cbdc::hashing::null>
+        m_proofs{};
 
     static constexpr const auto m_db_dir = "test_db";
 };
 
 TEST_F(uhs_test, leveldb_roundtrip) {
-    cbdc::transaction::compact_output o {
-        {'a', 'b', 'c', 'd'},
-        {'e', 'f', 'g', 'h'},
-        {'i', 'j', 'k', 'l'},
-        {'m', 'n', 'o', 'p'}
-    };
+    cbdc::transaction::compact_output o{{'a', 'b', 'c', 'd'},
+                                        {'e', 'f', 'g', 'h'},
+                                        {'i', 'j', 'k', 'l'},
+                                        {'m', 'n', 'o', 'p'}};
 
     std::array<char, 32> k;
     std::memcpy(k.data(), o.m_id.data(), k.size());
@@ -72,12 +71,10 @@ TEST_F(uhs_test, leveldb_roundtrip) {
 }
 
 TEST_F(uhs_test, map_roundtrip) {
-    cbdc::transaction::compact_output o {
-        {'a', 'b', 'c', 'd'},
-        {'e', 'f', 'g', 'h'},
-        {'i', 'j', 'k', 'l'},
-        {'m', 'n', 'o', 'p'}
-    };
+    cbdc::transaction::compact_output o{{'a', 'b', 'c', 'd'},
+                                        {'e', 'f', 'g', 'h'},
+                                        {'i', 'j', 'k', 'l'},
+                                        {'m', 'n', 'o', 'p'}};
 
     m_proofs.emplace(o.m_id, o);
     const auto& p = m_proofs[o.m_id];

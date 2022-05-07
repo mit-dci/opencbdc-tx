@@ -318,18 +318,25 @@ namespace cbdc {
                    &secp256k1_context_destroy};
 
         struct GensDeleter {
-            GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
+            explicit GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
 
-            void operator()(secp256k1_bulletproofs_generators* gens) {
+            void operator()(secp256k1_bulletproofs_generators* gens) const {
                 secp256k1_bulletproofs_generators_destroy(m_ctx, gens);
             }
 
             secp256k1_context* m_ctx;
         };
 
+        /// should be twice the bitcount of the range-proof's upper bound
+        ///
+        /// e.g., if proving things in the range [0, 2^64-1], it should be 128.
+        static const inline auto generator_count = 129;
+
         std::unique_ptr<secp256k1_bulletproofs_generators, GensDeleter>
-            m_generators{secp256k1_bulletproofs_generators_create(m_secp.get(),
-                128), GensDeleter(m_secp.get())};
+            m_generators{
+                secp256k1_bulletproofs_generators_create(m_secp.get(),
+                                                         generator_count),
+                GensDeleter(m_secp.get())};
     };
 }
 

@@ -400,13 +400,15 @@ auto main(int argc, char** argv) -> int {
                 for(const auto& it : pending_txs) {
                     cbdc::transaction::compact_tx ctx{it.second};
                     std::vector<cbdc::hash_t> uhs_ids{};
-                    std::transform(ctx.m_outputs.begin(),
-                                   ctx.m_outputs.end(),
-                                   std::back_inserter(uhs_ids),
-                                   [](const cbdc::transaction::compact_output& p) { return p.m_id; });
+                    std::transform(
+                        ctx.m_outputs.begin(),
+                        ctx.m_outputs.end(),
+                        std::back_inserter(uhs_ids),
+                        [](const cbdc::transaction::compact_output& p) {
+                            return p.m_id;
+                        });
 
-                    key_uhs_ids.emplace(
-                        std::make_pair(ctx.m_id, uhs_ids));
+                    key_uhs_ids.emplace(std::make_pair(ctx.m_id, uhs_ids));
                 }
             }
             watchtower_client->request_status_update(
@@ -539,12 +541,14 @@ auto main(int argc, char** argv) -> int {
                 for(const auto& it : pending_txs) {
                     cbdc::transaction::compact_tx ctx{it.second};
                     std::vector<cbdc::hash_t> uhs_ids{};
-                    std::transform(ctx.m_outputs.begin(),
-                                   ctx.m_outputs.end(),
-                                   std::back_inserter(uhs_ids),
-                                   [](const cbdc::transaction::compact_output& p) { return p.m_id; });
-                    key_uhs_ids.emplace(
-                        std::make_pair(ctx.m_id, uhs_ids));
+                    std::transform(
+                        ctx.m_outputs.begin(),
+                        ctx.m_outputs.end(),
+                        std::back_inserter(uhs_ids),
+                        [](const cbdc::transaction::compact_output& p) {
+                            return p.m_id;
+                        });
+                    key_uhs_ids.emplace(std::make_pair(ctx.m_id, uhs_ids));
                 }
             }
 

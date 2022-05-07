@@ -8,7 +8,6 @@
 
 #include "uhs/transaction/transaction.hpp"
 #include "util/common/hash.hpp"
-#include "uhs/transaction/transaction.hpp"
 
 #include <optional>
 #include <variant>

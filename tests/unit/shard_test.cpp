@@ -60,8 +60,8 @@ TEST_F(shard_test, digest_tx_valid) {
     cbdc::transaction::compact_tx ctx{};
     ctx.m_id = {'a'};
     ctx.m_inputs = {{0}, {3}, {6}, {100}};
-    ctx.m_outputs = {{{'b'}, {'c'}, {'d'}, {'e'}},
-                     {{'h'}, {'i'}, {'j'}, {'k'}}};
+    ctx.m_outputs
+        = {{{'b'}, {'c'}, {'d'}, {'e'}}, {{'h'}, {'i'}, {'j'}, {'k'}}};
 
     auto res = m_shard.digest_transaction(ctx);
     ASSERT_TRUE(
@@ -80,8 +80,8 @@ TEST_F(shard_test, digest_tx_empty_inputs) {
     cbdc::transaction::compact_tx ctx{};
     ctx.m_id = {'a'};
     ctx.m_inputs = {};
-    ctx.m_outputs = {{{'b'}, {'c'}, {'d'}, {'e'}},
-                     {{'h'}, {'i'}, {'j'}, {'k'}}};
+    ctx.m_outputs
+        = {{{'b'}, {'c'}, {'d'}, {'e'}}, {{'h'}, {'i'}, {'j'}, {'k'}}};
 
     auto res = m_shard.digest_transaction(ctx);
     ASSERT_TRUE(std::holds_alternative<cbdc::watchtower::tx_error>(res));
@@ -97,8 +97,8 @@ TEST_F(shard_test, digest_tx_inputs_dne) {
     cbdc::transaction::compact_tx ctx{};
     ctx.m_id = {'a'};
     ctx.m_inputs = {{0}, {7}, {8}, {100}};
-    ctx.m_outputs = {{{'b'}, {'c'}, {'d'}, {'e'}},
-                     {{'h'}, {'i'}, {'j'}, {'k'}}};
+    ctx.m_outputs
+        = {{{'b'}, {'c'}, {'d'}, {'e'}}, {{'h'}, {'i'}, {'j'}, {'k'}}};
 
     auto res = m_shard.digest_transaction(ctx);
     ASSERT_TRUE(std::holds_alternative<cbdc::watchtower::tx_error>(res));
@@ -123,8 +123,8 @@ TEST_F(shard_test, digest_block_valid) {
     cbdc::transaction::compact_tx valid_ctx{};
     valid_ctx.m_id = {'a'};
     valid_ctx.m_inputs = {{0}, {7}, {100}, {8}};
-    valid_ctx.m_outputs = {{{'b'}, {'c'}, {'d'}, {'e'}},
-                           {{'h'}, {'i'}, {'j'}, {'k'}}};
+    valid_ctx.m_outputs
+        = {{{'b'}, {'c'}, {'d'}, {'e'}}, {{'h'}, {'i'}, {'j'}, {'k'}}};
 
     auto valid_res = m_shard.digest_transaction(valid_ctx);
     ASSERT_TRUE(
@@ -141,8 +141,8 @@ TEST_F(shard_test, digest_block_valid) {
     cbdc::transaction::compact_tx invalid_ctx{};
     invalid_ctx.m_id = {'a'};
     invalid_ctx.m_inputs = {{0}, {3}, {4}, {5}, {6}, {100}};
-    invalid_ctx.m_outputs = {{{'b'}, {'c'}, {'d'}, {'e'}},
-                             {{'h'}, {'i'}, {'j'}, {'k'}}};
+    invalid_ctx.m_outputs
+        = {{{'b'}, {'c'}, {'d'}, {'e'}}, {{'h'}, {'i'}, {'j'}, {'k'}}};
     auto invalid_res = m_shard.digest_transaction(invalid_ctx);
     ASSERT_TRUE(
         std::holds_alternative<cbdc::watchtower::tx_error>(invalid_res));

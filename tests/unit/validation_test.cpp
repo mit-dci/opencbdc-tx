@@ -126,7 +126,7 @@ TEST_F(WalletTxValidationTest, asymmetric_inout_set) {
     auto err = cbdc::transaction::validation::check_proof(ctx);
     ASSERT_TRUE(err.has_value());
     ASSERT_EQ(err.value().m_code,
-        cbdc::transaction::validation::proof_error_code::wrong_sum);
+              cbdc::transaction::validation::proof_error_code::wrong_sum);
 }
 
 TEST_F(WalletTxValidationTest, witness_missing_witness_program_type) {

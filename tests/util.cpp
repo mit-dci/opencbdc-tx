@@ -45,9 +45,11 @@ namespace cbdc::test {
         tx.m_id = id;
         tx.m_inputs = ins;
         std::vector<transaction::compact_output> proofs{};
-        std::transform(outs.begin(), outs.end(), std::back_inserter(proofs),
+        std::transform(outs.begin(),
+                       outs.end(),
+                       std::back_inserter(proofs),
                        [](hash_t h) -> transaction::compact_output {
-                        return {h, {}, {}, {}};
+                           return {h, {}, {}, {}};
                        });
         tx.m_outputs = proofs;
         return tx;

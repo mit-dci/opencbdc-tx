@@ -58,11 +58,11 @@ namespace cbdc::transaction::validation {
     /// A proof verification error
     enum class proof_error_code : uint8_t {
         invalid_auxiliary, ///< deserializing the auxiliary commitment failed
-        invalid_uhs_id, ///< deserializing the UHS ID failed
+        invalid_uhs_id,    ///< deserializing the UHS ID failed
         invalid_signature_key, ///< constructing consistency key failed
-        inconsistent_value, ///< consistency proof did not verify
-        out_of_range,  ///< range proof did not verify
-        wrong_sum, ///< auxiliaries did not sum as-required
+        inconsistent_value,    ///< consistency proof did not verify
+        out_of_range,          ///< range proof did not verify
+        wrong_sum,             ///< auxiliaries did not sum as-required
     };
 
     /// An error that may occur when verifying transaction proof
@@ -128,9 +128,11 @@ namespace cbdc::transaction::validation {
     /// A transaction can fail validation because of an error in the inputs,
     /// outputs, witnesses, or because the transaction-local invariants
     /// do not hold.
-    using tx_error = std::
-        variant<input_error, output_error, witness_error, tx_error_code,
-            proof_error>;
+    using tx_error = std::variant<input_error,
+                                  output_error,
+                                  witness_error,
+                                  tx_error_code,
+                                  proof_error>;
 
     /// \brief Runs static validation checks on the given transaction
     ///

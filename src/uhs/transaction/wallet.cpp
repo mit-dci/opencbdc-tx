@@ -41,11 +41,14 @@ namespace cbdc {
         auto spend_keys = spending_keys(ret);
         assert(spend_keys.has_value());
 
-        ret.m_out_spend_data = std::vector<spend_data>(n_outputs,
-            {{}, output_val});
+        ret.m_out_spend_data
+            = std::vector<spend_data>(n_outputs, {{}, output_val});
 
-        auto res = transaction::add_proof(m_secp.get(), m_generators.get(),
-            *m_random_source, ret, spend_keys.value());
+        [[maybe_unused]] auto res = transaction::add_proof(m_secp.get(),
+                                                           m_generators.get(),
+                                                           *m_random_source,
+                                                           ret,
+                                                           spend_keys.value());
 
         assert(res);
 
@@ -55,7 +58,9 @@ namespace cbdc {
             for(size_t i = 0; i < ret.m_outputs.size(); ++i) {
                 transaction::output put = ret.m_outputs[i];
                 transaction::out_point point{id, i};
-                transaction::input inp{point, put, ret.m_out_spend_data.value()[i]};
+                transaction::input inp{point,
+                                       put,
+                                       ret.m_out_spend_data.value()[i]};
                 const auto [_, inserted] = m_utxos_set.insert({point, inp});
                 if(inserted) {
                     m_spend_queue.push_back(inp);
@@ -95,7 +100,7 @@ namespace cbdc {
                 = transaction::validation::get_p2pk_witness_commitment(pubkey);
             ret.m_outputs.push_back(change_out);
             transaction::spend_data sp{{}, total_amount - amount};
-            out_spend_data.push_back(std::move(sp));
+            out_spend_data.push_back(sp);
         }
 
         ret.m_out_spend_data = out_spend_data;
@@ -106,8 +111,11 @@ namespace cbdc {
             return std::nullopt;
         }
 
-        auto res = transaction::add_proof(m_secp.get(), m_generators.get(),
-            *m_random_source, ret, spend_keys.value());
+        auto res = transaction::add_proof(m_secp.get(),
+                                          m_generators.get(),
+                                          *m_random_source,
+                                          ret,
+                                          spend_keys.value());
 
         if(!res) {
             return std::nullopt;
@@ -135,8 +143,7 @@ namespace cbdc {
             return std::nullopt;
         }
 
-        auto inp = seed_inp.value();
-        tx.m_inputs[0] = std::move(inp);
+        tx.m_inputs[0] = seed_inp.value();
 
         tx.m_outputs[0].m_witness_program_commitment
             = m_seed_witness_commitment;
@@ -150,8 +157,11 @@ namespace cbdc {
         std::vector<spend_data> out_spend_data{};
         out_spend_data.push_back(transaction::spend_data{{}, m_seed_value});
         tx.m_out_spend_data = out_spend_data;
-        auto res = transaction::add_proof(m_secp.get(), m_generators.get(),
-            *m_random_source, tx, spend_keys.value());
+        auto res = transaction::add_proof(m_secp.get(),
+                                          m_generators.get(),
+                                          *m_random_source,
+                                          tx,
+                                          spend_keys.value());
 
         if(!res) {
             return std::nullopt;
@@ -177,10 +187,17 @@ namespace cbdc {
         out_spend_data.push_back(transaction::spend_data{{}, m_seed_value});
 
         auto aux = transaction::roll_auxiliaries(m_secp.get(),
-            *m_random_source, {}, out_spend_data);
+                                                 *m_random_source,
+                                                 {},
+                                                 out_spend_data);
 
-        auto res = transaction::prove_output(m_secp.get(), m_generators.get(), 
-            *m_random_source, put, point, out_spend_data.front(), &aux.front());
+        auto res = transaction::prove_output(m_secp.get(),
+                                             m_generators.get(),
+                                             *m_random_source,
+                                             put,
+                                             point,
+                                             out_spend_data.front(),
+                                             &aux.front());
 
         if(!res) {
             return std::nullopt;
@@ -242,18 +259,19 @@ namespace cbdc {
     }
 
     auto transaction::wallet::spending_keys(const transaction::full_tx& tx)
-    -> std::optional<std::vector<std::pair<privkey_t, pubkey_t>>> const {
+        -> std::optional<std::vector<std::pair<privkey_t, pubkey_t>>> const {
         std::vector<std::pair<privkey_t, pubkey_t>> keys{};
         keys.reserve(tx.m_inputs.size());
-        for(size_t i = 0; i < tx.m_inputs.size(); ++i) {
+        for(const auto& inp : tx.m_inputs) {
             const auto& wit_commit
-                = tx.m_inputs[i].m_prevout_data.m_witness_program_commitment;
+                = inp.m_prevout_data.m_witness_program_commitment;
 
             {
                 std::shared_lock<std::shared_mutex> sl(m_keys_mut);
                 const auto wit_prog = m_witness_programs.find(wit_commit);
                 if(wit_prog != m_witness_programs.end()) {
-                    keys.push_back(std::make_pair(m_keys.at(wit_prog->second), wit_prog->second));
+                    keys.emplace_back(m_keys.at(wit_prog->second),
+                                      wit_prog->second);
                 } else {
                     return std::nullopt;
                 }
@@ -262,22 +280,22 @@ namespace cbdc {
         return keys;
     }
 
-    void transaction::wallet::sign(transaction::full_tx& tx,
+    void transaction::wallet::sign(
+        transaction::full_tx& tx,
         std::vector<std::pair<privkey_t, pubkey_t>> keys) const {
         // TODO: other sighash types besides SIGHASH_ALL?
         const auto sighash = transaction::tx_id(tx);
         tx.m_witness.resize(tx.m_inputs.size());
 
         for(size_t i = 0; i < tx.m_inputs.size(); i++) {
-            const auto& [ seckey, pubkey ] = keys[i];
+            const auto& [seckey, pubkey] = keys[i];
 
             auto& sig = tx.m_witness[i];
             sig.resize(transaction::validation::p2pk_witness_len);
             sig[0] = std::byte(
                 transaction::validation::witness_program_type::p2pk);
             std::memcpy(
-                &sig[sizeof(
-                    transaction::validation::witness_program_type)],
+                &sig[sizeof(transaction::validation::witness_program_type)],
                 pubkey.data(),
                 pubkey.size());
 
@@ -296,10 +314,9 @@ namespace cbdc {
                                             &keypair,
                                             nullptr,
                                             nullptr);
-            std::memcpy(
-                &sig[transaction::validation::p2pk_witness_prog_len],
-                sig_arr.data(),
-                sizeof(sig_arr));
+            std::memcpy(&sig[transaction::validation::p2pk_witness_prog_len],
+                        sig_arr.data(),
+                        sizeof(sig_arr));
             assert(sign_ret == 1);
         }
     }
@@ -309,7 +326,8 @@ namespace cbdc {
         const std::vector<transaction::input>& debits) {
         std::unique_lock<std::shared_mutex> lu(m_utxos_mut);
         for(const auto& inp : credits) {
-            const auto [_, inserted] = m_utxos_set.insert({inp.m_prevout, inp});
+            const auto [_, inserted]
+                = m_utxos_set.insert({inp.m_prevout, inp});
             if(inserted) {
                 m_spend_queue.push_back(inp);
             }
@@ -366,9 +384,10 @@ namespace cbdc {
                 const auto& out = tx.m_outputs[i];
                 if(m_witness_programs.find(out.m_witness_program_commitment)
                    != m_witness_programs.end()) {
-                   auto inp = transaction::input_from_output(tx, i, tx_id).value();
-                   inp.m_spend_data = tx.m_out_spend_data.value()[i];
-                   new_utxos.push_back(inp);
+                    auto inp
+                        = transaction::input_from_output(tx, i, tx_id).value();
+                    inp.m_spend_data = tx.m_out_spend_data.value()[i];
+                    new_utxos.push_back(inp);
                 }
             }
         }
@@ -380,7 +399,8 @@ namespace cbdc {
         // TODO: handle overflow
         uint64_t balance{0};
         for(const auto& [k, v] : m_utxos_set) {
-            if(m_witness_programs.find(v.m_prevout_data.m_witness_program_commitment)
+            if(m_witness_programs.find(
+                   v.m_prevout_data.m_witness_program_commitment)
                != m_witness_programs.end()) {
                 balance += v.m_spend_data.value().m_value;
             }
@@ -544,8 +564,11 @@ namespace cbdc {
 
         ret.m_out_spend_data = out_spend_data;
 
-        auto res = transaction::add_proof(m_secp.get(), m_generators.get(),
-            *m_random_source, ret, spend_keys.value());
+        auto res = transaction::add_proof(m_secp.get(),
+                                          m_generators.get(),
+                                          *m_random_source,
+                                          ret,
+                                          spend_keys.value());
 
         if(!res) {
             return std::nullopt;
@@ -587,7 +610,7 @@ namespace cbdc {
                 = transaction::validation::get_p2pk_witness_commitment(pubkey);
             ret.m_outputs.push_back(change_out);
             transaction::spend_data sp{{}, total_amount - amount};
-            out_spend_data.push_back(std::move(sp));
+            out_spend_data.push_back(sp);
         }
 
         transaction::output destination_out;
@@ -607,8 +630,11 @@ namespace cbdc {
 
         ret.m_out_spend_data = out_spend_data;
 
-        auto res = transaction::add_proof(m_secp.get(), m_generators.get(),
-            *m_random_source, ret, spend_keys.value());
+        auto res = transaction::add_proof(m_secp.get(),
+                                          m_generators.get(),
+                                          *m_random_source,
+                                          ret,
+                                          spend_keys.value());
 
         if(!res) {
             return std::nullopt;

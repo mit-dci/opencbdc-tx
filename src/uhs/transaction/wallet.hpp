@@ -176,12 +176,15 @@ namespace cbdc::transaction {
         /// \param tx the transaction to fetch spending keys for
         /// \return the list of keypairs (or std::nullopt if any output is
         ///         unspendable)
-        auto spending_keys(const full_tx& tx)
-            -> std::optional<std::vector<std::pair<privkey_t, pubkey_t>>> const;
+        auto spending_keys(const full_tx& tx) -> std::optional<
+            std::vector<std::pair<privkey_t, pubkey_t>>> const;
 
         /// Signs each of the transaction's inputs using Schnorr signatures.
         /// \param tx the transaction whose inputs to sign.
-        void sign(full_tx& tx, std::vector<std::pair<privkey_t, pubkey_t>> spend_keys) const;
+        /// \param spend_keys the keys necessary to sign the transaction
+        void
+        sign(full_tx& tx,
+             std::vector<std::pair<privkey_t, pubkey_t>> spend_keys) const;
 
         /// Checks if the input is spendable by the current wallet.
         /// \param in the input to check.
@@ -237,7 +240,6 @@ namespace cbdc::transaction {
         /// Queue of spendable inputs, oldest first.
         std::list<input> m_spend_queue;
 
-
         /// Locks access to m_keys and related members m_pubkeys and
         /// m_witness_programs.
         /// \warning Do not lock simultaneously with m_utxos_mut.
@@ -263,23 +265,31 @@ namespace cbdc::transaction {
             -> std::optional<transaction::input>;
 
         struct GensDeleter {
-            GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
+            explicit GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
 
-            void operator()(secp256k1_bulletproofs_generators* gens) {
+            void operator()(secp256k1_bulletproofs_generators* gens) const {
                 secp256k1_bulletproofs_generators_destroy(m_ctx, gens);
             }
 
             secp256k1_context* m_ctx;
         };
 
+        /// should be twice the bitcount of the range-proof's upper bound
+        ///
+        /// e.g., if proving things in the range [0, 2^64-1], it should be 128.
+        static const inline auto generator_count = 128;
+
         std::unique_ptr<secp256k1_bulletproofs_generators, GensDeleter>
-            m_generators{secp256k1_bulletproofs_generators_create(m_secp.get(),
-                128), GensDeleter(m_secp.get())};
+            m_generators{
+                secp256k1_bulletproofs_generators_create(m_secp.get(),
+                                                         generator_count),
+                GensDeleter(m_secp.get())};
 
         static const inline auto m_secp
             = std::unique_ptr<secp256k1_context,
                               decltype(&secp256k1_context_destroy)>(
-                secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY),
+                secp256k1_context_create(SECP256K1_CONTEXT_SIGN
+                                         | SECP256K1_CONTEXT_VERIFY),
                 &secp256k1_context_destroy);
 
         static const inline auto m_random_source
