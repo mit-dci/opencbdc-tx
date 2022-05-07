@@ -25,12 +25,22 @@ namespace cbdc::transaction {
 
     auto output::operator==(const output& rhs) const -> bool {
         return m_witness_program_commitment == rhs.m_witness_program_commitment
-            && m_value == rhs.m_value;
+            && m_id == rhs.m_id
+            && m_nonce == rhs.m_nonce
+            && m_auxiliary == rhs.m_auxiliary
+            && m_range == rhs.m_range
+            && m_consistency == rhs.m_consistency;
     }
 
     auto output::operator!=(const output& rhs) const -> bool {
         return !(*this == rhs);
     }
+
+    compact_output::compact_output(const output& put)
+        : m_id(put.m_id),
+          m_auxiliary(put.m_auxiliary),
+          m_range(put.m_range),
+          m_consistency(put.m_consistency) {}
 
     compact_output::compact_output(const hash_t& id, const commitment_t& aux,
         const rangeproof_t<>& range, const signature_t& consist)
@@ -57,12 +67,13 @@ namespace cbdc::transaction {
     }
 
     auto input::hash() const -> hash_t {
-        auto buf = cbdc::make_buffer(*this);
-
         CSHA256 sha;
-        hash_t result;
+        auto opt_buf = cbdc::make_buffer(this->m_prevout);
+        sha.Write(opt_buf.c_ptr(), opt_buf.size());
+        sha.Write(this->m_prevout_data.m_witness_program_commitment.data(),
+            sizeof(hash_t));
 
-        sha.Write(buf.c_ptr(), buf.size());
+        hash_t result;
         sha.Finalize(result.data());
 
         return result;
@@ -83,11 +94,14 @@ namespace cbdc::transaction {
     auto tx_id(const full_tx& tx) noexcept -> hash_t {
         CSHA256 sha;
 
-        auto inp_buf = cbdc::make_buffer(tx.m_inputs);
-        sha.Write(inp_buf.c_ptr(), inp_buf.size());
+        for(const auto& inp : tx.m_inputs) {
+            sha.Write(inp.hash().data(), sizeof(hash_t));
+        }
 
-        auto out_buf = cbdc::make_buffer(tx.m_outputs);
-        sha.Write(out_buf.c_ptr(), out_buf.size());
+        for(const auto& out : tx.m_outputs) {
+            sha.Write(out.m_witness_program_commitment.data(),
+                sizeof(hash_t));
+        }
 
         hash_t ret;
         sha.Finalize(ret.data());
@@ -104,6 +118,7 @@ namespace cbdc::transaction {
         ret.m_prevout_data = tx.m_outputs[i];
         ret.m_prevout.m_index = i;
         ret.m_prevout.m_tx_id = txid;
+
         return ret;
     }
 
@@ -111,23 +126,6 @@ namespace cbdc::transaction {
         -> std::optional<input> {
         const auto id = tx_id(tx);
         return input_from_output(tx, i, id);
-    }
-
-    auto uhs_id_from_output(const hash_t& entropy,
-                            uint64_t i,
-                            const output& output) -> hash_t {
-        CSHA256 sha;
-        hash_t ret;
-        sha.Write(entropy.data(), entropy.size());
-        std::array<unsigned char, sizeof(i)> index_arr{};
-        std::memcpy(index_arr.data(), &i, sizeof(i));
-        sha.Write(index_arr.data(), sizeof(i));
-
-        auto buf = cbdc::make_buffer(output);
-
-        sha.Write(buf.c_ptr(), buf.size());
-        sha.Finalize(ret.data());
-        return ret;
     }
 
     auto output_preimage(const out_point& point, const output& put)
@@ -241,6 +239,145 @@ namespace cbdc::transaction {
         return auxiliaries;
     }
 
+    auto prove_output(secp256k1_context* ctx,
+        secp256k1_bulletproofs_generators* gens, random_source& rng,
+        output& put, const out_point& point, const spend_data& out_spend_data,
+        const secp256k1_pedersen_commitment* auxiliary)
+    -> bool {
+        const auto out_preimage = output_preimage(point, put);
+        auto [ uhs, nonce ] = calculate_uhs_id(ctx, rng, out_preimage, 
+            out_spend_data.m_value);
+
+        put.m_id = uhs;
+        put.m_nonce = nonce;
+
+        // manually derive the secret key
+        auto esk = output_randomness(out_preimage, nonce);
+        auto rprime = out_spend_data.m_blind;
+        [[maybe_unused]] auto ret = secp256k1_ec_seckey_negate(ctx,
+            rprime.data());
+        // fails when rprime == 0 (which is fine)
+        ret = secp256k1_ec_seckey_tweak_add(ctx, esk.data(), rprime.data());
+        assert(ret == 1);
+
+        secp256k1_keypair kp{};
+        ret = secp256k1_keypair_create(ctx, &kp, esk.data());
+        assert(ret == 1);
+
+        auto consistency = signature_t{};
+        unsigned char consist_contents [32] = "consistent proof";
+        ret = secp256k1_schnorrsig_sign(ctx, consistency.data(), consist_contents, &kp, nullptr, nullptr);
+        assert(ret == 1);
+
+        put.m_consistency = consistency;
+
+        rangeproof_t<> range{};
+        size_t rangelen = range.size();
+        ret = secp256k1_bulletproofs_rangeproof_uncompressed_prove(
+            ctx, gens, secp256k1_generator_h, range.data(),
+            &rangelen,
+            64, // 2^64-1
+            out_spend_data.m_value,
+            0,
+            auxiliary, // the auxiliary commitment for this output
+            out_spend_data.m_blind.data(),
+            rng.random_hash().data(),
+            NULL, // enc_data
+            NULL, // extra_commit
+            0     // extra_commit length
+        );
+        assert(ret == 1);
+
+        put.m_range = range;
+        put.m_auxiliary = serialize_commitment(ctx, *auxiliary);
+
+        return true;
+    }
+
+    auto sign_nonces(secp256k1_context* ctx, std::vector<unsigned char> nonces,
+        const std::vector<std::pair<privkey_t, pubkey_t>>& spending_keys)
+    -> std::vector<signature_t> {
+        std::vector<signature_t> noncesigs{};
+        noncesigs.reserve(spending_keys.size());
+        for(size_t i = 0; i < spending_keys.size(); ++i) {
+            const auto& [ sk, pk ] = spending_keys[i];
+            secp256k1_keypair spending_kp{};
+            [[maybe_unused]] auto ret = secp256k1_keypair_create(ctx,
+                &spending_kp, sk.data());
+            assert(ret == 1);
+
+            signature_t noncesig{};
+            ret = secp256k1_schnorrsig_sign(ctx, noncesig.data(),
+                nonces.data(), &spending_kp, nullptr, nullptr);
+            assert(ret == 1);
+
+            noncesigs[i] = noncesig;
+        }
+
+        return noncesigs;
+    }
+
+    auto add_proof(secp256k1_context* ctx,
+        secp256k1_bulletproofs_generators* gens, random_source& rng,
+        full_tx& tx,
+        const std::vector<std::pair<privkey_t, pubkey_t>>& spending_keys)
+    -> bool {
+
+        std::vector<hash_t> blinds{};
+        for(const auto& inp : tx.m_inputs) {
+            auto spend_data = inp.m_spend_data;
+            if(!spend_data.has_value() || spend_data.value().m_value == 0) {
+                // No input spend data or there was a zero-valued input
+                return false;
+            }
+            blinds.push_back(spend_data.value().m_blind);
+        }
+
+        if(!tx.m_out_spend_data.has_value()) {
+            // No output spend data
+            return false;
+        }
+        const auto& out_spend_data = tx.m_out_spend_data.value();
+        for(const auto& spend_data : out_spend_data) {
+            if(spend_data.m_value == 0) {
+                // There was a zero-valued output
+                return false;
+            }
+        }
+
+        auto auxiliaries = roll_auxiliaries(ctx, rng, blinds,
+            tx.m_out_spend_data.value());
+
+        const auto txid = tx_id(tx);
+
+        for(uint64_t i = 0; i < tx.m_outputs.size(); ++i) {
+            [[maybe_unused]] auto res = prove_output(ctx, gens, rng,
+                tx.m_outputs[i],
+                input_from_output(tx, i, txid).value().m_prevout,
+                tx.m_out_spend_data.value()[i], &auxiliaries[i]);
+            if(res != 1) {
+                return false;
+            }
+        }
+
+        // todo: blind spend-required data after adding proof
+        //       (unclear quite when this should happen)
+        // todo: same for m_out_spend_data?
+        //for(auto& inp : tx.m_inputs) {
+        //    inp.m_spend_data = std::nullopt;
+        //}
+
+        std::vector<unsigned char> nonces{};
+        for(const auto& put : tx.m_outputs) {
+            const auto& nonce = put.m_nonce;
+            std::copy(nonce.begin(), nonce.end(), std::back_inserter(nonces));
+        }
+
+        tx.m_tx_proofs = {sign_nonces(ctx, nonces, spending_keys)};
+
+        return true;
+    }
+
     auto compact_tx::operator==(const compact_tx& tx) const noexcept -> bool {
         return m_id == tx.m_id;
     }
@@ -248,11 +385,10 @@ namespace cbdc::transaction {
     compact_tx::compact_tx(const full_tx& tx) {
         m_id = tx_id(tx);
         for(const auto& inp : tx.m_inputs) {
-            m_inputs.push_back(inp.hash());
+            m_inputs.push_back(inp.m_prevout_data.m_id);
         }
-        for(uint64_t i = 0; i < tx.m_outputs.size(); i++) {
-            m_uhs_outputs.push_back(
-                uhs_id_from_output(m_id, i, tx.m_outputs[i]));
+        for(const auto& put : tx.m_outputs) {
+            m_outputs.emplace_back(put);
         }
     }
 

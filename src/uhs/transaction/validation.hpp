@@ -129,7 +129,8 @@ namespace cbdc::transaction::validation {
     /// outputs, witnesses, or because the transaction-local invariants
     /// do not hold.
     using tx_error = std::
-        variant<input_error, output_error, witness_error, tx_error_code>;
+        variant<input_error, output_error, witness_error, tx_error_code,
+            proof_error>;
 
     /// \brief Runs static validation checks on the given transaction
     ///
@@ -139,10 +140,6 @@ namespace cbdc::transaction::validation {
     /// \return null if transaction is valid, otherwise error information
     auto check_tx(const transaction::full_tx& tx) -> std::optional<tx_error>;
     auto check_tx_structure(const transaction::full_tx& tx)
-        -> std::optional<tx_error>;
-    auto check_input_structure(const transaction::input& inp) -> std::optional<
-        std::pair<input_error_code, std::optional<output_error_code>>>;
-    auto check_in_out_set(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
     // TODO: check input assumptions with flags for whether preconditions have
     //       already been checked.
@@ -166,8 +163,10 @@ namespace cbdc::transaction::validation {
         -> std::optional<tx_error>;
     auto check_input_set(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
-    auto check_output_value(const transaction::output& out)
-        -> std::optional<output_error_code>;
+    auto check_proof(const compact_tx& tx) -> std::optional<proof_error>;
+    auto check_commitment_sum(
+        const std::vector<secp256k1_pedersen_commitment>& auxiliaries,
+        uint64_t minted) -> bool;
     auto get_p2pk_witness_commitment(const pubkey_t& payee) -> hash_t;
     auto to_string(const tx_error& err) -> std::string;
 

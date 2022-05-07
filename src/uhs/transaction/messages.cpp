@@ -22,12 +22,16 @@ namespace cbdc {
 
     auto operator<<(serializer& packet, const transaction::output& out)
         -> serializer& {
-        return packet << out.m_witness_program_commitment << out.m_value;
+        return packet << out.m_witness_program_commitment << out.m_id
+            << out.m_nonce << out.m_auxiliary << out.m_range
+            << out.m_consistency;
     }
 
     auto operator>>(serializer& packet, transaction::output& out)
         -> serializer& {
-        return packet >> out.m_witness_program_commitment >> out.m_value;
+        return packet >> out.m_witness_program_commitment >> out.m_id
+            >> out.m_nonce >> out.m_auxiliary >> out.m_range
+            >> out.m_consistency;
     }
 
     auto operator<<(serializer& packet, const transaction::compact_output& out)
@@ -54,22 +58,26 @@ namespace cbdc {
 
     auto operator<<(serializer& packet, const transaction::input& inp)
         -> serializer& {
-        return packet << inp.m_prevout << inp.m_prevout_data;
+        return packet << inp.m_prevout << inp.m_prevout_data
+            << inp.m_spend_data;
     }
 
     auto operator>>(serializer& packet, transaction::input& inp)
         -> serializer& {
-        return packet >> inp.m_prevout >> inp.m_prevout_data;
+        return packet >> inp.m_prevout >> inp.m_prevout_data
+            >> inp.m_spend_data;
     }
 
     auto operator<<(serializer& packet, const transaction::full_tx& tx)
         -> serializer& {
-        return packet << tx.m_inputs << tx.m_outputs << tx.m_witness;
+        return packet << tx.m_inputs << tx.m_outputs << tx.m_witness
+            << tx.m_tx_proofs << tx.m_out_spend_data;
     }
 
     auto operator>>(serializer& packet, transaction::full_tx& tx)
         -> serializer& {
-        return packet >> tx.m_inputs >> tx.m_outputs >> tx.m_witness;
+        return packet >> tx.m_inputs >> tx.m_outputs >> tx.m_witness
+            >> tx.m_tx_proofs >> tx.m_out_spend_data;
     }
 
     auto operator<<(serializer& packet,
@@ -84,13 +92,13 @@ namespace cbdc {
 
     auto operator<<(serializer& packet, const transaction::compact_tx& tx)
         -> serializer& {
-        return packet << tx.m_id << tx.m_inputs << tx.m_uhs_outputs
+        return packet << tx.m_id << tx.m_inputs << tx.m_outputs
                       << tx.m_attestations;
     }
 
     auto operator>>(serializer& packet, transaction::compact_tx& tx)
         -> serializer& {
-        return packet >> tx.m_id >> tx.m_inputs >> tx.m_uhs_outputs
+        return packet >> tx.m_id >> tx.m_inputs >> tx.m_outputs
             >> tx.m_attestations;
     }
 

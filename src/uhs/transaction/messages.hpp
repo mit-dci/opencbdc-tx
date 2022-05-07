@@ -10,6 +10,8 @@
 #include "util/serialization/serializer.hpp"
 #include "validation.hpp"
 
+// todo: update all doc-comments for serialization of proofs (if-needed)
+
 namespace cbdc {
     /// \brief Serializes an out_point.
     ///
@@ -27,7 +29,9 @@ namespace cbdc {
 
     /// \brief Serializes an output.
     ///
-    /// Serializes the witness program commitment, and then the value.
+    /// Serializes the witness program commitment, then the UHS ID, then
+    /// the nonce, then the auxiliary commitment, then the range proof, and
+    /// then the consistency signature.
     /// \see \ref cbdc::operator<<(serializer&, const std::array<T, len>&)
     /// \see \ref cbdc::operator<<(serializer&, T)
     auto operator<<(serializer& packet, const transaction::output& out)

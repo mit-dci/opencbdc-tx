@@ -129,7 +129,7 @@ auto main(int argc, char** argv) -> int {
                     for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
                         tx.m_inputs[0].m_prevout.m_index = tx_idx;
                         cbdc::transaction::compact_tx ctx(tx);
-                        const cbdc::hash_t& output_hash = ctx.m_uhs_outputs[0];
+                        const cbdc::hash_t& output_hash = ctx.m_outputs[0].m_id;
                         if(output_hash[0] >= shard_start
                            && output_hash[0] <= shard_end) {
                             std::array<char, sizeof(output_hash)> hash_arr{};
@@ -162,7 +162,7 @@ auto main(int argc, char** argv) -> int {
                     for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
                         tx.m_inputs[0].m_prevout.m_index = tx_idx;
                         cbdc::transaction::compact_tx ctx(tx);
-                        const cbdc::hash_t& output_hash = ctx.m_uhs_outputs[0];
+                        const cbdc::hash_t& output_hash = ctx.m_outputs[0].m_id;
                         if(output_hash[0] >= shard_start
                            && output_hash[0] <= shard_end) {
                             ser << output_hash;

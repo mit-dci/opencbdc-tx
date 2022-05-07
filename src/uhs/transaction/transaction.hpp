@@ -54,9 +54,16 @@ namespace cbdc::transaction {
     struct output {
         /// Hash of the witness program
         hash_t m_witness_program_commitment{};
-
-        /// The integral value of the output, in atomic units of currency
-        uint64_t m_value{0};
+        /// The UHS ID for the output
+        hash_t m_id;
+        /// The nonce used to compress the Pedersen Commitment to 32 bytes
+        hash_t m_nonce;
+        /// An auxiliary value used to prove preservation of balance
+        commitment_t m_auxiliary;
+        /// The rangeproof guaranteeing that the output is greater than 0
+        rangeproof_t<> m_range;
+        /// The signature proving consistency
+        signature_t m_consistency;
 
         auto operator==(const output& rhs) const -> bool;
         auto operator!=(const output& rhs) const -> bool;
@@ -102,6 +109,9 @@ namespace cbdc::transaction {
         /// The output's data
         output m_prevout_data;
 
+        /// Additional data to make the input spendable
+        std::optional<spend_data> m_spend_data{};
+
         auto operator==(const input& rhs) const -> bool;
         auto operator!=(const input& rhs) const -> bool;
 
@@ -135,6 +145,11 @@ namespace cbdc::transaction {
         /// The set of witnesses
         std::vector<witness_t> m_witness{};
 
+        std::optional<std::vector<spend_data>> m_out_spend_data{};
+
+        /// The per-transaction proof set
+        transaction_proof m_tx_proofs{};
+
         auto operator==(const full_tx& rhs) const -> bool;
 
         full_tx() = default;
@@ -160,6 +175,7 @@ namespace cbdc::transaction {
         /// The signature proving consistency
         signature_t m_consistency{};
 
+        compact_output(const output& put);
         compact_output(const hash_t& id, const commitment_t& aux,
             const rangeproof_t<>& range, const signature_t& consist);
         compact_output() = default;
@@ -168,10 +184,12 @@ namespace cbdc::transaction {
         auto operator!=(const compact_output& rhs) const -> bool;
     };
 
+
     /// \brief A condensed, hash-only transaction representation
     ///
     /// The minimum amount of data necessary for the transaction processor to
-    /// update the UHS with the changes from a \ref full_tx.
+    /// update the UHS with the changes from a \ref full_tx and still support
+    /// auditing.
     ///
     /// \see \ref cbdc::operator<<(serializer&, const transaction::compact_tx&)
     struct compact_tx {
@@ -179,10 +197,10 @@ namespace cbdc::transaction {
         hash_t m_id{};
 
         /// The set of hashes of the transaction's inputs
-        std::vector<hash_t> m_inputs;
+        std::vector<hash_t> m_inputs{};
 
-        /// The set of hashes of the new outputs created in the transaction
-        std::vector<hash_t> m_uhs_outputs;
+        /// The output ids and associated proofs
+        std::vector<compact_output> m_outputs{};
 
         /// Signatures from sentinels attesting the compact TX is valid.
         std::unordered_map<pubkey_t, signature_t, hashing::null>
@@ -242,6 +260,46 @@ namespace cbdc::transaction {
         std::vector<spend_data>& out_spend_data)
     -> std::vector<secp256k1_pedersen_commitment>;
 
+    /// \brief Add cryptographic proof to a single output
+    ///
+    /// \warning Mostly, direct use should be avoided (instead leveraging the
+    /// higher-level `add_proof` method).
+    ///
+    /// \param ctx a secp256k1_context initialized for signing and commitment
+    /// \param gens bulletproof generators
+    /// \param rng a random_source for generating nonces
+    /// \param put the output to be proven
+    /// \param point the out_point uniquely identifying the output
+    /// \param out_spend_data the additional spending data for the output
+    /// \param auxiliary the auxiliary commitment
+    /// \return true if all proofs were correctly added to the output,
+    ///         false otherwise
+    auto prove_output(secp256k1_context* ctx,
+        secp256k1_bulletproofs_generators* gens, random_source& rng,
+        output& put, const out_point& point, const spend_data& out_spend_data,
+        const secp256k1_pedersen_commitment* auxiliary)
+    -> bool;
+
+    /// \brief Update a transaction with cryptographic proofs
+    ///
+    /// Adds a set of cryptographic proofs which enable the auditing and
+    /// verification of the transaction (and, by extension, the system) without
+    /// requiring exposure of the transaction details to the core of the
+    /// system.
+    ///
+    /// \param ctx a secp256k1_context initialized for signing and commitment
+    /// \param gens bulletproof generators
+    /// \param rng a random_source for generating nonces
+    /// \param tx the new transaction for which proofs will be created
+    /// \param spending_keys the private keys corresponding to the inputs
+    /// \param out_spend_data the additional spend data (in output order)
+    /// \return the new blinding factor set, one per-output (in order)
+    auto add_proof(secp256k1_context* ctx,
+        secp256k1_bulletproofs_generators* gens, random_source& rng,
+        full_tx& tx,
+        const std::vector<std::pair<privkey_t, pubkey_t>>& spending_keys)
+    -> bool;
+
     /// \brief Calculates the unique hash of a full transaction
     ///
     /// Returns a cryptographic hash of the inputs concatenated with the
@@ -267,10 +325,6 @@ namespace cbdc::transaction {
     /// \return result of input_from_output(tx, i, tx_id(tx))
     auto input_from_output(const full_tx& tx, size_t i)
         -> std::optional<input>;
-
-    auto uhs_id_from_output(const hash_t& entropy,
-                            uint64_t i,
-                            const output& output) -> hash_t;
 }
 
 #endif // OPENCBDC_TX_SRC_TRANSACTION_TRANSACTION_H_

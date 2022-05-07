@@ -24,6 +24,7 @@ add_executable(run_unit_tests archiver_test.cpp
                               twophase_test.cpp
                               validation_test.cpp
                               wallet_test.cpp
+                              uhs_test.cpp
                               watchtower/block_cache_test.cpp
                               watchtower/error_cache_test.cpp
                               watchtower/tx_error_messages_test.cpp
