@@ -104,6 +104,8 @@ namespace cbdc::atomizer {
             });
         }
 
+        m_logger->info("Atomizer started...");
+
         return true;
     }
 
@@ -194,7 +196,7 @@ namespace cbdc::atomizer {
                               std::forward<decltype(r)>(r),
                               std::forward<decltype(err)>(err));
                       });
-                if(!res) {
+                if(!res && m_running) {
                     m_logger->error("Failed to make block at time",
                                     last_time.time_since_epoch().count());
                 }
@@ -263,6 +265,7 @@ namespace cbdc::atomizer {
             if(m_atomizer_server.joinable()) {
                 m_atomizer_server.join();
             }
+            m_logger->debug("Became follower, stopped listening");
         } else if(type == nuraft::cb_func::Type::BecomeLeader) {
             // We became the leader. Ensure the previous handler thread is
             // stopped and network shut down.
@@ -284,6 +287,7 @@ namespace cbdc::atomizer {
                 m_logger->fatal("Failed to establish atomizer server.");
             }
             m_atomizer_server = std::move(as.value());
+            m_logger->debug("Became leader, started listening");
         }
         return nuraft::cb_func::ReturnCode::Ok;
     }

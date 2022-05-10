@@ -36,13 +36,15 @@ namespace cbdc::watchtower {
         /// \return true if initialization succeeded.
         auto init() -> bool;
 
+        auto get_block_height() const -> uint64_t;
+
       private:
         uint32_t m_watchtower_id;
         cbdc::config::options m_opts;
         std::shared_ptr<logging::log> m_logger;
 
         watchtower m_watchtower;
-        uint64_t m_last_blk_height{0};
+        std::atomic<uint64_t> m_last_blk_height{0};
 
         cbdc::network::connection_manager m_internal_network;
         cbdc::network::connection_manager m_external_network;

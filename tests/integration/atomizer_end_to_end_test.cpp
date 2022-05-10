@@ -54,6 +54,9 @@ class atomizer_end_to_end_test : public ::testing::Test {
         ASSERT_TRUE(m_ctl_shard->init());
         ASSERT_TRUE(m_ctl_sentinel->init());
 
+        std::this_thread::sleep_for(m_block_wait_interval);
+        ASSERT_TRUE(m_ctl_watchtower->get_block_height() > 0);
+
         reload_sender();
         reload_receiver();
 
@@ -62,6 +65,8 @@ class atomizer_end_to_end_test : public ::testing::Test {
         m_sender->mint(10, 10);
         std::this_thread::sleep_for(m_block_wait_interval);
         m_sender->sync();
+
+        ASSERT_EQ(m_sender->balance(), 10 * 10);
 
         reload_sender();
 
