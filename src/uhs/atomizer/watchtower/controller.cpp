@@ -161,3 +161,7 @@ auto cbdc::watchtower::controller::external_server_handler(
     auto msg = std::visit(res_handler, req.payload());
     return msg;
 }
+
+auto cbdc::watchtower::controller::get_block_height() const -> uint64_t {
+    return m_last_blk_height;
+}
