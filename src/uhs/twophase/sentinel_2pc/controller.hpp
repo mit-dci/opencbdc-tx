@@ -82,6 +82,9 @@ namespace cbdc::sentinel_2pc {
                                  const transaction::compact_tx& ctx,
                                  std::unordered_set<size_t> requested);
 
+        void send_compact_tx(const transaction::compact_tx& ctx,
+                             execute_result_callback_type result_callback);
+
         uint32_t m_sentinel_id;
         cbdc::config::options m_opts;
         std::shared_ptr<logging::log> m_logger;

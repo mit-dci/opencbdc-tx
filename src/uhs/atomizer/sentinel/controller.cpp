@@ -117,7 +117,7 @@ namespace cbdc::sentinel {
         auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
         compact_tx.m_attestations.insert(attestation);
 
-        gather_attestations(tx, std::move(compact_tx), {});
+        gather_attestations(tx, compact_tx, {});
     }
 
     auto controller::validate_transaction(transaction::full_tx tx)
@@ -142,12 +142,12 @@ namespace cbdc::sentinel {
             return;
         }
         ctx.m_attestations.insert(std::move(v_res.value()));
-        gather_attestations(tx, std::move(ctx), std::move(requested));
+        gather_attestations(tx, ctx, std::move(requested));
     }
 
     void
     controller::gather_attestations(const transaction::full_tx& tx,
-                                    transaction::compact_tx ctx,
+                                    const transaction::compact_tx& ctx,
                                     std::unordered_set<size_t> requested) {
         if(ctx.m_attestations.size() < m_opts.m_attestation_threshold) {
             auto success = false;
@@ -168,6 +168,10 @@ namespace cbdc::sentinel {
             return;
         }
 
+        send_compact_tx(ctx);
+    }
+
+    void controller::send_compact_tx(const transaction::compact_tx& ctx) {
         auto ctx_pkt = std::make_shared<cbdc::buffer>(cbdc::make_buffer(ctx));
 
         auto inputs_sent = std::unordered_set<size_t>();
