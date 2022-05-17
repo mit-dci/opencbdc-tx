@@ -89,8 +89,10 @@ namespace cbdc::sentinel {
                                      std::unordered_set<size_t> requested);
 
         void gather_attestations(const transaction::full_tx& tx,
-                                 transaction::compact_tx ctx,
+                                 const transaction::compact_tx& ctx,
                                  std::unordered_set<size_t> requested);
+
+        void send_compact_tx(const transaction::compact_tx& ctx);
     };
 }
 

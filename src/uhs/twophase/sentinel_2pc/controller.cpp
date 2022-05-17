@@ -180,6 +180,12 @@ namespace cbdc::sentinel_2pc {
 
         m_logger->debug("Accepted", to_string(ctx.m_id));
 
+        send_compact_tx(ctx, std::move(result_callback));
+    }
+
+    void
+    controller::send_compact_tx(const transaction::compact_tx& ctx,
+                                execute_result_callback_type result_callback) {
         auto cb =
             [&, res_cb = std::move(result_callback)](std::optional<bool> res) {
                 result_handler(res, res_cb);
