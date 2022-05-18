@@ -20,7 +20,7 @@ jobs:
           submodules: true
           fetch-depth: 0
       - name: Run Doxygen
-        uses: mattnotmitt/doxygen-action@1.9.3
+        uses: mattnotmitt/doxygen-action@edge
         with:
           working-directory: .
           doxyfile-path: ./Doxyfile
