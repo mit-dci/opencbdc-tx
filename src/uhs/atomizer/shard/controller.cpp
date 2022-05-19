@@ -136,7 +136,14 @@ namespace cbdc::shard {
         // If the block is not contiguous, catch up by requesting
         // blocks from the archiver.
         while(!m_shard.digest_block(blk)) {
-            m_logger->warn("Block", blk.m_height, "not contiguous.");
+            m_logger->warn("Block",
+                           blk.m_height,
+                           "not contiguous with previous block",
+                           m_shard.best_block_height());
+
+            if(blk.m_height <= m_shard.best_block_height()) {
+                break;
+            }
 
             // Attempt to catch up to the latest block
             for(uint64_t i = m_shard.best_block_height() + 1; i < blk.m_height;
