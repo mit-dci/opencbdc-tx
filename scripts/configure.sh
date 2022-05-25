@@ -39,7 +39,7 @@ fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   apt update
-  apt install -y build-essential wget cmake libgtest-dev libgmock-dev lcov git software-properties-common
+  apt install -y build-essential wget cmake libgtest-dev libgmock-dev lcov git software-properties-common rsync
 
   # GitHub Actions in .github/workflows/validation.yml will attempt to cache and reuse leveldb built in this block.
   # If a folder called leveldb-1.22 exists, skip the build step and go straight to install.
