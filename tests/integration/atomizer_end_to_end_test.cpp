@@ -174,13 +174,17 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
     auto wc = cbdc::watchtower::blocking_client(
         m_opts.m_watchtower_client_endpoints[0]);
     ASSERT_TRUE(wc.init());
-    auto bbh = wc.request_best_block_height()->height() + 1;
+    ASSERT_EQ(m_sender->balance(), 100);   // Initial state
     auto [tx, res] = m_sender->send(33, addr);
     ASSERT_TRUE(tx.has_value());
     ASSERT_TRUE(res.has_value());
+    ASSERT_EQ(tx->m_inputs.size(), 4); // 4 inputs of 10 each
+    ASSERT_EQ(tx->m_witness.size(), 4);
+    ASSERT_EQ(tx->m_outputs.size(), 2); // 2 outputs: 33 to receiver, 7 back to sender
     ASSERT_FALSE(res->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::pending);
     ASSERT_EQ(tx->m_outputs[0].m_value, 33UL);
+    ASSERT_EQ(tx->m_outputs[1].m_value, 7UL); // amount back to sender
     ASSERT_EQ(m_sender->balance(), 60UL);
 
     std::this_thread::sleep_for(m_block_wait_interval);
@@ -192,6 +196,7 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
     ASSERT_EQ(m_sender->balance(), 67UL);
     ASSERT_EQ(m_sender->pending_tx_count(), 0UL);
 
+    // Re-send the transaction directly to sentinel (ie double-spend)
     auto sc
         = cbdc::sentinel::rpc::client(m_opts.m_sentinel_endpoints, m_logger);
     ASSERT_TRUE(sc.init());
@@ -202,8 +207,8 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
 
     std::this_thread::sleep_for(m_block_wait_interval);
 
-    auto ctx = cbdc::transaction::compact_tx(tx.value());
-    auto wc_res = wc.request_status_update(
+    const auto ctx = cbdc::transaction::compact_tx(tx.value());
+    const auto wc_res = wc.request_status_update(
         cbdc::watchtower::status_update_request{{{ctx.m_id,
                                                   {
                                                       ctx.m_inputs[0],
@@ -212,25 +217,13 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
                                                       ctx.m_uhs_outputs[1],
                                                   }}}});
 
-    auto want = cbdc::watchtower::status_request_check_success{
-        {{ctx.m_id,
-          {cbdc::watchtower::status_update_state{
-               cbdc::watchtower::search_status::spent,
-               bbh,
-               ctx.m_inputs[0]},
-           cbdc::watchtower::status_update_state{
-               cbdc::watchtower::search_status::spent,
-               bbh,
-               ctx.m_inputs[1]},
-           cbdc::watchtower::status_update_state{
-               cbdc::watchtower::search_status::unspent,
-               bbh,
-               ctx.m_uhs_outputs[0]},
-           cbdc::watchtower::status_update_state{
-               cbdc::watchtower::search_status::unspent,
-               bbh,
-               ctx.m_uhs_outputs[1]}}}}};
-    ASSERT_EQ(*wc_res, want);
+    // Final check of status - ensure attempted double spends are marked as spent:
+    const auto res_uhs_states = wc_res->states().at(ctx.m_id);
+    ASSERT_EQ(res_uhs_states.size(), 4);
+    ASSERT_EQ(res_uhs_states[0].status(), cbdc::watchtower::search_status::spent);  // ctx.m_inputs[0] is already spent
+    ASSERT_EQ(res_uhs_states[1].status(), cbdc::watchtower::search_status::spent);  // ctx.m_inputs[1] is already spent
+    ASSERT_EQ(res_uhs_states[2].status(), cbdc::watchtower::search_status::unspent); // ctx.m_uhs_outputs[0]
+    ASSERT_EQ(res_uhs_states[3].status(), cbdc::watchtower::search_status::unspent); // ctx.m_uhs_outputs[1]
 }
 
 TEST_F(atomizer_end_to_end_test, invalid_transaction) {
@@ -260,9 +253,8 @@ TEST_F(atomizer_end_to_end_test, invalid_transaction) {
 
     std::this_thread::sleep_for(m_block_wait_interval);
 
-    auto bbh = wc.request_best_block_height()->height();
-    auto ctx = cbdc::transaction::compact_tx(tx.value());
-    auto wc_res = wc.request_status_update(
+    const auto ctx = cbdc::transaction::compact_tx(tx.value());
+    const auto wc_res = wc.request_status_update(
         cbdc::watchtower::status_update_request{{{ctx.m_id,
                                                   {
                                                       ctx.m_inputs[0],
@@ -271,24 +263,10 @@ TEST_F(atomizer_end_to_end_test, invalid_transaction) {
                                                       ctx.m_uhs_outputs[1],
                                                   }}}});
 
-    auto want = cbdc::watchtower::status_request_check_success{
-        {{ctx.m_id,
-          {cbdc::watchtower::status_update_state{
-               cbdc::watchtower::search_status::no_history,
-               bbh,
-               ctx.m_inputs[0]},
-           cbdc::watchtower::status_update_state{
-               cbdc::watchtower::search_status::no_history,
-               bbh,
-               ctx.m_inputs[1]},
-           cbdc::watchtower::status_update_state{
-               cbdc::watchtower::search_status::no_history,
-               bbh,
-               ctx.m_uhs_outputs[0]},
-           cbdc::watchtower::status_update_state{
-               cbdc::watchtower::search_status::no_history,
-               bbh,
-               ctx.m_uhs_outputs[1]}}}}};
-
-    ASSERT_EQ(*wc_res, want);
+    const auto res_uhs_states = wc_res->states().at(ctx.m_id);
+    ASSERT_EQ(res_uhs_states.size(), 4);    
+    ASSERT_EQ(res_uhs_states[0].status(), cbdc::watchtower::search_status::no_history);
+    ASSERT_EQ(res_uhs_states[1].status(), cbdc::watchtower::search_status::no_history);
+    ASSERT_EQ(res_uhs_states[2].status(), cbdc::watchtower::search_status::no_history);
+    ASSERT_EQ(res_uhs_states[3].status(), cbdc::watchtower::search_status::no_history);
 }
