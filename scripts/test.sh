@@ -14,7 +14,7 @@ run_test_suite () {
     LOCATION=$2
     rm -rf $LOCATION
     mkdir -p $LOCATION
-    find . \( -name '*.gcno' -or -name '*.gcda' \) -and -not -path '*coverage*' -exec cp --parents \{\} "$LOCATION" \;
+    find . \( -name '*.gcno' -or -name '*.gcda' \) -and -not -path '*coverage*' -exec rsync -R \{\} "$LOCATION" \;
     cd $LOCATION
 
     lcov -c -i -d . -o base.info --rc lcov_branch_coverage=1
