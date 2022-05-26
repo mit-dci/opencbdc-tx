@@ -174,13 +174,14 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
     auto wc = cbdc::watchtower::blocking_client(
         m_opts.m_watchtower_client_endpoints[0]);
     ASSERT_TRUE(wc.init());
-    ASSERT_EQ(m_sender->balance(), 100);   // Initial state
+    ASSERT_EQ(m_sender->balance(), 100UL); // Initial state
     auto [tx, res] = m_sender->send(33, addr);
     ASSERT_TRUE(tx.has_value());
     ASSERT_TRUE(res.has_value());
-    ASSERT_EQ(tx->m_inputs.size(), 4); // 4 inputs of 10 each
-    ASSERT_EQ(tx->m_witness.size(), 4);
-    ASSERT_EQ(tx->m_outputs.size(), 2); // 2 outputs: 33 to receiver, 7 back to sender
+    ASSERT_EQ(tx->m_inputs.size(), 4UL); // 4 inputs of 10 each
+    ASSERT_EQ(tx->m_witness.size(), 4UL);
+    // Confirm 2 outputs: 1) 33 to receiver, 2) 7 back to sender
+    ASSERT_EQ(tx->m_outputs.size(), 2UL);
     ASSERT_FALSE(res->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::pending);
     ASSERT_EQ(tx->m_outputs[0].m_value, 33UL);
@@ -217,13 +218,17 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
                                                       ctx.m_uhs_outputs[1],
                                                   }}}});
 
-    // Final check of status - ensure attempted double spends are marked as spent:
+    // Final check - ensure attempted double spends are marked as spent:
     const auto res_uhs_states = wc_res->states().at(ctx.m_id);
     ASSERT_EQ(res_uhs_states.size(), 4);
-    ASSERT_EQ(res_uhs_states[0].status(), cbdc::watchtower::search_status::spent);  // ctx.m_inputs[0] is already spent
-    ASSERT_EQ(res_uhs_states[1].status(), cbdc::watchtower::search_status::spent);  // ctx.m_inputs[1] is already spent
-    ASSERT_EQ(res_uhs_states[2].status(), cbdc::watchtower::search_status::unspent); // ctx.m_uhs_outputs[0]
-    ASSERT_EQ(res_uhs_states[3].status(), cbdc::watchtower::search_status::unspent); // ctx.m_uhs_outputs[1]
+    ASSERT_EQ(res_uhs_states[0].status(),
+              cbdc::watchtower::search_status::spent);
+    ASSERT_EQ(res_uhs_states[1].status(),
+              cbdc::watchtower::search_status::spent);
+    ASSERT_EQ(res_uhs_states[2].status(),
+              cbdc::watchtower::search_status::unspent);
+    ASSERT_EQ(res_uhs_states[3].status(),
+              cbdc::watchtower::search_status::unspent);
 }
 
 TEST_F(atomizer_end_to_end_test, invalid_transaction) {
@@ -264,9 +269,13 @@ TEST_F(atomizer_end_to_end_test, invalid_transaction) {
                                                   }}}});
 
     const auto res_uhs_states = wc_res->states().at(ctx.m_id);
-    ASSERT_EQ(res_uhs_states.size(), 4);    
-    ASSERT_EQ(res_uhs_states[0].status(), cbdc::watchtower::search_status::no_history);
-    ASSERT_EQ(res_uhs_states[1].status(), cbdc::watchtower::search_status::no_history);
-    ASSERT_EQ(res_uhs_states[2].status(), cbdc::watchtower::search_status::no_history);
-    ASSERT_EQ(res_uhs_states[3].status(), cbdc::watchtower::search_status::no_history);
+    ASSERT_EQ(res_uhs_states.size(), 4);
+    ASSERT_EQ(res_uhs_states[0].status(),
+              cbdc::watchtower::search_status::no_history);
+    ASSERT_EQ(res_uhs_states[1].status(),
+              cbdc::watchtower::search_status::no_history);
+    ASSERT_EQ(res_uhs_states[2].status(),
+              cbdc::watchtower::search_status::no_history);
+    ASSERT_EQ(res_uhs_states[3].status(),
+              cbdc::watchtower::search_status::no_history);
 }
