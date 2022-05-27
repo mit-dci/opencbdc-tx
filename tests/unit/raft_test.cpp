@@ -652,3 +652,37 @@ TEST_F(raft_test, test_state_manager_exit) {
                                         m_state_file);
     ASSERT_EXIT(sm.system_exit(20), ::testing::ExitedWithCode(20), "c*");
 }
+
+TEST(raft_buffer_serialization_test, make_buffer) {
+    constexpr uint64_t obj_to_serialize = std::numeric_limits<uint64_t>::max();
+    const auto buf = cbdc::make_buffer<uint64_t, nuraft::ptr<nuraft::buffer>>(
+        obj_to_serialize);
+
+    const auto obj_size = cbdc::serialized_size(obj_to_serialize);
+    ASSERT_EQ(buf->size(), obj_size);
+    // For the num. of buffer metadata bytes, see nuraft::buffer::alloc()
+    // in buffer.cxx in the source code for NuRaft-1.3.0.  The expression below
+    // is valid for buffer sizes <= 32kB.
+    constexpr uint64_t num_buf_metadata_bytes = sizeof(ushort) * 2;
+    const uint64_t expected_buf_capacity = obj_size + num_buf_metadata_bytes;
+    ASSERT_EQ(buf->container_size(), expected_buf_capacity);
+
+    ASSERT_EQ(buf->pos(), obj_size);
+
+    buf->pos(0);
+    ASSERT_EQ(buf->get_ulong(), obj_to_serialize);
+}
+
+TEST(raft_buffer_serialization_test, from_buffer) {
+    // Test successful deserialization.
+    constexpr uint64_t obj_to_serialize = std::numeric_limits<uint64_t>::max();
+    const auto buf = cbdc::make_buffer<uint64_t, nuraft::ptr<nuraft::buffer>>(
+        obj_to_serialize);
+    const auto deser_obj = cbdc::from_buffer<uint64_t>(*buf);
+    EXPECT_EQ(deser_obj.value(), obj_to_serialize);
+
+    // Test unsuccessful deserialization from an empty NuRaft buffer.
+    const auto empty_buf = nuraft::buffer::alloc(0);
+    const auto empty_deser_obj = cbdc::from_buffer<uint64_t>(*empty_buf);
+    EXPECT_FALSE(empty_deser_obj.has_value());
+}
