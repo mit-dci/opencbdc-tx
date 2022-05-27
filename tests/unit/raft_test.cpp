@@ -321,6 +321,24 @@ TEST_F(raft_test, test_raft_serializer_basic) {
     ASSERT_TRUE(ser.end_of_buffer());
 }
 
+TEST_F(raft_test, test_raft_serializer_read) {
+    auto new_log = nuraft::buffer::alloc(32);
+    auto test_hash = cbdc::hash_from_hex(
+        "cb7b43951ffcfe400a5432749a79096e632ef2e6328a28049c9af55b85fb260d");
+    auto ser = cbdc::nuraft_serializer(*new_log);
+    ser << test_hash;
+    ser.reset();
+    ASSERT_FALSE(ser.end_of_buffer());
+    auto read_output = nuraft::buffer::alloc(32);
+    ASSERT_TRUE(ser.read(read_output->data(), 32));
+    ASSERT_EQ(*read_output->data(), *test_hash.data());
+    ser.reset();
+    // Test advance_cursor method with read to follow as well.
+    ser.advance_cursor(10);
+    ASSERT_TRUE(ser.read(read_output->data(), 22));
+    ASSERT_EQ(*read_output->data(), *(test_hash.data() + 10));
+}
+
 TEST_F(raft_test, test_raft_serializer_out_of_bounds) {
     auto new_log = nuraft::buffer::alloc(32);
     auto test_hash = cbdc::hash_from_hex(
