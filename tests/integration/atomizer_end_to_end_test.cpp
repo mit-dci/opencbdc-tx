@@ -137,30 +137,30 @@ TEST_F(atomizer_end_to_end_test, complete_transaction) {
     ASSERT_TRUE(res.has_value());
     ASSERT_FALSE(res->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::pending);
-    ASSERT_EQ(tx->m_outputs[0].m_value, 33);
-    ASSERT_EQ(m_sender->balance(), 60);
+    ASSERT_EQ(tx->m_outputs[0].m_value, 33UL);
+    ASSERT_EQ(m_sender->balance(), 60UL);
     auto in = m_sender->export_send_inputs(tx.value(), addr);
-    ASSERT_EQ(in.size(), 1);
+    ASSERT_EQ(in.size(), 1UL);
 
     std::this_thread::sleep_for(m_block_wait_interval);
     reload_sender();
-    ASSERT_EQ(m_sender->balance(), 60);
-    ASSERT_EQ(m_sender->pending_tx_count(), 1);
-    ASSERT_EQ(m_sender->pending_input_count(), 0);
+    ASSERT_EQ(m_sender->balance(), 60UL);
+    ASSERT_EQ(m_sender->pending_tx_count(), 1UL);
+    ASSERT_EQ(m_sender->pending_input_count(), 0UL);
     m_sender->sync();
-    ASSERT_EQ(m_sender->balance(), 67);
-    ASSERT_EQ(m_sender->pending_tx_count(), 0);
+    ASSERT_EQ(m_sender->balance(), 67UL);
+    ASSERT_EQ(m_sender->pending_tx_count(), 0UL);
 
-    ASSERT_EQ(m_receiver->pending_input_count(), 0);
+    ASSERT_EQ(m_receiver->pending_input_count(), 0UL);
     m_receiver->import_send_input(in[0]);
     reload_receiver();
-    ASSERT_EQ(m_receiver->balance(), 0);
-    ASSERT_EQ(m_sender->pending_tx_count(), 0);
-    ASSERT_EQ(m_receiver->pending_input_count(), 1);
+    ASSERT_EQ(m_receiver->balance(), 0UL);
+    ASSERT_EQ(m_sender->pending_tx_count(), 0UL);
+    ASSERT_EQ(m_receiver->pending_input_count(), 1UL);
     m_receiver->sync();
-    ASSERT_EQ(m_receiver->balance(), 33);
-    ASSERT_EQ(m_sender->pending_tx_count(), 0);
-    ASSERT_EQ(m_receiver->pending_input_count(), 0);
+    ASSERT_EQ(m_receiver->balance(), 33UL);
+    ASSERT_EQ(m_sender->pending_tx_count(), 0UL);
+    ASSERT_EQ(m_receiver->pending_input_count(), 0UL);
 }
 
 TEST_F(atomizer_end_to_end_test, double_spend) {
@@ -175,17 +175,17 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
     ASSERT_TRUE(res.has_value());
     ASSERT_FALSE(res->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::pending);
-    ASSERT_EQ(tx->m_outputs[0].m_value, 33);
-    ASSERT_EQ(m_sender->balance(), 60);
+    ASSERT_EQ(tx->m_outputs[0].m_value, 33UL);
+    ASSERT_EQ(m_sender->balance(), 60UL);
 
     std::this_thread::sleep_for(m_block_wait_interval);
     reload_sender();
-    ASSERT_EQ(m_sender->balance(), 60);
-    ASSERT_EQ(m_sender->pending_tx_count(), 1);
-    ASSERT_EQ(m_sender->pending_input_count(), 0);
+    ASSERT_EQ(m_sender->balance(), 60UL);
+    ASSERT_EQ(m_sender->pending_tx_count(), 1UL);
+    ASSERT_EQ(m_sender->pending_input_count(), 0UL);
     m_sender->sync();
-    ASSERT_EQ(m_sender->balance(), 67);
-    ASSERT_EQ(m_sender->pending_tx_count(), 0);
+    ASSERT_EQ(m_sender->balance(), 67UL);
+    ASSERT_EQ(m_sender->pending_tx_count(), 0UL);
 
     auto sc
         = cbdc::sentinel::rpc::client(m_opts.m_sentinel_endpoints, m_logger);

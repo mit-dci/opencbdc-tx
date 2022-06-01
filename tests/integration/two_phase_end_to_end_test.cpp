@@ -53,7 +53,7 @@ class two_phase_end_to_end_test : public ::testing::Test {
         std::this_thread::sleep_for(m_wait_interval);
         m_sender->sync();
 
-        ASSERT_EQ(m_sender->balance(), 100);
+        ASSERT_EQ(m_sender->balance(), 100UL);
 
         reload_sender();
     }
@@ -125,21 +125,21 @@ TEST_F(two_phase_end_to_end_test, complete_transaction) {
     ASSERT_TRUE(res.has_value());
     ASSERT_FALSE(res->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::confirmed);
-    ASSERT_EQ(tx->m_outputs[0].m_value, 33);
-    ASSERT_EQ(m_sender->balance(), 67);
+    ASSERT_EQ(tx->m_outputs[0].m_value, 33UL);
+    ASSERT_EQ(m_sender->balance(), 67UL);
     auto in = m_sender->export_send_inputs(tx.value(), addr);
-    ASSERT_EQ(in.size(), 1);
+    ASSERT_EQ(in.size(), 1UL);
 
-    ASSERT_EQ(m_receiver->pending_input_count(), 0);
+    ASSERT_EQ(m_receiver->pending_input_count(), 0UL);
     m_receiver->import_send_input(in[0]);
     reload_receiver();
-    ASSERT_EQ(m_receiver->balance(), 0);
-    ASSERT_EQ(m_sender->pending_tx_count(), 0);
-    ASSERT_EQ(m_receiver->pending_input_count(), 1);
+    ASSERT_EQ(m_receiver->balance(), 0UL);
+    ASSERT_EQ(m_sender->pending_tx_count(), 0UL);
+    ASSERT_EQ(m_receiver->pending_input_count(), 1UL);
     m_receiver->sync();
-    ASSERT_EQ(m_receiver->balance(), 33);
-    ASSERT_EQ(m_sender->pending_tx_count(), 0);
-    ASSERT_EQ(m_receiver->pending_input_count(), 0);
+    ASSERT_EQ(m_receiver->balance(), 33UL);
+    ASSERT_EQ(m_sender->pending_tx_count(), 0UL);
+    ASSERT_EQ(m_receiver->pending_input_count(), 0UL);
 }
 
 TEST_F(two_phase_end_to_end_test, duplicate_transaction) {
@@ -157,26 +157,26 @@ TEST_F(two_phase_end_to_end_test, duplicate_transaction) {
     ASSERT_FALSE(res2->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::confirmed);
     ASSERT_EQ(res2->m_tx_status, cbdc::sentinel::tx_status::state_invalid);
-    ASSERT_EQ(tx->m_outputs[0].m_value, 33);
-    ASSERT_EQ(m_sender->balance(), 67);
+    ASSERT_EQ(tx->m_outputs[0].m_value, 33UL);
+    ASSERT_EQ(m_sender->balance(), 67UL);
     auto in = m_sender->export_send_inputs(tx.value(), addr);
-    ASSERT_EQ(in.size(), 1);
+    ASSERT_EQ(in.size(), 1UL);
 
     // Abandon the failed transaction
     auto abandoned
         = m_sender->abandon_transaction(cbdc::transaction::tx_id(tx.value()));
     ASSERT_TRUE(abandoned);
 
-    ASSERT_EQ(m_receiver->pending_input_count(), 0);
+    ASSERT_EQ(m_receiver->pending_input_count(), 0UL);
     m_receiver->import_send_input(in[0]);
     reload_receiver();
-    ASSERT_EQ(m_receiver->balance(), 0);
-    ASSERT_EQ(m_sender->pending_tx_count(), 0);
-    ASSERT_EQ(m_receiver->pending_input_count(), 1);
+    ASSERT_EQ(m_receiver->balance(), 0UL);
+    ASSERT_EQ(m_sender->pending_tx_count(), 0UL);
+    ASSERT_EQ(m_receiver->pending_input_count(), 1UL);
     m_receiver->sync();
-    ASSERT_EQ(m_receiver->balance(), 33);
-    ASSERT_EQ(m_sender->pending_tx_count(), 0);
-    ASSERT_EQ(m_receiver->pending_input_count(), 0);
+    ASSERT_EQ(m_receiver->balance(), 33UL);
+    ASSERT_EQ(m_sender->pending_tx_count(), 0UL);
+    ASSERT_EQ(m_receiver->pending_input_count(), 0UL);
 }
 
 TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
@@ -189,18 +189,18 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
     ASSERT_TRUE(res.has_value());
     ASSERT_FALSE(res->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::confirmed);
-    ASSERT_EQ(tx->m_outputs[0].m_value, 33);
-    ASSERT_EQ(m_sender->balance(), 67);
+    ASSERT_EQ(tx->m_outputs[0].m_value, 33UL);
+    ASSERT_EQ(m_sender->balance(), 67UL);
     auto in = m_sender->export_send_inputs(tx.value(), addr);
-    ASSERT_EQ(in.size(), 1);
-    ASSERT_EQ(m_receiver->pending_input_count(), 0);
+    ASSERT_EQ(in.size(), 1UL);
+    ASSERT_EQ(m_receiver->pending_input_count(), 0UL);
     m_receiver->import_send_input(in[0]);
     reload_receiver();
-    ASSERT_EQ(m_receiver->balance(), 0);
-    ASSERT_EQ(m_receiver->pending_input_count(), 1);
+    ASSERT_EQ(m_receiver->balance(), 0UL);
+    ASSERT_EQ(m_receiver->pending_input_count(), 1UL);
     m_receiver->sync();
-    ASSERT_EQ(m_receiver->balance(), 33);
-    ASSERT_EQ(m_receiver->pending_input_count(), 0);
+    ASSERT_EQ(m_receiver->balance(), 33UL);
+    ASSERT_EQ(m_receiver->pending_input_count(), 0UL);
 
     // Create a second transaction
     auto tx2 = m_sender->create_transaction(33, addr);
@@ -241,7 +241,7 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
     ASSERT_TRUE(abandoned);
 
     // Confirm to see if our balance is restored after abandoning
-    ASSERT_EQ(m_sender->balance(), 67);
+    ASSERT_EQ(m_sender->balance(), 67UL);
 }
 
 TEST_F(two_phase_end_to_end_test, invalid_transaction) {

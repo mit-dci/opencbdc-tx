@@ -167,16 +167,16 @@ class raft_test : public ::testing::Test {
         ASSERT_TRUE(nodes[0]->is_leader());
         ASSERT_FALSE(nodes[1]->is_leader());
         ASSERT_FALSE(nodes[2]->is_leader());
-        ASSERT_EQ(nodes[0]->last_log_idx(), 0);
-        ASSERT_EQ(nodes[1]->last_log_idx(), 0);
-        ASSERT_EQ(nodes[2]->last_log_idx(), 0);
+        ASSERT_EQ(nodes[0]->last_log_idx(), 0UL);
+        ASSERT_EQ(nodes[1]->last_log_idx(), 0UL);
+        ASSERT_EQ(nodes[2]->last_log_idx(), 0UL);
 
         auto new_log
             = cbdc::make_buffer<uint64_t, nuraft::ptr<nuraft::buffer>>(1);
 
         auto res = nodes[0]->replicate_sync(new_log);
         ASSERT_TRUE(res.has_value());
-        ASSERT_EQ(nodes[0]->last_log_idx(), 4);
+        ASSERT_EQ(nodes[0]->last_log_idx(), 4UL);
 
         cbdc::raft::callback_type result_fn = nullptr;
         auto result_done = std::atomic<bool>(false);
@@ -195,7 +195,7 @@ class raft_test : public ::testing::Test {
         while(!result_done) {
             std::this_thread::sleep_for(std::chrono::milliseconds(250));
         }
-        ASSERT_EQ(nodes[0]->last_log_idx(), 5);
+        ASSERT_EQ(nodes[0]->last_log_idx(), 5UL);
 
         for(size_t i{0}; i < nodes.size(); i++) {
             ASSERT_EQ(nodes[i]->get_sm(), sms[i].get());
@@ -236,7 +236,7 @@ TEST_F(raft_test, test_state_manager_store_and_read_state) {
     auto state = nuraft::srv_state(100, 10, true);
     sm.save_state(state);
     auto loaded_state = sm.read_state();
-    ASSERT_EQ(loaded_state->get_term(), 100);
+    ASSERT_EQ(loaded_state->get_term(), 100UL);
     ASSERT_EQ(loaded_state->get_voted_for(), 10);
     ASSERT_TRUE(loaded_state->is_election_timer_allowed());
 }
@@ -263,10 +263,10 @@ TEST_F(raft_test, test_state_manager_store_and_read_config) {
     cfg.get_servers().push_back(srv_config);
     sm.save_config(cfg);
     auto loaded_cfg = sm.load_config();
-    ASSERT_EQ(loaded_cfg->get_log_idx(), 100);
-    ASSERT_EQ(loaded_cfg->get_prev_log_idx(), 10);
+    ASSERT_EQ(loaded_cfg->get_log_idx(), 100UL);
+    ASSERT_EQ(loaded_cfg->get_prev_log_idx(), 10UL);
     ASSERT_TRUE(loaded_cfg->is_async_replication());
-    ASSERT_EQ(loaded_cfg->get_servers().size(), 1);
+    ASSERT_EQ(loaded_cfg->get_servers().size(), 1UL);
     ASSERT_EQ(loaded_cfg->get_server(0)->get_endpoint(),
               "endpoint2"); // m_endpoint would be the default
 }
@@ -278,10 +278,10 @@ TEST_F(raft_test, test_state_manager_default_config) {
                                         "non-existent-config",
                                         m_state_file);
     auto cfg = sm.load_config();
-    ASSERT_EQ(cfg->get_log_idx(), 0);
-    ASSERT_EQ(cfg->get_prev_log_idx(), 0);
+    ASSERT_EQ(cfg->get_log_idx(), 0UL);
+    ASSERT_EQ(cfg->get_prev_log_idx(), 0UL);
     ASSERT_FALSE(cfg->is_async_replication());
-    ASSERT_EQ(cfg->get_servers().size(), 1);
+    ASSERT_EQ(cfg->get_servers().size(), 1UL);
     ASSERT_EQ(cfg->get_server(0)->get_endpoint(), m_endpoint);
 }
 
@@ -354,8 +354,8 @@ TEST_F(raft_test, serialize_nuraft_buffer) {
 TEST_F(raft_test, log_store_append) {
     auto log_store = cbdc::raft::log_store();
     ASSERT_TRUE(log_store.load(m_db_dir));
-    ASSERT_EQ(log_store.append(m_dummy_log_entries[0]), 1);
-    ASSERT_EQ(log_store.append(m_dummy_log_entries[1]), 2);
+    ASSERT_EQ(log_store.append(m_dummy_log_entries[0]), 1UL);
+    ASSERT_EQ(log_store.append(m_dummy_log_entries[1]), 2UL);
 }
 
 TEST_F(raft_test, log_store_load_filled) {
@@ -371,7 +371,7 @@ TEST_F(raft_test, log_store_load_filled) {
         auto log_store2 = cbdc::raft::log_store();
         ASSERT_TRUE(log_store2.load(m_db_dir));
         ASSERT_EQ(log_store2.next_slot(), m_dummy_log_entries.size() + 1);
-        ASSERT_EQ(log_store2.start_index(), 1);
+        ASSERT_EQ(log_store2.start_index(), 1UL);
 
         auto entry = log_store2.last_entry();
         auto last_dummy_entry = m_dummy_log_entries.back();
@@ -415,7 +415,7 @@ TEST_F(raft_test, log_store_write_at) {
 
     ASSERT_EQ(log_store.next_slot(), m_dummy_log_entries.size() + 1);
     log_store.write_at(3, m_dummy_log_entries[2]);
-    ASSERT_EQ(log_store.next_slot(), 4);
+    ASSERT_EQ(log_store.next_slot(), 4UL);
 
     // Try to get the erased entry - should return null
     auto entry = log_store.entry_at(4);
@@ -434,7 +434,7 @@ TEST_F(raft_test, log_store_pack_apply) {
     ASSERT_EQ(log_store.next_slot(), m_dummy_log_entries.size() + 1);
     auto pack = log_store.pack(4, 17);
     log_store.write_at(3, m_dummy_log_entries[2]);
-    ASSERT_EQ(log_store.next_slot(), 4);
+    ASSERT_EQ(log_store.next_slot(), 4UL);
 
     log_store.apply_pack(4, *pack);
     ASSERT_EQ(log_store.next_slot(), m_dummy_log_entries.size() + 1);
@@ -472,7 +472,7 @@ TEST_F(raft_test, log_store_compact) {
         auto log_store2 = cbdc::raft::log_store();
         ASSERT_TRUE(log_store2.load(m_db_dir));
         ASSERT_EQ(log_store2.next_slot(), m_dummy_log_entries.size() + 1);
-        ASSERT_EQ(log_store2.start_index(), 17);
+        ASSERT_EQ(log_store2.start_index(), 17UL);
     }
 }
 

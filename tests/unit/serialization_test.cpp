@@ -73,10 +73,10 @@ TEST_F(SerializationTest, TestDummy) {
     ASSERT_FALSE(sz.end_of_buffer());
 
     sz.reset();
-    ASSERT_EQ(sz.size(), 0);
+    ASSERT_EQ(sz.size(), 0UL);
 
     sz.advance_cursor(10);
-    ASSERT_EQ(sz.size(), 10);
+    ASSERT_EQ(sz.size(), 10UL);
 }
 
 TEST_F(SerializationTest, TestEndOfBuffer) {

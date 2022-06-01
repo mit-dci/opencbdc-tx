@@ -58,7 +58,7 @@ TEST_F(WalletTest, export_send_input_basic) {
     auto send_tx = m_wallet.send_to(25, target_addr, false).value();
     auto receiver_inputs
         = cbdc::transaction::wallet::export_send_inputs(send_tx, target_addr);
-    ASSERT_EQ(receiver_inputs.size(), 1);
+    ASSERT_EQ(receiver_inputs.size(), 1UL);
 
     ASSERT_EQ(receiver_inputs[0].m_prevout.m_tx_id,
               cbdc::transaction::tx_id(send_tx));
@@ -68,33 +68,33 @@ TEST_F(WalletTest, export_send_input_basic) {
 TEST_F(WalletTest, fan_out) {
     cbdc::pubkey_t target_addr = {'a', 'b', 'c', 'd'};
     auto send_tx = m_wallet.fan(20, 5, target_addr, false).value();
-    ASSERT_EQ(send_tx.m_outputs.size(), 20);
+    ASSERT_EQ(send_tx.m_outputs.size(), 20UL);
     auto witcom = cbdc::transaction::validation::get_p2pk_witness_commitment(
         target_addr);
     for(const auto& out : send_tx.m_outputs) {
-        ASSERT_EQ(out.m_value, 5);
+        ASSERT_EQ(out.m_value, 5UL);
         ASSERT_EQ(out.m_witness_program_commitment, witcom);
     }
     auto receiver_inputs
         = cbdc::transaction::wallet::export_send_inputs(send_tx, target_addr);
-    ASSERT_EQ(receiver_inputs.size(), 20);
+    ASSERT_EQ(receiver_inputs.size(), 20UL);
 }
 
 TEST_F(WalletTest, fan_out_change) {
     cbdc::pubkey_t target_addr = {'a', 'b', 'c', 'd'};
     auto send_tx = m_wallet.fan(19, 5, target_addr, false).value();
-    ASSERT_EQ(send_tx.m_outputs.size(), 20);
+    ASSERT_EQ(send_tx.m_outputs.size(), 20UL);
     auto witcom = cbdc::transaction::validation::get_p2pk_witness_commitment(
         target_addr);
     for(size_t i = 1; i < send_tx.m_outputs.size(); i++) {
-        ASSERT_EQ(send_tx.m_outputs[i].m_value, 5);
+        ASSERT_EQ(send_tx.m_outputs[i].m_value, 5UL);
         ASSERT_EQ(send_tx.m_outputs[i].m_witness_program_commitment, witcom);
     }
-    ASSERT_EQ(send_tx.m_outputs[0].m_value, 5);
+    ASSERT_EQ(send_tx.m_outputs[0].m_value, 5UL);
     ASSERT_NE(send_tx.m_outputs[0].m_witness_program_commitment, witcom);
     auto receiver_inputs
         = cbdc::transaction::wallet::export_send_inputs(send_tx, target_addr);
-    ASSERT_EQ(receiver_inputs.size(), 19);
+    ASSERT_EQ(receiver_inputs.size(), 19UL);
 }
 
 class WalletTxTest : public ::testing::Test {

@@ -97,7 +97,7 @@ TEST_F(config_validation_test, parsing_validation) {
 
     auto window_size = ex.get_ulong("window_size");
     EXPECT_TRUE(window_size.has_value());
-    EXPECT_EQ(window_size.value(), 40000);
+    EXPECT_EQ(window_size.value(), 40000UL);
 
     auto endpoint = ex.get_endpoint("archiver0_endpoint");
     EXPECT_TRUE(endpoint.has_value());

@@ -62,7 +62,7 @@ class watchtower_integration_test : public ::testing::Test {
 
     static constexpr auto m_watchtower_cfg_path = "integration_tests.cfg";
 
-    static constexpr auto m_best_height{1};
+    static constexpr size_t m_best_height{1};
 
     cbdc::config::options m_opts{};
 
