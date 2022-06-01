@@ -96,7 +96,7 @@ TEST_F(ArchiverTest, archiver_leveldb_init_failure) {
 TEST_F(ArchiverTest, archiver_best_block_init) {
     ASSERT_TRUE(m_archiver->init_leveldb());
     ASSERT_TRUE(m_archiver->init_best_block());
-    ASSERT_EQ(m_archiver->best_block_height(), 0);
+    ASSERT_EQ(m_archiver->best_block_height(), 0UL);
 }
 
 // Test if the best block height is properly initialized to non-zero
@@ -110,7 +110,7 @@ TEST_F(ArchiverTest, archiver_best_block_init_nonzero) {
 
         archiver0->init_leveldb();
         archiver0->digest_block(m_dummy_blocks[0]);
-        ASSERT_EQ(archiver0->best_block_height(), 1);
+        ASSERT_EQ(archiver0->best_block_height(), 1UL);
     }
     {
         auto archiver1
@@ -121,7 +121,7 @@ TEST_F(ArchiverTest, archiver_best_block_init_nonzero) {
 
         archiver1->init_leveldb();
         archiver1->init_best_block();
-        ASSERT_EQ(archiver1->best_block_height(), 1);
+        ASSERT_EQ(archiver1->best_block_height(), 1UL);
     }
 }
 
@@ -195,7 +195,7 @@ TEST_F(ArchiverTest, digest_block) {
     m_archiver->init_leveldb();
     m_archiver->init_best_block();
     m_archiver->digest_block(m_dummy_blocks[0]);
-    ASSERT_EQ(m_archiver->best_block_height(), 1);
+    ASSERT_EQ(m_archiver->best_block_height(), 1UL);
 }
 
 // Test if the archiver properly defers digestion of a block that is received
@@ -204,11 +204,11 @@ TEST_F(ArchiverTest, digest_block_deferral) {
     m_archiver->init_leveldb();
     m_archiver->init_best_block();
     m_archiver->digest_block(m_dummy_blocks[0]);
-    ASSERT_EQ(m_archiver->best_block_height(), 1);
+    ASSERT_EQ(m_archiver->best_block_height(), 1UL);
     m_archiver->digest_block(m_dummy_blocks[2]);
-    ASSERT_EQ(m_archiver->best_block_height(), 1);
+    ASSERT_EQ(m_archiver->best_block_height(), 1UL);
     m_archiver->digest_block(m_dummy_blocks[1]);
-    ASSERT_EQ(m_archiver->best_block_height(), 3);
+    ASSERT_EQ(m_archiver->best_block_height(), 3UL);
 }
 
 // Test the get_block function
@@ -220,8 +220,8 @@ TEST_F(ArchiverTest, get_block) {
     m_archiver->digest_block(m_dummy_blocks[2]);
     auto blk = m_archiver->get_block(1);
     ASSERT_TRUE(blk.has_value());
-    ASSERT_EQ(blk.value().m_height, 1);
-    ASSERT_EQ(blk.value().m_transactions.size(), 20);
+    ASSERT_EQ(blk.value().m_height, 1UL);
+    ASSERT_EQ(blk.value().m_transactions.size(), 20UL);
     ASSERT_EQ(blk.value().m_transactions[2].m_id,
               m_dummy_blocks[0].m_transactions[2].m_id);
 }
@@ -244,8 +244,8 @@ TEST_F(ArchiverTest, server_handler) {
     std::optional<cbdc::atomizer::block> blk;
     deser >> blk;
     ASSERT_TRUE(blk.has_value());
-    ASSERT_EQ(blk.value().m_height, 1);
-    ASSERT_EQ(blk.value().m_transactions.size(), 20);
+    ASSERT_EQ(blk.value().m_height, 1UL);
+    ASSERT_EQ(blk.value().m_transactions.size(), 20UL);
     ASSERT_EQ(blk.value().m_transactions[2].m_id,
               m_dummy_blocks[0].m_transactions[2].m_id);
 }
@@ -264,8 +264,8 @@ TEST_F(ArchiverTest, client) {
     ASSERT_TRUE(client.init());
     auto blk = client.get_block(1);
     ASSERT_TRUE(blk.has_value());
-    ASSERT_EQ(blk.value().m_height, 1);
-    ASSERT_EQ(blk.value().m_transactions.size(), 20);
+    ASSERT_EQ(blk.value().m_height, 1UL);
+    ASSERT_EQ(blk.value().m_transactions.size(), 20UL);
     ASSERT_EQ(blk.value().m_transactions[2].m_id,
               m_dummy_blocks[0].m_transactions[2].m_id);
 }
@@ -290,5 +290,5 @@ TEST_F(ArchiverTest, init) {
     m_archiver->digest_block(m_dummy_blocks[0]);
     auto blk = m_archiver->get_block(1);
     ASSERT_TRUE(blk.has_value());
-    ASSERT_EQ(m_archiver->best_block_height(), 1);
+    ASSERT_EQ(m_archiver->best_block_height(), 1UL);
 }

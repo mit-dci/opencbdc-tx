@@ -41,7 +41,7 @@ TEST_F(format_test, inordinate_declared_lengths_are_handled) {
     deser >> r0;
 
     EXPECT_FALSE(deser);
-    EXPECT_EQ(r0.size(), 4);
+    EXPECT_EQ(r0.size(), 4UL);
     EXPECT_EQ(r0.capacity(), 1024UL * 1024UL / sizeof(uint64_t));
 }
 

@@ -94,7 +94,7 @@ TEST_F(NetworkTest, reset_net) {
 
     m_blocking_net->close();
     listener.join();
-    ASSERT_EQ(m_blocking_net->peer_count(), 0);
+    ASSERT_EQ(m_blocking_net->peer_count(), 0UL);
 
     m_blocking_net->reset();
     ASSERT_TRUE(m_blocking_net->listen(cbdc::network::localhost, listen_port));

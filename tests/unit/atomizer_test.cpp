@@ -142,7 +142,7 @@ TEST_F(atomizer_test, err_incomplete) {
     ASSERT_FALSE(err.has_value());
 
     errs = m_atomizer->make_block().second;
-    ASSERT_EQ(errs.size(), 1);
+    ASSERT_EQ(errs.size(), 1UL);
     auto want
         = cbdc::watchtower::tx_error{{'A'},
                                      cbdc::watchtower::tx_error_incomplete{}};

@@ -29,12 +29,12 @@ TEST_F(BlockCacheTest, no_history) {
     ASSERT_FALSE(m_bc.check_spent({'Z'}).has_value());
     ASSERT_FALSE(m_bc.check_unspent({'Z'}).has_value());
 
-    ASSERT_EQ(m_bc.best_block_height(), 44);
+    ASSERT_EQ(m_bc.best_block_height(), 44UL);
 }
 
 TEST_F(BlockCacheTest, spend_g) {
     ASSERT_FALSE(m_bc.check_spent({'G'}).has_value());
-    ASSERT_EQ(m_bc.check_unspent({'G'}).value().first, 44);
+    ASSERT_EQ(m_bc.check_unspent({'G'}).value().first, 44UL);
     ASSERT_EQ(m_bc.check_unspent({'G'}).value().second, cbdc::hash_t{'E'});
 
     cbdc::atomizer::block b1;
@@ -44,13 +44,13 @@ TEST_F(BlockCacheTest, spend_g) {
     m_bc.push_block(std::move(b1));
 
     ASSERT_FALSE(m_bc.check_unspent({'G'}).has_value());
-    ASSERT_EQ(m_bc.check_spent({'G'}).value().first, 45);
+    ASSERT_EQ(m_bc.check_spent({'G'}).value().first, 45UL);
     ASSERT_EQ(m_bc.check_spent({'G'}).value().second, cbdc::hash_t{'L'});
 }
 
 TEST_F(BlockCacheTest, add_k_plus_1) {
     ASSERT_FALSE(m_bc.check_spent({'G'}).has_value());
-    ASSERT_EQ(m_bc.check_unspent({'G'}).value().first, 44);
+    ASSERT_EQ(m_bc.check_unspent({'G'}).value().first, 44UL);
     ASSERT_EQ(m_bc.check_unspent({'G'}).value().second, cbdc::hash_t{'E'});
 
     cbdc::atomizer::block b1;
@@ -77,8 +77,8 @@ TEST_F(BlockCacheTest, add_k_plus_1) {
     m_bc.push_block(std::move(b3));
 
     ASSERT_FALSE(m_bc.check_unspent({'G'}).has_value());
-    ASSERT_EQ(m_bc.check_spent({'G'}).value().first, 47);
+    ASSERT_EQ(m_bc.check_spent({'G'}).value().first, 47UL);
     ASSERT_EQ(m_bc.check_spent({'G'}).value().second, cbdc::hash_t{'X'});
 
-    ASSERT_EQ(m_bc.best_block_height(), 47);
+    ASSERT_EQ(m_bc.best_block_height(), 47UL);
 }
