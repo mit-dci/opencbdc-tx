@@ -8,6 +8,12 @@ end="\033[0m"
 
 set -e
 
+SUDO=''
+if (( $EUID != 0 )); then
+    echo -e "non-root user, sudo required"
+    SUDO='sudo'
+fi
+
 CMAKE_BUILD_TYPE="Debug"
 if [[ "$BUILD_RELEASE" == "1" ]]; then
   CMAKE_BUILD_TYPE="Release"
@@ -76,14 +82,15 @@ else
   cd "NuRaft-${NURAFT_VERSION}-${CMAKE_BUILD_TYPE}/build"
 fi
 
-echo -e "${green}Copying nuraft to /usr/local. sudo needed${end}"
-sudo cp libnuraft.a /usr/local/lib
-sudo cp -r ../include/libnuraft /usr/local/include
+echo -e "${green}Copying nuraft to /usr/local"
+$SUDO cp libnuraft.a /usr/local/lib
+$SUDO cp -r ../include/libnuraft /usr/local/include
 
 cd ..
 
 PYTHON_TIDY=/usr/local/bin/run-clang-tidy.py
 if [ ! -f "${PYTHON_TIDY}" ]; then
-  echo -e "${green}Copying run-clang-tidy to /usr/local/bin. sudo needed${end}"
-  sudo wget https://raw.githubusercontent.com/llvm/llvm-project/e837ce2a32369b2e9e8e5d60270c072c7dd63827/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py -P /usr/local/bin
+  echo -e "${green}Copying run-clang-tidy to /usr/local/bin"
+  wget https://raw.githubusercontent.com/llvm/llvm-project/e837ce2a32369b2e9e8e5d60270c072c7dd63827/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py
+  $SUDO mv run-clang-tidy.py /usr/local/bin
 fi
