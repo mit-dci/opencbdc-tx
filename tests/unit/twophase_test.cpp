@@ -34,7 +34,7 @@ TEST_F(TwoPhaseTest, test_one_shard) {
         auto tx = cbdc::locking_shard::tx();
         auto uhs_id = cbdc::hash_t();
         std::memcpy(uhs_id.data(), &i, sizeof(i));
-        tx.m_creating.push_back({uhs_id, {}, {}, {}});
+        tx.m_tx.m_outputs.push_back({uhs_id, {}, {}, {}});
         txs.push_back(tx);
     }
 
@@ -115,8 +115,8 @@ TEST_F(TwoPhaseTest, test_one_shard_random) {
             const auto val = rnd(e);
             std::memcpy(&output1[j * 8], &val, sizeof(val));
         }
-        tx.m_creating.push_back({output0, {}, {}, {}});
-        tx.m_creating.push_back({output1, {}, {}, {}});
+        tx.m_tx.m_outputs.push_back({output0, {}, {}, {}});
+        tx.m_tx.m_outputs.push_back({output1, {}, {}, {}});
         outputs.push(output0);
         outputs.push(output1);
         txs.push_back(tx);
@@ -144,9 +144,9 @@ TEST_F(TwoPhaseTest, test_one_shard_random) {
             const auto val = rnd(e);
             std::memcpy(&output1[j * 8], &val, sizeof(val));
         }
-        tx.m_creating.push_back({output0, {}, {}, {}});
-        tx.m_creating.push_back({output1, {}, {}, {}});
-        tx.m_spending.push_back(outputs.front());
+        tx.m_tx.m_outputs.push_back({output0, {}, {}, {}});
+        tx.m_tx.m_outputs.push_back({output1, {}, {}, {}});
+        tx.m_tx.m_inputs.push_back(outputs.front());
         outputs.pop();
         tx.m_tx.m_inputs.push_back(outputs.front());
         outputs.pop();

@@ -206,7 +206,7 @@ namespace cbdc::transaction {
 
         /// Signatures from sentinels attesting the compact TX is valid.
         std::unordered_map<pubkey_t, signature_t, hashing::null>
-            m_attestations;
+            m_attestations{};
 
         /// Equality of two compact transactions. Only compares the transaction
         /// IDs.
