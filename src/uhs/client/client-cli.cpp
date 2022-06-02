@@ -249,12 +249,13 @@ auto confirmtx_command(cbdc::client& client,
 auto dispatch_command(const std::string& command,
                       cbdc::client& client,
                       const std::vector<std::string>& args) -> bool {
+    auto result = true;
     if(command == "mint") {
-        return mint_command(client, args);
+        result = mint_command(client, args);
     } else if(command == "send") {
-        return send_command(client, args);
+        result = send_command(client, args);
     } else if(command == "fan") {
-        return fan_command(client, args);
+        result = fan_command(client, args);
     } else if(command == "sync") {
         client.sync();
     } else if(command == "newaddress") {
@@ -267,13 +268,13 @@ auto dispatch_command(const std::string& command,
                   << ", pending TXs: " << client.pending_tx_count()
                   << std::endl;
     } else if(command == "importinput") {
-        return importinput_command(client, args);
+        result = importinput_command(client, args);
     } else if(command == "confirmtx") {
-        return confirmtx_command(client, args);
+        result = confirmtx_command(client, args);
     } else {
         std::cerr << "Unknown command" << std::endl;
     }
-    return true;
+    return result;
 }
 
 // LCOV_EXCL_START
