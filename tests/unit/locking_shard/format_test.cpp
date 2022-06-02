@@ -14,10 +14,26 @@ class locking_shard_format_test : public ::testing::Test {
     cbdc::buffer_serializer m_ser{m_target_packet};
     cbdc::buffer_serializer m_deser{m_target_packet};
 
-    cbdc::locking_shard::tx m_tx{
-        std::optional<cbdc::hash_t>({'a', 'b', 'c'}),
-        {{'d', 'e', 'f'}, {'g', 'h', 'i'}},
-        {{{'w'}, {'x'}, {'y'}, {'z'}}, {{'z'}, {'z'}, {'z'}, {'z'}}}};
+    cbdc::locking_shard::tx m_tx{};
+
+    void SetUp () {
+        m_tx.m_tx.m_id = {'a', 'b', 'c'};
+        m_tx.m_tx.m_inputs = {
+            {'d', 'e', 'f'},
+            {'g', 'h', 'i'}
+        };
+        m_tx.m_tx.m_outputs = {
+            {
+                {'w'}, {'x'}, {'y'}, {'z'}
+            },
+            {
+                {'z'}, {'z'}, {'z'}, {'z'}
+            }
+        };
+        m_tx.m_tx.m_attestations = {
+            {{'a'}, {'b'}}
+        };
+    }
 };
 
 TEST_F(locking_shard_format_test, tx) {

@@ -98,7 +98,7 @@ namespace cbdc::sentinel {
 
         void send_compact_tx(const transaction::compact_tx& ctx);
 
-        void send_transaction(const transaction::compact_tx& tx);
+        void send_transaction(const transaction::full_tx& tx);
     };
 }
 
