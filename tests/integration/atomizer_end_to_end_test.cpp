@@ -66,7 +66,7 @@ class atomizer_end_to_end_test : public ::testing::Test {
         std::this_thread::sleep_for(m_block_wait_interval);
         m_sender->sync();
 
-        ASSERT_EQ(m_sender->balance(), 10 * 10);
+        ASSERT_EQ(m_sender->balance(), 10UL * 10UL);
 
         reload_sender();
 
