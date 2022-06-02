@@ -24,6 +24,17 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   CPUS=$(grep -c ^processor /proc/cpuinfo)
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   CPUS=$(sysctl -n hw.ncpu)
+  # ensure development environment is set correctly for clang
+  $SUDO xcode-select -switch /Library/Developer/CommandLineTools
+  brew install leveldb llvm@11 googletest lcov make wget cmake
+  CLANG_TIDY=/usr/local/bin/clang-tidy
+  if [ ! -L "$CLANG_TIDY" ]; then
+    $SUDO ln -s $(brew --prefix)/opt/llvm@11/bin/clang-tidy /usr/local/bin/clang-tidy
+  fi
+  GMAKE=/usr/local/bin/gmake
+  if [ ! -L "$GMAKE" ]; then
+    $SUDO ln -s $(xcode-select -p)/usr/bin/gnumake /usr/local/bin/gmake
+  fi
 fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
