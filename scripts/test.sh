@@ -19,6 +19,19 @@ FLAGS:
     -nc, --no-coverage              Do not measure test coverage.
                                     Default:  false
     -h, --help                      Show usage.
+
+EXAMPLES:
+    - Run unit tests and integration tests and measure test coverage.  Assume
+      the build directory is 'opencbdc-tx/build'.
+    $ ./test.sh 
+
+    - Run integration tests but do not run unit tests.  Do not measure
+      test coverage.  Assume the build directory is 'opencbdc-tx/build'.
+    $ ./test.sh -nu -nc
+
+    - Run unit tests and integration tests and measure test coverage.  Set the 
+      build directory to 'mybuild'.
+    $ ./test.sh -d mybuild
 	"
 }
 
@@ -112,7 +125,7 @@ run_test_suite () {
     if [[ "$MEASURE_COVERAGE" == "true" ]]
     then
         echo "Checking test coverage."
-        LOCATION=$2
+        LOCATION="$2"
         rm -rf "$LOCATION"
         mkdir -p "$LOCATION"
         find . \( -name '*.gcno' -or -name '*.gcda' \) \
