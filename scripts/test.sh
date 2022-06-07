@@ -10,12 +10,19 @@ DESCRIPTION:
     This script runs unit and integration tests and measures test coverage. 
 
 FLAGS: 
+    -nu, --no-unit-tests            Do not run unit tests.
+                                    Default:  false
+    -ni, --no-integration-tests     Do not run integration tests.
+                                    Default:  false
     -nc, --no-coverage              Do not measure test coverage.
                                     Default:  false
     -h, --help                      Show usage.
 	"
 }
 
+# Parse command-line arguments.
+RUN_UNIT_TESTS="true"
+RUN_INTEGRATION_TESTS="true"
 MEASURE_COVERAGE="true"
 while [[ $# -gt 0 ]]
 do
@@ -24,6 +31,14 @@ do
             usage
             exit 0
             ;; 
+        -ni|--no-integration-tests)
+            RUN_INTEGRATION_TESTS="false"
+            shift 
+            ;;
+        -nu|--no-unit-tests)
+            RUN_UNIT_TESTS="false"
+            shift 
+            ;;
         -nc|--no-coverage)
             MEASURE_COVERAGE="false"
             shift
@@ -77,10 +92,21 @@ run_test_suite () {
     cd ..
 }
 
-echo "Running unit tests..."
-run_test_suite "tests/unit/run_unit_tests" "unit_tests_coverage"
+if [[ $RUN_UNIT_TESTS == "true" ]]
+then 
+    echo "Running unit tests..."
+    run_test_suite "tests/unit/run_unit_tests" "unit_tests_coverage"
+else
+    echo "Skipping unit tests."
+fi
 
-echo "Running integration tests..."
-cp tests/integration/*.cfg "$BUILD_DIR"
-run_test_suite "tests/integration/run_integration_tests" \
-    "integration_tests_coverage"
+echo
+if [[ $RUN_INTEGRATION_TESTS == "true" ]]
+then
+    echo "Running integration tests..."
+    cp tests/integration/*.cfg "$BUILD_DIR"
+    run_test_suite "tests/integration/run_integration_tests" \
+        "integration_tests_coverage"
+else
+    echo "Skipping integration tests."
+fi
