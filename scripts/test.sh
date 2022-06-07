@@ -1,5 +1,5 @@
 #!/bin/bash
-# exit script on failure
+# Exit script on failure.
 set -e
 
 if [ -z ${BUILD_DIR+x} ]; then
@@ -7,9 +7,9 @@ if [ -z ${BUILD_DIR+x} ]; then
 fi
 
 run_test_suite () {
-    cd $BUILD_DIR
+    cd "$BUILD_DIR"
     find . -name '*.gcda' -exec rm {} \;
-    $PWD/$1
+    "$PWD"/"$1"
 
     LOCATION=$2
     rm -rf $LOCATION
@@ -31,5 +31,5 @@ echo "Running unit tests..."
 run_test_suite "tests/unit/run_unit_tests" "unit_tests_coverage"
 
 echo "Running integration tests..."
-cp tests/integration/*.cfg $BUILD_DIR
+cp tests/integration/*.cfg "$BUILD_DIR"
 run_test_suite "tests/integration/run_integration_tests" "integration_tests_coverage"
