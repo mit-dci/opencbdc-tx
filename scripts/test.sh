@@ -7,9 +7,9 @@ USAGE:
     ./test.sh
 
 DESCRIPTION:
-    This script runs unit and integration tests and measures test coverage. 
+    This script runs unit and integration tests and measures test coverage.
 
-FLAGS: 
+FLAGS:
     -d, --build-dir <dir. name>     The directory containing the built code.
                                     Default:  opencbdc-tx/build/
     -nu, --no-unit-tests            Do not run unit tests.
@@ -19,6 +19,21 @@ FLAGS:
     -nc, --no-coverage              Do not measure test coverage.
                                     Default:  false
     -h, --help                      Show usage.
+
+EXAMPLES:
+    - Run unit tests and integration tests and measure test coverage.
+      The build directory is set by an environment variable called 'BUILD_DIR'
+      or will be set to 'opencbdc-tx/build' by default.
+    $ ./test.sh
+
+    - Run integration tests but do not run unit tests.  Do not measure
+      test coverage. The build directory is set by an environment variable
+      called 'BUILD_DIR' or will be set to 'opencbdc-tx/build' by default.
+    $ ./test.sh -nu -nc
+
+    - Run unit tests and integration tests and measure test coverage.  Set the
+      build directory to 'mybuild'.
+    $ ./test.sh -d mybuild
 	"
 }
 
@@ -32,33 +47,33 @@ do
         -h|--help)
             usage
             exit 0
-            ;; 
+            ;;
         -d|--build-dir)
-            shift 
+            shift
             ARG="$1"
             if [[ $ARG == "" || ${ARG:0:1} == "-" ]]
-            then      
+            then
                 echo -n "ERROR:  The -d flag was used, "
                 echo "but a valid build folder was not given."
-                echo 
+                echo
                 usage
                 exit 1
-            fi 
+            fi
             BUILD_DIR=$ARG
             shift
             ;;
         -ni|--no-integration-tests)
             RUN_INTEGRATION_TESTS="false"
-            shift 
+            shift
             ;;
         -nu|--no-unit-tests)
             RUN_UNIT_TESTS="false"
-            shift 
+            shift
             ;;
         -nc|--no-coverage)
             MEASURE_COVERAGE="false"
             shift
-            ;; 
+            ;;
         -*)
             echo "ERROR:  unknown command-line option '${1}'."
             usage
@@ -105,7 +120,7 @@ run_test_suite () {
     if [[ "$MEASURE_COVERAGE" == "true" ]]
     then
         echo "Checking test coverage."
-        LOCATION=$2
+        LOCATION="$2"
         rm -rf "$LOCATION"
         mkdir -p "$LOCATION"
         find . \( -name '*.gcno' -or -name '*.gcda' \) \
@@ -126,7 +141,7 @@ run_test_suite () {
 }
 
 if [[ $RUN_UNIT_TESTS == "true" ]]
-then 
+then
     echo "Running unit tests..."
     run_test_suite "tests/unit/run_unit_tests" "unit_tests_coverage"
 else
