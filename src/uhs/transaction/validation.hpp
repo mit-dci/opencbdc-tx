@@ -121,7 +121,7 @@ namespace cbdc::transaction::validation {
     /// \note This function returns immediately on the first-found error.
     ///
     /// \param tx transaction to validate
-    /// \param set of authorized minters
+    /// \param minters public keys of authorized minters
     /// \return null if transaction is valid, otherwise error information
     auto check_tx(const transaction::full_tx& tx,
                   const std::unordered_set<pubkey_t, hashing::null>& minters)
