@@ -61,11 +61,9 @@ auto mint_command(cbdc::client& client, const std::vector<std::string>& args)
 
 /// Generate a demo wallet for use with demo. It creates a minter public key
 /// to match the value pre-configued in the provided 'cfg' files.
-///
-/// Example use: client-cli 'wallet file name' demowallet
-auto generate_demo_minter_wallet(const std::vector<std::string>& args)
+auto generate_demo_wallet_command(const std::vector<std::string>& args)
     -> bool {
-    const auto wallet_file = args[1];
+    const auto wallet_file = args[3];
     if(std::filesystem::exists(wallet_file)) {
         std::cout << " " << wallet_file << " already exists" << std::endl;
         return false;
@@ -252,6 +250,8 @@ auto dispatch_command(const std::string& command,
     auto result = true;
     if(command == "mint") {
         result = mint_command(client, args);
+    } else if(command == "demowallet") {
+        result = generate_demo_wallet_command(args);
     } else if(command == "send") {
         result = send_command(client, args);
     } else if(command == "fan") {
@@ -280,11 +280,6 @@ auto dispatch_command(const std::string& command,
 // LCOV_EXCL_START
 auto main(int argc, char** argv) -> int {
     auto args = cbdc::config::get_args(argc, argv);
-
-    // Create a demo wallet
-    if(args.size() == 3 && args[2] == "demowallet") {
-        return generate_demo_minter_wallet(args) ? 0 : -1;
-    }
 
     static constexpr auto min_arg_count = 5;
     if(args.size() < min_arg_count) {

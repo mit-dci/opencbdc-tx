@@ -121,13 +121,14 @@ namespace cbdc::transaction::validation {
     /// \note This function returns immediately on the first-found error.
     ///
     /// \param tx transaction to validate
-    /// \param options configuration options
+    /// \param set of authorized minters
     /// \return null if transaction is valid, otherwise error information
     auto check_tx(const transaction::full_tx& tx,
-                  const cbdc::config::options& options)
+                  const std::unordered_set<pubkey_t, hashing::null>& minters)
         -> std::optional<tx_error>;
-    auto check_mint_tx(const cbdc::transaction::full_tx& tx,
-                       const cbdc::config::options& options)
+    auto
+    check_mint_tx(const cbdc::transaction::full_tx& tx,
+                  const std::unordered_set<pubkey_t, hashing::null>& minters)
         -> std::optional<tx_error>;
     auto check_tx_structure(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
@@ -174,23 +175,24 @@ namespace cbdc::transaction::validation {
         const std::unordered_set<pubkey_t, hashing::null>& pubkeys,
         size_t threshold) -> bool;
 
-    // TODO: Document below
-    auto check_mint_witness(const cbdc::transaction::full_tx& tx,
-                            size_t idx,
-                            const cbdc::config::options& options)
+    auto check_mint_witness(
+        const cbdc::transaction::full_tx& tx,
+        size_t idx,
+        const std::unordered_set<pubkey_t, hashing::null>& minters)
         -> std::optional<witness_error_code>;
-    auto check_mint_p2pk_witness(const cbdc::transaction::full_tx& tx,
-                                 size_t idx,
-                                 const cbdc::config::options& options)
+    auto check_mint_p2pk_witness(
+        const cbdc::transaction::full_tx& tx,
+        size_t idx,
+        const std::unordered_set<pubkey_t, hashing::null>& minters)
         -> std::optional<witness_error_code>;
     auto
     check_mint_p2pk_witness_commitment(const cbdc::transaction::full_tx& tx,
                                        size_t idx)
         -> std::optional<witness_error_code>;
-    auto
-    check_mint_p2pk_witness_signature(const cbdc::transaction::full_tx& tx,
-                                      size_t idx,
-                                      const cbdc::config::options& options)
+    auto check_mint_p2pk_witness_signature(
+        const cbdc::transaction::full_tx& tx,
+        size_t idx,
+        const std::unordered_set<pubkey_t, hashing::null>& minters)
         -> std::optional<witness_error_code>;
 }
 

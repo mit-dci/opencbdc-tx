@@ -34,10 +34,10 @@ namespace cbdc::transaction::validation {
     }
 
     auto check_tx(const cbdc::transaction::full_tx& tx,
-                  const cbdc::config::options& options)
+                  const std::unordered_set<pubkey_t, hashing::null>& minters)
         -> std::optional<tx_error> {
         if(tx.m_inputs.empty()) {
-            return check_mint_tx(tx, options);
+            return check_mint_tx(tx, minters);
         }
 
         const auto structure_err = check_tx_structure(tx);
@@ -77,8 +77,9 @@ namespace cbdc::transaction::validation {
         return std::nullopt;
     }
 
-    auto check_mint_tx(const cbdc::transaction::full_tx& tx,
-                       const cbdc::config::options& options)
+    auto
+    check_mint_tx(const cbdc::transaction::full_tx& tx,
+                  const std::unordered_set<pubkey_t, hashing::null>& minters)
         -> std::optional<tx_error> {
         // ensure there are outputs
         const auto output_count_err = check_output_count(tx);
@@ -99,7 +100,7 @@ namespace cbdc::transaction::validation {
         }
 
         for(size_t idx = 0; idx < tx.m_witness.size(); idx++) {
-            const auto witness_err = check_mint_witness(tx, idx, options);
+            const auto witness_err = check_mint_witness(tx, idx, minters);
             if(witness_err) {
                 return tx_error{witness_error{witness_err.value(), idx}};
             }
@@ -456,9 +457,10 @@ namespace cbdc::transaction::validation {
                            });
     }
 
-    auto check_mint_witness(const cbdc::transaction::full_tx& tx,
-                            size_t idx,
-                            const cbdc::config::options& options)
+    auto check_mint_witness(
+        const cbdc::transaction::full_tx& tx,
+        size_t idx,
+        const std::unordered_set<pubkey_t, hashing::null>& minters)
         -> std::optional<witness_error_code> {
         const auto& witness_program = tx.m_witness[idx];
         if(witness_program.empty()) {
@@ -470,15 +472,16 @@ namespace cbdc::transaction::validation {
                 witness_program[0]);
         switch(witness_program_type) {
             case witness_program_type::p2pk:
-                return check_mint_p2pk_witness(tx, idx, options);
+                return check_mint_p2pk_witness(tx, idx, minters);
             default:
                 return witness_error_code::unknown_witness_program_type;
         }
     }
 
-    auto check_mint_p2pk_witness(const cbdc::transaction::full_tx& tx,
-                                 size_t idx,
-                                 const cbdc::config::options& options)
+    auto check_mint_p2pk_witness(
+        const cbdc::transaction::full_tx& tx,
+        size_t idx,
+        const std::unordered_set<pubkey_t, hashing::null>& minters)
         -> std::optional<witness_error_code> {
         const auto witness_len_err = check_p2pk_witness_len(tx, idx);
         if(witness_len_err) {
@@ -492,7 +495,7 @@ namespace cbdc::transaction::validation {
         }
 
         const auto witness_sig_err
-            = check_mint_p2pk_witness_signature(tx, idx, options);
+            = check_mint_p2pk_witness_signature(tx, idx, minters);
         if(witness_sig_err) {
             return witness_sig_err;
         }
@@ -520,10 +523,10 @@ namespace cbdc::transaction::validation {
         return std::nullopt;
     }
 
-    auto
-    check_mint_p2pk_witness_signature(const cbdc::transaction::full_tx& tx,
-                                      size_t idx,
-                                      const cbdc::config::options& options)
+    auto check_mint_p2pk_witness_signature(
+        const cbdc::transaction::full_tx& tx,
+        size_t idx,
+        const std::unordered_set<pubkey_t, hashing::null>& minters)
         -> std::optional<witness_error_code> {
         const auto& wit = tx.m_witness[idx];
         secp256k1_xonly_pubkey pubkey{};
@@ -537,7 +540,7 @@ namespace cbdc::transaction::validation {
 
         // check if the signer is an authorized minter identified in the
         // configuration
-        if(options.m_minter_pubkeys.count(pubkey_arr) == 0) {
+        if(minters.count(pubkey_arr) == 0) {
             return witness_error_code::invalid_minter_key;
         }
 

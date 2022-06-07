@@ -125,7 +125,7 @@ namespace cbdc::shard {
         // If the tx has no inputs, it's a mint.
         if(tx.m_inputs.empty()) {
             msg.m_tx = std::move(tx);
-            msg.m_block_height = best_block_height();
+            msg.m_block_height = snp_height;
             return msg;
         }
 

@@ -76,7 +76,7 @@ namespace cbdc::sentinel_2pc {
         transaction::full_tx tx,
         execute_result_callback_type result_callback) -> bool {
         const auto validation_err
-            = transaction::validation::check_tx(tx, m_opts);
+            = transaction::validation::check_tx(tx, m_opts.m_minter_pubkeys);
         if(validation_err.has_value()) {
             auto tx_id = transaction::tx_id(tx);
             m_logger->debug(
@@ -122,7 +122,7 @@ namespace cbdc::sentinel_2pc {
         transaction::full_tx tx,
         validate_result_callback_type result_callback) -> bool {
         const auto validation_err
-            = transaction::validation::check_tx(tx, m_opts);
+            = transaction::validation::check_tx(tx, m_opts.m_minter_pubkeys);
         if(validation_err.has_value()) {
             result_callback(std::nullopt);
             return true;
