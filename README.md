@@ -150,7 +150,8 @@ In each of the below commands, you should pass `atomizer-compose.cfg` instead of
   usd1qrw038lx5n4wxx3yvuwdndpr7gnm347d6pn37uywgudzq90w7fsuk52kd5u
   ```
 
-  Note the resulting string ("usd1qrw038lx5n4wxx3yvuwdndpr7gnm347d6pn37uywgudzq90w7fsuk52kd5u"). It is the new wallet's address, and will be used in the following step.
+  Note the resulting string ("usd1qrw038lx5n4wxx3yvuwdndpr7gnm347d6pn37uywgudzq90w7fsuk52kd5u").
+  It is the new wallet's address, and will be used in the following step.
 
 * Send currency from one wallet to another (e.g., 30 atomic units of currency) **Note that you may need to change the wallet string in the code below ("usd1qrw0...") depending on the result of the previous step.**
   ```terminal
