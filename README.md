@@ -150,10 +150,7 @@ In each of the below commands, you should pass `atomizer-compose.cfg` instead of
   usd1qrw038lx5n4wxx3yvuwdndpr7gnm347d6pn37uywgudzq90w7fsuk52kd5u
   ```
 
-  Note the resulting string ("usd1qrw038lx5n4wxx3yvuwdndpr7gnm347d6pn37uywgudzq90w7fsuk52kd5u").
-  It is the new wallet's address, and will be used in the following step.
-
-* Send currency from one wallet to another (e.g., 30 atomic units of currency) **Note that you may need to change the wallet string in the code below ("usd1qrw0...") depending on the result of the previous step.**
+* Send currency from the first wallet to the address of the second wallet created in the previous step (e.g., 30 atomic units of currency)
   ```terminal
   # ./build/src/uhs/client/client-cli 2pc-compose.cfg mempool0.dat wallet0.dat send 30 usd1qrw038lx5n4wxx3yvuwdndpr7gnm347d6pn37uywgudzq90w7fsuk52kd5u
   tx_id:
@@ -174,7 +171,7 @@ In each of the below commands, you should pass `atomizer-compose.cfg` instead of
   Balance: $0.20, UTXOs: 4, pending TXs: 0
   ```
 
-* Import coins to the receiving wallet. Note that the string after `importinput` is the same as the result from step above of sending the currency between wallets.
+* Import coins to the receiving wallet using the string after `importinput` from step above.
   ```terminal
   # ./build/src/uhs/client/client-cli 2pc-compose.cfg mempool1.dat wallet1.dat importinput cc1f7dc708be5b07e23e125cf0674002ff8546a9342928114bc97031d8b96e750000000000000000d0e4f689b550f623e9370edae235de50417860be0f2f8e924eca9f402fcefeaa1e00000000000000
   # ./build/src/uhs/client/client-cli 2pc-compose.cfg mempool1.dat wallet1.dat sync
