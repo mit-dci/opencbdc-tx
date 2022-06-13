@@ -45,6 +45,12 @@ namespace cbdc::atomizer {
         [[nodiscard]] auto commit(nuraft::ulong log_idx, nuraft::buffer& data)
             -> nuraft::ptr<nuraft::buffer> override;
 
+        /// Handler for the raft cluster configuration changes
+        /// \param log_idx Raft log number of the configuration change.
+        void commit_config(
+            nuraft::ulong log_idx,
+            nuraft::ptr<nuraft::cluster_config>& /*new_conf*/) override;
+
         /// Read the portion of the state machine snapshot associated with
         /// the given metadata and object ID into a buffer.
         /// \param s metadata of snapshot to read.

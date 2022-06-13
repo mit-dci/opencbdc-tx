@@ -99,6 +99,12 @@ namespace cbdc::atomizer {
             resp.value());
     }
 
+    void state_machine::commit_config(
+        const nuraft::ulong log_idx,
+        nuraft::ptr<nuraft::cluster_config>& /*new_conf*/) {
+        m_last_committed_idx = log_idx;
+    }
+
     auto
     state_machine::read_logical_snp_obj(nuraft::snapshot& s,
                                         void*& /* user_snp_ctx */,
