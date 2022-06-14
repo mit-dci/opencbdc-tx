@@ -20,17 +20,16 @@ namespace cbdc::atomizer {
         : m_atomizer_id(atomizer_id),
           m_opts(opts),
           m_logger(std::move(log)),
-          m_raft_node(
-              static_cast<uint32_t>(atomizer_id),
-              opts.m_atomizer_raft_endpoints[atomizer_id].value(),
-              m_opts.m_stxo_cache_depth,
-              m_logger,
-              opts,
-              [&](auto&& type, auto&& param) {
-                  return raft_callback(std::forward<decltype(type)>(type),
-                                       std::forward<decltype(param)>(param));
-              },
-              m_opts.m_wait_for_followers) {}
+          m_raft_node(static_cast<uint32_t>(atomizer_id),
+                      opts.m_atomizer_raft_endpoints,
+                      m_opts.m_stxo_cache_depth,
+                      m_logger,
+                      m_opts,
+                      [&](auto&& type, auto&& param) {
+                          return raft_callback(
+                              std::forward<decltype(type)>(type),
+                              std::forward<decltype(param)>(param));
+                      }) {}
 
     controller::~controller() {
         m_raft_node.stop();
@@ -78,14 +77,6 @@ namespace cbdc::atomizer {
             = static_cast<int>(m_opts.m_raft_max_batch);
 
         if(!m_raft_node.init(raft_params)) {
-            return false;
-        }
-
-        auto raft_endpoints = std::vector<network::endpoint_t>();
-        for(const auto& s : m_opts.m_atomizer_raft_endpoints) {
-            raft_endpoints.push_back(*s);
-        }
-        if(!m_raft_node.build_cluster(raft_endpoints)) {
             return false;
         }
 

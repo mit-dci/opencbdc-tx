@@ -475,7 +475,11 @@ namespace cbdc::config {
 
             const auto endpoint_key = get_atomizer_raft_endpoint_key(i);
             const auto endpoint_str = cfg.get_endpoint(endpoint_key);
-            opts.m_atomizer_raft_endpoints.push_back(endpoint_str);
+            if(!endpoint_str) {
+                return "No raft endpoint specified for atomizer "
+                     + std::to_string(i) + " (" + endpoint_key + ")";
+            }
+            opts.m_atomizer_raft_endpoints.push_back(endpoint_str.value());
         }
 
         opts.m_target_block_interval
@@ -584,10 +588,6 @@ namespace cbdc::config {
 
         opts.m_batch_size
             = cfg.get_ulong(batch_size_key).value_or(opts.m_batch_size);
-        auto wait_for_followers = cfg.get_ulong(wait_for_followers_key);
-        if(wait_for_followers.has_value()) {
-            opts.m_wait_for_followers = wait_for_followers.value() != 0;
-        }
     }
 
     void read_loadgen_options(options& opts, const parser& cfg) {
