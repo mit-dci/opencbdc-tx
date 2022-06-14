@@ -59,7 +59,6 @@ namespace cbdc::config {
         static constexpr size_t initial_mint_value{100};
         static constexpr size_t watchtower_block_cache_size{100};
         static constexpr size_t watchtower_error_cache_size{1000000};
-        static constexpr bool wait_for_followers{true};
         static constexpr size_t input_count{2};
         static constexpr size_t output_count{2};
         static constexpr double fixed_tx_rate{1.0};
@@ -162,8 +161,7 @@ namespace cbdc::config {
         /// List of shard endpoints, ordered by shard ID.
         std::vector<network::endpoint_t> m_shard_endpoints;
         /// List of atomizer raft endpoints, ordered by atomizer ID.
-        std::vector<std::optional<network::endpoint_t>>
-            m_atomizer_raft_endpoints;
+        std::vector<network::endpoint_t> m_atomizer_raft_endpoints;
         /// Maximum transaction batch size for one log entry in the raft
         /// atomizer or one batch in the coordinator.
         size_t m_batch_size{defaults::batch_size};
@@ -251,10 +249,6 @@ namespace cbdc::config {
 
         /// Number of load generators over which to split pre-seeded UTXOs.
         size_t m_loadgen_count{0};
-
-        /// Flag for whether the raft leader should re-attempt to join
-        /// followers to the cluster until successful.
-        bool m_wait_for_followers{defaults::wait_for_followers};
 
         /// Private keys for sentinels.
         std::unordered_map<size_t, privkey_t> m_sentinel_private_keys;

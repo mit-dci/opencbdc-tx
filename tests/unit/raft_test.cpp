@@ -128,14 +128,13 @@ class raft_test : public ::testing::Test {
             auto sm = std::make_shared<dummy_sm>();
             nodes.emplace_back(
                 std::make_unique<cbdc::raft::node>(static_cast<int>(i),
-                                                   m_raft_endpoints[i],
+                                                   m_raft_endpoints,
                                                    "test",
                                                    blocking,
                                                    sm,
                                                    10,
                                                    log,
-                                                   nullptr,
-                                                   false));
+                                                   nullptr));
             sms.emplace_back(sm);
         }
 
@@ -144,7 +143,6 @@ class raft_test : public ::testing::Test {
             std::thread t(
                 [&](cbdc::raft::node& node) {
                     node.init(m_raft_params);
-                    node.build_cluster(m_raft_endpoints);
                 },
                 std::ref(*nodes[i]));
 
@@ -154,7 +152,6 @@ class raft_test : public ::testing::Test {
         std::thread t(
             [&](cbdc::raft::node& node) {
                 node.init(m_raft_params);
-                node.build_cluster(m_raft_endpoints);
             },
             std::ref(*nodes[0]));
 
@@ -178,7 +175,7 @@ class raft_test : public ::testing::Test {
 
         auto res = nodes[0]->replicate_sync(new_log);
         ASSERT_TRUE(res.has_value());
-        ASSERT_EQ(nodes[0]->last_log_idx(), 4UL);
+        ASSERT_EQ(nodes[0]->last_log_idx(), 2UL);
 
         cbdc::raft::callback_type result_fn = nullptr;
         auto result_done = std::atomic<bool>(false);
@@ -197,7 +194,7 @@ class raft_test : public ::testing::Test {
         while(!result_done) {
             std::this_thread::sleep_for(std::chrono::milliseconds(250));
         }
-        ASSERT_EQ(nodes[0]->last_log_idx(), 5UL);
+        ASSERT_EQ(nodes[0]->last_log_idx(), 3UL);
 
         for(size_t i{0}; i < nodes.size(); i++) {
             ASSERT_EQ(nodes[i]->get_sm(), sms[i].get());
@@ -218,14 +215,13 @@ class raft_test : public ::testing::Test {
             auto sm = std::make_shared<dummy_sm>();
             nodes.emplace_back(
                 std::make_unique<cbdc::raft::node>(static_cast<int>(i),
-                                                   m_raft_endpoints[i],
+                                                   m_raft_endpoints,
                                                    "test",
                                                    true,
                                                    sm,
                                                    10,
                                                    log,
-                                                   nullptr,
-                                                   false));
+                                                   nullptr));
             sms.emplace_back(sm);
         }
 
@@ -247,7 +243,6 @@ class raft_test : public ::testing::Test {
             std::thread t(
                 [&](cbdc::raft::node& node) {
                     ASSERT_TRUE(node.init(m_raft_params));
-                    ASSERT_TRUE(node.build_cluster(bad_raft_endpoints));
                 },
                 std::ref(*nodes[i]));
             init_threads[i] = std::move(t);
@@ -255,7 +250,6 @@ class raft_test : public ::testing::Test {
         std::thread t(
             [&](cbdc::raft::node& node) {
                 ASSERT_TRUE(node.init(m_raft_params));
-                ASSERT_FALSE(node.build_cluster(m_raft_endpoints));
             },
             std::ref(*nodes[0]));
         init_threads[0] = std::move(t);
@@ -289,14 +283,13 @@ class raft_test : public ::testing::Test {
             auto sm = std::make_shared<dummy_sm>();
             nodes.emplace_back(
                 std::make_unique<cbdc::raft::node>(static_cast<int>(i),
-                                                   m_raft_endpoints[i],
+                                                   m_raft_endpoints,
                                                    "test",
                                                    true,
                                                    sm,
                                                    10,
                                                    log,
-                                                   nullptr,
-                                                   true));
+                                                   nullptr));
             sms.emplace_back(sm);
         }
 
@@ -311,7 +304,6 @@ class raft_test : public ::testing::Test {
             std::thread t(
                 [&](cbdc::raft::node& node) {
                     ASSERT_TRUE(node.init(m_raft_params));
-                    ASSERT_TRUE(node.build_cluster(m_raft_endpoints));
                 },
                 std::ref(*nodes[i]));
             init_threads[i] = std::move(t);
@@ -349,10 +341,10 @@ TEST_F(raft_test, test_init) {
 
 TEST_F(raft_test, test_state_manager_store_and_read_state) {
     auto sm = cbdc::raft::state_manager(3,
-                                        m_endpoint,
                                         m_db_dir,
                                         m_config_file,
-                                        m_state_file);
+                                        m_state_file,
+                                        m_raft_endpoints);
     ASSERT_EQ(sm.server_id(), 3);
 
     auto state = nuraft::srv_state(100, 10, true);
@@ -365,20 +357,20 @@ TEST_F(raft_test, test_state_manager_store_and_read_state) {
 
 TEST_F(raft_test, test_state_manager_fail_read) {
     auto sm = cbdc::raft::state_manager(0,
-                                        m_endpoint,
                                         m_db_dir,
                                         m_config_file,
-                                        "non-existent-state");
+                                        "non-existent-state",
+                                        m_raft_endpoints);
     auto state = sm.read_state();
     ASSERT_EQ(state, nullptr);
 }
 
 TEST_F(raft_test, test_state_manager_store_and_read_config) {
     auto sm = cbdc::raft::state_manager(3,
-                                        m_endpoint,
                                         m_db_dir,
                                         m_config_file,
-                                        m_state_file);
+                                        m_state_file,
+                                        m_raft_endpoints);
 
     auto cfg = nuraft::cluster_config(100, 10, true);
     auto srv_config = nuraft::cs_new<nuraft::srv_config>(0, "endpoint2");
@@ -395,34 +387,36 @@ TEST_F(raft_test, test_state_manager_store_and_read_config) {
 
 TEST_F(raft_test, test_state_manager_default_config) {
     auto sm = cbdc::raft::state_manager(0,
-                                        m_endpoint,
                                         m_db_dir,
                                         "non-existent-config",
-                                        m_state_file);
+                                        m_state_file,
+                                        m_raft_endpoints);
     auto cfg = sm.load_config();
     ASSERT_EQ(cfg->get_log_idx(), 0UL);
     ASSERT_EQ(cfg->get_prev_log_idx(), 0UL);
     ASSERT_FALSE(cfg->is_async_replication());
-    ASSERT_EQ(cfg->get_servers().size(), 1UL);
-    ASSERT_EQ(cfg->get_server(0)->get_endpoint(), m_endpoint);
+    ASSERT_EQ(cfg->get_servers().size(), 3UL);
+    auto exp_ep = m_raft_endpoints[1].first + ":"
+                + std::to_string(m_raft_endpoints[1].second - 1);
+    ASSERT_EQ(cfg->get_server(1)->get_endpoint(), exp_ep);
 }
 
 TEST_F(raft_test, test_state_manager_load_logstore) {
     auto sm = cbdc::raft::state_manager(0,
-                                        m_endpoint,
                                         m_db_dir,
                                         m_config_file,
-                                        m_state_file);
+                                        m_state_file,
+                                        m_raft_endpoints);
     auto ls = sm.load_log_store();
     ASSERT_NE(ls, nullptr);
 }
 
 TEST_F(raft_test, test_state_manager_fail_logstore) {
     auto sm = cbdc::raft::state_manager(0,
-                                        m_endpoint,
                                         m_db_dir,
                                         m_config_file,
-                                        m_state_file);
+                                        m_state_file,
+                                        m_raft_endpoints);
     std::filesystem::remove_all(m_db_dir);
     // Make a file with the same name as the DB directory
     // That will make the init fail
@@ -794,10 +788,10 @@ TEST_F(raft_test, index_comparator_test) {
 
 TEST_F(raft_test, test_state_manager_exit) {
     auto sm = cbdc::raft::state_manager(0,
-                                        m_endpoint,
                                         m_db_dir,
                                         m_config_file,
-                                        m_state_file);
+                                        m_state_file,
+                                        m_raft_endpoints);
     ASSERT_EXIT(sm.system_exit(20), ::testing::ExitedWithCode(20), "c*");
 }
 

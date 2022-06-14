@@ -7,6 +7,7 @@
 #define OPENCBDC_TX_SRC_RAFT_STATE_MANAGER_H_
 
 #include "log_store.hpp"
+#include "util/network/socket.hpp"
 
 #include <libnuraft/nuraft.hxx>
 
@@ -16,15 +17,15 @@ namespace cbdc::raft {
       public:
         /// Constructor.
         /// \param srv_id ID of the raft node.
-        /// \param endpoint raft endpoint.
         /// \param log_dir directory for the raft log.
         /// \param config_file file for the cluster configuration.
         /// \param state_file file for the server state.
+        /// \param raft_endpoints list of initial node endpoints in the cluster.
         state_manager(int32_t srv_id,
-                      std::string endpoint,
                       std::string log_dir,
                       std::string config_file,
-                      std::string state_file);
+                      std::string state_file,
+                      std::vector<network::endpoint_t> raft_endpoints);
         ~state_manager() override = default;
 
         state_manager(const state_manager& other) = delete;
@@ -63,10 +64,10 @@ namespace cbdc::raft {
 
       private:
         int32_t m_id;
-        std::string m_endpoint;
         std::string m_config_file;
         std::string m_state_file;
         std::string m_log_dir;
+        std::vector<network::endpoint_t> m_raft_endpoints;
     };
 }
 
