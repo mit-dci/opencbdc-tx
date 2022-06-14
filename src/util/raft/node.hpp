@@ -40,8 +40,7 @@ namespace cbdc::raft {
         /// Constructor.
         /// \param node_id identifier of the node in the raft cluster. Must be
         ///                0 or greater.
-        /// \param raft_endpoint TCP endpoint upon which to listen for incoming raft
-        ///                      connections.
+        /// \param raft_endpoints TCP endpoints of nodes in the cluster.
         /// \param node_type name of the raft cluster this node will be part
         ///                  of.
         /// \param blocking true if replication calls should block until the
@@ -52,18 +51,14 @@ namespace cbdc::raft {
         ///                              of cores on the system.
         /// \param logger log instance NuRaft should use.
         /// \param raft_cb NuRaft callback to report raft events.
-        /// \param wait_for_followers true if the leader raft node should
-        ///                           re-attempt to add all followers to the
-        ///                           cluster until success.
         node(int node_id,
-             const network::endpoint_t& raft_endpoint,
+             std::vector<network::endpoint_t> raft_endpoints,
              const std::string& node_type,
              bool blocking,
              nuraft::ptr<nuraft::state_machine> sm,
              size_t asio_thread_pool_size,
              std::shared_ptr<logging::log> logger,
-             nuraft::cb_func::func_type raft_cb,
-             bool wait_for_followers);
+             nuraft::cb_func::func_type raft_cb);
 
         ~node();
 
@@ -72,16 +67,6 @@ namespace cbdc::raft {
         /// \param raft_params NuRaft-specific parameters for the raft node.
         /// \return true if the raft node initialized successfully.
         auto init(const nuraft::raft_params& raft_params) -> bool;
-
-        /// Connect to each of the given raft nodes and join them to the
-        /// cluster. If this node is not node 0, this method blocks until
-        /// node 0 joins this node to the cluster.
-        /// \param raft_servers node endpoints of the other raft nodes in the
-        ///                     cluster.
-        /// \return true if adding the nodes to the raft cluster succeeded.
-        auto
-        build_cluster(const std::vector<network::endpoint_t>& raft_servers)
-            -> bool;
 
         /// Indicates whether this node is the current raft leader.
         /// \return true if this node is the leader.
@@ -132,12 +117,6 @@ namespace cbdc::raft {
 
         nuraft::asio_service::options m_asio_opt;
         nuraft::raft_server::init_options m_init_opts;
-
-        bool m_wait_for_followers;
-
-        [[nodiscard]] auto add_cluster_nodes(
-            const std::vector<network::endpoint_t>& raft_servers) const
-            -> bool;
     };
 }
 
