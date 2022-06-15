@@ -32,6 +32,7 @@ namespace cbdc::locking_shard {
 
     auto state_machine::commit(uint64_t log_idx, nuraft::buffer& data)
         -> nuraft::ptr<nuraft::buffer> {
+        assert(log_idx == m_last_committed_idx + 1);
         m_last_committed_idx = log_idx;
 
         auto resp = blocking_call(data);
@@ -43,6 +44,13 @@ namespace cbdc::locking_shard {
         }
 
         return resp.value();
+    }
+
+    void state_machine::commit_config(
+        const nuraft::ulong log_idx,
+        nuraft::ptr<nuraft::cluster_config>& /*new_conf*/) {
+        assert(log_idx == m_last_committed_idx + 1);
+        m_last_committed_idx = log_idx;
     }
 
     auto state_machine::apply_snapshot(nuraft::snapshot& /* s */) -> bool {

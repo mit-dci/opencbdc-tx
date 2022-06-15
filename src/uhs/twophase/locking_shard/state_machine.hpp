@@ -46,6 +46,12 @@ namespace cbdc::locking_shard {
         auto commit(uint64_t log_idx, nuraft::buffer& data)
             -> nuraft::ptr<nuraft::buffer> override;
 
+        /// Handler for the raft cluster configuration changes
+        /// \param log_idx Raft log number of the configuration change.
+        void commit_config(
+            nuraft::ulong log_idx,
+            nuraft::ptr<nuraft::cluster_config>& /*new_conf*/) override;
+
         /// Not implemented for locking shard.
         /// \return false.
         auto apply_snapshot(nuraft::snapshot& /* s */) -> bool override;
