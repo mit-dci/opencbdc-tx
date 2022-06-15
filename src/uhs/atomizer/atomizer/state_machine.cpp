@@ -41,6 +41,7 @@ namespace cbdc::atomizer {
 
     auto state_machine::commit(nuraft::ulong log_idx, nuraft::buffer& data)
         -> nuraft::ptr<nuraft::buffer> {
+        assert(log_idx == m_last_committed_idx + 1);
         m_last_committed_idx = log_idx;
         auto req = from_buffer<request>(data);
         assert(req.has_value());
@@ -102,6 +103,7 @@ namespace cbdc::atomizer {
     void state_machine::commit_config(
         const nuraft::ulong log_idx,
         nuraft::ptr<nuraft::cluster_config>& /*new_conf*/) {
+        assert(log_idx == m_last_committed_idx + 1);
         m_last_committed_idx = log_idx;
     }
 

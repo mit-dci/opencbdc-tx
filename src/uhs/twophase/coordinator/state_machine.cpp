@@ -13,6 +13,7 @@
 namespace cbdc::coordinator {
     auto state_machine::commit(uint64_t log_idx, nuraft::buffer& data)
         -> nuraft::ptr<nuraft::buffer> {
+        assert(log_idx == m_last_committed_idx + 1);
         m_last_committed_idx = log_idx;
         auto comm = cbdc::coordinator::controller::sm_command_header();
         auto deser = cbdc::nuraft_serializer(data);
@@ -88,6 +89,13 @@ namespace cbdc::coordinator {
             }
         }
         return nullptr;
+    }
+
+    void state_machine::commit_config(
+        const nuraft::ulong log_idx,
+        nuraft::ptr<nuraft::cluster_config>& /*new_conf*/) {
+        assert(log_idx == m_last_committed_idx + 1);
+        m_last_committed_idx = log_idx;
     }
 
     auto state_machine::apply_snapshot(nuraft::snapshot& /* s */) -> bool {
