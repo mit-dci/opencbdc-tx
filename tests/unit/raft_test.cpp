@@ -161,7 +161,9 @@ class raft_test : public ::testing::Test {
         init_threads[0] = std::move(t);
 
         for(auto& thr : init_threads) {
-            thr.join();
+            if(thr.joinable()) {
+                thr.join();
+            }
         }
 
         ASSERT_TRUE(nodes[0]->is_leader());
@@ -199,6 +201,126 @@ class raft_test : public ::testing::Test {
 
         for(size_t i{0}; i < nodes.size(); i++) {
             ASSERT_EQ(nodes[i]->get_sm(), sms[i].get());
+        }
+    }
+
+    void basic_raft_cluster_fail_test() {
+        auto log = std::make_shared<cbdc::logging::log>(
+            cbdc::logging::log_level::trace,
+            false,
+            std::unique_ptr<std::ostream>(
+                new std::ofstream(m_log_file,
+                                  std::ios::out | std::ios::trunc)));
+
+        auto nodes = std::vector<std::unique_ptr<cbdc::raft::node>>();
+        auto sms = std::vector<std::shared_ptr<dummy_sm>>();
+        for(size_t i{0}; i < m_raft_endpoints.size(); i++) {
+            auto sm = std::make_shared<dummy_sm>();
+            nodes.emplace_back(
+                std::make_unique<cbdc::raft::node>(static_cast<int>(i),
+                                                   m_raft_endpoints[i],
+                                                   "test",
+                                                   true,
+                                                   sm,
+                                                   10,
+                                                   log,
+                                                   nullptr,
+                                                   false));
+            sms.emplace_back(sm);
+        }
+
+        // Test failure to init node raft by keeping port busy
+        auto ep = cbdc::network::endpoint_t{cbdc::network::localhost, 5001};
+        auto listener = cbdc::network::tcp_listener();
+        listener.listen(ep.first, ep.second);
+        ASSERT_FALSE(nodes[1]->init(m_raft_params));
+        nodes[1]->stop();
+        listener.close();
+
+        // Test timeout without waiting (leave off one follower node)
+        unsigned int follower_node_size_minus_one
+            = m_raft_endpoints.size() - 1;
+        std::vector<cbdc::network::endpoint_t> bad_raft_endpoints{};
+        auto init_threads
+            = std::vector<std::thread>(follower_node_size_minus_one);
+        for(size_t i{1}; i < follower_node_size_minus_one; i++) {
+            std::thread t(
+                [&](cbdc::raft::node& node) {
+                    ASSERT_TRUE(node.init(m_raft_params));
+                    ASSERT_TRUE(node.build_cluster(bad_raft_endpoints));
+                },
+                std::ref(*nodes[i]));
+            init_threads[i] = std::move(t);
+        }
+        std::thread t(
+            [&](cbdc::raft::node& node) {
+                ASSERT_TRUE(node.init(m_raft_params));
+                ASSERT_FALSE(node.build_cluster(m_raft_endpoints));
+            },
+            std::ref(*nodes[0]));
+        init_threads[0] = std::move(t);
+
+        for(auto& thr : init_threads) {
+            if(thr.joinable()) {
+                thr.join();
+            }
+        }
+
+        // Test replicate_sync called by non-leader failure
+        auto new_log
+            = cbdc::make_buffer<uint64_t, nuraft::ptr<nuraft::buffer>>(1);
+        ASSERT_EQ(nodes[1]->replicate_sync(new_log), std::nullopt);
+
+        // Test replicate_sync called by non-leader failure
+        ASSERT_FALSE(nodes[1]->replicate(new_log, nullptr));
+    }
+
+    void basic_raft_cluster_wait_for_follower_test() {
+        auto log = std::make_shared<cbdc::logging::log>(
+            cbdc::logging::log_level::trace,
+            false,
+            std::unique_ptr<std::ostream>(
+                new std::ofstream(m_log_file,
+                                  std::ios::out | std::ios::trunc)));
+
+        auto nodes = std::vector<std::unique_ptr<cbdc::raft::node>>();
+        auto sms = std::vector<std::shared_ptr<dummy_sm>>();
+        for(size_t i{0}; i < m_raft_endpoints.size(); i++) {
+            auto sm = std::make_shared<dummy_sm>();
+            nodes.emplace_back(
+                std::make_unique<cbdc::raft::node>(static_cast<int>(i),
+                                                   m_raft_endpoints[i],
+                                                   "test",
+                                                   true,
+                                                   sm,
+                                                   10,
+                                                   log,
+                                                   nullptr,
+                                                   true));
+            sms.emplace_back(sm);
+        }
+
+        // Test tiemout with successful wait for follower
+        auto init_threads = std::vector<std::thread>(m_raft_endpoints.size());
+        for(size_t i{0}; i < m_raft_endpoints.size(); i++) {
+            if(i == m_raft_endpoints.size() - 1) {
+                static constexpr auto sleep_time
+                    = std::chrono::milliseconds(8000);
+                std::this_thread::sleep_for(sleep_time);
+            }
+            std::thread t(
+                [&](cbdc::raft::node& node) {
+                    ASSERT_TRUE(node.init(m_raft_params));
+                    ASSERT_TRUE(node.build_cluster(m_raft_endpoints));
+                },
+                std::ref(*nodes[i]));
+            init_threads[i] = std::move(t);
+        }
+
+        for(auto& thr : init_threads) {
+            if(thr.joinable()) {
+                thr.join();
+            }
         }
     }
 
@@ -648,6 +770,14 @@ TEST_F(raft_test, raft_node_test_blocking) {
 
 TEST_F(raft_test, raft_node_test_non_blocking) {
     basic_raft_cluster_test(false);
+}
+
+TEST_F(raft_test, basic_raft_cluster_wait_for_follower_test) {
+    basic_raft_cluster_wait_for_follower_test();
+}
+
+TEST_F(raft_test, basic_raft_cluster_fail_test) {
+    basic_raft_cluster_fail_test();
 }
 
 TEST_F(raft_test, index_comparator_test) {
