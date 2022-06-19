@@ -55,7 +55,7 @@ namespace cbdc::rpc {
         /// starts the response handler thread.
         /// \return true.
         [[nodiscard]] auto init() -> bool {
-            if(!m_net.cluster_connect(m_server_endpoints, false)) {
+            if(!m_net.cluster_connect(m_server_endpoints, true)) {
                 return false;
             }
 

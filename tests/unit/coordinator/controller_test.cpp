@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "uhs/twophase/coordinator/controller.hpp"
+#include "uhs/twophase/locking_shard/controller.hpp"
 #include "util.hpp"
 
 #include <gtest/gtest.h>
@@ -55,13 +56,4 @@ TEST_F(coordinator_controller_test, out_of_range_node_id) {
                                                           m_opts,
                                                           m_logger);
     ASSERT_FALSE(m_ctl_coordinator->init());
-}
-
-TEST_F(coordinator_controller_test, successful_init) {
-    m_ctl_coordinator
-        = std::make_unique<cbdc::coordinator::controller>(0,
-                                                          0,
-                                                          m_opts,
-                                                          m_logger);
-    ASSERT_TRUE(m_ctl_coordinator->init());
 }
