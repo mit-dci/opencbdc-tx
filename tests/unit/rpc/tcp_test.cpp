@@ -126,7 +126,7 @@ TEST(tcp_rpc_test, send_fail_test) {
     auto client = cbdc::rpc::tcp_client<request, response>(
         {{cbdc::network::localhost, 55555},
          {cbdc::network::localhost, 55556}});
-    ASSERT_TRUE(client.init());
+    ASSERT_FALSE(client.init());
 
     auto req = request{0};
     auto resp = client.call(req);

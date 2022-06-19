@@ -8,6 +8,8 @@
 
 #include "uhs/transaction/transaction.hpp"
 
+#include <functional>
+
 namespace cbdc::coordinator {
     /// \brief Interface for a coordinator.
     /// Provides consistent semantics whether using a remote coordinator via
