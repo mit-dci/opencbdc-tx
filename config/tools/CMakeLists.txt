@@ -1,12 +1,13 @@
 project(config_gen)
 
-include_directories(../../src ../../3rdparty/secp256k1/include)
+include_directories(../../src ../../config/tools ../../3rdparty/secp256k1/include)
 
-set(SECP256K1_LIBRARY $<TARGET_FILE:secp256k1>)
+add_library(config_generator config_generator.cpp)
 
-add_executable(generate_config config_generator.cpp)
+add_executable(generate_config generate_configd.cpp)
 
-target_link_libraries(generate_config util
+target_link_libraries(generate_config config_generator
+                                      util
                                       network
                                       common
                                       crypto
