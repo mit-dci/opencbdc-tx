@@ -284,6 +284,32 @@ namespace cbdc {
         return deser;
     }
 
+    /// Deserializes a map of key-value pairs.
+    template<typename K, typename V, typename... Ts>
+    auto operator>>(serializer& deser, std::map<K, V, Ts...>& map)
+        -> serializer& {
+        auto len = uint64_t();
+        if(!(deser >> len)) {
+            return deser;
+        }
+
+        for(uint64_t i = 0; i < len; i++) {
+            auto key = K();
+            if(!(deser >> key)) {
+                return deser;
+            }
+
+            auto val = V();
+            if(!(deser >> val)) {
+                return deser;
+            }
+
+            map.emplace(std::move(key), std::move(val));
+        }
+
+        return deser;
+    }
+
     /// Serializes the count of items, and then each item statically-casted.
     /// \see \ref cbdc::operator<<(serializer&, T)
     template<typename K, typename... Ts>

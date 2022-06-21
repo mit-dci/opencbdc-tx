@@ -94,4 +94,14 @@ namespace cbdc {
         -> serializer& {
         return packet << e.m_code << e.m_idx;
     }
+
+    auto operator<<(serializer& ser, const transaction::uhs_element& e)
+        -> serializer& {
+        return ser << e.m_id << e.m_data << e.m_value;
+    }
+
+    auto operator>>(serializer& deser, transaction::uhs_element& e)
+        -> serializer& {
+        return deser >> e.m_id >> e.m_data >> e.m_value;
+    }
 }

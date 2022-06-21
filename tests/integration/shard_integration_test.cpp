@@ -54,7 +54,7 @@ TEST_F(shard_integration_test, error_non_existant_input) {
         init_blk));
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
-    auto tx = cbdc::test::simple_tx({'a'}, {{'b'}}, {{'c'}});
+    auto tx = cbdc::test::simple_tx({'a'}, {{{'b'}}}, {{{'c'}}});
     cbdc::test::sign_tx(tx, m_opts.m_sentinel_private_keys[0]);
 
     m_client.broadcast(tx);
@@ -71,7 +71,7 @@ TEST_F(shard_integration_test, error_initial_sync) {
     auto got_err = m_sys->expect<std::vector<cbdc::watchtower::tx_error>>(
         cbdc::test::mock_system_module::watchtower);
 
-    auto tx = cbdc::test::simple_tx({'a'}, {{'b'}}, {{'c'}});
+    auto tx = cbdc::test::simple_tx({'a'}, {{{'b'}}}, {{{'c'}}});
     cbdc::test::sign_tx(tx, m_opts.m_sentinel_private_keys[0]);
 
     m_client.broadcast(tx);

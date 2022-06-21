@@ -44,16 +44,16 @@ namespace cbdc {
             auto ctx = transaction::compact_tx(tx);
             auto [it, success] = tus.insert({ctx.m_id, {}});
             assert(success);
-            it->second.insert(it->second.end(),
-                              ctx.m_inputs.begin(),
-                              ctx.m_inputs.end());
-            it->second.insert(it->second.end(),
-                              ctx.m_uhs_outputs.begin(),
-                              ctx.m_uhs_outputs.end());
+            for(auto& inp : ctx.m_inputs) {
+                it->second.push_back(inp.m_id);
+            }
+            for(auto& out : ctx.m_uhs_outputs) {
+                it->second.push_back(out.m_id);
+            }
         }
 
         for(const auto& [tx_id, in] : pending_inputs()) {
-            tus.insert({tx_id, {in.hash()}});
+            tus.insert({tx_id, {in.to_uhs_element().m_id}});
         }
 
         cbdc::watchtower::status_update_request req{tus};

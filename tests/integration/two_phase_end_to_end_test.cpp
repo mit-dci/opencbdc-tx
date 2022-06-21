@@ -62,6 +62,19 @@ class two_phase_end_to_end_test : public ::testing::Test {
         m_sender.reset();
         m_receiver.reset();
 
+        // Wait for an audit to complete
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        auto audit_file = std::ifstream("shard0_audit.txt");
+        ASSERT_TRUE(audit_file.good());
+        auto audit_entries = std::vector<std::pair<uint64_t, uint64_t>>();
+        uint64_t epoch{};
+        uint64_t value{};
+        while(audit_file >> epoch >> value) {
+            audit_entries.emplace_back(epoch, value);
+        }
+        ASSERT_FALSE(audit_entries.empty());
+        ASSERT_EQ(audit_entries.back().second, 100UL);
+
         std::filesystem::remove(m_sender_wallet_store_file);
         std::filesystem::remove(m_sender_client_store_file);
         std::filesystem::remove(m_receiver_wallet_store_file);
@@ -73,6 +86,7 @@ class two_phase_end_to_end_test : public ::testing::Test {
         std::filesystem::remove("shard0_raft_config_0.dat");
         std::filesystem::remove("shard0_raft_state_0.dat");
         std::filesystem::remove("tp_samples.txt");
+        std::filesystem::remove("shard0_audit.txt");
     }
 
     void reload_sender() {
@@ -230,7 +244,7 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
     // still marked as unspent on the shard
     for(size_t i = 0; i < tx2.value().m_inputs.size() - 1; i++) {
         auto inp = tx2.value().m_inputs[i];
-        auto res4 = m_sender->check_unspent(inp.hash());
+        auto res4 = m_sender->check_unspent(inp.to_uhs_element().m_id);
         ASSERT_TRUE(res4.has_value());
         ASSERT_TRUE(res4.value());
     }

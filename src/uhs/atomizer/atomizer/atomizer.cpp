@@ -227,8 +227,8 @@ namespace cbdc::atomizer {
         auto err_set = std::unordered_set<hash_t, hashing::null>{};
         for(size_t offset = 0; offset <= cache_check_range; offset++) {
             for(const auto& inp : tx.m_inputs) {
-                if(m_spent[offset].find(inp) != m_spent[offset].end()) {
-                    err_set.insert(inp);
+                if(m_spent[offset].find(inp.m_id) != m_spent[offset].end()) {
+                    err_set.insert(inp.m_id);
                 }
             }
         }
@@ -246,6 +246,8 @@ namespace cbdc::atomizer {
         // None of the inputs have previously been spent during block heights
         // we used attestations from, so spend all the TX inputs in the current
         // block height (offset 0).
-        m_spent[0].insert(tx.m_inputs.begin(), tx.m_inputs.end());
+        for(const auto& inp : tx.m_inputs) {
+            m_spent[0].insert(inp.m_id);
+        }
     }
 }

@@ -5,6 +5,8 @@
 
 #include "shard.hpp"
 
+#include "uhs/transaction/messages.hpp"
+
 #include <utility>
 
 namespace cbdc::shard {
@@ -49,7 +51,8 @@ namespace cbdc::shard {
                         sizeof(this->m_best_block_height));
         }
 
-        update_snapshot();
+        auto snp = get_snapshot();
+        update_snapshot(std::move(snp));
 
         return std::nullopt;
     }
@@ -65,20 +68,20 @@ namespace cbdc::shard {
         for(const auto& tx : blk.m_transactions) {
             // Add new outputs
             for(const auto& out : tx.m_uhs_outputs) {
-                if(is_output_on_shard(out)) {
-                    std::array<char, sizeof(out)> out_arr{};
-                    std::memcpy(out_arr.data(), out.data(), out.size());
-                    leveldb::Slice OutPointKey(out_arr.data(), out.size());
+                if(is_output_on_shard(out.m_id)) {
+                    auto out_buf = cbdc::make_buffer(out);
+                    leveldb::Slice OutPointKey(out_buf.c_str(),
+                                               out_buf.size());
                     batch.Put(OutPointKey, leveldb::Slice());
                 }
             }
 
             // Delete spent inputs
             for(const auto& inp : tx.m_inputs) {
-                if(is_output_on_shard(inp)) {
-                    std::array<char, sizeof(inp)> inp_arr{};
-                    std::memcpy(inp_arr.data(), inp.data(), inp.size());
-                    leveldb::Slice OutPointKey(inp_arr.data(), inp.size());
+                if(is_output_on_shard(inp.m_id)) {
+                    auto inp_buf = cbdc::make_buffer(inp);
+                    leveldb::Slice OutPointKey(inp_buf.c_str(),
+                                               inp_buf.size());
                     batch.Delete(OutPointKey);
                 }
             }
@@ -97,7 +100,8 @@ namespace cbdc::shard {
         // Commit the changes atomically
         this->m_db->Write(this->m_write_options, &batch);
 
-        update_snapshot();
+        auto snp = get_snapshot();
+        update_snapshot(std::move(snp));
 
         return true;
     }
@@ -135,18 +139,17 @@ namespace cbdc::shard {
         for(uint64_t i = 0; i < tx.m_inputs.size(); i++) {
             const auto& inp = tx.m_inputs[i];
             // Only check for inputs/outputs relevant to this shard
-            if(!is_output_on_shard(inp)) {
+            if(!is_output_on_shard(inp.m_id)) {
                 continue;
             }
 
-            std::array<char, sizeof(inp)> inp_arr{};
-            std::memcpy(inp_arr.data(), inp.data(), inp.size());
-            leveldb::Slice OutPointKey(inp_arr.data(), inp.size());
+            auto inp_buf = cbdc::make_buffer(inp);
+            leveldb::Slice OutPointKey(inp_buf.c_str(), inp_buf.size());
             std::string op;
 
             const auto& res = m_db->Get(read_options, OutPointKey, &op);
             if(res.IsNotFound()) {
-                dne_inputs.push_back(inp);
+                dne_inputs.push_back(inp.m_id);
             } else {
                 attestations.insert(i);
             }
@@ -174,13 +177,49 @@ namespace cbdc::shard {
         return config::hash_in_shard_range(m_prefix_range, uhs_hash);
     }
 
-    void shard::update_snapshot() {
+    void shard::update_snapshot(std::shared_ptr<const leveldb::Snapshot> snp) {
         std::unique_lock<std::shared_mutex> l(m_snp_mut);
         m_snp_height = m_best_block_height;
-        m_snp = std::shared_ptr<const leveldb::Snapshot>(
+        m_snp = std::move(snp);
+    }
+
+    auto shard::audit(const std::shared_ptr<const leveldb::Snapshot>& snp)
+        -> std::optional<uint64_t> {
+        auto opts = leveldb::ReadOptions();
+        opts.snapshot = snp.get();
+        auto it = std::shared_ptr<leveldb::Iterator>(m_db->NewIterator(opts));
+        it->SeekToFirst();
+        // Skip best block height key
+        it->Next();
+        uint64_t tot{};
+        for(; it->Valid(); it->Next()) {
+            auto key = it->key();
+            auto buf = cbdc::buffer();
+            buf.extend(key.size());
+            std::memcpy(buf.data(), key.data(), key.size());
+            auto maybe_uhs_element
+                = cbdc::from_buffer<transaction::uhs_element>(buf);
+            if(!maybe_uhs_element.has_value()) {
+                return std::nullopt;
+            }
+            auto& uhs_element = maybe_uhs_element.value();
+            if(transaction::calculate_uhs_id(uhs_element.m_data,
+                                             uhs_element.m_value)
+               != uhs_element.m_id) {
+                return std::nullopt;
+            }
+            tot += uhs_element.m_value;
+        }
+
+        return tot;
+    }
+
+    auto shard::get_snapshot() -> std::shared_ptr<const leveldb::Snapshot> {
+        auto snp = std::shared_ptr<const leveldb::Snapshot>(
             m_db->GetSnapshot(),
             [&](const leveldb::Snapshot* p) {
                 m_db->ReleaseSnapshot(p);
             });
+        return snp;
     }
 }

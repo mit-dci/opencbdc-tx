@@ -241,6 +241,13 @@ namespace cbdc::config {
         return ss.str();
     }
 
+    auto get_shard_audit_log_key(size_t shard_id) -> std::string {
+        std::stringstream ss;
+        get_shard_key_prefix(ss, shard_id);
+        ss << audit_log_postfix;
+        return ss.str();
+    }
+
     auto read_shard_endpoints(options& opts, const parser& cfg)
         -> std::optional<std::string> {
         const auto shard_count = cfg.get_ulong(shard_count_key).value_or(0);
@@ -335,6 +342,14 @@ namespace cbdc::config {
                 = std::make_pair(static_cast<uint8_t>(*range_start),
                                  static_cast<uint8_t>(*range_end));
             opts.m_shard_ranges.push_back(shard_range);
+
+            const auto audit_log_key = get_shard_audit_log_key(i);
+            const auto audit_log = cfg.get_string(audit_log_key);
+            if(!audit_log.has_value()) {
+                return "No audit log file specified for shard "
+                     + std::to_string(i) + " (" + audit_log_key + ")";
+            }
+            opts.m_shard_audit_logs.push_back(audit_log.value());
         }
 
         opts.m_shard_completed_txs_cache_size
@@ -355,6 +370,10 @@ namespace cbdc::config {
             opts.m_seed_value
                 = cfg.get_ulong(seed_value).value_or(opts.m_seed_value);
         }
+
+        opts.m_shard_audit_interval
+            = cfg.get_ulong(shard_audit_interval_key)
+                  .value_or(opts.m_shard_audit_interval);
 
         return std::nullopt;
     }

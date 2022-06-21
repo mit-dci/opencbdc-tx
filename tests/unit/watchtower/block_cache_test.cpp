@@ -14,11 +14,11 @@ class BlockCacheTest : public ::testing::Test {
         cbdc::atomizer::block b0;
         b0.m_height = 44;
         b0.m_transactions.push_back(
-            cbdc::test::simple_tx({'a'}, {{'b'}, {'c'}}, {{'d'}}));
+            cbdc::test::simple_tx({'a'}, {{{'b'}}, {{'c'}}}, {{{'d'}}}));
         b0.m_transactions.push_back(
-            cbdc::test::simple_tx({'E'}, {{'d'}, {'f'}}, {{'G'}}));
+            cbdc::test::simple_tx({'E'}, {{{'d'}}, {{'f'}}}, {{{'G'}}}));
         b0.m_transactions.push_back(
-            cbdc::test::simple_tx({'h'}, {{'i'}, {'j'}}, {{'k'}}));
+            cbdc::test::simple_tx({'h'}, {{{'i'}}, {{'j'}}}, {{{'k'}}}));
         m_bc.push_block(std::move(b0));
     }
 
@@ -40,7 +40,7 @@ TEST_F(BlockCacheTest, spend_g) {
     cbdc::atomizer::block b1;
     b1.m_height = 45;
     b1.m_transactions.push_back(
-        cbdc::test::simple_tx({'L'}, {{'m'}, {'G'}}, {{'o'}}));
+        cbdc::test::simple_tx({'L'}, {{{'m'}}, {{'G'}}}, {{{'o'}}}));
     m_bc.push_block(std::move(b1));
 
     ASSERT_FALSE(m_bc.check_unspent({'G'}).has_value());
@@ -56,15 +56,15 @@ TEST_F(BlockCacheTest, add_k_plus_1) {
     cbdc::atomizer::block b1;
     b1.m_height = 45;
     b1.m_transactions.push_back(
-        cbdc::test::simple_tx({'l'}, {{'m'}, {'n'}}, {{'o'}}));
+        cbdc::test::simple_tx({'l'}, {{{'m'}}, {{'n'}}}, {{{'o'}}}));
     b1.m_transactions.push_back(
-        cbdc::test::simple_tx({'p'}, {{'q'}, {'r'}}, {{'s'}}));
+        cbdc::test::simple_tx({'p'}, {{{'q'}}, {{'r'}}}, {{{'s'}}}));
     m_bc.push_block(std::move(b1));
 
     cbdc::atomizer::block b2;
     b2.m_height = 46;
     b2.m_transactions.push_back(
-        cbdc::test::simple_tx({'t'}, {{'u'}, {'v'}}, {{'w'}}));
+        cbdc::test::simple_tx({'t'}, {{{'u'}}, {{'v'}}}, {{{'w'}}}));
     m_bc.push_block(std::move(b2));
 
     ASSERT_FALSE(m_bc.check_spent({'G'}).has_value());
@@ -73,7 +73,7 @@ TEST_F(BlockCacheTest, add_k_plus_1) {
     cbdc::atomizer::block b3;
     b3.m_height = 47;
     b3.m_transactions.push_back(
-        cbdc::test::simple_tx({'X'}, {{'y'}, {'G'}}, {{'z'}}));
+        cbdc::test::simple_tx({'X'}, {{{'y'}}, {{'G'}}}, {{{'z'}}}));
     m_bc.push_block(std::move(b3));
 
     ASSERT_FALSE(m_bc.check_unspent({'G'}).has_value());
