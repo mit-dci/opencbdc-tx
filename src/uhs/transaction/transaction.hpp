@@ -55,14 +55,10 @@ namespace cbdc::transaction {
         hash_t m_witness_program_commitment{};
         /// The UHS ID for the output
         hash_t m_id{};
-        /// The nonce used to compress the Pedersen Commitment to 32 bytes
-        hash_t m_nonce{};
         /// An auxiliary value used to prove preservation of balance
         commitment_t m_auxiliary{};
         /// The rangeproof guaranteeing that the output is greater than 0
         rangeproof_t<> m_range{};
-        /// The signature proving consistency
-        signature_t m_consistency{};
 
         auto operator==(const output& rhs) const -> bool;
         auto operator!=(const output& rhs) const -> bool;
@@ -87,6 +83,10 @@ namespace cbdc::transaction {
                           random_source& rng,
                           const out_point& point,
                           const output& put) -> std::pair<hash_t, hash_t>;
+
+    auto calculate_uhs_id(const out_point& point,
+                          const output& put,
+                          const commitment_t& value) -> hash_t;
 
     /// \brief Additional information a spender needs to spend an input
     struct spend_data {
@@ -120,12 +120,6 @@ namespace cbdc::transaction {
         input() = default;
     };
 
-    struct transaction_proof {
-        /// The signatures (one per input, in-order) on the nonces used for
-        /// compressing UHS IDs
-        std::vector<signature_t> m_noncesigs;
-    };
-
     /// \brief A complete transaction
     ///
     /// Complete set of transaction data:
@@ -146,9 +140,6 @@ namespace cbdc::transaction {
         std::vector<witness_t> m_witness{};
 
         std::optional<std::vector<spend_data>> m_out_spend_data{};
-
-        /// The per-transaction proof set
-        transaction_proof m_tx_proofs{};
 
         auto operator==(const full_tx& rhs) const -> bool;
 
@@ -172,15 +163,16 @@ namespace cbdc::transaction {
         commitment_t m_auxiliary{};
         /// The rangeproof guaranteeing that the output is greater than 0
         rangeproof_t<> m_range{};
-        /// The signature proving consistency
-        signature_t m_consistency{};
+        /// The nested hash of the outpoint and encumbrance
+        hash_t m_provenance{};
 
         explicit compact_output(const output& put);
+        explicit compact_output(const output& put, const out_point& point);
 
         compact_output(const hash_t& id,
                        const commitment_t& aux,
                        const rangeproof_t<>& range,
-                       const signature_t& consist);
+                       const hash_t& provenance);
         compact_output() = default;
 
         auto operator==(const compact_output& rhs) const -> bool;
@@ -302,9 +294,7 @@ namespace cbdc::transaction {
     add_proof(secp256k1_context* ctx,
               secp256k1_bulletproofs_generators* gens,
               random_source& rng,
-              full_tx& tx,
-              const std::vector<std::pair<privkey_t, pubkey_t>>& spending_keys)
-        -> bool;
+              full_tx& tx) -> bool;
 
     /// \brief Calculates the unique hash of a full transaction
     ///

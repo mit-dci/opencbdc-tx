@@ -25,9 +25,8 @@ namespace cbdc::transaction {
 
     auto output::operator==(const output& rhs) const -> bool {
         return m_witness_program_commitment == rhs.m_witness_program_commitment
-            && m_id == rhs.m_id && m_nonce == rhs.m_nonce
-            && m_auxiliary == rhs.m_auxiliary && m_range == rhs.m_range
-            && m_consistency == rhs.m_consistency;
+            && m_id == rhs.m_id && m_auxiliary == rhs.m_auxiliary
+            && m_range == rhs.m_range;
     }
 
     auto output::operator!=(const output& rhs) const -> bool {
@@ -37,21 +36,61 @@ namespace cbdc::transaction {
     compact_output::compact_output(const output& put)
         : m_id(put.m_id),
           m_auxiliary(put.m_auxiliary),
+          m_range(put.m_range) {}
+
+    auto output_preimage(const out_point& point, const output& put)
+        -> std::array<unsigned char,
+                      sizeof(compact_tx::m_id) + sizeof(out_point::m_index)
+                          + sizeof(output::m_witness_program_commitment)> {
+        std::array<unsigned char,
+                   sizeof(compact_tx::m_id) + sizeof(out_point::m_index)
+                       + sizeof(output::m_witness_program_commitment)>
+            buf{};
+
+        static constexpr auto tx_id_size = sizeof(point.m_tx_id);
+        static constexpr auto idx_size = sizeof(point.m_index);
+        static constexpr auto wcom_size
+            = sizeof(put.m_witness_program_commitment);
+
+        std::memcpy(buf.data(), point.m_tx_id.data(), tx_id_size);
+        std::memcpy(buf.data() + tx_id_size, &point.m_index, idx_size);
+        std::memcpy(buf.data() + tx_id_size + idx_size,
+                    put.m_witness_program_commitment.data(),
+                    wcom_size);
+
+        return buf;
+    }
+
+    auto output_nested_hash(const out_point& point, const output& put)
+        -> hash_t {
+        auto buf = output_preimage(point, put);
+        CSHA256 sha;
+        sha.Write(buf.data(), buf.size());
+
+        hash_t res{};
+        sha.Finalize(res.data());
+
+        return res;
+    }
+
+    compact_output::compact_output(const output& put, const out_point& point)
+        : m_id(put.m_id),
+          m_auxiliary(put.m_auxiliary),
           m_range(put.m_range),
-          m_consistency(put.m_consistency) {}
+          m_provenance(output_nested_hash(point, put)) {}
 
     compact_output::compact_output(const hash_t& id,
                                    const commitment_t& aux,
                                    const rangeproof_t<>& range,
-                                   const signature_t& consist)
+                                   const hash_t& provenance)
         : m_id(id),
           m_auxiliary(aux),
           m_range(range),
-          m_consistency(consist) {}
+          m_provenance(provenance) {}
 
     auto compact_output::operator==(const compact_output& rhs) const -> bool {
         return m_id == rhs.m_id && m_auxiliary == rhs.m_auxiliary
-            && m_range == rhs.m_range && m_consistency == rhs.m_consistency;
+            && m_range == rhs.m_range;
     }
 
     auto compact_output::operator!=(const compact_output& rhs) const -> bool {
@@ -128,71 +167,19 @@ namespace cbdc::transaction {
         return input_from_output(tx, i, id);
     }
 
-    auto output_preimage(const out_point& point, const output& put)
-        -> std::array<unsigned char,
-                      sizeof(compact_tx::m_id) + sizeof(out_point::m_index)
-                          + sizeof(output::m_witness_program_commitment)> {
-        std::array<unsigned char,
-                   sizeof(compact_tx::m_id) + sizeof(out_point::m_index)
-                       + sizeof(output::m_witness_program_commitment)>
-            buf{};
-
-        static constexpr auto tx_id_size = sizeof(point.m_tx_id);
-        static constexpr auto idx_size = sizeof(point.m_index);
-        static constexpr auto wcom_size
-            = sizeof(put.m_witness_program_commitment);
-
-        std::memcpy(buf.data(), point.m_tx_id.data(), tx_id_size);
-        std::memcpy(buf.data() + tx_id_size, &point.m_index, idx_size);
-        std::memcpy(buf.data() + tx_id_size + idx_size,
-                    put.m_witness_program_commitment.data(),
-                    wcom_size);
-
-        return buf;
-    }
-
-    auto output_randomness(
-        std::array<unsigned char,
-                   sizeof(compact_tx::m_id) + sizeof(out_point::m_index)
-                       + sizeof(output::m_witness_program_commitment)> buf,
-        const hash_t& nonce) -> hash_t {
-        const auto bufsize = buf.size();
+    auto calculate_uhs_id(const out_point& point,
+                          const output& put,
+                          const commitment_t& value) -> hash_t {
+        auto buf = output_nested_hash(point, put);
 
         CSHA256 sha;
-        sha.Write(buf.data(), bufsize);
-        sha.Write(nonce.data(), nonce.size());
-        hash_t candidate{};
-        sha.Finalize(candidate.data());
+        sha.Write(buf.data(), buf.size());
+        sha.Write(value.data(), value.size());
 
-        return candidate;
-    }
+        hash_t id{};
+        sha.Finalize(id.data());
 
-    auto calculate_uhs_id(
-        secp256k1_context* ctx,
-        random_source& rng,
-        std::array<unsigned char,
-                   sizeof(compact_tx::m_id) + sizeof(out_point::m_index)
-                       + sizeof(output::m_witness_program_commitment)> buf,
-        uint64_t value) -> std::pair<hash_t, hash_t> {
-        while(true) {
-            auto t = rng.random_hash();
-            auto candidate = output_randomness(buf, t);
-            auto c = make_xonly_commitment(ctx, value, candidate);
-            if(c.has_value()) {
-                return std::make_pair(c.value(), t);
-            }
-        }
-
-        __builtin_unreachable();
-    }
-
-    auto calculate_uhs_id(secp256k1_context* ctx,
-                          random_source& rng,
-                          const out_point& point,
-                          const output& put,
-                          uint64_t value) -> std::pair<hash_t, hash_t> {
-        auto buf = output_preimage(point, put);
-        return calculate_uhs_id(ctx, rng, buf, value);
+        return id;
     }
 
     auto roll_auxiliaries(secp256k1_context* ctx,
@@ -261,43 +248,10 @@ namespace cbdc::transaction {
                       const out_point& point,
                       const spend_data& out_spend_data,
                       const secp256k1_pedersen_commitment* auxiliary) -> bool {
-        const auto out_preimage = output_preimage(point, put);
-        auto [uhs, nonce]
-            = calculate_uhs_id(ctx, rng, out_preimage, out_spend_data.m_value);
-
-        put.m_id = uhs;
-        put.m_nonce = nonce;
-
-        // manually derive the secret key
-        auto esk = output_randomness(out_preimage, nonce);
-        auto rprime = out_spend_data.m_blind;
-        [[maybe_unused]] auto ret
-            = secp256k1_ec_seckey_negate(ctx, rprime.data());
-        // fails when rprime == 0 (which is fine)
-        ret = secp256k1_ec_seckey_tweak_add(ctx, esk.data(), rprime.data());
-        assert(ret == 1);
-
-        secp256k1_keypair kp{};
-        ret = secp256k1_keypair_create(ctx, &kp, esk.data());
-        assert(ret == 1);
-
-        auto consistency = signature_t{};
-        std::array<unsigned char, hash_size> consist_contents{
-            "consistent proof"};
-        ret = secp256k1_schnorrsig_sign(ctx,
-                                        consistency.data(),
-                                        consist_contents.data(),
-                                        &kp,
-                                        nullptr,
-                                        nullptr);
-        assert(ret == 1);
-
-        put.m_consistency = consistency;
-
         rangeproof_t<> range{};
         size_t rangelen = range.size();
         static constexpr auto upper_bound = 64; // 2^64 - 1
-        ret = secp256k1_bulletproofs_rangeproof_uncompressed_prove(
+        [[maybe_unused]] auto ret = secp256k1_bulletproofs_rangeproof_uncompressed_prove(
             ctx,
             gens,
             secp256k1_generator_h,
@@ -317,6 +271,9 @@ namespace cbdc::transaction {
 
         put.m_range = range;
         put.m_auxiliary = serialize_commitment(ctx, *auxiliary);
+
+        auto uhs = calculate_uhs_id(point, put, put.m_auxiliary);
+        put.m_id = uhs;
 
         return true;
     }
@@ -354,8 +311,7 @@ namespace cbdc::transaction {
     add_proof(secp256k1_context* ctx,
               secp256k1_bulletproofs_generators* gens,
               random_source& rng,
-              full_tx& tx,
-              const std::vector<std::pair<privkey_t, pubkey_t>>& spending_keys)
+              full_tx& tx)
         -> bool {
         std::vector<hash_t> blinds{};
         for(const auto& inp : tx.m_inputs) {
@@ -405,14 +361,6 @@ namespace cbdc::transaction {
         //    inp.m_spend_data = std::nullopt;
         //}
 
-        std::vector<unsigned char> nonces{};
-        for(const auto& put : tx.m_outputs) {
-            const auto& nonce = put.m_nonce;
-            std::copy(nonce.begin(), nonce.end(), std::back_inserter(nonces));
-        }
-
-        tx.m_tx_proofs = {sign_nonces(ctx, nonces, spending_keys)};
-
         return true;
     }
 
@@ -425,8 +373,10 @@ namespace cbdc::transaction {
         for(const auto& inp : tx.m_inputs) {
             m_inputs.push_back(inp.m_prevout_data.m_id);
         }
-        for(const auto& put : tx.m_outputs) {
-            m_outputs.emplace_back(put);
+        for(size_t i{0}; i < tx.m_outputs.size(); ++i) {
+            auto put = tx.m_outputs[i];
+            out_point point{m_id, i};
+            m_outputs.emplace_back(put, point);
         }
     }
 
