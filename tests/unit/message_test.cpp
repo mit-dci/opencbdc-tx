@@ -40,10 +40,8 @@ TEST_F(PacketIOTest, output) {
     cbdc::transaction::output out;
     out.m_witness_program_commitment = {'t', 'a', 'f', 'm'};
     out.m_id = {'q', 'w', 'e', 'r'};
-    out.m_nonce = {'t', 'y', 'u', 'i'};
     out.m_auxiliary = {'o', 'p', '[', ']'};
     out.m_range = {'}', '{', 'P', 'O'};
-    out.m_consistency = {'I', 'U', 'Y', 'T'};
 
     m_ser << out;
 
@@ -57,10 +55,8 @@ TEST_F(PacketIOTest, input) {
     cbdc::transaction::output out;
     out.m_witness_program_commitment = {'t', 'a', 'f', 'm'};
     out.m_id = {'q', 'w', 'e', 'r'};
-    out.m_nonce = {'t', 'y', 'u', 'i'};
     out.m_auxiliary = {'o', 'p', '[', ']'};
     out.m_range = {'}', '{', 'P', 'O'};
-    out.m_consistency = {'I', 'U', 'Y', 'T'};
 
     cbdc::transaction::input in;
     in.m_prevout_data = out;
@@ -80,10 +76,8 @@ TEST_F(PacketIOTest, transaction) {
     cbdc::transaction::output inout;
     inout.m_witness_program_commitment = {'t', 'a', 'f', 'm'};
     inout.m_id = {'q', 'w', 'e', 'r'};
-    inout.m_nonce = {'t', 'y', 'u', 'i'};
     inout.m_auxiliary = {'o', 'p', '[', ']'};
     inout.m_range = {'}', '{', 'P', 'O'};
-    inout.m_consistency = {'I', 'U', 'Y', 'T'};
 
     cbdc::transaction::input in;
     in.m_prevout_data = inout;
@@ -114,8 +108,8 @@ TEST_F(PacketIOTest, ctx_notify_request) {
     tx_notify.m_attestations.insert({'e', 'o', 'm', 'e'});
     tx_notify.m_block_height = 33;
     tx_notify.m_tx.m_inputs.push_back({'a', 'x', 'o', 'p'});
-    tx_notify.m_tx.m_outputs.push_back({{'b'}, {'t'}, {'a'}, {'f'}});
-    tx_notify.m_tx.m_outputs.push_back({{'c'}, {'q'}, {'e'}, {'n'}});
+    tx_notify.m_tx.m_outputs.push_back({{'b'}, {'t'}, {'a'}, {'h'}});
+    tx_notify.m_tx.m_outputs.push_back({{'c'}, {'q'}, {'e'}, {'d'}});
     tx_notify.m_tx.m_id = {'p', 'l', 'k', 'e'};
 
     m_ser << tx_notify;
@@ -129,14 +123,14 @@ TEST_F(PacketIOTest, ctx_notify_request) {
 TEST_F(PacketIOTest, block) {
     cbdc::transaction::compact_tx tx0;
     tx0.m_inputs.push_back({'a', 'x', 'o', 'p'});
-    tx0.m_outputs.push_back({{'b'}, {'t'}, {'a'}, {'f'}});
-    tx0.m_outputs.push_back({{'c'}, {'q'}, {'e'}, {'n'}});
+    tx0.m_outputs.push_back({{'b'}, {'t'}, {'a'}, {'h'}});
+    tx0.m_outputs.push_back({{'c'}, {'q'}, {'e'}, {'d'}});
     tx0.m_id = {'p', 'l', 'k', 'e'};
 
     cbdc::transaction::compact_tx tx1;
     tx1.m_inputs.push_back({'h', 'o', 'o', 'e'});
-    tx1.m_outputs.push_back({{'b'}, {'t'}, {'a'}, {'f'}});
-    tx1.m_outputs.push_back({{'c'}, {'q'}, {'e'}, {'n'}});
+    tx1.m_outputs.push_back({{'b'}, {'t'}, {'a'}, {'h'}});
+    tx1.m_outputs.push_back({{'c'}, {'q'}, {'e'}, {'d'}});
     tx1.m_id = {'o', 'g', 'l', 'j'};
 
     cbdc::atomizer::block block;
@@ -154,8 +148,8 @@ TEST_F(PacketIOTest, block) {
 TEST_F(PacketIOTest, compact_transaction) {
     cbdc::transaction::compact_tx tx;
     tx.m_inputs.push_back({'h', 'o', 'o', 'e'});
-    tx.m_outputs.push_back({{'a'}, {'q'}, {'b'}, {'g'}});
-    tx.m_outputs.push_back({{'c'}, {'m'}, {'e'}, {'o'}});
+    tx.m_outputs.push_back({{'a'}, {'q'}, {'b'}, {'p'}});
+    tx.m_outputs.push_back({{'c'}, {'m'}, {'e'}, {'z'}});
     tx.m_id = {'o', 'g', 'l', 'j'};
 
     m_ser << tx;
@@ -472,7 +466,7 @@ TEST_F(PacketIOTest, aggregate_tx_notify_request) {
 TEST_F(PacketIOTest, variant) {
     auto outpoint = cbdc::transaction::out_point{{'a', 'b', 'c', 'd'}, 1};
     auto output
-        = cbdc::transaction::output{{'b'}, {'c'}, {'d'}, {'e'}, {'f'}, {'g'}};
+        = cbdc::transaction::output{{'b'}, {'c'}, {'d'}, {'e'}};
     auto var = std::variant<cbdc::transaction::out_point,
                             cbdc::transaction::output>(outpoint);
     m_ser << var;

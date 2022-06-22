@@ -141,10 +141,7 @@ auto main(int argc, char** argv) -> int {
                                 sizeof(ctx.m_outputs[0].m_auxiliary);
                             static constexpr auto rng_size =
                                 sizeof(ctx.m_outputs[0].m_range);
-                            static constexpr auto cst_size =
-                                sizeof(ctx.m_outputs[0].m_consistency);
-                            std::array<char, aux_size + rng_size + cst_size>
-                                proofs_arr{};
+                            std::array<char, aux_size + rng_size> proofs_arr{};
 
                             std::memcpy(proofs_arr.data(),
                                         ctx.m_outputs[0].m_auxiliary.data(),
@@ -152,9 +149,6 @@ auto main(int argc, char** argv) -> int {
                             std::memcpy(proofs_arr.data() + aux_size,
                                         ctx.m_outputs[0].m_range.data(),
                                         rng_size);
-                            std::memcpy(proofs_arr.data() + aux_size + rng_size,
-                                        ctx.m_outputs[0].m_consistency.data(),
-                                        cst_size);
                             leveldb::Slice hash_key(hash_arr.data(),
                                                     output_hash.size());
                             leveldb::Slice ProofVal(proofs_arr.data(),

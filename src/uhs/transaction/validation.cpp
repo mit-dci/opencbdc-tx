@@ -261,14 +261,13 @@ namespace cbdc::transaction::validation {
     }
 
     auto check_proof(const compact_tx& tx) -> std::optional<proof_error> {
+        // todo: verify the UHS ID itself
         auto* ctx = secp_context.get();
         static constexpr auto scratch_size = 100UL * 1024UL;
         secp256k1_scratch_space* scratch
             = secp256k1_scratch_space_create(ctx, scratch_size);
         std::vector<secp256k1_pedersen_commitment> auxiliaries{};
         for(const auto& proof : tx.m_outputs) {
-            std::array<secp256k1_pubkey, 2> points{};
-
             auto maybe_aux = deserialize_commitment(ctx, proof.m_auxiliary);
             if(!maybe_aux.has_value()) {
                 return proof_error{proof_error_code::invalid_auxiliary};
@@ -276,48 +275,7 @@ namespace cbdc::transaction::validation {
             auto aux = maybe_aux.value();
             auxiliaries.push_back(aux);
 
-            secp256k1_pedersen_commitment_as_key(&aux, &points[0]);
-            auto ret = secp256k1_ec_pubkey_negate(ctx, &points[0]);
-            assert(ret == 1);
-
-            hash_t uhs_id = proof.m_id;
-            auto maybe_comm = expand_xonly_commitment(ctx, uhs_id);
-            if(!maybe_comm.has_value()) {
-                return proof_error{proof_error_code::invalid_uhs_id};
-            }
-            auto comm = maybe_comm.value();
-
-            secp256k1_pedersen_commitment_as_key(&comm, &points[1]);
-
-            std::array<secp256k1_pubkey*, 2> pks{&points[0], &points[1]};
-
-            secp256k1_pubkey fullepk{};
-            ret = secp256k1_ec_pubkey_combine(ctx, &fullepk, pks.data(), 2);
-            if(ret != 1) {
-                return proof_error{proof_error_code::invalid_signature_key};
-            }
-
-            secp256k1_xonly_pubkey epk{};
-            [[maybe_unused]] int parity{};
-            ret = secp256k1_xonly_pubkey_from_pubkey(ctx,
-                                                     &epk,
-                                                     &parity,
-                                                     &fullepk);
-            if(ret != 1) {
-                return proof_error{proof_error_code::invalid_signature_key};
-            }
-
-            std::array<unsigned char, hash_size> consist_contents{
-                "consistent proof"};
-            ret = secp256k1_schnorrsig_verify(ctx,
-                                              proof.m_consistency.data(),
-                                              consist_contents.data(),
-                                              &epk);
-            if(ret != 1) {
-                return proof_error{proof_error_code::inconsistent_value};
-            }
-
-            ret = secp256k1_bulletproofs_rangeproof_uncompressed_verify(
+            [[maybe_unused]] auto ret = secp256k1_bulletproofs_rangeproof_uncompressed_verify(
                 ctx,
                 scratch,
                 generators.get(),

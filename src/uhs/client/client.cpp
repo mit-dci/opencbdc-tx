@@ -106,9 +106,7 @@ namespace cbdc {
     }
 
     void client::sign_transaction(transaction::full_tx& tx) {
-        auto keys = m_wallet.spending_keys(tx);
-        assert(keys.has_value());
-        m_wallet.sign(tx, keys.value());
+        m_wallet.sign(tx);
     }
 
     void client::register_pending_tx(const transaction::full_tx& tx) {

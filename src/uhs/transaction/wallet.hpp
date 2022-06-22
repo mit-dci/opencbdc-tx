@@ -181,10 +181,8 @@ namespace cbdc::transaction {
 
         /// Signs each of the transaction's inputs using Schnorr signatures.
         /// \param tx the transaction whose inputs to sign.
-        /// \param spend_keys the keys necessary to sign the transaction
         void
-        sign(full_tx& tx,
-             std::vector<std::pair<privkey_t, pubkey_t>> spend_keys) const;
+        sign(full_tx& tx) const;
 
         /// Checks if the input is spendable by the current wallet.
         /// \param in the input to check.

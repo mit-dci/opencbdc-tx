@@ -58,8 +58,6 @@ TEST_F(uhs_test, leveldb_roundtrip) {
     std::memcpy(vptr, o.m_auxiliary.data(), o.m_auxiliary.size());
     vptr += o.m_auxiliary.size();
     std::memcpy(vptr, o.m_range.data(), o.m_range.size());
-    vptr += o.m_range.size();
-    std::memcpy(vptr, o.m_consistency.data(), o.m_consistency.size());
 
     leveldb::Slice Val(v.data(), v.size());
     m_db->Put(this->m_write_options, Key, Val);
@@ -75,6 +73,7 @@ TEST_F(uhs_test, map_roundtrip) {
                                         {'e', 'f', 'g', 'h'},
                                         {'i', 'j', 'k', 'l'},
                                         {'m', 'n', 'o', 'p'}};
+
 
     m_proofs.emplace(o.m_id, o);
     const auto& p = m_proofs[o.m_id];

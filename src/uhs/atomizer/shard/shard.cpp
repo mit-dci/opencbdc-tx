@@ -75,9 +75,9 @@ namespace cbdc::shard {
 
                     static constexpr auto aux_size = sizeof(out.m_auxiliary);
                     static constexpr auto rng_size = sizeof(out.m_range);
-                    static constexpr auto cst_size = sizeof(out.m_consistency);
+                    static constexpr auto preimg_size = sizeof(out.m_range);
 
-                    std::array<char, aux_size + rng_size + cst_size>
+                    std::array<char, aux_size + rng_size + preimg_size>
                         proofs_arr{};
                     std::memcpy(proofs_arr.data(),
                                 out.m_auxiliary.data(),
@@ -86,8 +86,8 @@ namespace cbdc::shard {
                                 out.m_range.data(),
                                 out.m_range.size());
                     std::memcpy(proofs_arr.data() + aux_size + rng_size,
-                                out.m_consistency.data(),
-                                cst_size);
+                                out.m_provenance.data(),
+                                out.m_provenance.size());
 
                     leveldb::Slice ProofVal(proofs_arr.data(),
                                             proofs_arr.size());

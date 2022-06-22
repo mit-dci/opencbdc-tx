@@ -38,17 +38,13 @@ namespace cbdc {
             ret.m_outputs.push_back(out);
         }
 
-        auto spend_keys = spending_keys(ret);
-        assert(spend_keys.has_value());
-
         ret.m_out_spend_data
             = std::vector<spend_data>(n_outputs, {{}, output_val});
 
         [[maybe_unused]] auto res = transaction::add_proof(m_secp.get(),
                                                            m_generators.get(),
                                                            *m_random_source,
-                                                           ret,
-                                                           spend_keys.value());
+                                                           ret);
 
         assert(res);
 
@@ -105,24 +101,17 @@ namespace cbdc {
 
         ret.m_out_spend_data = out_spend_data;
 
-        auto spend_keys = spending_keys(ret);
-        if(!spend_keys.has_value()) {
-            // we do not have the keys necessary to spend one-or-more inputs
-            return std::nullopt;
-        }
-
         auto res = transaction::add_proof(m_secp.get(),
                                           m_generators.get(),
                                           *m_random_source,
-                                          ret,
-                                          spend_keys.value());
+                                          ret);
 
         if(!res) {
             return std::nullopt;
         }
 
         if(sign_tx) {
-            sign(ret, spend_keys.value());
+            sign(ret);
         }
 
         return ret;
@@ -148,20 +137,13 @@ namespace cbdc {
         tx.m_outputs[0].m_witness_program_commitment
             = m_seed_witness_commitment;
 
-        auto spend_keys = spending_keys(tx);
-        if(!spend_keys.has_value()) {
-            // we do not have the keys necessary to spend one-or-more inputs
-            return std::nullopt;
-        }
-
         std::vector<spend_data> out_spend_data{};
         out_spend_data.push_back(transaction::spend_data{{}, m_seed_value});
         tx.m_out_spend_data = out_spend_data;
         auto res = transaction::add_proof(m_secp.get(),
                                           m_generators.get(),
                                           *m_random_source,
-                                          tx,
-                                          spend_keys.value());
+                                          tx);
 
         if(!res) {
             return std::nullopt;
@@ -280,44 +262,60 @@ namespace cbdc {
         return keys;
     }
 
-    void transaction::wallet::sign(
-        transaction::full_tx& tx,
-        std::vector<std::pair<privkey_t, pubkey_t>> keys) const {
+    void transaction::wallet::sign(transaction::full_tx& tx) const {
         // TODO: other sighash types besides SIGHASH_ALL?
         const auto sighash = transaction::tx_id(tx);
         tx.m_witness.resize(tx.m_inputs.size());
 
         for(size_t i = 0; i < tx.m_inputs.size(); i++) {
-            const auto& [seckey, pubkey] = keys[i];
+            const auto& wit_commit
+                = tx.m_inputs[i].m_prevout_data.m_witness_program_commitment;
 
-            auto& sig = tx.m_witness[i];
-            sig.resize(transaction::validation::p2pk_witness_len);
-            sig[0] = std::byte(
-                transaction::validation::witness_program_type::p2pk);
-            std::memcpy(
-                &sig[sizeof(transaction::validation::witness_program_type)],
-                pubkey.data(),
-                pubkey.size());
+            privkey_t seckey{};
+            pubkey_t pubkey{};
+            bool key_ours = false;
+            {
+                std::shared_lock<std::shared_mutex> sl(m_keys_mut);
+                const auto wit_prog = m_witness_programs.find(wit_commit);
+                key_ours = wit_prog != m_witness_programs.end();
+                if(key_ours) {
+                    pubkey = wit_prog->second;
+                    seckey = m_keys.at(pubkey);
+                }
+            }
 
-            secp256k1_keypair keypair{};
-            [[maybe_unused]] const auto ret
-                = secp256k1_keypair_create(m_secp.get(),
-                                           &keypair,
-                                           seckey.data());
-            assert(ret == 1);
+            if(key_ours) {
+                auto& sig = tx.m_witness[i];
+                sig.resize(transaction::validation::p2pk_witness_len);
+                sig[0] = std::byte(
+                    transaction::validation::witness_program_type::p2pk);
+                std::memcpy(
+                    &sig[sizeof(
+                        transaction::validation::witness_program_type)],
+                    pubkey.data(),
+                    pubkey.size());
 
-            std::array<unsigned char, sig_len> sig_arr{};
-            [[maybe_unused]] const auto sign_ret
-                = secp256k1_schnorrsig_sign(m_secp.get(),
-                                            sig_arr.data(),
-                                            sighash.data(),
-                                            &keypair,
-                                            nullptr,
-                                            nullptr);
-            std::memcpy(&sig[transaction::validation::p2pk_witness_prog_len],
-                        sig_arr.data(),
-                        sizeof(sig_arr));
-            assert(sign_ret == 1);
+                secp256k1_keypair keypair{};
+                [[maybe_unused]] const auto ret
+                    = secp256k1_keypair_create(m_secp.get(),
+                                               &keypair,
+                                               seckey.data());
+                assert(ret == 1);
+
+                std::array<unsigned char, sig_len> sig_arr{};
+                [[maybe_unused]] const auto sign_ret
+                    = secp256k1_schnorrsig_sign(m_secp.get(),
+                                                sig_arr.data(),
+                                                sighash.data(),
+                                                &keypair,
+                                                nullptr,
+                                                nullptr);
+                std::memcpy(
+                    &sig[transaction::validation::p2pk_witness_prog_len],
+                    sig_arr.data(),
+                    sizeof(sig_arr));
+                assert(sign_ret == 1);
+            }
         }
     }
 
@@ -556,26 +554,19 @@ namespace cbdc {
 
         assert(total_amount == 0);
 
-        auto spend_keys = spending_keys(ret);
-        if(!spend_keys.has_value()) {
-            // we do not have the keys necessary to spend one-or-more inputs
-            return std::nullopt;
-        }
-
         ret.m_out_spend_data = out_spend_data;
 
         auto res = transaction::add_proof(m_secp.get(),
                                           m_generators.get(),
                                           *m_random_source,
-                                          ret,
-                                          spend_keys.value());
+                                          ret);
 
         if(!res) {
             return std::nullopt;
         }
 
         if(sign_tx) {
-            sign(ret, spend_keys.value());
+            sign(ret);
         }
 
         return ret;
@@ -622,26 +613,19 @@ namespace cbdc {
             out_spend_data.push_back(transaction::spend_data{{}, value});
         }
 
-        auto spend_keys = spending_keys(ret);
-        if(!spend_keys.has_value()) {
-            // we do not have the keys necessary to spend one-or-more inputs
-            return std::nullopt;
-        }
-
         ret.m_out_spend_data = out_spend_data;
 
         auto res = transaction::add_proof(m_secp.get(),
                                           m_generators.get(),
                                           *m_random_source,
-                                          ret,
-                                          spend_keys.value());
+                                          ret);
 
         if(!res) {
             return std::nullopt;
         }
 
         if(sign_tx) {
-            sign(ret, spend_keys.value());
+            sign(ret);
         }
 
         return ret;
