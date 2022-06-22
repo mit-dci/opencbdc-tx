@@ -6,6 +6,6 @@ services:
     build: .
     image: opencbdc-tx
     tty: true
-    command: sh ./scripts/test-transaction.sh 2pc-compose.cfg
+    command: sh ./scripts/test-transaction.sh ./config/general/2pc-compose.cfg
     networks:
       - 2pc-network

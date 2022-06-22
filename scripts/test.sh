@@ -173,7 +173,8 @@ echo
 if [[ "$RUN_INTEGRATION_TESTS" == "true" ]]
 then
     echo "Running integration tests..."
-    cp "${REPO_TOP_DIR}"/tests/integration/*.cfg "$BUILD_DIR"
+    cp "${REPO_TOP_DIR}"/config/integration/*.cfg "${BUILD_DIR}"
+    cp "${REPO_TOP_DIR}"/config/tools/*.tmpl "${BUILD_DIR}"/config/tools
     run_test_suite "tests/integration/run_integration_tests" \
         "integration_tests_coverage"
 else
