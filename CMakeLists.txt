@@ -75,5 +75,6 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(tests)
+add_subdirectory(tools/config_generator)
 add_subdirectory(tools/bench)
 add_subdirectory(tools/shard-seeder)
