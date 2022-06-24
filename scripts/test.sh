@@ -2,6 +2,12 @@
 # Exit script on failure.
 set -e
 
+function echo_help_msg(){
+    echo "Run test.sh -h for help."
+}
+
+trap '[ "$?" -eq 0 ] || echo_help_msg' EXIT
+
 function usage() { echo "
 USAGE:
     ./test.sh
@@ -10,27 +16,23 @@ DESCRIPTION:
     This script runs unit and integration tests and measures test coverage.
 
 FLAGS:
-    -d, --build-dir <dir. name>     The directory containing the built code.
+    -d, --build-dir <dir. name>     Set the directory containing the built code.
                                     Default:  opencbdc-tx/build/
     -nu, --no-unit-tests            Do not run unit tests.
-                                    Default:  false
     -ni, --no-integration-tests     Do not run integration tests.
-                                    Default:  false
     -nc, --no-coverage              Do not measure test coverage.
-                                    Default:  false
     -h, --help                      Show usage.
 
     All Google Test flags are also accepted.  A subset is listed below.  For a
-    complete list, use the flags '-ni -nc --gtest_help'.
+    complete list of Google Test flags and their usage, run:
+    $ ./test.sh -ni -nc --gtest_help
+
     --gtest_filter=<filter>         Define filter that specifies which tests
-                                    to run.  The syntax is exactly the same
-                                    as when using the --gtest_filter flag
-                                    directly with a GoogleTest executable.
+                                    to run.
                                     Default:  no filter (i.e. run all tests)
     --gtest_repeat=<integer>        Repeat tests.
                                     Default:  1 (i.e. do not repeat tests)
     --gtest_break_on_failure        Stop running tests if a test fails.
-                                    Default:  false
 
 EXAMPLES:
     - Run unit tests and integration tests and measure test coverage.
@@ -79,8 +81,6 @@ do
             then
                 echo -n "ERROR:  The -d flag was used, "
                 echo "but a valid build folder was not given."
-                echo
-                usage
                 exit 1
             fi
             BUILD_DIR=$ARG
@@ -104,12 +104,10 @@ do
             ;;
         -*)
             echo "ERROR:  unknown command-line option '${1}'."
-            usage
             exit 1
             ;;
         *)
             echo "ERROR:  unknown command-line option '${1}'."
-            usage
             exit 1
             ;;
     esac
@@ -129,7 +127,6 @@ fi
 if [ ! -d "$BUILD_DIR" ]
 then
     echo "ERROR:  The folder '${BUILD_DIR}' was not found."
-    usage
     exit 1
 fi
 
