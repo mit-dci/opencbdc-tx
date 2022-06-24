@@ -20,6 +20,18 @@ FLAGS:
                                     Default:  false
     -h, --help                      Show usage.
 
+    All Google Test flags are also accepted.  A subset is listed below.  For a
+    complete list, use the flags '-ni -nc --gtest_help'.
+    --gtest_filter=<filter>         Define filter that specifies which tests
+                                    to run.  The syntax is exactly the same
+                                    as when using the --gtest_filter flag
+                                    directly with a GoogleTest executable.
+                                    Default:  no filter (i.e. run all tests)
+    --gtest_repeat=<integer>        Repeat tests.
+                                    Default:  1 (i.e. do not repeat tests)
+    --gtest_break_on_failure        Stop running tests if a test fails.
+                                    Default:  false
+
 EXAMPLES:
     - Run unit tests and integration tests and measure test coverage.
       The build directory is set by an environment variable called 'BUILD_DIR'
@@ -34,6 +46,17 @@ EXAMPLES:
     - Run unit tests and integration tests and measure test coverage.  Set the
       build directory to 'mybuild'.
     $ ./test.sh -d mybuild
+
+    - Run only the ArchiverTest tests and measure test coverage.
+    $ ./test.sh --gtest_filter=ArchiverTest*
+
+    - Run only the ArchiverTest.client test.  Repeat it 4 times.
+      Don't measure test coverage.
+    $ ./test.sh --gtest_filter=ArchiverTest.client --gtest_repeat=4 -nc
+
+    - Run only unit tests and don't measure test coverage.
+      Stop the tests if any test fails.
+    $ ./test.sh -ni -nc --gtest_break_on_failure
 	"
 }
 
@@ -41,6 +64,7 @@ EXAMPLES:
 RUN_UNIT_TESTS="true"
 RUN_INTEGRATION_TESTS="true"
 MEASURE_COVERAGE="true"
+GTEST_FLAGS=()
 while [[ $# -gt 0 ]]
 do
     case $1 in
@@ -72,6 +96,10 @@ do
             ;;
         -nc|--no-coverage)
             MEASURE_COVERAGE="false"
+            shift
+            ;;
+        --gtest_*)
+            GTEST_FLAGS+=("$1")
             shift
             ;;
         -*)
@@ -115,7 +143,7 @@ echo
 run_test_suite () {
     cd "$BUILD_DIR"
     find . -name '*.gcda' -exec rm {} \;
-    "$PWD"/"$1"
+    "$PWD"/"$1" "${GTEST_FLAGS[@]}"
 
     if [[ "$MEASURE_COVERAGE" == "true" ]]
     then
