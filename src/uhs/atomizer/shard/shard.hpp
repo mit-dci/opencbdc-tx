@@ -72,11 +72,9 @@ namespace cbdc::shard {
         /// Audit the supply of coins in this shard's UHS and check UHS IDs
         /// match the nested data and value stored in the UHS.
         /// \param snp LevelDB snapshot upon which to calculate the audit.
-        /// \return total value of all UHS elements in the snapshot or
-        ///         std::nullopt if any of the UHS elements do not match their
-        ///         UHS ID.
+        /// \return per-range summary commitments to value
         auto audit(const std::shared_ptr<const leveldb::Snapshot>& snp)
-            -> std::optional<uint64_t>;
+            -> std::unordered_map<unsigned char, commitment_t>;
 
       private:
         [[nodiscard]] auto is_output_on_shard(const hash_t& uhs_hash) const
@@ -95,6 +93,13 @@ namespace cbdc::shard {
         std::shared_mutex m_snp_mut;
 
         const std::string m_best_block_height_key;
+
+        static const inline auto m_secp
+            = std::unique_ptr<secp256k1_context,
+                              decltype(&secp256k1_context_destroy)>(
+                secp256k1_context_create(SECP256K1_CONTEXT_SIGN
+                                         | SECP256K1_CONTEXT_VERIFY),
+                &secp256k1_context_destroy);
 
         std::pair<uint8_t, uint8_t> m_prefix_range;
     };

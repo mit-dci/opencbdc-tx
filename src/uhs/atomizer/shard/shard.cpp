@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "shard.hpp"
+#include "uhs/transaction/messages.hpp"
 
 #include <utility>
 
@@ -205,34 +206,44 @@ namespace cbdc::shard {
     }
 
     auto shard::audit(const std::shared_ptr<const leveldb::Snapshot>& snp)
-        -> std::optional<uint64_t> {
+        -> std::unordered_map<unsigned char, commitment_t> {
+        std::unordered_map<unsigned char, std::vector<commitment_t>> comms{};
         auto opts = leveldb::ReadOptions();
         opts.snapshot = snp.get();
         auto it = std::shared_ptr<leveldb::Iterator>(m_db->NewIterator(opts));
         it->SeekToFirst();
         // Skip best block height key
         it->Next();
-        uint64_t tot{};
         for(; it->Valid(); it->Next()) {
             auto key = it->key();
-            auto buf = cbdc::buffer();
-            buf.extend(key.size());
-            std::memcpy(buf.data(), key.data(), key.size());
-            auto maybe_uhs_element
-                = cbdc::from_buffer<transaction::uhs_element>(buf);
-            if(!maybe_uhs_element.has_value()) {
-                return std::nullopt;
+            auto val = it->value();
+
+            transaction::compact_output outp{};
+            std::memcpy(outp.m_id.data(), key.data(), key.size());
+            std::memcpy(outp.m_auxiliary.data(), val.data(), outp.m_auxiliary.size());
+            std::memcpy(outp.m_range.data(), val.data() + sizeof(outp.m_auxiliary), outp.m_range.size());
+            std::memcpy(outp.m_provenance.data(), val.data() + sizeof(outp.m_auxiliary) + sizeof(outp.m_range), outp.m_provenance.size());
+            if(!transaction::validate_uhs_id(outp)) {
+                continue;
             }
-            auto& uhs_element = maybe_uhs_element.value();
-            if(transaction::calculate_uhs_id(uhs_element.m_data,
-                                             uhs_element.m_value)
-               != uhs_element.m_id) {
-                return std::nullopt;
+            auto bucket = outp.m_id[0];
+            if(comms.find(bucket) == comms.end()) {
+                std::vector<commitment_t> commits{};
+                commits.reserve(1);
+                comms.emplace(bucket, std::move(commits));
             }
-            tot += uhs_element.m_value;
+            comms[bucket].emplace_back(std::move(outp.m_auxiliary));
         }
 
-        return tot;
+        std::unordered_map<unsigned char, commitment_t> summaries{};
+        for(auto& [k, v] : comms) {
+            auto summary = sum_commitments(m_secp.get(), v);
+            if (summary.has_value()) {
+                summaries[k] = summary.value();
+            }
+        }
+
+        return summaries;
     }
 
     auto shard::get_snapshot() -> std::shared_ptr<const leveldb::Snapshot> {

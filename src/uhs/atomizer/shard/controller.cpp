@@ -232,15 +232,18 @@ namespace cbdc::shard {
             m_audit_thread.join();
         }
         m_audit_thread = std::thread([this, s = std::move(snp), height]() {
-            auto maybe_total = m_shard.audit(s);
-            if(!maybe_total.has_value()) {
-                m_logger->fatal("Error running audit at height", height);
+            auto range_summaries = m_shard.audit(s);
+            auto buf = cbdc::buffer();
+            buf.extend(sizeof(commitment_t));
+            for(const auto& [bucket, summary] : range_summaries) {
+                buf.clear();
+                buf.append(summary.data(), summary.size());
+                m_audit_log
+                    << height << " "
+                    << static_cast<int>(bucket) << " "
+                    << buf.to_hex() << std::endl;
             }
-            m_audit_log << height << " " << maybe_total.value() << std::endl;
-            m_logger->info("Audit completed for",
-                           height,
-                           maybe_total.value(),
-                           "coins total");
+            m_logger->info("Audit completed for", height);
         });
     }
 }

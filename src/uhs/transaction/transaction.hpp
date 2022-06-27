@@ -84,10 +84,6 @@ namespace cbdc::transaction {
                           const out_point& point,
                           const output& put) -> std::pair<hash_t, hash_t>;
 
-    auto calculate_uhs_id(const out_point& point,
-                          const output& put,
-                          const commitment_t& value) -> hash_t;
-
     /// \brief Additional information a spender needs to spend an input
     struct spend_data {
         /// The blinding factor for the auxiliary commitment
@@ -178,6 +174,15 @@ namespace cbdc::transaction {
         auto operator==(const compact_output& rhs) const -> bool;
         auto operator!=(const compact_output& rhs) const -> bool;
     };
+
+    /// \brief Validates that a compact_output's UHS ID matches its contents
+    ///
+    /// Simply rehashes the provenance nested-hash and value commitment,
+    /// and checks to see the result is identical to the ID.
+    ///
+    /// \param output the compact_output itself
+    /// \returns true if the rehash matches the included ID, false otherwise
+    auto validate_uhs_id(const compact_output& output) -> bool;
 
     /// \brief A condensed, hash-only transaction representation
     ///

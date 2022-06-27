@@ -3,7 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "common/config.hpp"
+#include "util/common/config.hpp"
+#include "util/serialization/util.hpp"
+#include "util/serialization/format.hpp"
+#include "util/common/commitment.hpp"
 
 #include <unordered_map>
 
@@ -24,13 +27,9 @@ auto main(int argc, char** argv) -> int {
     }
     auto cfg = std::get<cbdc::config::options>(cfg_or_err);
 
-    struct total {
-        uint64_t m_total_value{};
-        size_t m_shard_count{};
-    };
+    auto audits = std::unordered_map<uint64_t, std::unordered_map<unsigned char, cbdc::commitment_t>>();
 
-    auto totals = std::unordered_map<uint64_t, total>();
-
+    // todo: ensure/detect whether or not the most recent audit has finished
     for(auto& audit_file : cfg.m_shard_audit_logs) {
         auto f = std::ifstream(audit_file);
         if(!f.good()) {
@@ -39,22 +38,39 @@ auto main(int argc, char** argv) -> int {
         }
 
         uint64_t epoch{};
-        uint64_t total_value{};
-        while(f >> epoch >> total_value) {
-            auto it = totals.find(epoch);
-            if(it != totals.end()) {
-                it->second.m_total_value += total_value;
-                it->second.m_shard_count++;
+        std::string bucket_str{};
+        std::string commit_hex{};
+        while(f >> epoch >> bucket_str >> commit_hex) {
+            auto bucket = static_cast<unsigned char>(std::stoul(bucket_str));
+
+            auto commitbuf = cbdc::buffer::from_hex(commit_hex);
+            auto commit = cbdc::from_buffer<cbdc::commitment_t>(commitbuf.value()).value();
+
+            auto it = audits.find(epoch);
+            if(it != audits.end()) {
+                auto& audit = it->second;
+                auto entry = audit.find(bucket);
+                if(entry != audit.end()) {
+                    if(entry->second != commit) {
+                        std::cerr << "Audit failed at epoch " << epoch
+                                  << "; inconsistency in range "
+                                  << bucket_str << std::endl;
+                        return 1;
+                    }
+                } else {
+                    audit[bucket] = commit;
+                }
             } else {
-                totals[epoch] = total{total_value, 1};
+                auto entries = std::unordered_map<unsigned char, cbdc::commitment_t>();
+                entries.emplace(bucket, std::move(commit));
+                audits[epoch] = std::move(entries);
             }
         }
     }
 
-    for(auto& [epoch, tot] : totals) {
-        std::cout << "epoch: " << epoch
-                  << ", total_value: " << tot.m_total_value
-                  << ", shard_count: " << tot.m_shard_count << std::endl;
+    // todo: per-epoch: get a vector of all commitments, push_back circulation_commitment, check sum = 1
+    for(auto& [epoch, entries] : audits) {
+        std::cout << "epoch: " << epoch << std::endl;
     }
 
     return 0;
