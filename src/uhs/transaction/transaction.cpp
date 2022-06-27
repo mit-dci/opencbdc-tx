@@ -182,6 +182,17 @@ namespace cbdc::transaction {
         return id;
     }
 
+    auto validate_uhs_id(const compact_output& output) -> bool {
+        CSHA256 sha;
+        sha.Write(output.m_provenance.data(), output.m_provenance.size());
+        sha.Write(output.m_auxiliary.data(), output.m_auxiliary.size());
+
+        hash_t check{};
+        sha.Finalize(check.data());
+
+        return output.m_id == check;
+    }
+
     auto roll_auxiliaries(secp256k1_context* ctx,
                           random_source& rng,
                           const std::vector<hash_t>& blinds,

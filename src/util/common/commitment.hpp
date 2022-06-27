@@ -55,6 +55,16 @@ namespace cbdc {
     auto deserialize_commitment(const secp256k1_context* ctx,
                                 commitment_t comm)
         -> std::optional<secp256k1_pedersen_commitment>;
+
+    /// Attempts to sum a list of Pedersen commitments
+    ///
+    /// \param ctx secp256k1 context initialized for signing and commitment
+    /// \param commitments the vector of commitments to sum
+    /// \return std::nullopt if conversion or summing failed; the summed
+    ///         commitment otherwise
+    auto sum_commitments(const secp256k1_context* ctx,
+                         std::vector<commitment_t> commitments)
+        -> std::optional<commitment_t>;
 }
 
 #endif // OPENCBDC_TX_SRC_COMMON_COMMITMENT_H_

@@ -61,4 +61,41 @@ namespace cbdc {
 
         return commitment;
     }
+
+    auto sum_commitments(const secp256k1_context* ctx,
+                         std::vector<commitment_t> commitments)
+        -> std::optional<commitment_t> {
+        if(commitments.size() == 0) {
+            return std::nullopt;
+        } else if(commitments.size() == 1) {
+            return {commitments[0]};
+        }
+
+        std::vector<secp256k1_pubkey> as_keys{};
+        for(auto& c : commitments) {
+            auto maybe_pc = deserialize_commitment(ctx, c);
+            if(!maybe_pc.has_value()) {
+                return std::nullopt;
+            }
+
+            auto pc = maybe_pc.value();
+            secp256k1_pubkey k{};
+            secp256k1_pedersen_commitment_as_key(&pc, &k);
+            as_keys.emplace_back(k);
+        }
+
+        secp256k1_pubkey k{};
+        auto res =
+            secp256k1_ec_pubkey_combine(ctx, &k,
+                reinterpret_cast<const secp256k1_pubkey* const*>(as_keys.data()),
+                as_keys.size());
+        if(res != 1) {
+            return std::nullopt;
+        }
+
+        secp256k1_pedersen_commitment summary{};
+        secp256k1_pubkey_as_pedersen_commitment(ctx, &k, &summary);
+
+        return serialize_commitment(ctx, summary);
+    }
 }
