@@ -295,11 +295,10 @@ namespace cbdc::transaction {
     /// \param tx the new transaction for which proofs will be created
     /// \param spending_keys the private keys corresponding to the inputs
     /// \return true if proving was successful; false otherwise
-    auto
-    add_proof(secp256k1_context* ctx,
-              secp256k1_bulletproofs_generators* gens,
-              random_source& rng,
-              full_tx& tx) -> bool;
+    auto add_proof(secp256k1_context* ctx,
+                   secp256k1_bulletproofs_generators* gens,
+                   random_source& rng,
+                   full_tx& tx) -> bool;
 
     /// \brief Calculates the unique hash of a full transaction
     ///

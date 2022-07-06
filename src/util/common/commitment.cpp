@@ -10,7 +10,6 @@
 
 #include <array>
 #include <cstring>
-#include <secp256k1_generator.h>
 #include <sstream>
 #include <vector>
 
@@ -65,9 +64,10 @@ namespace cbdc {
     auto sum_commitments(const secp256k1_context* ctx,
                          std::vector<commitment_t> commitments)
         -> std::optional<commitment_t> {
-        if(commitments.size() == 0) {
+        if(commitments.empty()) {
             return std::nullopt;
-        } else if(commitments.size() == 1) {
+        }
+        if(commitments.size() == 1) {
             return {commitments[0]};
         }
 
@@ -84,11 +84,17 @@ namespace cbdc {
             as_keys.emplace_back(k);
         }
 
+        std::vector<secp256k1_pubkey*> key_pointers{};
+        key_pointers.reserve(as_keys.size());
+        for(auto& k : as_keys) {
+            key_pointers.push_back(&k);
+        }
+
         secp256k1_pubkey k{};
-        auto res =
-            secp256k1_ec_pubkey_combine(ctx, &k,
-                reinterpret_cast<const secp256k1_pubkey* const*>(as_keys.data()),
-                as_keys.size());
+        auto res = secp256k1_ec_pubkey_combine(ctx,
+                                               &k,
+                                               key_pointers.data(),
+                                               as_keys.size());
         if(res != 1) {
             return std::nullopt;
         }

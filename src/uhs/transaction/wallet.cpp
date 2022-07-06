@@ -240,8 +240,9 @@ namespace cbdc {
         return ret;
     }
 
-    auto transaction::wallet::spending_keys(const transaction::full_tx& tx)
-        -> std::optional<std::vector<std::pair<privkey_t, pubkey_t>>> const {
+    auto
+    transaction::wallet::spending_keys(const transaction::full_tx& tx) const
+        -> std::optional<std::vector<std::pair<privkey_t, pubkey_t>>> {
         std::vector<std::pair<privkey_t, pubkey_t>> keys{};
         keys.reserve(tx.m_inputs.size());
         for(const auto& inp : tx.m_inputs) {

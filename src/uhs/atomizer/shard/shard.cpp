@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "shard.hpp"
+
 #include "uhs/transaction/messages.hpp"
 
 #include <utility>
@@ -218,11 +219,20 @@ namespace cbdc::shard {
             auto key = it->key();
             auto val = it->value();
 
+            static constexpr auto comm_size
+                = sizeof(transaction::compact_output::m_auxiliary);
+            static constexpr auto rng_size
+                = sizeof(transaction::compact_output::m_range);
+
             transaction::compact_output outp{};
             std::memcpy(outp.m_id.data(), key.data(), key.size());
-            std::memcpy(outp.m_auxiliary.data(), val.data(), outp.m_auxiliary.size());
-            std::memcpy(outp.m_range.data(), val.data() + sizeof(outp.m_auxiliary), outp.m_range.size());
-            std::memcpy(outp.m_provenance.data(), val.data() + sizeof(outp.m_auxiliary) + sizeof(outp.m_range), outp.m_provenance.size());
+            std::memcpy(outp.m_auxiliary.data(), val.data(), comm_size);
+            val.remove_prefix(comm_size);
+            std::memcpy(outp.m_range.data(), val.data(), rng_size);
+            val.remove_prefix(rng_size);
+            std::memcpy(outp.m_provenance.data(),
+                        val.data(),
+                        outp.m_provenance.size());
             if(!transaction::validate_uhs_id(outp)) {
                 continue;
             }
@@ -232,13 +242,13 @@ namespace cbdc::shard {
                 commits.reserve(1);
                 comms.emplace(bucket, std::move(commits));
             }
-            comms[bucket].emplace_back(std::move(outp.m_auxiliary));
+            comms[bucket].emplace_back(outp.m_auxiliary);
         }
 
         std::unordered_map<unsigned char, commitment_t> summaries{};
         for(auto& [k, v] : comms) {
             auto summary = sum_commitments(m_secp.get(), v);
-            if (summary.has_value()) {
+            if(summary.has_value()) {
                 summaries[k] = summary.value();
             }
         }

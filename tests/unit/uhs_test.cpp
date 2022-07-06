@@ -52,7 +52,7 @@ TEST_F(uhs_test, leveldb_roundtrip) {
     leveldb::Slice Key(k.data(), k.size());
 
     std::array<char, sizeof(cbdc::transaction::compact_output)> v;
-    auto vptr = v.data();
+    auto* vptr = v.data();
     std::memcpy(vptr, o.m_id.data(), o.m_id.size());
     vptr += o.m_id.size();
     std::memcpy(vptr, o.m_auxiliary.data(), o.m_auxiliary.size());
@@ -73,7 +73,6 @@ TEST_F(uhs_test, map_roundtrip) {
                                         {'e', 'f', 'g', 'h'},
                                         {'i', 'j', 'k', 'l'},
                                         {'m', 'n', 'o', 'p'}};
-
 
     m_proofs.emplace(o.m_id, o);
     const auto& p = m_proofs[o.m_id];
