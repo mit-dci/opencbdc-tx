@@ -465,8 +465,7 @@ TEST_F(PacketIOTest, aggregate_tx_notify_request) {
 
 TEST_F(PacketIOTest, variant) {
     auto outpoint = cbdc::transaction::out_point{{'a', 'b', 'c', 'd'}, 1};
-    auto output
-        = cbdc::transaction::output{{'b'}, {'c'}, {'d'}, {'e'}};
+    auto output = cbdc::transaction::output{{'b'}, {'c'}, {'d'}, {'e'}};
     auto var = std::variant<cbdc::transaction::out_point,
                             cbdc::transaction::output>(outpoint);
     m_ser << var;

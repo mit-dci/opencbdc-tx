@@ -137,10 +137,10 @@ auto main(int argc, char** argv) -> int {
                             std::memcpy(hash_arr.data(),
                                         output_hash.data(),
                                         sizeof(output_hash));
-                            static constexpr auto aux_size =
-                                sizeof(ctx.m_outputs[0].m_auxiliary);
-                            static constexpr auto rng_size =
-                                sizeof(ctx.m_outputs[0].m_range);
+                            static constexpr auto aux_size
+                                = sizeof(ctx.m_outputs[0].m_auxiliary);
+                            static constexpr auto rng_size
+                                = sizeof(ctx.m_outputs[0].m_range);
                             std::array<char, aux_size + rng_size> proofs_arr{};
 
                             std::memcpy(proofs_arr.data(),

@@ -238,10 +238,8 @@ namespace cbdc::shard {
             for(const auto& [bucket, summary] : range_summaries) {
                 buf.clear();
                 buf.append(summary.data(), summary.size());
-                m_audit_log
-                    << height << " "
-                    << static_cast<int>(bucket) << " "
-                    << buf.to_hex() << std::endl;
+                m_audit_log << height << " " << static_cast<int>(bucket) << " "
+                            << buf.to_hex() << std::endl;
             }
             m_logger->info("Audit completed for", height);
         });

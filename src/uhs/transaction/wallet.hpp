@@ -176,13 +176,12 @@ namespace cbdc::transaction {
         /// \param tx the transaction to fetch spending keys for
         /// \return the list of keypairs (or std::nullopt if any output is
         ///         unspendable)
-        auto spending_keys(const full_tx& tx) -> std::optional<
-            std::vector<std::pair<privkey_t, pubkey_t>>> const;
+        auto spending_keys(const full_tx& tx) const
+            -> std::optional<std::vector<std::pair<privkey_t, pubkey_t>>>;
 
         /// Signs each of the transaction's inputs using Schnorr signatures.
         /// \param tx the transaction whose inputs to sign.
-        void
-        sign(full_tx& tx) const;
+        void sign(full_tx& tx) const;
 
         /// Checks if the input is spendable by the current wallet.
         /// \param in the input to check.

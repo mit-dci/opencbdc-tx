@@ -275,18 +275,19 @@ namespace cbdc::transaction::validation {
             auto aux = maybe_aux.value();
             auxiliaries.push_back(aux);
 
-            [[maybe_unused]] auto ret = secp256k1_bulletproofs_rangeproof_uncompressed_verify(
-                ctx,
-                scratch,
-                generators.get(),
-                secp256k1_generator_h,
-                proof.m_range.data(),
-                proof.m_range.size(),
-                0, // minimum
-                &aux,
-                nullptr, // extra commit
-                0        // extra commit length
-            );
+            [[maybe_unused]] auto ret
+                = secp256k1_bulletproofs_rangeproof_uncompressed_verify(
+                    ctx,
+                    scratch,
+                    generators.get(),
+                    secp256k1_generator_h,
+                    proof.m_range.data(),
+                    proof.m_range.size(),
+                    0, // minimum
+                    &aux,
+                    nullptr, // extra commit
+                    0        // extra commit length
+                );
 
             if(ret != 1) {
                 return proof_error{proof_error_code::out_of_range};

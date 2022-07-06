@@ -104,7 +104,8 @@ namespace cbdc::sentinel {
         return execute_response{status, res};
     }
 
-    // todo: need to take a full_tx instead of a compact_tx for gather_attestations
+    // todo: need to take a full_tx instead of a compact_tx for
+    // gather_attestations
     void controller::send_transaction(const transaction::full_tx& tx) {
         auto compact_tx = cbdc::transaction::compact_tx(tx);
         auto attestation = compact_tx.sign(m_secp.get(), m_privkey);

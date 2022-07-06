@@ -72,7 +72,7 @@ namespace cbdc::locking_shard {
             m_proofs.rehash(bucket_count);
             m_uhs.rehash(bucket_count);
             deser >> m_proofs;
-            for (const auto& [k, v] : m_proofs) {
+            for(const auto& [k, v] : m_proofs) {
                 m_uhs.insert(k);
             }
             return true;

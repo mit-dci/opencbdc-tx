@@ -262,22 +262,23 @@ namespace cbdc::transaction {
         rangeproof_t<> range{};
         size_t rangelen = range.size();
         static constexpr auto upper_bound = 64; // 2^64 - 1
-        [[maybe_unused]] auto ret = secp256k1_bulletproofs_rangeproof_uncompressed_prove(
-            ctx,
-            gens,
-            secp256k1_generator_h,
-            range.data(),
-            &rangelen,
-            upper_bound,
-            out_spend_data.m_value,
-            0,
-            auxiliary, // the auxiliary commitment for this output
-            out_spend_data.m_blind.data(),
-            rng.random_hash().data(),
-            nullptr, // enc_data
-            nullptr, // extra_commit
-            0        // extra_commit length
-        );
+        [[maybe_unused]] auto ret
+            = secp256k1_bulletproofs_rangeproof_uncompressed_prove(
+                ctx,
+                gens,
+                secp256k1_generator_h,
+                range.data(),
+                &rangelen,
+                upper_bound,
+                out_spend_data.m_value,
+                0,
+                auxiliary, // the auxiliary commitment for this output
+                out_spend_data.m_blind.data(),
+                rng.random_hash().data(),
+                nullptr, // enc_data
+                nullptr, // extra_commit
+                0        // extra_commit length
+            );
         assert(ret == 1);
 
         put.m_range = range;
@@ -318,12 +319,10 @@ namespace cbdc::transaction {
         return noncesigs;
     }
 
-    auto
-    add_proof(secp256k1_context* ctx,
-              secp256k1_bulletproofs_generators* gens,
-              random_source& rng,
-              full_tx& tx)
-        -> bool {
+    auto add_proof(secp256k1_context* ctx,
+                   secp256k1_bulletproofs_generators* gens,
+                   random_source& rng,
+                   full_tx& tx) -> bool {
         std::vector<hash_t> blinds{};
         for(const auto& inp : tx.m_inputs) {
             auto spend_data = inp.m_spend_data;

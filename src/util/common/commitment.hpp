@@ -10,7 +10,6 @@
 #include "keys.hpp"
 
 #include <optional>
-#include <secp256k1_generator.h>
 
 namespace cbdc {
     /// Creates a Pedersen commitment

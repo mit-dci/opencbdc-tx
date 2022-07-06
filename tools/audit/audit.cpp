@@ -3,10 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "util/common/config.hpp"
-#include "util/serialization/util.hpp"
-#include "util/serialization/format.hpp"
 #include "util/common/commitment.hpp"
+#include "util/common/config.hpp"
+#include "util/serialization/format.hpp"
+#include "util/serialization/util.hpp"
 
 #include <unordered_map>
 
@@ -27,7 +27,9 @@ auto main(int argc, char** argv) -> int {
     }
     auto cfg = std::get<cbdc::config::options>(cfg_or_err);
 
-    auto audits = std::unordered_map<uint64_t, std::unordered_map<unsigned char, cbdc::commitment_t>>();
+    auto audits = std::unordered_map<
+        uint64_t,
+        std::unordered_map<unsigned char, cbdc::commitment_t>>();
 
     // todo: ensure/detect whether or not the most recent audit has finished
     for(auto& audit_file : cfg.m_shard_audit_logs) {
@@ -44,7 +46,9 @@ auto main(int argc, char** argv) -> int {
             auto bucket = static_cast<unsigned char>(std::stoul(bucket_str));
 
             auto commitbuf = cbdc::buffer::from_hex(commit_hex);
-            auto commit = cbdc::from_buffer<cbdc::commitment_t>(commitbuf.value()).value();
+            auto commit
+                = cbdc::from_buffer<cbdc::commitment_t>(commitbuf.value())
+                      .value();
 
             auto it = audits.find(epoch);
             if(it != audits.end()) {
@@ -53,22 +57,24 @@ auto main(int argc, char** argv) -> int {
                 if(entry != audit.end()) {
                     if(entry->second != commit) {
                         std::cerr << "Audit failed at epoch " << epoch
-                                  << "; inconsistency in range "
-                                  << bucket_str << std::endl;
+                                  << "; inconsistency in range " << bucket_str
+                                  << std::endl;
                         return 1;
                     }
                 } else {
                     audit[bucket] = commit;
                 }
             } else {
-                auto entries = std::unordered_map<unsigned char, cbdc::commitment_t>();
-                entries.emplace(bucket, std::move(commit));
+                auto entries
+                    = std::unordered_map<unsigned char, cbdc::commitment_t>();
+                entries.emplace(bucket, commit);
                 audits[epoch] = std::move(entries);
             }
         }
     }
 
-    // todo: per-epoch: get a vector of all commitments, push_back circulation_commitment, check sum = 1
+    // todo: per-epoch: get a vector of all commitments, push_back
+    // circulation_commitment, check sum = 1
     for(auto& [epoch, entries] : audits) {
         std::cout << "epoch: " << epoch << std::endl;
     }
