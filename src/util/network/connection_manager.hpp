@@ -10,6 +10,7 @@
 #include "socket_selector.hpp"
 #include "tcp_listener.hpp"
 #include "tcp_socket.hpp"
+#include "util/common/config.hpp"
 
 #include <atomic>
 #include <cassert>
@@ -230,7 +231,7 @@ namespace cbdc::network {
 
         socket_selector m_listen_selector;
 
-        std::random_device m_r;
+        std::random_device m_r{cbdc::config::random_source};
         std::default_random_engine m_rnd{m_r()};
     };
 }
