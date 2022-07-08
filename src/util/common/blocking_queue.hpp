@@ -83,6 +83,14 @@ namespace cbdc {
             m_cv.notify_all();
         }
 
+        /// Removes the wakeup flag for consumers. Must be called after
+        /// \ref clear() before re-using the queue. All consumers must have
+        /// returned from \ref pop() before calling this method.
+        void reset() {
+            std::unique_lock l(m_mut);
+            m_wake = false;
+        }
+
       private:
         std::queue<T> m_buffer;
         std::mutex m_mut;
