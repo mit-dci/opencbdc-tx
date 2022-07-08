@@ -29,8 +29,8 @@ add_executable(run_unit_tests archiver_test.cpp
 
 target_compile_options(run_unit_tests PRIVATE -ftest-coverage -fprofile-arcs)
 target_link_options(run_unit_tests PRIVATE --coverage)
-target_link_libraries(run_unit_tests ${GTEST_BOTH_LIBRARIES}
-                                     ${GMOCK_BOTH_LIBRARIES}
+target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
+                                     ${GTEST_MAIN_LIBRARY}
                                      util
                                      client
                                      atomizer
