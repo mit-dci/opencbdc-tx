@@ -115,12 +115,12 @@ done
 # to the location of this script, the user can run this script from any folder.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 REPO_TOP_DIR="${SCRIPT_DIR}/.."
-if [ -z ${BUILD_DIR+x} ]
+if [[ -z "${BUILD_DIR+x}" ]]
 then
     BUILD_DIR="${REPO_TOP_DIR}/build"
 fi
 
-if [ ! -d "$BUILD_DIR" ]
+if [[ ! -d "$BUILD_DIR" ]]
 then
     echo "ERROR:  The folder '${BUILD_DIR}' was not found."
     exit 1
@@ -161,7 +161,7 @@ run_test_suite () {
     fi
 }
 
-if [[ $RUN_UNIT_TESTS == "true" ]]
+if [[ "$RUN_UNIT_TESTS" == "true" ]]
 then
     echo "Running unit tests..."
     run_test_suite "tests/unit/run_unit_tests" "unit_tests_coverage"
@@ -170,7 +170,7 @@ else
 fi
 
 echo
-if [[ $RUN_INTEGRATION_TESTS == "true" ]]
+if [[ "$RUN_INTEGRATION_TESTS" == "true" ]]
 then
     echo "Running integration tests..."
     cp "${REPO_TOP_DIR}"/tests/integration/*.cfg "$BUILD_DIR"
