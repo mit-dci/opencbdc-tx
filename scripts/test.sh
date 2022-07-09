@@ -102,10 +102,6 @@ do
             GTEST_FLAGS+=("$1")
             shift
             ;;
-        -*)
-            echo "ERROR:  unknown command-line option '${1}'."
-            exit 1
-            ;;
         *)
             echo "ERROR:  unknown command-line option '${1}'."
             exit 1
