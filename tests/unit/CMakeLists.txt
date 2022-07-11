@@ -10,6 +10,7 @@ add_executable(run_unit_tests archiver_test.cpp
                               locking_shard/format_test.cpp
                               network_test.cpp
                               message_test.cpp
+                              minter_validation_test.cpp
                               raft_test.cpp
                               rpc/tcp_test.cpp
                               sentinel_2pc/controller_test.cpp

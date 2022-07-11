@@ -118,6 +118,9 @@ namespace cbdc::config {
     static constexpr auto coordinator_max_threads = "coordinator_max_threads";
     static constexpr auto initial_mint_count_key = "initial_mint_count";
     static constexpr auto initial_mint_value_key = "initial_mint_value";
+    static constexpr auto minter_count_key = "minter_count";
+    static constexpr auto minter_prefix = "minter";
+
     static constexpr auto loadgen_count_key = "loadgen_count";
     static constexpr auto shard_completed_txs_cache_size
         = "shard_completed_txs_cache_size";
@@ -239,6 +242,8 @@ namespace cbdc::config {
         size_t m_initial_mint_count{defaults::initial_mint_count};
         /// Value for all outputs in the initial mint transaction.
         size_t m_initial_mint_value{defaults::initial_mint_value};
+        /// Set of public keys belonging to authorized minters
+        std::unordered_set<pubkey_t, hashing::null> m_minter_pubkeys;
 
         /// Number of blocks to store in watchtower block caches.
         /// (0=unlimited). Defaults to 1 hour of blocks.

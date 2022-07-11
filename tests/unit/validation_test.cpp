@@ -26,6 +26,7 @@ class WalletTxValidationTest : public ::testing::Test {
             = wallet1.send_to(200, wallet2.generate_key(), true).value();
     }
 
+    cbdc::config::options m_opts{};
     cbdc::transaction::full_tx m_valid_tx{};
     cbdc::transaction::full_tx m_valid_tx_multi_inp{};
 
@@ -44,14 +45,18 @@ class WalletTxValidationTest : public ::testing::Test {
 };
 
 TEST_F(WalletTxValidationTest, valid) {
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
+    auto err
+        = cbdc::transaction::validation::check_tx(m_valid_tx,
+                                                  m_opts.m_minter_pubkeys);
     ASSERT_FALSE(err.has_value());
 }
 
 TEST_F(WalletTxValidationTest, no_inputs) {
     m_valid_tx.m_inputs.clear();
 
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
+    auto err
+        = cbdc::transaction::validation::check_tx(m_valid_tx,
+                                                  m_opts.m_minter_pubkeys);
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
         std::holds_alternative<cbdc::transaction::validation::tx_error_code>(
@@ -60,13 +65,18 @@ TEST_F(WalletTxValidationTest, no_inputs) {
     auto tx_err
         = std::get<cbdc::transaction::validation::tx_error_code>(err.value());
 
-    ASSERT_EQ(tx_err, cbdc::transaction::validation::tx_error_code::no_inputs);
+    // We have this err because 'no inputs' runs the check_mint_tx
+    ASSERT_EQ(tx_err,
+              cbdc::transaction::validation::tx_error_code::
+                  mint_output_witness_mismatch);
 }
 
 TEST_F(WalletTxValidationTest, no_outputs) {
     m_valid_tx.m_outputs.clear();
 
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
+    auto err
+        = cbdc::transaction::validation::check_tx(m_valid_tx,
+                                                  m_opts.m_minter_pubkeys);
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
         std::holds_alternative<cbdc::transaction::validation::tx_error_code>(
@@ -82,7 +92,9 @@ TEST_F(WalletTxValidationTest, no_outputs) {
 TEST_F(WalletTxValidationTest, missing_witness) {
     m_valid_tx.m_witness.clear();
 
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
+    auto err
+        = cbdc::transaction::validation::check_tx(m_valid_tx,
+                                                  m_opts.m_minter_pubkeys);
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
         std::holds_alternative<cbdc::transaction::validation::tx_error_code>(
@@ -98,7 +110,9 @@ TEST_F(WalletTxValidationTest, missing_witness) {
 TEST_F(WalletTxValidationTest, zero_output) {
     m_valid_tx.m_outputs[0].m_value = 0;
 
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
+    auto err
+        = cbdc::transaction::validation::check_tx(m_valid_tx,
+                                                  m_opts.m_minter_pubkeys);
 
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
@@ -118,7 +132,9 @@ TEST_F(WalletTxValidationTest, duplicate_input) {
     m_valid_tx.m_witness.emplace_back(m_valid_tx.m_witness[0]);
     m_valid_tx.m_outputs[0].m_value *= 2;
 
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
+    auto err
+        = cbdc::transaction::validation::check_tx(m_valid_tx,
+                                                  m_opts.m_minter_pubkeys);
 
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
@@ -135,7 +151,9 @@ TEST_F(WalletTxValidationTest, duplicate_input) {
 
 TEST_F(WalletTxValidationTest, invalid_input_prevout) {
     m_valid_tx.m_inputs[0].m_prevout_data.m_value = 0;
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
+    auto err
+        = cbdc::transaction::validation::check_tx(m_valid_tx,
+                                                  m_opts.m_minter_pubkeys);
 
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
@@ -152,7 +170,9 @@ TEST_F(WalletTxValidationTest, invalid_input_prevout) {
 
 TEST_F(WalletTxValidationTest, asymmetric_inout_set) {
     m_valid_tx.m_outputs[0].m_value--;
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
+    auto err
+        = cbdc::transaction::validation::check_tx(m_valid_tx,
+                                                  m_opts.m_minter_pubkeys);
 
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
@@ -249,7 +269,9 @@ TEST_F(WalletTxValidationTest, witness_p2pk_invalid_signature) {
 TEST_F(WalletTxValidationTest,
        check_transaction_with_unknown_witness_program_type) {
     m_valid_tx.m_witness[0][0] = std::byte(0xFF);
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
+    auto err
+        = cbdc::transaction::validation::check_tx(m_valid_tx,
+                                                  m_opts.m_minter_pubkeys);
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
         std::holds_alternative<cbdc::transaction::validation::witness_error>(

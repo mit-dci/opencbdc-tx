@@ -67,6 +67,7 @@ namespace cbdc::transaction::validation {
         program_mismatch,
         ///< The witness's specified program doesn't match its commitment
         invalid_public_key, ///< The witness's public key is invalid
+        invalid_minter_key, ///< The witness is not a valid minter
         invalid_signature   ///< The witness's signature is invalid
     };
 
@@ -80,6 +81,8 @@ namespace cbdc::transaction::validation {
         ///< The total values of inputs and outputs do not match
         value_overflow,
         ///< The total value of inputs/outputs overflows a 64-bit integer
+        mint_output_witness_mismatch ///< number of outputs don't match
+                                     ///< witnesses
     };
 
     /// An error that may occur when sentinels validate witness commitments
@@ -118,8 +121,15 @@ namespace cbdc::transaction::validation {
     /// \note This function returns immediately on the first-found error.
     ///
     /// \param tx transaction to validate
+    /// \param minters public keys of authorized minters
     /// \return null if transaction is valid, otherwise error information
-    auto check_tx(const transaction::full_tx& tx) -> std::optional<tx_error>;
+    auto check_tx(const transaction::full_tx& tx,
+                  const std::unordered_set<pubkey_t, hashing::null>& minters)
+        -> std::optional<tx_error>;
+    auto
+    check_mint_tx(const cbdc::transaction::full_tx& tx,
+                  const std::unordered_set<pubkey_t, hashing::null>& minters)
+        -> std::optional<tx_error>;
     auto check_tx_structure(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
     auto check_input_structure(const transaction::input& inp) -> std::optional<
@@ -164,6 +174,26 @@ namespace cbdc::transaction::validation {
         const transaction::compact_tx& tx,
         const std::unordered_set<pubkey_t, hashing::null>& pubkeys,
         size_t threshold) -> bool;
+
+    auto check_mint_witness(
+        const cbdc::transaction::full_tx& tx,
+        size_t idx,
+        const std::unordered_set<pubkey_t, hashing::null>& minters)
+        -> std::optional<witness_error_code>;
+    auto check_mint_p2pk_witness(
+        const cbdc::transaction::full_tx& tx,
+        size_t idx,
+        const std::unordered_set<pubkey_t, hashing::null>& minters)
+        -> std::optional<witness_error_code>;
+    auto
+    check_mint_p2pk_witness_commitment(const cbdc::transaction::full_tx& tx,
+                                       size_t idx)
+        -> std::optional<witness_error_code>;
+    auto check_mint_p2pk_witness_signature(
+        const cbdc::transaction::full_tx& tx,
+        size_t idx,
+        const std::unordered_set<pubkey_t, hashing::null>& minters)
+        -> std::optional<witness_error_code>;
 }
 
 #endif // OPENCBDC_TX_SRC_TRANSACTION_VALIDATION_H_

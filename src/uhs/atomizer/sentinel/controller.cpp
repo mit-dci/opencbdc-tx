@@ -86,7 +86,8 @@ namespace cbdc::sentinel {
 
     auto controller::execute_transaction(transaction::full_tx tx)
         -> std::optional<cbdc::sentinel::execute_response> {
-        const auto res = transaction::validation::check_tx(tx);
+        const auto res
+            = transaction::validation::check_tx(tx, m_opts.m_minter_pubkeys);
         tx_status status{tx_status::pending};
         if(res.has_value()) {
             status = tx_status::static_invalid;
@@ -118,7 +119,8 @@ namespace cbdc::sentinel {
 
     auto controller::validate_transaction(transaction::full_tx tx)
         -> std::optional<validate_response> {
-        const auto res = transaction::validation::check_tx(tx);
+        const auto res
+            = transaction::validation::check_tx(tx, m_opts.m_minter_pubkeys);
         if(res.has_value()) {
             return std::nullopt;
         }
@@ -167,7 +169,17 @@ namespace cbdc::sentinel {
             return;
         }
 
-        send_compact_tx(ctx);
+        // If the tx has no inputs, it's a mint. Send it directly to one of the
+        // shards
+        if(ctx.m_inputs.empty()) {
+            auto ctx_pkt
+                = std::make_shared<cbdc::buffer>(cbdc::make_buffer(ctx));
+            if(!m_shard_network.send_to_one(ctx_pkt)) {
+                m_logger->error("Failed to send mint tx to shard");
+            }
+        } else {
+            send_compact_tx(ctx);
+        }
     }
 
     void controller::send_compact_tx(const transaction::compact_tx& ctx) {
