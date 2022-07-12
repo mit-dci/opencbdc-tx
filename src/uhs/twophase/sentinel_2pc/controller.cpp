@@ -25,6 +25,14 @@ namespace cbdc::sentinel_2pc {
                                                    .size())]) {}
 
     auto controller::init() -> bool {
+        if(m_opts.m_attestation_threshold
+           > m_opts.m_sentinel_endpoints.size()) {
+            m_logger->error(
+                "The number of required attestations is larger \n"
+                "than the number of sentinels that can provide them.");
+            return false;
+        }
+
         auto skey = m_opts.m_sentinel_private_keys.find(m_sentinel_id);
         if(skey == m_opts.m_sentinel_private_keys.end()) {
             m_logger->error("No private key specified");
@@ -54,7 +62,10 @@ namespace cbdc::sentinel_2pc {
             m_sentinel_clients.emplace_back(std::move(client));
         }
 
-        m_dist = decltype(m_dist)(0, m_sentinel_clients.size() - 1);
+        constexpr size_t dist_lower_bound = 0;
+        const size_t dist_upper_bound
+            = m_sentinel_clients.empty() ? 0 : m_sentinel_clients.size() - 1;
+        m_dist = decltype(m_dist)(dist_lower_bound, dist_upper_bound);
 
         auto rpc_server = std::make_unique<cbdc::rpc::tcp_server<
             cbdc::rpc::async_server<cbdc::sentinel::request,

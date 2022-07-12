@@ -169,3 +169,15 @@ TEST_F(sentinel_2pc_test, tx_validation_test) {
           });
     ASSERT_TRUE(res);
 }
+
+TEST_F(sentinel_2pc_test, required_attestations_exceed_sentinel_count) {
+    // Test that controller initialization fails when the required number
+    // of attestations exceeds the number of sentinels that can provide them.
+    // Here, there is only 1 sentinel (defined in the fixture), but the
+    // required number of attestations is set to 2.
+    m_opts.m_attestation_threshold = 2;
+    auto ctl = std::make_unique<cbdc::sentinel_2pc::controller>(0,
+                                                                m_opts,
+                                                                m_logger);
+    ASSERT_FALSE(ctl->init());
+}
