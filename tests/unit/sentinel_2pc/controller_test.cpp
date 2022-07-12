@@ -226,3 +226,24 @@ TEST_F(sentinel_2pc_test, bad_rpc_server_endpoint) {
     // Check that the controller with the invalid endpoint fails to initialize.
     ASSERT_FALSE(ctl->init());
 }
+
+TEST_F(sentinel_2pc_test, out_of_range_sentinel_id) {
+    // Test that controller initialization fails when the sentinel ID is
+    // too large for the number of sentinels.  Here, since there's only
+    // 1 sentinel, the only allowable sentinel ID is 0.  However, it's
+    // deliberately set to 1 to trigger failure.
+    constexpr uint32_t bad_sentinel_id = 1;
+
+    // Add private key for the bad sentinel ID to avoid triggering the error
+    // "No private key specified".
+    constexpr auto sentinel_private_key
+        = "0000000000000001000000000000000000000000000000000000000000000001";
+    m_opts.m_sentinel_private_keys[bad_sentinel_id]
+        = cbdc::hash_from_hex(sentinel_private_key);
+
+    auto ctl
+        = std::make_unique<cbdc::sentinel_2pc::controller>(bad_sentinel_id,
+                                                           m_opts,
+                                                           m_logger);
+    ASSERT_FALSE(ctl->init());
+}
