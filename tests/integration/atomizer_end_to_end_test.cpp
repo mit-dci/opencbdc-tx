@@ -220,7 +220,7 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
 
     // Final check - ensure attempted double spends are marked as spent:
     const auto res_uhs_states = wc_res->states().at(ctx.m_id);
-    ASSERT_EQ(res_uhs_states.size(), 4);
+    ASSERT_EQ(res_uhs_states.size(), 4UL);
     ASSERT_EQ(res_uhs_states[0].status(),
               cbdc::watchtower::search_status::spent);
     ASSERT_EQ(res_uhs_states[1].status(),
@@ -269,7 +269,7 @@ TEST_F(atomizer_end_to_end_test, invalid_transaction) {
                                                   }}}});
 
     const auto res_uhs_states = wc_res->states().at(ctx.m_id);
-    ASSERT_EQ(res_uhs_states.size(), 4);
+    ASSERT_EQ(res_uhs_states.size(), 4UL);
     ASSERT_EQ(res_uhs_states[0].status(),
               cbdc::watchtower::search_status::no_history);
     ASSERT_EQ(res_uhs_states[1].status(),
