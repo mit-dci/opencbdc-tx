@@ -27,14 +27,12 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   # ensure development environment is set correctly for clang
   $SUDO xcode-select -switch /Library/Developer/CommandLineTools
   brew install llvm@14 googletest lcov make wget cmake snappy
-  CLANG_TIDY=/usr/local/bin/clang-tidy
-  if [ ! -L "$CLANG_TIDY" ]; then
-    $SUDO ln -s $(brew --prefix)/opt/llvm@14/bin/clang-tidy /usr/local/bin/clang-tidy
-  fi
-  GMAKE=/usr/local/bin/gmake
-  if [ ! -L "$GMAKE" ]; then
-    $SUDO ln -s $(xcode-select -p)/usr/bin/gnumake /usr/local/bin/gmake
-  fi
+  for CLANG_ITEM in "clang-tidy" "clang-format"
+  do
+    if [ ! -L "$(brew --prefix)/bin/$CLANG_ITEM" ]; then
+      ln -s $(brew --prefix llvm@14)/bin/$CLANG_ITEM $(brew --prefix)/bin/$CLANG_ITEM
+    fi
+  done
 fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -84,6 +82,7 @@ cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DDISABLE_SSL=1 ..
 make -j$CPUS static_lib
 
 echo -e "${green}Copying nuraft to /usr/local"
+$SUDO mkdir -p /usr/local/lib /usr/local/include
 $SUDO cp libnuraft.a /usr/local/lib
 $SUDO cp -r ../include/libnuraft /usr/local/include
 
@@ -93,5 +92,6 @@ PYTHON_TIDY=/usr/local/bin/run-clang-tidy.py
 if [ ! -f "${PYTHON_TIDY}" ]; then
   echo -e "${green}Copying run-clang-tidy to /usr/local/bin"
   wget https://raw.githubusercontent.com/llvm/llvm-project/e837ce2a32369b2e9e8e5d60270c072c7dd63827/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py
+  $SUDO mkdir -p /usr/local/bin
   $SUDO mv run-clang-tidy.py /usr/local/bin
 fi
