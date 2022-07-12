@@ -55,7 +55,10 @@ namespace cbdc::sentinel_2pc {
             m_sentinel_clients.emplace_back(std::move(client));
         }
 
-        m_dist = decltype(m_dist)(0, m_sentinel_clients.size() - 1);
+        constexpr size_t dist_lower_bound = 0;
+        const size_t dist_upper_bound
+            = m_sentinel_clients.empty() ? 0 : m_sentinel_clients.size() - 1;
+        m_dist = decltype(m_dist)(dist_lower_bound, dist_upper_bound);
 
         auto rpc_server = std::make_unique<cbdc::rpc::tcp_server<
             cbdc::rpc::async_server<cbdc::sentinel::request,
