@@ -25,6 +25,12 @@ namespace cbdc::sentinel_2pc {
                                                    .size())]) {}
 
     auto controller::init() -> bool {
+        if(m_sentinel_id >= m_opts.m_sentinel_endpoints.size()) {
+            m_logger->error(
+                "The sentinel ID is too large for the number of sentinels.");
+            return false;
+        }
+
         auto skey = m_opts.m_sentinel_private_keys.find(m_sentinel_id);
         if(skey == m_opts.m_sentinel_private_keys.end()) {
             if(m_opts.m_attestation_threshold > 0) {
