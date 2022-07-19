@@ -36,6 +36,14 @@ namespace cbdc::transaction {
         /// Initializes the randomization engine for key shuffling.
         wallet();
 
+        /// \brief Constructor.
+        ///
+        /// \param log (optional) logger to write debugging to.
+        wallet(std::shared_ptr<logging::log> log);
+
+        /// Initializes the randomization engine for key shuffling.
+        void init();
+
         /// \brief Mints new spendable outputs.
         ///
         /// Generates the specified number spendable outputs, each with the
@@ -247,6 +255,7 @@ namespace cbdc::transaction {
             m_keys;
         std::vector<pubkey_t> m_pubkeys;
         std::default_random_engine m_shuffle;
+        std::shared_ptr<logging::log> m_log;
 
         // TODO: currently this map grows unbounded, we need to garbage
         //       collect it

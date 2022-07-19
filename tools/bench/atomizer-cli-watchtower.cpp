@@ -122,7 +122,7 @@ auto main(int argc, char** argv) -> int {
         log->warn("Failed to connect to watchtower.");
     }
 
-    cbdc::transaction::wallet wal;
+    cbdc::transaction::wallet wal(log);
 
     // Optionally Pre-seed wallet with deterministic UTXOs
     if(cfg.m_seed_from != cfg.m_seed_to) {

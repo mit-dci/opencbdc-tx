@@ -14,7 +14,16 @@
 #include <secp256k1_schnorrsig.h>
 
 namespace cbdc {
-    transaction::wallet::wallet() {
+    transaction::wallet::wallet() : m_log(nullptr) {
+        init();
+    }
+
+    transaction::wallet::wallet(std::shared_ptr<logging::log> log)
+        : m_log(log) {
+        init();
+    }
+
+    void transaction::wallet::init() {
         auto seed = std::chrono::high_resolution_clock::now()
                         .time_since_epoch()
                         .count();
@@ -267,8 +276,10 @@ namespace cbdc {
         // TODO: other sighash types besides SIGHASH_ALL?
         const auto sighash = transaction::tx_id(tx);
         tx.m_witness.resize(tx.m_inputs.size());
-
         for(size_t i = 0; i < tx.m_inputs.size(); i++) {
+            if(m_log) {
+                m_log->debug("Attempting to sign input", i);
+            }
             const auto& wit_commit
                 = tx.m_inputs[i].m_prevout_data.m_witness_program_commitment;
 
@@ -286,6 +297,10 @@ namespace cbdc {
             }
 
             if(key_ours) {
+                if(m_log) {
+                    m_log->debug("Input", i, " is ours - signing");
+                }
+
                 auto& sig = tx.m_witness[i];
                 sig.resize(transaction::validation::p2pk_witness_len);
                 sig[0] = std::byte(
@@ -316,6 +331,10 @@ namespace cbdc {
                     sig_arr.data(),
                     sizeof(sig_arr));
                 assert(sign_ret == 1);
+            } else {
+                if(m_log) {
+                    m_log->debug("Input", i, " is not ours - not signing");
+                }
             }
         }
     }
