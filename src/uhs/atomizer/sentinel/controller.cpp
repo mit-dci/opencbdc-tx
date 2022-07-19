@@ -98,11 +98,47 @@ namespace cbdc::sentinel {
             // Only forward transactions that are valid
             send_transaction(tx);
         } else {
-            m_logger->debug("Rejected tx:",
-                            cbdc::to_string(tx_id),
-                            "(",
-                            cbdc::transaction::validation::to_string(res.value()),
-                            ")");
+            m_logger->debug(
+                "Rejected tx:",
+                cbdc::to_string(tx_id),
+                "(",
+                cbdc::transaction::validation::to_string(res.value()),
+                ")");
+
+            m_logger->debug("TX Inputs:", std::to_string(tx.m_inputs.size()));
+            for(size_t i = 0; i < tx.m_inputs.size(); i++) {
+                m_logger->debug(
+                    "Input [",
+                    std::to_string(i),
+                    "]: prevout [",
+                    cbdc::to_string(tx.m_inputs[i].m_prevout.m_tx_id),
+                    "/",
+                    std::to_string(tx.m_inputs[i].m_prevout.m_index),
+                    "]");
+                if(tx.m_inputs[i].m_spend_data.has_value()) {
+                    m_logger->debug(
+                        "Input [",
+                        std::to_string(i),
+                        "]: m_spend_data [",
+                        cbdc::to_string(tx.m_inputs[i].m_spend_data->m_blind),
+                        "/",
+                        std::to_string(tx.m_inputs[i].m_spend_data->m_value),
+                        "]");
+                } else {
+                    m_logger->debug("Input [",
+                                    std::to_string(i),
+                                    "]: no m_spend_data");
+                }
+            }
+
+            m_logger->debug("TX Outputs:",
+                            std::to_string(tx.m_outputs.size()));
+            m_logger->debug("TX Witnesses:",
+                            std::to_string(tx.m_witness.size()));
+            for(size_t i = 0; i < tx.m_witness.size(); i++) {
+                auto buf = cbdc::make_buffer(tx.m_witness[i]);
+                m_logger->debug("TX Witness [", i, "]: ", buf.to_hex());
+            }
         }
 
         return execute_response{status, res};
