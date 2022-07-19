@@ -50,7 +50,12 @@ auto main(int argc, char** argv) -> int {
 
     auto start = std::chrono::system_clock::now();
 
-    auto num_shards = cfg.m_shard_ranges.size();
+    auto unique_ranges
+        = std::vector<cbdc::config::shard_range_t>(cfg.m_shard_ranges);
+    std::sort(unique_ranges.begin(), unique_ranges.end());
+    unique_ranges.erase(unique(unique_ranges.begin(), unique_ranges.end()),
+                        unique_ranges.end());
+    auto num_shards = unique_ranges.size();
     auto num_utxos = cfg.m_seed_to - cfg.m_seed_from;
     auto utxo_val = cfg.m_seed_value;
     if(!cfg.m_seed_privkey.has_value()) {
