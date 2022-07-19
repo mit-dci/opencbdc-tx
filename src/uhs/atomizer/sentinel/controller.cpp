@@ -98,7 +98,11 @@ namespace cbdc::sentinel {
             // Only forward transactions that are valid
             send_transaction(tx);
         } else {
-            m_logger->debug("Rejected tx:", cbdc::to_string(tx_id));
+            m_logger->debug("Rejected tx:",
+                            cbdc::to_string(tx_id),
+                            "(",
+                            cbdc::transaction::validation::to_string(res.value()),
+                            ")");
         }
 
         return execute_response{status, res};
