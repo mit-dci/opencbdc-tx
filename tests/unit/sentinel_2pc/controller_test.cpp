@@ -38,6 +38,19 @@ class sentinel_2pc_test : public ::testing::Test {
         m_opts.m_coordinator_endpoints.resize(1);
         m_opts.m_coordinator_endpoints[0].push_back(coordinator_ep);
 
+        // The locking shard endpoint defined below may not be used in tests,
+        // but it must be defined for the options struct to be valid.  Without
+        // it, the check_options function couldn't be used to validate the
+        // other options used in this test.
+        static constexpr unsigned short m_locking_shard_port = 42001;
+        const auto locking_shard_endpoint
+            = std::make_pair(cbdc::network::localhost, m_locking_shard_port);
+        m_opts.m_locking_shard_endpoints.resize(1);
+        m_opts.m_locking_shard_endpoints[0].push_back(locking_shard_endpoint);
+
+        auto opt_chk_result = cbdc::config::check_options(m_opts);
+        ASSERT_FALSE(opt_chk_result.has_value());
+
         m_dummy_coordinator_thread = m_dummy_coordinator_net->start_server(
             coordinator_ep,
             [&](cbdc::network::message_t&& pkt)
@@ -168,18 +181,6 @@ TEST_F(sentinel_2pc_test, tx_validation_test) {
               ASSERT_TRUE(ctx.verify(secp.get(), validation_res.value()));
           });
     ASSERT_TRUE(res);
-}
-
-TEST_F(sentinel_2pc_test, required_attestations_exceed_sentinel_count) {
-    // Test that controller initialization fails when the required number
-    // of attestations exceeds the number of sentinels that can provide them.
-    // Here, there is only 1 sentinel (defined in the fixture), but the
-    // required number of attestations is set to 2.
-    m_opts.m_attestation_threshold = 2;
-    auto ctl = std::make_unique<cbdc::sentinel_2pc::controller>(0,
-                                                                m_opts,
-                                                                m_logger);
-    ASSERT_FALSE(ctl->init());
 }
 
 TEST_F(sentinel_2pc_test, out_of_range_sentinel_id) {
