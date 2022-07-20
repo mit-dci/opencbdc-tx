@@ -169,3 +169,60 @@ TEST_F(sentinel_2pc_test, tx_validation_test) {
           });
     ASSERT_TRUE(res);
 }
+
+TEST_F(sentinel_2pc_test, bad_coordinator_endpoint) {
+    // Replace the valid coordinator endpoint defined in the fixture
+    // with an invalid endpoint.
+    m_opts.m_coordinator_endpoints.clear();
+    const auto bad_coordinator_ep
+        = std::make_pair("abcdefg", m_coordinator_port);
+    m_opts.m_coordinator_endpoints.resize(1);
+    m_opts.m_coordinator_endpoints[0].push_back(bad_coordinator_ep);
+
+    // Initialize a new controller with the invalid coordinator endpoint.
+    auto ctl = std::make_unique<cbdc::sentinel_2pc::controller>(0,
+                                                                m_opts,
+                                                                m_logger);
+
+    // Check that the controller with the invalid coordinator endpoint
+    // fails to initialize correctly.
+    ASSERT_FALSE(ctl->init());
+}
+
+TEST_F(sentinel_2pc_test, bad_sentinel_client_endpoint) {
+    // Test that a sentinel client fails to initialize
+    // when given a bad endpoint.
+    constexpr auto bad_endpoint = std::make_pair("abcdefg", m_sentinel_port);
+    const std::vector<cbdc::network::endpoint_t> bad_endpoints{bad_endpoint};
+    auto client = cbdc::sentinel::rpc::client(bad_endpoints, m_logger);
+    ASSERT_FALSE(client.init());
+
+    // Test that the controller fails to initialize when given a bad endpoint
+    // for a sentinel client.
+    m_opts.m_sentinel_endpoints.emplace_back(bad_endpoint);
+    auto ctl = std::make_unique<cbdc::sentinel_2pc::controller>(0,
+                                                                m_opts,
+                                                                m_logger);
+    ASSERT_FALSE(ctl->init());
+}
+
+TEST_F(sentinel_2pc_test, bad_rpc_server_endpoint) {
+    // The sentinel endpoint defined below (which corresponds to sentinel_id
+    // also defined below) is used by the sentinel_2pc controller to initialize
+    // an rpc server.  Replacing the valid endpoint defined in the fixture with
+    // an invalid endpoint should cause the rpc server to fail to initialize.
+    m_opts.m_sentinel_endpoints.clear();
+    constexpr auto bad_endpoint = std::make_pair("abcdefg", m_sentinel_port);
+    m_opts.m_sentinel_endpoints.resize(1);
+    m_opts.m_sentinel_endpoints.emplace_back(bad_endpoint);
+
+    // Initialize a new controller with the invalid endpoint for the server.
+    constexpr uint32_t sentinel_id = 0;
+    const auto ctl
+        = std::make_unique<cbdc::sentinel_2pc::controller>(sentinel_id,
+                                                           m_opts,
+                                                           m_logger);
+
+    // Check that the controller with the invalid endpoint fails to initialize.
+    ASSERT_FALSE(ctl->init());
+}
