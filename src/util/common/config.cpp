@@ -685,6 +685,11 @@ namespace cbdc::config {
                 return "Two-phase mode requires at least one configured "
                        "sentinel";
             }
+            if(opts.m_sentinel_endpoints.size()
+               < opts.m_attestation_threshold) {
+                return "The number of required attestations is larger \n"
+                       "than the number of sentinels that can provide them.";
+            }
             if(opts.m_locking_shard_endpoints.empty()) {
                 return "Two-phase mode requires at least one configured shard";
             }
