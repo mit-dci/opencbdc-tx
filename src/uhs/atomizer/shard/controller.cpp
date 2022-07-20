@@ -70,6 +70,19 @@ namespace cbdc::shard {
             return atomizer_handler(std::forward<decltype(pkt)>(pkt));
         });
 
+        constexpr auto max_wait = 3;
+        for(size_t i = 0; i < max_wait && m_shard.best_block_height() < 1;
+            i++) {
+            m_logger->info("Waiting to sync with atomizer");
+            constexpr auto wait_time = std::chrono::seconds(1);
+            std::this_thread::sleep_for(wait_time);
+        }
+
+        if(m_shard.best_block_height() < 1) {
+            m_logger->warn(
+                "Shard still not syncronized with atomizer, starting anyway");
+        }
+
         auto ss = m_shard_network.start_server(
             m_opts.m_shard_endpoints[m_shard_id],
             [&](auto&& pkt) {
@@ -114,7 +127,14 @@ namespace cbdc::shard {
         // If the block is not contiguous, catch up by requesting
         // blocks from the archiver.
         while(!m_shard.digest_block(blk)) {
-            m_logger->warn("Block", blk.m_height, "not contiguous.");
+            m_logger->warn("Block",
+                           blk.m_height,
+                           "not contiguous with previous block",
+                           m_shard.best_block_height());
+
+            if(blk.m_height <= m_shard.best_block_height()) {
+                break;
+            }
 
             // Attempt to catch up to the latest block
             for(uint64_t i = m_shard.best_block_height() + 1; i < blk.m_height;
