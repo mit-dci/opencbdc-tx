@@ -38,6 +38,19 @@ class sentinel_2pc_test : public ::testing::Test {
         m_opts.m_coordinator_endpoints.resize(1);
         m_opts.m_coordinator_endpoints[0].push_back(coordinator_ep);
 
+        // The locking shard endpoint defined below may not be used in tests,
+        // but it must be defined for the options struct to be valid.  Without
+        // it, the check_options function couldn't be used to validate the
+        // other options used in this test.
+        static constexpr unsigned short m_locking_shard_port = 42001;
+        const auto locking_shard_endpoint
+            = std::make_pair(cbdc::network::localhost, m_locking_shard_port);
+        m_opts.m_locking_shard_endpoints.resize(1);
+        m_opts.m_locking_shard_endpoints[0].push_back(locking_shard_endpoint);
+
+        auto opt_chk_result = cbdc::config::check_options(m_opts);
+        ASSERT_FALSE(opt_chk_result.has_value());
+
         m_dummy_coordinator_thread = m_dummy_coordinator_net->start_server(
             coordinator_ep,
             [&](cbdc::network::message_t&& pkt)
