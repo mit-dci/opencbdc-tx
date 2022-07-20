@@ -37,6 +37,10 @@ namespace cbdc::shard {
                 t.join();
             }
         }
+
+        if(m_audit_thread.joinable()) {
+            m_audit_thread.join();
+        }
     }
 
     auto controller::init() -> bool {
@@ -46,6 +50,13 @@ namespace cbdc::shard {
                             m_shard_id,
                             ". Got error:",
                             *err_msg);
+            return false;
+        }
+
+        m_audit_log.open(m_opts.m_shard_audit_logs[m_shard_id],
+                         std::ios::app | std::ios::out);
+        if(!m_audit_log.good()) {
+            m_logger->error("Failed to open audit log");
             return false;
         }
 
@@ -69,6 +80,19 @@ namespace cbdc::shard {
         m_atomizer_client = m_atomizer_network.start_handler([&](auto&& pkt) {
             return atomizer_handler(std::forward<decltype(pkt)>(pkt));
         });
+
+        constexpr auto max_wait = 3;
+        for(size_t i = 0; i < max_wait && m_shard.best_block_height() < 1;
+            i++) {
+            m_logger->info("Waiting to sync with atomizer");
+            constexpr auto wait_time = std::chrono::seconds(1);
+            std::this_thread::sleep_for(wait_time);
+        }
+
+        if(m_shard.best_block_height() < 1) {
+            m_logger->warn(
+                "Shard still not syncronized with atomizer, starting anyway");
+        }
 
         auto ss = m_shard_network.start_server(
             m_opts.m_shard_endpoints[m_shard_id],
@@ -114,7 +138,14 @@ namespace cbdc::shard {
         // If the block is not contiguous, catch up by requesting
         // blocks from the archiver.
         while(!m_shard.digest_block(blk)) {
-            m_logger->warn("Block", blk.m_height, "not contiguous.");
+            m_logger->warn("Block",
+                           blk.m_height,
+                           "not contiguous with previous block",
+                           m_shard.best_block_height());
+
+            if(blk.m_height <= m_shard.best_block_height()) {
+                break;
+            }
 
             // Attempt to catch up to the latest block
             for(uint64_t i = m_shard.best_block_height() + 1; i < blk.m_height;
@@ -122,6 +153,7 @@ namespace cbdc::shard {
                 const auto past_blk = m_archiver_client.get_block(i);
                 if(past_blk) {
                     m_shard.digest_block(past_blk.value());
+                    audit();
                 } else {
                     m_logger->info("Waiting for archiver sync");
                     const auto wait_time = std::chrono::milliseconds(10);
@@ -131,6 +163,7 @@ namespace cbdc::shard {
                 }
             }
         }
+        audit();
 
         m_logger->info("Digested block", blk.m_height);
         return std::nullopt;
@@ -188,5 +221,30 @@ namespace cbdc::shard {
                 }};
             std::visit(res_handler, res);
         }
+    }
+
+    void controller::audit() {
+        auto height = m_shard.best_block_height();
+        if(m_opts.m_shard_audit_interval > 0
+           && height % m_opts.m_shard_audit_interval != 0) {
+            return;
+        }
+
+        auto snp = m_shard.get_snapshot();
+        if(m_audit_thread.joinable()) {
+            m_audit_thread.join();
+        }
+        m_audit_thread = std::thread([this, s = std::move(snp), height]() {
+            auto range_summaries = m_shard.audit(s);
+            auto buf = cbdc::buffer();
+            buf.extend(sizeof(commitment_t));
+            for(const auto& [bucket, summary] : range_summaries) {
+                buf.clear();
+                buf.append(summary.data(), summary.size());
+                m_audit_log << height << " " << static_cast<int>(bucket) << " "
+                            << buf.to_hex() << std::endl;
+            }
+            m_logger->info("Audit completed for", height);
+        });
     }
 }

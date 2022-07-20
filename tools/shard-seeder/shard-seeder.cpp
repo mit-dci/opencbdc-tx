@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "uhs/transaction/messages.hpp"
 #include "uhs/transaction/transaction.hpp"
 #include "uhs/transaction/validation.hpp"
 #include "uhs/transaction/wallet.hpp"
@@ -117,23 +118,38 @@ auto main(int argc, char** argv) -> int {
                                      res.ToString());
                         return;
                     }
-
                     auto tx = wal.create_seeded_transaction(0).value();
                     auto batch_size = 0;
                     leveldb::WriteBatch batch;
                     for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
                         tx.m_inputs[0].m_prevout.m_index = tx_idx;
                         cbdc::transaction::compact_tx ctx(tx);
-                        const cbdc::hash_t& output_hash = ctx.m_uhs_outputs[0];
+                        const cbdc::hash_t& output_hash
+                            = ctx.m_outputs[0].m_id;
                         if(output_hash[0] >= shard_start
                            && output_hash[0] <= shard_end) {
                             std::array<char, sizeof(output_hash)> hash_arr{};
                             std::memcpy(hash_arr.data(),
                                         output_hash.data(),
                                         sizeof(output_hash));
+                            static constexpr auto aux_size
+                                = sizeof(ctx.m_outputs[0].m_auxiliary);
+                            static constexpr auto rng_size
+                                = sizeof(ctx.m_outputs[0].m_range);
+                            std::array<char, aux_size + rng_size> proofs_arr{};
+
+                            std::memcpy(proofs_arr.data(),
+                                        ctx.m_outputs[0].m_auxiliary.data(),
+                                        aux_size);
+                            std::memcpy(proofs_arr.data() + aux_size,
+                                        ctx.m_outputs[0].m_range.data(),
+                                        rng_size);
                             leveldb::Slice hash_key(hash_arr.data(),
                                                     output_hash.size());
-                            batch.Put(hash_key, leveldb::Slice());
+                            leveldb::Slice ProofVal(proofs_arr.data(),
+                                                    proofs_arr.size());
+
+                            batch.Put(hash_key, ProofVal);
                             batch_size++;
                             if(batch_size >= write_batch_size) {
                                 db->Write(wopt, &batch);
@@ -157,10 +173,11 @@ auto main(int argc, char** argv) -> int {
                     for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
                         tx.m_inputs[0].m_prevout.m_index = tx_idx;
                         cbdc::transaction::compact_tx ctx(tx);
-                        const cbdc::hash_t& output_hash = ctx.m_uhs_outputs[0];
-                        if(output_hash[0] >= shard_start
-                           && output_hash[0] <= shard_end) {
-                            ser << output_hash;
+                        const auto& compact_out = ctx.m_outputs[0];
+                        if(compact_out.m_id[0] >= shard_start
+                           && compact_out.m_id[0] <= shard_end) {
+                            ser << compact_out.m_id;
+                            ser << compact_out;
                             count++;
                         }
                     }

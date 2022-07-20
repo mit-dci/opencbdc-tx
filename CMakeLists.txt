@@ -44,6 +44,7 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_link_options(--coverage)
+    add_compile_options(-Og -g -ggdb)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Profiling")
@@ -75,5 +76,4 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(tests)
-add_subdirectory(tools/bench)
-add_subdirectory(tools/shard-seeder)
+add_subdirectory(tools)

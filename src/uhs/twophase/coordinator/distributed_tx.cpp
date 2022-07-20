@@ -160,8 +160,8 @@ namespace cbdc::coordinator {
                     }
                 }
                 if(!active) {
-                    for(const auto& out : tx.m_uhs_outputs) {
-                        if(shard->hash_in_shard_range(out)) {
+                    for(const auto& out : tx.m_outputs) {
+                        if(shard->hash_in_shard_range(out.m_id)) {
                             active = true;
                             break;
                         }

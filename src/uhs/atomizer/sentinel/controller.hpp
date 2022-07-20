@@ -10,11 +10,14 @@
 #include "uhs/sentinel/async_interface.hpp"
 #include "uhs/sentinel/client.hpp"
 #include "uhs/sentinel/interface.hpp"
+#include "uhs/transaction/transaction.hpp"
 #include "util/common/config.hpp"
 #include "util/network/connection_manager.hpp"
 
 #include <memory>
 #include <random>
+#include <secp256k1.h>
+#include <secp256k1_bulletproofs.h>
 
 namespace cbdc::sentinel {
     /// Sentinel implementation.
@@ -83,8 +86,6 @@ namespace cbdc::sentinel {
 
         privkey_t m_privkey{};
 
-        void send_transaction(const transaction::full_tx& tx);
-
         void validate_result_handler(async_interface::validate_result v_res,
                                      const transaction::full_tx& tx,
                                      transaction::compact_tx ctx,
@@ -95,6 +96,8 @@ namespace cbdc::sentinel {
                                  std::unordered_set<size_t> requested);
 
         void send_compact_tx(const transaction::compact_tx& ctx);
+
+        void send_transaction(const transaction::full_tx& tx);
     };
 }
 

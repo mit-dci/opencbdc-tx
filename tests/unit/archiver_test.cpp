@@ -50,11 +50,10 @@ class ArchiverTest : public ::testing::Test {
                 inp.m_prevout.m_tx_id = {val++};
                 inp.m_prevout.m_index = val++;
                 inp.m_prevout_data.m_witness_program_commitment = {val++};
-                inp.m_prevout_data.m_value = val++;
+                inp.m_spend_data = {{}, val++};
 
                 cbdc::transaction::output out;
                 out.m_witness_program_commitment = {val++};
-                out.m_value = val++;
 
                 tx.m_inputs.push_back(inp);
                 tx.m_outputs.push_back(out);

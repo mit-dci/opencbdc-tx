@@ -9,6 +9,7 @@
 #include "client.hpp"
 #include "interface.hpp"
 #include "status_interface.hpp"
+#include "uhs/transaction/messages.hpp"
 #include "uhs/transaction/transaction.hpp"
 #include "util/common/cache_set.hpp"
 #include "util/common/hash.hpp"
@@ -136,7 +137,9 @@ namespace cbdc::locking_shard {
 
         std::shared_ptr<logging::log> m_logger;
         mutable std::shared_mutex m_mut;
-        std::unordered_set<hash_t, hashing::null> m_uhs;
+        std::unordered_set<hash_t, hashing::null> m_uhs{};
+        std::unordered_map<hash_t, transaction::compact_output, hashing::null>
+            m_proofs{};
         std::unordered_set<hash_t, hashing::null> m_locked;
         std::unordered_map<hash_t, prepared_dtx, hashing::null>
             m_prepared_dtxs;

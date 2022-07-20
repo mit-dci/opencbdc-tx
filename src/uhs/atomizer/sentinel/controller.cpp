@@ -96,22 +96,24 @@ namespace cbdc::sentinel {
 
         if(!res.has_value()) {
             m_logger->debug("Accepted tx:", cbdc::to_string(tx_id));
+            // Only forward transactions that are valid
+            send_transaction(tx);
         } else {
             m_logger->debug("Rejected tx:", cbdc::to_string(tx_id));
-        }
-
-        // Only forward transactions that are valid
-        if(!res.has_value()) {
-            send_transaction(tx);
         }
 
         return execute_response{status, res};
     }
 
+    // todo: need to take a full_tx instead of a compact_tx for
+    // gather_attestations
     void controller::send_transaction(const transaction::full_tx& tx) {
         auto compact_tx = cbdc::transaction::compact_tx(tx);
         auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
         compact_tx.m_attestations.insert(attestation);
+        auto ctx_pkt = std::make_shared<cbdc::buffer>();
+        auto ctx_ser = cbdc::buffer_serializer(*ctx_pkt);
+        ctx_ser << compact_tx;
 
         gather_attestations(tx, compact_tx, {});
     }
