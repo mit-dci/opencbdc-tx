@@ -8,6 +8,7 @@ add_executable(run_unit_tests archiver_test.cpp
                               config_test.cpp
                               coordinator/messages_test.cpp
                               locking_shard/format_test.cpp
+                              locking_shard/controller_test.cpp
                               network_test.cpp
                               message_test.cpp
                               raft_test.cpp
