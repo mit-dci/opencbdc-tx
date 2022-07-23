@@ -142,7 +142,7 @@ namespace cbdc::coordinator {
         std::shared_ptr<logging::log> m_logger;
 
         nuraft::ptr<state_machine> m_state_machine;
-        raft::node m_raft_serv;
+        std::shared_ptr<raft::node> m_raft_serv;
         nuraft::raft_params m_raft_params{};
         std::atomic_bool m_running{false};
         std::vector<std::shared_ptr<cbdc::locking_shard::interface>> m_shards;
