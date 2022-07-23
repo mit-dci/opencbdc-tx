@@ -24,24 +24,9 @@ namespace cbdc::coordinator {
           m_opts(std::move(opts)),
           m_logger(std::move(logger)),
           m_state_machine(nuraft::cs_new<state_machine>(m_logger)),
-          m_raft_serv(
-              static_cast<int>(m_node_id),
-              m_opts.m_coordinator_raft_endpoints[m_coordinator_id][m_node_id],
-              "coordinator" + std::to_string(m_coordinator_id),
-              true,
-              m_state_machine,
-              0,
-              m_logger,
-              [&](auto&& res, auto&& err) {
-                  return raft_callback(std::forward<decltype(res)>(res),
-                                       std::forward<decltype(err)>(err));
-              },
-              m_opts.m_wait_for_followers),
           m_shard_endpoints(m_opts.m_locking_shard_endpoints),
           m_shard_ranges(m_opts.m_shard_ranges),
           m_batch_size(m_opts.m_batch_size),
-          m_handler_endpoint(
-              m_opts.m_coordinator_endpoints[m_coordinator_id][m_node_id]),
           m_exec_threads(m_opts.m_coordinator_max_threads) {
         m_raft_params.election_timeout_lower_bound_
             = static_cast<int>(m_opts.m_election_timeout_lower);
@@ -59,6 +44,59 @@ namespace cbdc::coordinator {
     }
 
     auto controller::init() -> bool {
+        if(!m_logger) {
+            std::cerr
+                << "[ERROR] The logger pointer in coordinator::controller "
+                << "is null." << std::endl;
+            return false;
+        }
+
+        if(m_coordinator_id > (m_opts.m_coordinator_endpoints.size() - 1)) {
+            m_logger->error("The coordinator ID is out of range "
+                            "of the m_coordinator_endpoints vector.");
+            return false;
+        }
+
+        for(const auto& vec : m_opts.m_coordinator_endpoints) {
+            if(m_node_id > (vec.size() - 1)) {
+                m_logger->error("The node ID is out of range "
+                                "of the m_coordinator_endpoints vector.");
+                return false;
+            }
+        }
+
+        m_handler_endpoint
+            = m_opts.m_coordinator_endpoints[m_coordinator_id][m_node_id];
+
+        if(m_coordinator_id
+           > (m_opts.m_coordinator_raft_endpoints.size() - 1)) {
+            m_logger->error("The coordinator ID is out of range "
+                            "of the m_coordinator_raft_endpoints vector.");
+            return false;
+        }
+
+        for(const auto& vec : m_opts.m_coordinator_raft_endpoints) {
+            if(m_node_id > (vec.size() - 1)) {
+                m_logger->error("The node ID is out of range "
+                                "of the m_coordinator_raft_endpoints vector.");
+                return false;
+            }
+        }
+
+        m_raft_serv = std::make_shared<raft::node>(
+            static_cast<int>(m_node_id),
+            m_opts.m_coordinator_raft_endpoints[m_coordinator_id][m_node_id],
+            "coordinator" + std::to_string(m_coordinator_id),
+            true,
+            m_state_machine,
+            0,
+            m_logger,
+            [&](auto&& res, auto&& err) {
+                return raft_callback(std::forward<decltype(res)>(res),
+                                     std::forward<decltype(err)>(err));
+            },
+            m_opts.m_wait_for_followers);
+
         // Thread to handle starting and stopping the message handler and dtx
         // batch processing threads when triggered by the raft callback
         // becoming leader or follower
@@ -69,12 +107,12 @@ namespace cbdc::coordinator {
         // Initialize NuRaft with the state machine we just created. Register
         // our callback function to notify us when we become a leader or
         // follower.
-        if(!m_raft_serv.init(m_raft_params)) {
+        if(!m_raft_serv->init(m_raft_params)) {
             return false;
         }
 
         // Connect to the other raft nodes in our coordinator cluster
-        return m_raft_serv.build_cluster(
+        return m_raft_serv->build_cluster(
             m_opts.m_coordinator_raft_endpoints[m_coordinator_id]);
     }
 
@@ -434,7 +472,7 @@ namespace cbdc::coordinator {
         // Sanity check to ensure total_sz was correct
         assert(ser.end_of_buffer());
         // Use synchronous mode to block until replication or failure
-        return m_raft_serv.replicate_sync(buf);
+        return m_raft_serv->replicate_sync(buf);
     }
 
     void controller::connect_shards() {
@@ -576,12 +614,12 @@ namespace cbdc::coordinator {
                 continue;
             }
             recovered = true;
-        } while(!recovered && m_raft_serv.is_leader());
+        } while(!recovered && m_raft_serv->is_leader());
         m_logger->info("Recovery complete");
 
         // If we stopped being the leader while attempting to recover we
         // shouldn't bother starting and handler threads
-        if(!m_raft_serv.is_leader()) {
+        if(!m_raft_serv->is_leader()) {
             return;
         }
 
@@ -654,7 +692,7 @@ namespace cbdc::coordinator {
                                          callback_type result_callback)
         -> bool {
         // If we're not the leader we can't process txs
-        if(!m_raft_serv.is_leader()) {
+        if(!m_raft_serv->is_leader()) {
             return false;
         }
 
