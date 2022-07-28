@@ -24,19 +24,18 @@ namespace cbdc::coordinator {
           m_opts(std::move(opts)),
           m_logger(std::move(logger)),
           m_state_machine(nuraft::cs_new<state_machine>(m_logger)),
-          m_raft_serv(
-              static_cast<int>(m_node_id),
-              m_opts.m_coordinator_raft_endpoints[m_coordinator_id][m_node_id],
-              "coordinator" + std::to_string(m_coordinator_id),
-              true,
-              m_state_machine,
-              0,
-              m_logger,
-              [&](auto&& res, auto&& err) {
-                  return raft_callback(std::forward<decltype(res)>(res),
-                                       std::forward<decltype(err)>(err));
-              },
-              m_opts.m_wait_for_followers),
+          m_raft_serv(static_cast<int>(m_node_id),
+                      m_opts.m_coordinator_raft_endpoints[m_coordinator_id],
+                      "coordinator" + std::to_string(m_coordinator_id),
+                      true,
+                      m_state_machine,
+                      0,
+                      m_logger,
+                      [&](auto&& res, auto&& err) {
+                          return raft_callback(
+                              std::forward<decltype(res)>(res),
+                              std::forward<decltype(err)>(err));
+                      }),
           m_shard_endpoints(m_opts.m_locking_shard_endpoints),
           m_shard_ranges(m_opts.m_shard_ranges),
           m_batch_size(m_opts.m_batch_size),
@@ -69,13 +68,7 @@ namespace cbdc::coordinator {
         // Initialize NuRaft with the state machine we just created. Register
         // our callback function to notify us when we become a leader or
         // follower.
-        if(!m_raft_serv.init(m_raft_params)) {
-            return false;
-        }
-
-        // Connect to the other raft nodes in our coordinator cluster
-        return m_raft_serv.build_cluster(
-            m_opts.m_coordinator_raft_endpoints[m_coordinator_id]);
+        return m_raft_serv.init(m_raft_params);
     }
 
     auto controller::raft_callback(nuraft::cb_func::Type type,

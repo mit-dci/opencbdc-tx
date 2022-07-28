@@ -13,16 +13,17 @@
 #include <utility>
 
 namespace cbdc::raft {
-    state_manager::state_manager(int32_t srv_id,
-                                 std::string endpoint,
-                                 std::string log_dir,
-                                 std::string config_file,
-                                 std::string state_file)
+    state_manager::state_manager(
+        int32_t srv_id,
+        std::string log_dir,
+        std::string config_file,
+        std::string state_file,
+        std::vector<network::endpoint_t> raft_endpoints)
         : m_id(srv_id),
-          m_endpoint(std::move(endpoint)),
           m_config_file(std::move(config_file)),
           m_state_file(std::move(state_file)),
-          m_log_dir(std::move(log_dir)) {}
+          m_log_dir(std::move(log_dir)),
+          m_raft_endpoints(std::move(raft_endpoints)) {}
 
     template<typename T>
     void save_object(const T& obj, const std::string& filename) {
@@ -65,10 +66,19 @@ namespace cbdc::raft {
     auto state_manager::load_config() -> nuraft::ptr<nuraft::cluster_config> {
         auto config = load_object<nuraft::cluster_config>(m_config_file);
         if(!config) {
-            auto srv_config
-                = nuraft::cs_new<nuraft::srv_config>(m_id, m_endpoint);
             auto cluster_config = nuraft::cs_new<nuraft::cluster_config>();
-            cluster_config->get_servers().push_back(srv_config);
+            for(size_t i = 0; i < m_raft_endpoints.size(); i++) {
+                auto& ep = m_raft_endpoints[i];
+                auto ep_str = ep.first + ":" + std::to_string(ep.second);
+                auto srv_config
+                    = nuraft::cs_new<nuraft::srv_config>(i + 1, ep_str);
+                if(i == 0) {
+                    constexpr auto leader_priority = 100;
+                    srv_config->set_priority(leader_priority);
+                }
+                cluster_config->get_servers().emplace_back(
+                    std::move(srv_config));
+            }
             return cluster_config;
         }
 

@@ -12,15 +12,15 @@
 #include "util/serialization/util.hpp"
 
 namespace cbdc::atomizer {
-    atomizer_raft::atomizer_raft(uint32_t atomizer_id,
-                                 const network::endpoint_t& raft_endpoint,
-                                 size_t stxo_cache_depth,
-                                 std::shared_ptr<logging::log> logger,
-                                 config::options opts,
-                                 nuraft::cb_func::func_type raft_callback,
-                                 bool wait_for_followers)
+    atomizer_raft::atomizer_raft(
+        uint32_t atomizer_id,
+        std::vector<network::endpoint_t> raft_endpoints,
+        size_t stxo_cache_depth,
+        std::shared_ptr<logging::log> logger,
+        config::options opts,
+        nuraft::cb_func::func_type raft_callback)
         : node(static_cast<int>(atomizer_id),
-               raft_endpoint,
+               std::move(raft_endpoints),
                m_node_type,
                false,
                nuraft::cs_new<state_machine>(
@@ -28,8 +28,7 @@ namespace cbdc::atomizer {
                    "atomizer_snps_" + std::to_string(atomizer_id)),
                0,
                logger,
-               std::move(raft_callback),
-               wait_for_followers),
+               std::move(raft_callback)),
           m_log(std::move(logger)),
           m_opts(std::move(opts)) {}
 

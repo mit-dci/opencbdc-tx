@@ -37,7 +37,7 @@ namespace cbdc::locking_shard {
           m_shard(m_state_machine->get_shard_instance()),
           m_raft_serv(std::make_shared<raft::node>(
               static_cast<int>(node_id),
-              opts.m_locking_shard_raft_endpoints[shard_id][node_id],
+              opts.m_locking_shard_raft_endpoints[shard_id],
               "shard" + std::to_string(shard_id),
               false,
               m_state_machine,
@@ -46,8 +46,7 @@ namespace cbdc::locking_shard {
               [&](auto&& res, auto&& err) {
                   return raft_callback(std::forward<decltype(res)>(res),
                                        std::forward<decltype(err)>(err));
-              },
-              m_opts.m_wait_for_followers)) {}
+              })) {}
 
     auto controller::init() -> bool {
         auto params = nuraft::raft_params();
@@ -61,12 +60,6 @@ namespace cbdc::locking_shard {
 
         if(!m_raft_serv->init(params)) {
             m_logger->error("Failed to initialize raft server");
-            return false;
-        }
-
-        if(!m_raft_serv->build_cluster(
-               m_opts.m_locking_shard_raft_endpoints[m_shard_id])) {
-            m_logger->error("Failed to build raft cluster");
             return false;
         }
 
