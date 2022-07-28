@@ -5,6 +5,7 @@
 
 #include "peer.hpp"
 
+#include <cassert>
 #include <utility>
 
 namespace cbdc::network {
@@ -47,7 +48,8 @@ namespace cbdc::network {
             while(m_running) {
                 std::shared_ptr<cbdc::buffer> pkt;
                 if(!m_send_queue.pop(pkt)) {
-                    continue;
+                    assert(!m_running);
+                    break;
                 }
 
                 if(pkt) {
@@ -123,6 +125,7 @@ namespace cbdc::network {
         if(m_recv_thread.joinable()) {
             m_recv_thread.join();
         }
+        m_send_queue.reset();
     }
 
     void peer::signal_reconnect() {
