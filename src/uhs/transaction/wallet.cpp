@@ -278,7 +278,7 @@ namespace cbdc {
         tx.m_witness.resize(tx.m_inputs.size());
         for(size_t i = 0; i < tx.m_inputs.size(); i++) {
             if(m_log) {
-                m_log->debug("Attempting to sign input", i);
+                m_log->info("Attempting to sign input", i);
             }
             const auto& wit_commit
                 = tx.m_inputs[i].m_prevout_data.m_witness_program_commitment;
@@ -298,7 +298,7 @@ namespace cbdc {
 
             if(key_ours) {
                 if(m_log) {
-                    m_log->debug("Input", i, " is ours - signing");
+                    m_log->info("Input", i, " is ours - signing");
                 }
 
                 auto& sig = tx.m_witness[i];
@@ -333,7 +333,7 @@ namespace cbdc {
                 assert(sign_ret == 1);
             } else {
                 if(m_log) {
-                    m_log->debug("Input", i, " is not ours - not signing");
+                    m_log->info("Input", i, " is not ours - not signing");
                 }
             }
         }
