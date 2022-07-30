@@ -164,6 +164,8 @@ run_test_suite () {
 if [[ "$RUN_UNIT_TESTS" == "true" ]]
 then
     echo "Running unit tests..."
+    find "${REPO_TOP_DIR}"/tests/unit/ -name '*.cfg' \
+        -exec rsync \{\} "$BUILD_DIR" \;
     run_test_suite "tests/unit/run_unit_tests" "unit_tests_coverage"
 else
     echo "Skipping unit tests."

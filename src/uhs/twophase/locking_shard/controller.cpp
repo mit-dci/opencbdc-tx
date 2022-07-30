@@ -16,9 +16,9 @@
 namespace cbdc::locking_shard {
     controller::controller(size_t shard_id,
                            size_t node_id,
-                           const cbdc::config::options& opts,
+                           config::options opts,
                            std::shared_ptr<logging::log> logger)
-        : m_opts(opts),
+        : m_opts(std::move(opts)),
           m_logger(std::move(logger)),
           m_shard_id(shard_id),
           m_node_id(node_id),
@@ -27,29 +27,16 @@ namespace cbdc::locking_shard {
                   ? "2pc_shard_preseed_"
                         + std::to_string(m_opts.m_seed_to - m_opts.m_seed_from)
                         + "_" + std::to_string(m_shard_id)
-                  : ""),
-          m_state_machine(nuraft::cs_new<state_machine>(
-              m_opts.m_shard_ranges[m_shard_id],
-              m_logger,
-              m_opts.m_shard_completed_txs_cache_size,
-              m_preseed_dir,
-              m_opts)),
-          m_shard(m_state_machine->get_shard_instance()),
-          m_raft_serv(std::make_shared<raft::node>(
-              static_cast<int>(node_id),
-              opts.m_locking_shard_raft_endpoints[shard_id][node_id],
-              "shard" + std::to_string(shard_id),
-              false,
-              m_state_machine,
-              0,
-              m_logger,
-              [&](auto&& res, auto&& err) {
-                  return raft_callback(std::forward<decltype(res)>(res),
-                                       std::forward<decltype(err)>(err));
-              },
-              m_opts.m_wait_for_followers)) {}
+                  : "") {}
 
     auto controller::init() -> bool {
+        if(!m_logger) {
+            std::cerr
+                << "[ERROR] The logger pointer in locking_shard::controller"
+                << " is null." << std::endl;
+            return false;
+        }
+
         auto params = nuraft::raft_params();
         params.election_timeout_lower_bound_
             = static_cast<int>(m_opts.m_election_timeout_lower);
@@ -58,6 +45,50 @@ namespace cbdc::locking_shard {
         params.heart_beat_interval_ = static_cast<int>(m_opts.m_heartbeat);
         params.snapshot_distance_ = 0; // TODO: implement snapshots
         params.max_append_size_ = static_cast<int>(m_opts.m_raft_max_batch);
+
+        if(m_shard_id > (m_opts.m_shard_ranges.size() - 1)) {
+            m_logger->error(
+                "The shard ID is out of range of the m_shard_ranges vector.");
+            return false;
+        }
+
+        m_state_machine = nuraft::cs_new<state_machine>(
+            m_opts.m_shard_ranges[m_shard_id],
+            m_logger,
+            m_opts.m_shard_completed_txs_cache_size,
+            m_preseed_dir,
+            m_opts);
+
+        m_shard = m_state_machine->get_shard_instance();
+
+        if(m_shard_id > (m_opts.m_locking_shard_raft_endpoints.size() - 1)) {
+            m_logger->error("The shard ID is out of range "
+                            "of the m_locking_shard_raft_endpoints vector.");
+            return false;
+        }
+
+        for(const auto& vec : m_opts.m_locking_shard_raft_endpoints) {
+            if(m_node_id > (vec.size() - 1)) {
+                m_logger->error(
+                    "The node ID is out of range "
+                    "of the m_locking_shard_raft_endpoints vector.");
+                return false;
+            }
+        }
+
+        m_raft_serv = std::make_shared<raft::node>(
+            static_cast<int>(m_node_id),
+            m_opts.m_locking_shard_raft_endpoints[m_shard_id][m_node_id],
+            "shard" + std::to_string(m_shard_id),
+            false,
+            m_state_machine,
+            0,
+            m_logger,
+            [&](auto&& res, auto&& err) {
+                return raft_callback(std::forward<decltype(res)>(res),
+                                     std::forward<decltype(err)>(err));
+            },
+            m_opts.m_wait_for_followers);
 
         if(!m_raft_serv->init(params)) {
             m_logger->error("Failed to initialize raft server");
