@@ -16,9 +16,9 @@
 namespace cbdc::locking_shard {
     controller::controller(size_t shard_id,
                            size_t node_id,
-                           const cbdc::config::options& opts,
+                           config::options opts,
                            std::shared_ptr<logging::log> logger)
-        : m_opts(opts),
+        : m_opts(std::move(opts)),
           m_logger(std::move(logger)),
           m_shard_id(shard_id),
           m_node_id(node_id),
