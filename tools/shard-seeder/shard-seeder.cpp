@@ -123,11 +123,10 @@ auto main(int argc, char** argv) -> int {
                                      res.ToString());
                         return;
                     }
-                    auto tx = wal.create_seeded_transaction(0).value();
                     auto batch_size = 0;
                     leveldb::WriteBatch batch;
                     for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
-                        tx.m_inputs[0].m_prevout.m_index = tx_idx;
+                        auto tx = wal.create_seeded_transaction(tx_idx).value();
                         cbdc::transaction::compact_tx ctx(tx);
                         const cbdc::hash_t& output_hash
                             = ctx.m_outputs[0].m_id;
