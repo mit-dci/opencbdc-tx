@@ -136,23 +136,41 @@ namespace cbdc {
         tx.m_inputs.resize(1);
         tx.m_outputs.resize(1);
 
-        auto seed_inp = create_seeded_input(seed_idx);
-        if(!seed_inp.has_value()) {
-            return std::nullopt;
-        }
+        transaction::input inp{};
+        inp.m_prevout.m_tx_id = {0};
+        inp.m_prevout.m_index = seed_idx;
 
-        tx.m_inputs[0] = seed_inp.value();
+        inp.m_prevout_data.m_witness_program_commitment = {0};
+
+        std::vector<transaction::spend_data> in_spend_data{};
+        in_spend_data.push_back(transaction::spend_data{{}, m_seed_value});
+
+        auto aux = transaction::roll_auxiliaries(m_secp.get(),
+                                                 *m_random_source,
+                                                 {},
+                                                 in_spend_data);
+
+        auto res = transaction::prove_output(m_secp.get(),
+                                             m_generators.get(),
+                                             *m_random_source,
+                                             inp.m_prevout_data,
+                                             inp.m_prevout,
+                                             in_spend_data.front(),
+                                             &aux.front());
+
+        inp.m_spend_data = in_spend_data.front();
+        tx.m_inputs[0] = inp;
 
         tx.m_outputs[0].m_witness_program_commitment
             = m_seed_witness_commitment;
 
-        std::vector<spend_data> out_spend_data{};
+        std::vector<transaction::spend_data> out_spend_data{};
         out_spend_data.push_back(transaction::spend_data{{}, m_seed_value});
         tx.m_out_spend_data = out_spend_data;
-        auto res = transaction::add_proof(m_secp.get(),
-                                          m_generators.get(),
-                                          *m_random_source,
-                                          tx);
+        res = transaction::add_proof(m_secp.get(),
+                                     m_generators.get(),
+                                     *m_random_source,
+                                     tx);
 
         if(!res) {
             return std::nullopt;
@@ -167,34 +185,23 @@ namespace cbdc {
             return std::nullopt;
         }
 
-        transaction::out_point point{};
-        point.m_tx_id = {0};
-        point.m_index = seed_idx;
+        auto maybe_tx = create_seeded_transaction(seed_idx);
+        if(!maybe_tx.has_value()) {
+            return std::nullopt;
+        }
+        auto tx = maybe_tx.value();
 
-        transaction::output put{};
-        put.m_witness_program_commitment = {0};
-
-        std::vector<transaction::spend_data> out_spend_data{};
-        out_spend_data.push_back(transaction::spend_data{{}, m_seed_value});
-
-        auto aux = transaction::roll_auxiliaries(m_secp.get(),
-                                                 *m_random_source,
-                                                 {},
-                                                 out_spend_data);
-
-        auto res = transaction::prove_output(m_secp.get(),
-                                             m_generators.get(),
-                                             *m_random_source,
-                                             put,
-                                             point,
-                                             out_spend_data.front(),
-                                             &aux.front());
-
-        if(!res) {
+        if(!tx.m_out_spend_data.has_value()) {
             return std::nullopt;
         }
 
-        transaction::input inp{point, put, out_spend_data.front()};
+        auto maybe_inp = transaction::input_from_output(tx, 0);
+        if(!maybe_inp.has_value()) {
+            return std::nullopt;
+        }
+        auto inp = maybe_inp.value();
+
+        inp.m_spend_data = tx.m_out_spend_data.value().front();
 
         return inp;
     }
