@@ -64,8 +64,6 @@ namespace cbdc {
             m_logger->error("Failed to send mint tx");
         }
 
-        save();
-
         return mint_tx;
     }
 
