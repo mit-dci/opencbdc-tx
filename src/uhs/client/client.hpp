@@ -36,8 +36,8 @@ namespace cbdc {
 
         /// \brief Initializes the client.
         ///
-        /// Attempts to load the data files, and creates new ones if they do
-        /// not exist. Establishes connections to the system components.
+        /// Attempts to load the data files and
+        /// establish connections to the system components.
         /// \return true if initialization succeeded.
         auto init() -> bool;
 
