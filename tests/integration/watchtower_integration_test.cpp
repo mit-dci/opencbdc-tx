@@ -43,7 +43,7 @@ class watchtower_integration_test : public ::testing::Test {
         b0.m_transactions.push_back(
             cbdc::test::simple_tx({'t', 'x', 'a'},
                                   {{'s', 'b'}, {'s', 'c'}},
-                                  {{'u', 'd'}}));
+                                  {{{'u'}, {'d'}, {'y'}}}));
 
         auto pkt = std::make_shared<cbdc::buffer>();
         auto ser = cbdc::buffer_serializer(*pkt);
@@ -77,9 +77,10 @@ class watchtower_integration_test : public ::testing::Test {
 };
 
 TEST_F(watchtower_integration_test, check_spent_unspent) {
+    auto id = cbdc::transaction::calculate_uhs_id({{'u'}, {'d'}, {'y'}});
     auto got
         = m_wc->request_status_update(cbdc::watchtower::status_update_request{
-            {{{'t', 'x', 'a'}, {{'s', 'b'}, {'u', 'd'}}}}});
+            {{{'t', 'x', 'a'}, {{'s', 'b'}, id}}}});
 
     auto want = cbdc::watchtower::status_request_check_success{
         {{{'t', 'x', 'a'},
@@ -90,7 +91,7 @@ TEST_F(watchtower_integration_test, check_spent_unspent) {
            cbdc::watchtower::status_update_state{
                cbdc::watchtower::search_status::unspent,
                m_best_height,
-               {'u', 'd'}}}}}};
+               id}}}}};
     ASSERT_EQ(*got, want);
 }
 

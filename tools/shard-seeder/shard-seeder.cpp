@@ -126,10 +126,12 @@ auto main(int argc, char** argv) -> int {
                     auto batch_size = 0;
                     leveldb::WriteBatch batch;
                     for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
-                        auto tx = wal.create_seeded_transaction(tx_idx).value();
+                        auto tx
+                            = wal.create_seeded_transaction(tx_idx).value();
                         cbdc::transaction::compact_tx ctx(tx);
                         const cbdc::hash_t& output_hash
-                            = ctx.m_outputs[0].m_id;
+                            = cbdc::transaction::calculate_uhs_id(
+                                ctx.m_outputs[0]);
                         if(output_hash[0] >= shard_start
                            && output_hash[0] <= shard_end) {
                             std::array<char, sizeof(output_hash)> hash_arr{};
@@ -178,9 +180,10 @@ auto main(int argc, char** argv) -> int {
                         tx.m_inputs[0].m_prevout.m_index = tx_idx;
                         cbdc::transaction::compact_tx ctx(tx);
                         const auto& compact_out = ctx.m_outputs[0];
-                        if(compact_out.m_id[0] >= shard_start
-                           && compact_out.m_id[0] <= shard_end) {
-                            ser << compact_out.m_id;
+                        const auto& id
+                            = cbdc::transaction::calculate_uhs_id(compact_out);
+                        if(id[0] >= shard_start && id[0] <= shard_end) {
+                            ser << id;
                             ser << compact_out;
                             count++;
                         }

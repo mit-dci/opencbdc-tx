@@ -66,23 +66,18 @@ namespace cbdc::transaction {
         output() = default;
     };
 
-    /// \brief Calculate a pedersen commitment for use as a UHS ID
+    /// \brief Calculate the UHS ID from an outpoint and output
     ///
     /// The commitment is serialized into 32 bytes (via compression similar to
     /// x-only public keys), and commits to the value, outpoint, encumbrance,
     /// and a random nonce.
     ///
-    /// \param ctx secp256k1 context initialized for signing and verification
-    /// \param rng random source capable of generating secure nonces
     /// \param point the \ref out_point disambiguating the origin of the
     ///              output to-be-spent
     /// \param put the \ref output to-be-spent
-    /// \returns a pair of the commitment, and the random nonce that was
-    ///          committed to
-    auto calculate_uhs_id(secp256k1_context* ctx,
-                          random_source& rng,
-                          const out_point& point,
-                          const output& put) -> std::pair<hash_t, hash_t>;
+    /// \returns the hash serving as the UHS ID
+    auto calculate_uhs_id(const out_point& point, const output& put)
+        -> std::pair<hash_t, hash_t>;
 
     /// \brief Additional information a spender needs to spend an input
     struct spend_data {
@@ -148,13 +143,11 @@ namespace cbdc::transaction {
 
     /// \brief A compacted output of a transaction
     ///
-    /// Contains all (and only) the information necessecary for the UHS
+    /// Contains all (and only) the information necessary for the UHS
     /// to be updated and for the system to perform audits.
     ///
     /// \see \ref cbdc::operator<<(serializer&, const transaction::compact_output&)
     struct compact_output {
-        /// The UHS ID for the output
-        hash_t m_id{};
         /// The nonce used to compress the Pedersen Commitment to 32 bytes
         commitment_t m_auxiliary{};
         /// The rangeproof guaranteeing that the output is greater than 0
@@ -162,11 +155,9 @@ namespace cbdc::transaction {
         /// The nested hash of the outpoint and encumbrance
         hash_t m_provenance{};
 
-        explicit compact_output(const output& put);
         explicit compact_output(const output& put, const out_point& point);
 
-        compact_output(const hash_t& id,
-                       const commitment_t& aux,
+        compact_output(const commitment_t& aux,
                        const rangeproof_t<>& range,
                        const hash_t& provenance);
         compact_output() = default;
@@ -175,14 +166,15 @@ namespace cbdc::transaction {
         auto operator!=(const compact_output& rhs) const -> bool;
     };
 
-    /// \brief Validates that a compact_output's UHS ID matches its contents
+    /// \brief Calculate the UHS ID from an compact_output
     ///
-    /// Simply rehashes the provenance nested-hash and value commitment,
-    /// and checks to see the result is identical to the ID.
+    /// A \ref compact_output includes all the information necessary to
+    /// calculate the UHS ID (by-design), so we can get the UHS ID from it
+    /// alone.
     ///
-    /// \param output the compact_output itself
-    /// \returns true if the rehash matches the included ID, false otherwise
-    auto validate_uhs_id(const compact_output& output) -> bool;
+    /// \param put the \ref compact_output to-be-spent
+    /// \returns the hash serving as the UHS ID
+    auto calculate_uhs_id(const compact_output& put) -> hash_t;
 
     /// \brief A condensed, hash-only transaction representation
     ///

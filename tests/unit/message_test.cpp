@@ -108,8 +108,8 @@ TEST_F(PacketIOTest, ctx_notify_request) {
     tx_notify.m_attestations.insert({'e', 'o', 'm', 'e'});
     tx_notify.m_block_height = 33;
     tx_notify.m_tx.m_inputs.push_back({'a', 'x', 'o', 'p'});
-    tx_notify.m_tx.m_outputs.push_back({{'b'}, {'t'}, {'a'}, {'h'}});
-    tx_notify.m_tx.m_outputs.push_back({{'c'}, {'q'}, {'e'}, {'d'}});
+    tx_notify.m_tx.m_outputs.push_back({{'t'}, {'a'}, {'h'}});
+    tx_notify.m_tx.m_outputs.push_back({{'q'}, {'e'}, {'d'}});
     tx_notify.m_tx.m_id = {'p', 'l', 'k', 'e'};
 
     m_ser << tx_notify;
@@ -123,14 +123,14 @@ TEST_F(PacketIOTest, ctx_notify_request) {
 TEST_F(PacketIOTest, block) {
     cbdc::transaction::compact_tx tx0;
     tx0.m_inputs.push_back({'a', 'x', 'o', 'p'});
-    tx0.m_outputs.push_back({{'b'}, {'t'}, {'a'}, {'h'}});
-    tx0.m_outputs.push_back({{'c'}, {'q'}, {'e'}, {'d'}});
+    tx0.m_outputs.push_back({{'t'}, {'a'}, {'h'}});
+    tx0.m_outputs.push_back({{'q'}, {'e'}, {'d'}});
     tx0.m_id = {'p', 'l', 'k', 'e'};
 
     cbdc::transaction::compact_tx tx1;
     tx1.m_inputs.push_back({'h', 'o', 'o', 'e'});
-    tx1.m_outputs.push_back({{'b'}, {'t'}, {'a'}, {'h'}});
-    tx1.m_outputs.push_back({{'c'}, {'q'}, {'e'}, {'d'}});
+    tx1.m_outputs.push_back({{'t'}, {'a'}, {'h'}});
+    tx1.m_outputs.push_back({{'q'}, {'e'}, {'d'}});
     tx1.m_id = {'o', 'g', 'l', 'j'};
 
     cbdc::atomizer::block block;
@@ -148,8 +148,8 @@ TEST_F(PacketIOTest, block) {
 TEST_F(PacketIOTest, compact_transaction) {
     cbdc::transaction::compact_tx tx;
     tx.m_inputs.push_back({'h', 'o', 'o', 'e'});
-    tx.m_outputs.push_back({{'a'}, {'q'}, {'b'}, {'p'}});
-    tx.m_outputs.push_back({{'c'}, {'m'}, {'e'}, {'z'}});
+    tx.m_outputs.push_back({{'q'}, {'b'}, {'p'}});
+    tx.m_outputs.push_back({{'m'}, {'e'}, {'z'}});
     tx.m_id = {'o', 'g', 'l', 'j'};
 
     m_ser << tx;
@@ -437,7 +437,7 @@ TEST_F(PacketIOTest, aggregate_tx_notification) {
     atn.m_oldest_attestation = 77;
     atn.m_tx = cbdc::test::simple_tx({'t', 'x', 'a'},
                                      {{'a'}, {'b'}},
-                                     {{'c'}, {'d'}});
+                                     {{{'c'}, {'d'}, {'e'}}});
     m_ser << atn;
 
     auto atn_deser = cbdc::atomizer::aggregate_tx_notification();
@@ -452,7 +452,7 @@ TEST_F(PacketIOTest, aggregate_tx_notify_request) {
     atn.m_oldest_attestation = 77;
     atn.m_tx = cbdc::test::simple_tx({'t', 'x', 'a'},
                                      {{'a'}, {'b'}},
-                                     {{'c'}, {'d'}});
+                                     {{{'c'}, {'d'}, {'e'}}});
 
     atns.m_agg_txs.push_back(atn);
 

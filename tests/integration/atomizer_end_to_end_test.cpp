@@ -223,13 +223,15 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
     std::this_thread::sleep_for(m_block_wait_interval);
 
     const auto ctx = cbdc::transaction::compact_tx(tx.value());
+    const auto out0_id = cbdc::transaction::calculate_uhs_id(ctx.m_outputs[0]);
+    const auto out1_id = cbdc::transaction::calculate_uhs_id(ctx.m_outputs[1]);
     const auto wc_res = wc.request_status_update(
         cbdc::watchtower::status_update_request{{{ctx.m_id,
                                                   {
                                                       ctx.m_inputs[0],
                                                       ctx.m_inputs[1],
-                                                      ctx.m_outputs[0].m_id,
-                                                      ctx.m_outputs[1].m_id,
+                                                      out0_id,
+                                                      out1_id,
                                                   }}}});
 
     // Final check - ensure attempted double spends are marked as spent:
@@ -274,13 +276,15 @@ TEST_F(atomizer_end_to_end_test, invalid_transaction) {
     std::this_thread::sleep_for(m_block_wait_interval);
 
     const auto ctx = cbdc::transaction::compact_tx(tx);
+    const auto out0_id = cbdc::transaction::calculate_uhs_id(ctx.m_outputs[0]);
+    const auto out1_id = cbdc::transaction::calculate_uhs_id(ctx.m_outputs[1]);
     const auto wc_res = wc.request_status_update(
         cbdc::watchtower::status_update_request{{{ctx.m_id,
                                                   {
                                                       ctx.m_inputs[0],
                                                       ctx.m_inputs[1],
-                                                      ctx.m_outputs[0].m_id,
-                                                      ctx.m_outputs[1].m_id,
+                                                      out0_id,
+                                                      out1_id,
                                                   }}}});
 
     const auto res_uhs_states = wc_res->states().at(ctx.m_id);

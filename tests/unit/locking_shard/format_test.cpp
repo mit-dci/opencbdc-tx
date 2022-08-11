@@ -19,8 +19,7 @@ class locking_shard_format_test : public ::testing::Test {
     void SetUp() override {
         m_tx.m_tx.m_id = {'a', 'b', 'c'};
         m_tx.m_tx.m_inputs = {{'d', 'e', 'f'}, {'g', 'h', 'i'}};
-        m_tx.m_tx.m_outputs
-            = {{{'w'}, {'x'}, {'y'}, {'z'}}, {{'z'}, {'z'}, {'z'}, {'z'}}};
+        m_tx.m_tx.m_outputs = {{{'x'}, {'y'}, {'z'}}, {{'z'}, {'z'}, {'z'}}};
         m_tx.m_tx.m_attestations = {{{'a'}, {'b'}}};
     }
 };

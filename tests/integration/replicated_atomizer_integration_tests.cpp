@@ -137,7 +137,7 @@ class replicated_atomizer_integration_tests : public ::testing::Test {
 
 TEST_F(replicated_atomizer_integration_tests,
        can_send_message_from_clustered_atomizer) {
-    auto tx = cbdc::test::simple_tx({'a'}, {}, {{{'c'}}});
+    auto tx = cbdc::test::simple_tx({'a'}, {}, {{{'c'}, {'d'}, {'e'}}});
     ASSERT_TRUE(m_cluster.send_to_one(cbdc::atomizer::request{
         cbdc::atomizer::tx_notify_request{tx, {}, 0}}));
 
@@ -169,17 +169,17 @@ TEST_F(replicated_atomizer_integration_tests, raftnode_crash_recover) {
 
     // Sending a number of transactions (>=snapshot_distance) to ensure
     // snapshot is being taken:
-    const auto tx = cbdc::test::simple_tx({'a'}, {}, {{{'c'}}});
+    const auto tx = cbdc::test::simple_tx({'a'}, {}, {{{'c'}, {'d'}, {'e'}}});
     ASSERT_TRUE(m_cluster.send_to_one(cbdc::atomizer::request{
         cbdc::atomizer::tx_notify_request{tx, {}, 0}}));
     expect_tx(tx, std::chrono::seconds(5));
 
-    const auto tx2 = cbdc::test::simple_tx({'b'}, {}, {{{'d'}}});
+    const auto tx2 = cbdc::test::simple_tx({'b'}, {}, {{{'d'}, {'e'}, {'f'}}});
     ASSERT_TRUE(m_cluster.send_to_one(cbdc::atomizer::request{
         cbdc::atomizer::tx_notify_request{tx2, {}, 0}}));
     expect_tx(tx2, std::chrono::seconds(5));
 
-    const auto tx3 = cbdc::test::simple_tx({'c'}, {}, {{{'e'}}});
+    const auto tx3 = cbdc::test::simple_tx({'c'}, {}, {{{'e'}, {'f'}, {'g'}}});
     ASSERT_TRUE(m_cluster.send_to_one(cbdc::atomizer::request{
         cbdc::atomizer::tx_notify_request{tx3, {}, 0}}));
     expect_tx(tx3, std::chrono::seconds(5));
@@ -191,7 +191,7 @@ TEST_F(replicated_atomizer_integration_tests, raftnode_crash_recover) {
     ASSERT_TRUE(m_ctls[killidx]->init());
 
     // Send/confirm another transaction
-    const auto tx4 = cbdc::test::simple_tx({'d'}, {}, {{{'f'}}});
+    const auto tx4 = cbdc::test::simple_tx({'d'}, {}, {{{'f'}, {'g'}, {'h'}}});
     ASSERT_TRUE(m_cluster.send_to_one(cbdc::atomizer::request{
         cbdc::atomizer::tx_notify_request{tx4, {}, 0}}));
     expect_tx(tx4, std::chrono::seconds(5));

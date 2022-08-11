@@ -80,6 +80,10 @@ namespace cbdc::shard {
         [[nodiscard]] auto is_output_on_shard(const hash_t& uhs_hash) const
             -> bool;
 
+        [[nodiscard]] auto
+        is_output_on_shard(const transaction::compact_output& put) const
+            -> bool;
+
         void update_snapshot(std::shared_ptr<const leveldb::Snapshot> snp);
 
         std::unique_ptr<leveldb::DB> m_db;

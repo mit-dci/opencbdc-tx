@@ -342,9 +342,11 @@ auto main(int argc, char** argv) -> int {
                 std::chrono::milliseconds(cfg.m_target_block_interval)
                 * cfg.m_stxo_cache_depth);
             cbdc::transaction::compact_tx ctx{mint_tx};
+            auto out_id
+                = cbdc::transaction::calculate_uhs_id(ctx.m_outputs[0]);
             watchtower_client->request_status_update(
                 cbdc::watchtower::status_update_request{
-                    {{ctx.m_id, {ctx.m_outputs[0].m_id}}}});
+                    {{ctx.m_id, {out_id}}}});
             static constexpr auto mint_retry_delay
                 = std::chrono::milliseconds(1000);
             std::this_thread::sleep_for(mint_retry_delay);
@@ -405,7 +407,7 @@ auto main(int argc, char** argv) -> int {
                         ctx.m_outputs.end(),
                         std::back_inserter(uhs_ids),
                         [](const cbdc::transaction::compact_output& p) {
-                            return p.m_id;
+                            return cbdc::transaction::calculate_uhs_id(p);
                         });
 
                     key_uhs_ids.emplace(std::make_pair(ctx.m_id, uhs_ids));
@@ -546,7 +548,7 @@ auto main(int argc, char** argv) -> int {
                         ctx.m_outputs.end(),
                         std::back_inserter(uhs_ids),
                         [](const cbdc::transaction::compact_output& p) {
-                            return p.m_id;
+                            return cbdc::transaction::calculate_uhs_id(p);
                         });
                     key_uhs_ids.emplace(std::make_pair(ctx.m_id, uhs_ids));
                 }

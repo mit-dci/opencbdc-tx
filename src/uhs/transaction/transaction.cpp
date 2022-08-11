@@ -33,11 +33,6 @@ namespace cbdc::transaction {
         return !(*this == rhs);
     }
 
-    compact_output::compact_output(const output& put)
-        : m_id(put.m_id),
-          m_auxiliary(put.m_auxiliary),
-          m_range(put.m_range) {}
-
     auto output_preimage(const out_point& point, const output& put)
         -> std::array<unsigned char,
                       sizeof(compact_tx::m_id) + sizeof(out_point::m_index)
@@ -74,23 +69,20 @@ namespace cbdc::transaction {
     }
 
     compact_output::compact_output(const output& put, const out_point& point)
-        : m_id(put.m_id),
-          m_auxiliary(put.m_auxiliary),
+        : m_auxiliary(put.m_auxiliary),
           m_range(put.m_range),
           m_provenance(output_nested_hash(point, put)) {}
 
-    compact_output::compact_output(const hash_t& id,
-                                   const commitment_t& aux,
+    compact_output::compact_output(const commitment_t& aux,
                                    const rangeproof_t<>& range,
                                    const hash_t& provenance)
-        : m_id(id),
-          m_auxiliary(aux),
+        : m_auxiliary(aux),
           m_range(range),
           m_provenance(provenance) {}
 
     auto compact_output::operator==(const compact_output& rhs) const -> bool {
-        return m_id == rhs.m_id && m_auxiliary == rhs.m_auxiliary
-            && m_range == rhs.m_range;
+        return m_auxiliary == rhs.m_auxiliary && m_range == rhs.m_range
+            && m_provenance == rhs.m_provenance;
     }
 
     auto compact_output::operator!=(const compact_output& rhs) const -> bool {
@@ -182,15 +174,16 @@ namespace cbdc::transaction {
         return id;
     }
 
-    auto validate_uhs_id(const compact_output& output) -> bool {
+    auto calculate_uhs_id(const compact_output& put) -> hash_t {
         CSHA256 sha;
-        sha.Write(output.m_provenance.data(), output.m_provenance.size());
-        sha.Write(output.m_auxiliary.data(), output.m_auxiliary.size());
+        sha.Write(put.m_provenance.data(), put.m_provenance.size());
+        sha.Write(put.m_auxiliary.data(), put.m_auxiliary.size());
+        // sha.Write(put.m_range.data(), put.m_range.size());
 
-        hash_t check{};
-        sha.Finalize(check.data());
+        hash_t id{};
+        sha.Finalize(id.data());
 
-        return output.m_id == check;
+        return id;
     }
 
     auto roll_auxiliaries(secp256k1_context* ctx,

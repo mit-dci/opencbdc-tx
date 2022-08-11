@@ -167,7 +167,7 @@ namespace cbdc::locking_shard {
             }
 
             for(auto&& proof : tx.m_tx.m_outputs) {
-                auto uhs_id = proof.m_id;
+                auto uhs_id = transaction::calculate_uhs_id(proof);
                 if(hash_in_shard_range(uhs_id) && complete_txs[i]) {
                     m_uhs.emplace(uhs_id);
                     m_proofs.emplace(uhs_id, proof);

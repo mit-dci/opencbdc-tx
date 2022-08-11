@@ -19,7 +19,7 @@ namespace cbdc {
     }
 
     transaction::wallet::wallet(std::shared_ptr<logging::log> log)
-        : m_log(log) {
+        : m_log(std::move(log)) {
         init();
     }
 
@@ -150,13 +150,13 @@ namespace cbdc {
                                                  {},
                                                  in_spend_data);
 
-        auto res = transaction::prove_output(m_secp.get(),
-                                             m_generators.get(),
-                                             *m_random_source,
-                                             inp.m_prevout_data,
-                                             inp.m_prevout,
-                                             in_spend_data.front(),
-                                             &aux.front());
+        transaction::prove_output(m_secp.get(),
+                                  m_generators.get(),
+                                  *m_random_source,
+                                  inp.m_prevout_data,
+                                  inp.m_prevout,
+                                  in_spend_data.front(),
+                                  &aux.front());
 
         inp.m_spend_data = in_spend_data.front();
         tx.m_inputs[0] = inp;
@@ -167,10 +167,10 @@ namespace cbdc {
         std::vector<transaction::spend_data> out_spend_data{};
         out_spend_data.push_back(transaction::spend_data{{}, m_seed_value});
         tx.m_out_spend_data = out_spend_data;
-        res = transaction::add_proof(m_secp.get(),
-                                     m_generators.get(),
-                                     *m_random_source,
-                                     tx);
+        auto res = transaction::add_proof(m_secp.get(),
+                                          m_generators.get(),
+                                          *m_random_source,
+                                          tx);
 
         if(!res) {
             return std::nullopt;

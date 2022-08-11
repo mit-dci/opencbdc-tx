@@ -39,7 +39,7 @@ namespace cbdc::transaction {
         /// \brief Constructor.
         ///
         /// \param log (optional) logger to write debugging to.
-        wallet(std::shared_ptr<logging::log> log);
+        explicit wallet(std::shared_ptr<logging::log> log);
 
         /// Initializes the randomization engine for key shuffling.
         void init();

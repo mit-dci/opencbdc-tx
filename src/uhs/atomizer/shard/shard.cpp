@@ -68,13 +68,11 @@ namespace cbdc::shard {
         for(const auto& tx : blk.m_transactions) {
             // Add new outputs
             for(const auto& out : tx.m_outputs) {
-                if(is_output_on_shard(out.m_id)) {
-                    std::array<char, sizeof(out.m_id)> out_arr{};
-                    std::memcpy(out_arr.data(),
-                                out.m_id.data(),
-                                out.m_id.size());
-                    leveldb::Slice OutPointKey(out_arr.data(),
-                                               out.m_id.size());
+                auto id = transaction::calculate_uhs_id(out);
+                if(is_output_on_shard(id)) {
+                    std::array<char, sizeof(id)> out_arr{};
+                    std::memcpy(out_arr.data(), id.data(), id.size());
+                    leveldb::Slice OutPointKey(out_arr.data(), id.size());
 
                     static constexpr auto aux_size = sizeof(out.m_auxiliary);
                     static constexpr auto rng_size = sizeof(out.m_range);
@@ -200,6 +198,13 @@ namespace cbdc::shard {
         return config::hash_in_shard_range(m_prefix_range, uhs_hash);
     }
 
+    auto
+    shard::is_output_on_shard(const transaction::compact_output& put) const
+        -> bool {
+        auto id = transaction::calculate_uhs_id(put);
+        return config::hash_in_shard_range(m_prefix_range, id);
+    }
+
     void shard::update_snapshot(std::shared_ptr<const leveldb::Snapshot> snp) {
         std::unique_lock<std::shared_mutex> l(m_snp_mut);
         m_snp_height = m_best_block_height;
@@ -225,7 +230,8 @@ namespace cbdc::shard {
                 = sizeof(transaction::compact_output::m_range);
 
             transaction::compact_output outp{};
-            std::memcpy(outp.m_id.data(), key.data(), key.size());
+            hash_t id{};
+            std::memcpy(id.data(), key.data(), key.size());
             std::memcpy(outp.m_auxiliary.data(), val.data(), comm_size);
             val.remove_prefix(comm_size);
             std::memcpy(outp.m_range.data(), val.data(), rng_size);
@@ -233,10 +239,11 @@ namespace cbdc::shard {
             std::memcpy(outp.m_provenance.data(),
                         val.data(),
                         outp.m_provenance.size());
-            if(!transaction::validate_uhs_id(outp)) {
+
+            if(id != transaction::calculate_uhs_id(outp)) {
                 continue;
             }
-            auto bucket = outp.m_id[0];
+            auto bucket = id[0];
             if(comms.find(bucket) == comms.end()) {
                 std::vector<commitment_t> commits{};
                 commits.reserve(1);

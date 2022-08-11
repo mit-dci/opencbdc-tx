@@ -42,22 +42,22 @@ class uhs_test : public ::testing::Test {
 };
 
 TEST_F(uhs_test, leveldb_roundtrip) {
-    cbdc::transaction::compact_output o{{'a', 'b', 'c', 'd'},
-                                        {'e', 'f', 'g', 'h'},
+    cbdc::hash_t id{{'a', 'b', 'c', 'd'}};
+    cbdc::transaction::compact_output o{{'e', 'f', 'g', 'h'},
                                         {'i', 'j', 'k', 'l'},
                                         {'m', 'n', 'o', 'p'}};
 
     std::array<char, 32> k;
-    std::memcpy(k.data(), o.m_id.data(), k.size());
+    std::memcpy(k.data(), id.data(), k.size());
     leveldb::Slice Key(k.data(), k.size());
 
     std::array<char, sizeof(cbdc::transaction::compact_output)> v;
     auto* vptr = v.data();
-    std::memcpy(vptr, o.m_id.data(), o.m_id.size());
-    vptr += o.m_id.size();
     std::memcpy(vptr, o.m_auxiliary.data(), o.m_auxiliary.size());
     vptr += o.m_auxiliary.size();
     std::memcpy(vptr, o.m_range.data(), o.m_range.size());
+    vptr += o.m_range.size();
+    std::memcpy(vptr, o.m_provenance.data(), o.m_provenance.size());
 
     leveldb::Slice Val(v.data(), v.size());
     m_db->Put(this->m_write_options, Key, Val);
@@ -69,12 +69,12 @@ TEST_F(uhs_test, leveldb_roundtrip) {
 }
 
 TEST_F(uhs_test, map_roundtrip) {
-    cbdc::transaction::compact_output o{{'a', 'b', 'c', 'd'},
-                                        {'e', 'f', 'g', 'h'},
+    cbdc::transaction::compact_output o{{'e', 'f', 'g', 'h'},
                                         {'i', 'j', 'k', 'l'},
                                         {'m', 'n', 'o', 'p'}};
 
-    m_proofs.emplace(o.m_id, o);
-    const auto& p = m_proofs[o.m_id];
+    cbdc::hash_t id{{'a', 'b', 'c', 'd'}};
+    m_proofs.emplace(id, o);
+    const auto& p = m_proofs[id];
     EXPECT_EQ(p, o);
 }

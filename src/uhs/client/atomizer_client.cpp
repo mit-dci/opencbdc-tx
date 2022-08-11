@@ -50,7 +50,7 @@ namespace cbdc {
                            ctx.m_outputs.end(),
                            std::back_inserter(uhs_ids),
                            [](transaction::compact_output p) -> hash_t {
-                               return p.m_id;
+                               return transaction::calculate_uhs_id(p);
                            });
             it->second.insert(it->second.end(),
                               uhs_ids.begin(),

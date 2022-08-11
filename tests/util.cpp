@@ -40,18 +40,12 @@ namespace cbdc::test {
 
     auto simple_tx(const hash_t& id,
                    const std::vector<hash_t>& ins,
-                   const std::vector<hash_t>& outs) -> compact_transaction {
+                   const std::vector<transaction::compact_output>& outs)
+        -> compact_transaction {
         compact_transaction tx{};
         tx.m_id = id;
         tx.m_inputs = ins;
-        std::vector<transaction::compact_output> proofs{};
-        std::transform(outs.begin(),
-                       outs.end(),
-                       std::back_inserter(proofs),
-                       [](hash_t h) -> transaction::compact_output {
-                           return {h, {}, {}, {}};
-                       });
-        tx.m_outputs = proofs;
+        tx.m_outputs = outs;
         return tx;
     }
 
