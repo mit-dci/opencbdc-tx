@@ -1,7 +1,7 @@
 # Define image base arg
 ARG IMAGE_VERSION="ubuntu:20.04"
 
-# Create Base Image
+# Create Base image
 FROM $IMAGE_VERSION AS base
 
 # set non-interactive shell
