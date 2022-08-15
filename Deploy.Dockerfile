@@ -1,13 +1,15 @@
+# Define image base arg
 ARG IMAGE_VERSION="ubuntu:20.04"
 
+# Create Base Image
 FROM $IMAGE_VERSION AS base
 
 # set non-interactive shell
 ENV DEBIAN_FRONTEND noninteractive
 
 # install base packages
-RUN apt update && \
-    apt install -y \
+RUN apt update \
+    apt -y --quiet install \
     build-essential \
     wget \
     cmake \
@@ -15,7 +17,10 @@ RUN apt update && \
     libgmock-dev \
     net-tools \
     lcov \
-    git
+    git \
+    && apt -y autoremove \
+    && apt clean autoclean \
+    && rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
 
 # Args
 ARG CMAKE_BUILD_TYPE="Release"
@@ -47,6 +52,7 @@ RUN wget https://github.com/eBay/NuRaft/archive/v${NURAFT_VERSION}.tar.gz && \
 # Set working directory
 WORKDIR /opt/tx-processor
 
+# Create Build Image
 FROM base AS builder
 
 # Copy source
@@ -61,13 +67,11 @@ RUN mkdir build && \
     cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .. && \
     make -j$(nproc)
 
-# Create Deployment Image
-FROM $IMAGE_VERSION AS deploy
+# Create 2PC Deployment Image
+FROM $IMAGE_VERSION AS two-pc
 
+# Set working directory
 WORKDIR /opt/tx-processor
-
-# Copy All of the ./build directory
-# COPY --from=builder  /opt/tx-processor/build ./build
 
 # Only copy essential binaries
 COPY --from=builder  /opt/tx-processor/build/src/uhs/twophase/sentinel_2pc/sentineld-2pc ./build/src/uhs/twophase/sentinel_2pc/sentineld-2pc
@@ -77,6 +81,25 @@ COPY --from=builder  /opt/tx-processor/build/src/uhs/twophase/locking_shard/lock
 # Copy Client CLI
 COPY --from=builder  /opt/tx-processor/build/src/uhs/client/client-cli ./build/src/uhs/client/client-cli
 
-# Copy config
+# Copy 2PC config
 COPY --from=builder  /opt/tx-processor/2pc-compose.cfg ./2pc-compose.cfg
+
+# Create Atomizer Deployment Image
+FROM $IMAGE_VERSION AS atomizer
+
+# Set working directory
+WORKDIR /opt/tx-processor
+
+# Only copy essential binaries
+COPY --from=builder /opt/tx-processor/build/src/uhs/atomizer/atomizer/atomizer-raftd ./build/src/uhs/atomizer/atomizer/atomizer-raftd
+COPY --from=builder /opt/tx-processor/build/src/uhs/atomizer/watchtower/watchtowerd ./build/src/uhs/atomizer/watchtower/watchtowerd
+COPY --from=builder /opt/tx-processor/build/src/uhs/atomizer/watchtower/watchtowerd ./build/src/uhs/atomizer/watchtower/watchtowerd
+COPY --from=builder /opt/tx-processor/build/src/uhs/atomizer/archiver/archiverd ./build/src/uhs/atomizer/archiver/archiverd
+COPY --from=builder /opt/tx-processor/build/src/uhs/atomizer/shard/shardd ./build/src/uhs/atomizer/shard/shardd
+COPY --from=builder /opt/tx-processor/build/src/uhs/atomizer/sentinel/sentineld ./build/src/uhs/atomizer/sentinel/sentineld
+
+# Copy Client CLI
+COPY --from=builder  /opt/tx-processor/build/src/uhs/client/client-cli ./build/src/uhs/client/client-cli
+
+# Copy atomizer config
 COPY --from=builder  /opt/tx-processor/atomizer-compose.cfg ./atomizer-compose.cfg

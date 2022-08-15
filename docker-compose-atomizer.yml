@@ -3,7 +3,9 @@ version: '3'
 services:
 
   watchtower0:
-    build: .
+    build:
+      context: .
+      target: atomizer
     image: opencbdc-tx
     tty: true
     command: ./build/src/uhs/atomizer/watchtower/watchtowerd atomizer-compose.cfg 0
@@ -20,7 +22,9 @@ services:
       retries: 5
 
   atomizer0:
-    build: .
+    build:
+      context: .
+      target: atomizer
     image: opencbdc-tx
     tty: true
     command: ./build/src/uhs/atomizer/atomizer/atomizer-raftd atomizer-compose.cfg 0
@@ -37,7 +41,9 @@ services:
       retries: 5
 
   archiver0:
-    build: .
+    build:
+      context: .
+      target: atomizer
     image: opencbdc-tx
     tty: true
     command: ./build/src/uhs/atomizer/archiver/archiverd atomizer-compose.cfg 0
@@ -56,7 +62,9 @@ services:
       retries: 5
 
   shard0:
-    build: .
+    build:
+      context: .
+      target: atomizer
     image: opencbdc-tx
     tty: true
     command: ./build/src/uhs/atomizer/shard/shardd atomizer-compose.cfg 0
@@ -76,7 +84,9 @@ services:
       retries: 5
 
   sentinel0:
-    build: .
+    build:
+      context: .
+      target: atomizer
     image: opencbdc-tx
     tty: true
     command: ./build/src/uhs/atomizer/sentinel/sentineld atomizer-compose.cfg 0
