@@ -2,7 +2,7 @@
 ARG IMAGE_VERSION="ubuntu:20.04"
 
 # Define base image repo name
-ARG BASE_IMAGE="ghcr.io/mit-dci/opencbdc-tx-base:latest"
+ARG BASE_IMAGE="ghcr.io/jallen-frb/opencbdc-tx-base:latest"
 
 # Create Build Image
 FROM $BASE_IMAGE AS builder
