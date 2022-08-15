@@ -5,8 +5,8 @@ services:
   sentinel0:
     build:
       context: .
-      target: two-pc
-    image: opencbdc-tx
+      target: twophase
+    image: opencbdc-tx-twophase
     tty: true
     restart: always
     command: ./build/src/uhs/twophase/sentinel_2pc/sentineld-2pc 2pc-compose.cfg 0
@@ -26,8 +26,8 @@ services:
   coordinator0:
     build:
       context: .
-      target: two-pc
-    image: opencbdc-tx
+      target: twophase
+    image: opencbdc-tx-twophase
     tty: true
     command: ./build/src/uhs/twophase/coordinator/coordinatord 2pc-compose.cfg 0 0
     expose:
@@ -46,8 +46,8 @@ services:
   shard0:
     build:
       context: .
-      target: two-pc
-    image: opencbdc-tx
+      target: twophase
+    image: opencbdc-tx-twophase
     tty: true
     command: ./build/src/uhs/twophase/locking_shard/locking-shardd 2pc-compose.cfg 0 0
     expose:

@@ -6,7 +6,7 @@ services:
     build:
       context: .
       target: atomizer
-    image: opencbdc-tx
+    image: opencbdc-tx-atomizer
     tty: true
     command: ./build/src/uhs/atomizer/watchtower/watchtowerd atomizer-compose.cfg 0
     ports:
@@ -15,6 +15,7 @@ services:
       - "8556"
     networks:
       - atomizer-network
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "netstat -ltn | grep -c 8555"]
       interval: 30s
@@ -25,7 +26,7 @@ services:
     build:
       context: .
       target: atomizer
-    image: opencbdc-tx
+    image: opencbdc-tx-atomizer
     tty: true
     command: ./build/src/uhs/atomizer/atomizer/atomizer-raftd atomizer-compose.cfg 0
     expose:
@@ -34,6 +35,7 @@ services:
       - "watchtower0"
     networks:
       - atomizer-network
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "netstat -ltn | grep -c 5555"]
       interval: 30s
@@ -44,7 +46,7 @@ services:
     build:
       context: .
       target: atomizer
-    image: opencbdc-tx
+    image: opencbdc-tx-atomizer
     tty: true
     command: ./build/src/uhs/atomizer/archiver/archiverd atomizer-compose.cfg 0
     expose:
@@ -65,7 +67,7 @@ services:
     build:
       context: .
       target: atomizer
-    image: opencbdc-tx
+    image: opencbdc-tx-atomizer
     tty: true
     command: ./build/src/uhs/atomizer/shard/shardd atomizer-compose.cfg 0
     expose:
@@ -87,7 +89,7 @@ services:
     build:
       context: .
       target: atomizer
-    image: opencbdc-tx
+    image: opencbdc-tx-atomizer
     tty: true
     command: ./build/src/uhs/atomizer/sentinel/sentineld atomizer-compose.cfg 0
     ports:
