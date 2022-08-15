@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+
+  test-atomizer:
+    build:
+      context: .
+      target: atomizer
+    image: opencbdc-tx-atomizer
+    tty: true
+    command: sh ./scripts/test-transaction.sh ./atomizer-compose.cfg
+    networks:
+      - atomizer-network
+
+networks:
+  atomizer-network:
+    external: true

@@ -3,16 +3,16 @@ version: '3'
 services:
 
   watchtower0:
-    image: ghcr.io/mit-dci/opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx-atomizer
 
   atomizer0:
-    image: ghcr.io/mit-dci/opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx-atomizer
 
   archiver0:
-    image: ghcr.io/mit-dci/opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx-atomizer
 
   shard0:
-    image: ghcr.io/mit-dci/opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx-atomizer
 
   sentinel0:
-    image: ghcr.io/mit-dci/opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx-atomizer

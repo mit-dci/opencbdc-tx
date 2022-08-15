@@ -3,10 +3,10 @@ version: '3'
 services:
 
   sentinel0:
-    image: ghcr.io/mit-dci/opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx-twophase
 
   coordinator0:
-    image: ghcr.io/mit-dci/opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx-twophase
 
   shard0:
-    image: ghcr.io/mit-dci/opencbdc-tx
+    image: ghcr.io/mit-dci/opencbdc-tx-twophase
