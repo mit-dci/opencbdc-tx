@@ -369,11 +369,11 @@ auto main(int argc, char** argv) -> int {
     uint32_t batch_counter = 0;
     uint32_t best_height
         = blocking_watchtower_client->request_best_block_height()->height();
-    std::chrono::nanoseconds total_time;
-    std::chrono::nanoseconds check_time;
-    std::chrono::nanoseconds gen_time;
-    std::chrono::nanoseconds add_time;
-    std::chrono::nanoseconds send_time;
+    std::chrono::nanoseconds total_time{0};
+    std::chrono::nanoseconds check_time{0};
+    std::chrono::nanoseconds gen_time{0};
+    std::chrono::nanoseconds add_time{0};
+    std::chrono::nanoseconds send_time{0};
     uint64_t gen_avg{};
     while(running) {
         static constexpr auto send_amount = 5;
