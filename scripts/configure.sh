@@ -26,10 +26,10 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   CPUS=$(sysctl -n hw.ncpu)
   # ensure development environment is set correctly for clang
   $SUDO xcode-select -switch /Library/Developer/CommandLineTools
-  brew install leveldb llvm@11 googletest lcov make wget cmake
+  brew install leveldb llvm@14 googletest lcov make wget cmake
   CLANG_TIDY=/usr/local/bin/clang-tidy
   if [ ! -L "$CLANG_TIDY" ]; then
-    $SUDO ln -s $(brew --prefix)/opt/llvm@11/bin/clang-tidy /usr/local/bin/clang-tidy
+    $SUDO ln -s $(brew --prefix)/opt/llvm@14/bin/clang-tidy /usr/local/bin/clang-tidy
   fi
   GMAKE=/usr/local/bin/gmake
   if [ ! -L "$GMAKE" ]; then
@@ -61,10 +61,10 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   cd ..
 
   wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-  add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main"
-  apt install -y clang-format-13 clang-tidy-13
-  ln -s -f $(which clang-format-13) /usr/local/bin/clang-format
-  ln -s -f $(which clang-tidy-13) /usr/local/bin/clang-tidy
+  add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
+  apt install -y clang-format-14 clang-tidy-14
+  ln -s -f $(which clang-format-14) /usr/local/bin/clang-format
+  ln -s -f $(which clang-tidy-14) /usr/local/bin/clang-tidy
 fi
 
 NURAFT_VERSION="1.3.0"

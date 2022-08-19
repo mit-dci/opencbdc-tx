@@ -35,9 +35,10 @@ namespace cbdc::network {
         socket(socket&&) = delete;
         auto operator=(socket&&) -> socket& = delete;
 
+        virtual ~socket() = default;
+
       private:
         socket();
-        virtual ~socket() = default;
 
         int m_sock_fd{-1};
 
