@@ -9,7 +9,8 @@ portability-*,
 cppcoreguidelines-*,
 -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
 readability-*,
-google-explicit-constructor'
+google-explicit-constructor,
+-readability-identifier-length'
 WarningsAsErrors: '*'
 FormatStyle: 'file'
 HeaderFilterRegex: 'hpp'
