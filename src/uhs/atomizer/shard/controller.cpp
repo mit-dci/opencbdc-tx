@@ -49,22 +49,30 @@ namespace cbdc::shard {
             return false;
         }
 
-        if(!m_archiver_client.init()) {
-            m_logger->error("Failed to connect to archiver");
-            return false;
+        static constexpr auto retry_delay = std::chrono::seconds(1);
+        while(!m_archiver_client.init()) {
+            m_logger->warn("Failed to connect to archiver.  Retrying...");
+            std::this_thread::sleep_for(retry_delay);
         }
+        m_logger->info("Connected to archiver.");
 
-        if(!m_watchtower_network.cluster_connect(
-               m_opts.m_watchtower_internal_endpoints)) {
-            m_logger->error("Failed to connect to watchtowers.");
-            return false;
+        m_watchtower_network.cluster_connect(
+            m_opts.m_watchtower_internal_endpoints,
+            false);
+        while(!m_watchtower_network.connected_to_one()) {
+            // TODO:  should we limit the number of attempts?
+            m_logger->warn("Waiting to connect to watchtowers...");
+            std::this_thread::sleep_for(retry_delay);
         }
+        m_logger->info("Connected to watchtower network.");
 
         m_atomizer_network.cluster_connect(m_opts.m_atomizer_endpoints, false);
-        if(!m_atomizer_network.connected_to_one()) {
-            m_logger->error("Failed to connect to any atomizers");
-            return false;
+        while(!m_atomizer_network.connected_to_one()) {
+            // TODO:  should we limit the number of attempts?
+            m_logger->warn("Waiting to connect to atomizers ...");
+            std::this_thread::sleep_for(retry_delay);
         }
+        m_logger->info("Connected to atomizer network.");
 
         m_atomizer_client = m_atomizer_network.start_handler([&](auto&& pkt) {
             return atomizer_handler(std::forward<decltype(pkt)>(pkt));

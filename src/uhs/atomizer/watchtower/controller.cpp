@@ -73,14 +73,15 @@ auto cbdc::watchtower::controller::init() -> bool {
         // Since atomizers require a watchtower and the archiver requires an
         // atomizer, this has to be allowed to fail. The network will reconnect
         // when an atomizer comes online.
-        m_logger->warn("Failed to connect to any atomizers, waiting...");
+        m_logger->warn("Waiting to connect to atomizers...");
         std::this_thread::sleep_for(retry_delay);
     }
 
     while(!m_archiver_client.init()) {
-        m_logger->warn("Failed to connect to archiver, retrying...");
+        m_logger->warn("Failed to connect to archiver.  Retrying...");
         std::this_thread::sleep_for(retry_delay);
     }
+    m_logger->info("Connected to archiver.");
 
     m_atomizer_thread = m_atomizer_network.start_handler([&](auto&& pkt) {
         return atomizer_handler(std::forward<decltype(pkt)>(pkt));
