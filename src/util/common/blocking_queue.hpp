@@ -15,34 +15,38 @@ namespace cbdc {
     /// Thread-safe producer-consumer FIFO queue supporting multiple
     /// concurrent producers and consumers.
     /// \tparam type of object stored in the queue.
-    template<typename T>
-    class blocking_queue {
+    template<typename T, typename Q>
+    class blocking_queue_internal {
       public:
-        blocking_queue() = default;
+        blocking_queue_internal() = default;
 
-        blocking_queue(const blocking_queue&) = delete;
-        auto operator=(const blocking_queue&) -> blocking_queue& = delete;
+        blocking_queue_internal(const blocking_queue_internal&) = delete;
+        auto operator=(const blocking_queue_internal&)
+            -> blocking_queue_internal& = delete;
 
-        blocking_queue(blocking_queue&&) = delete;
-        auto operator=(blocking_queue&&) -> blocking_queue& = delete;
+        blocking_queue_internal(blocking_queue_internal&&) = delete;
+        auto operator=(blocking_queue_internal&&)
+            -> blocking_queue_internal& = delete;
 
         /// \brief Destructor.
         ///
         /// Clears the queue and unblocks any waiting consumers.
-        ~blocking_queue() {
+        ~blocking_queue_internal() {
             clear();
         }
 
         /// Pushes an element onto the queue and notifies at most one waiting
         /// consumer.
         /// \param item object to push onto the queue.
-        void push(const T& item) {
-            {
+        auto push(const T& item) -> size_t {
+            auto sz = [&]() {
                 std::unique_lock<std::mutex> lck(m_mut);
                 m_buffer.push(item);
                 m_wake = true;
-            }
+                return m_buffer.size();
+            }();
             m_cv.notify_one();
+            return sz;
         }
 
         /// \brief Pops an element from the queue.
@@ -63,7 +67,7 @@ namespace cbdc {
 
                 bool popped{false};
                 if(!m_buffer.empty()) {
-                    item = std::move(m_buffer.front());
+                    item = std::move(first_item<T, Q>());
                     m_buffer.pop();
                     popped = true;
                     m_wake = !m_buffer.empty();
@@ -92,11 +96,33 @@ namespace cbdc {
         }
 
       private:
-        std::queue<T> m_buffer;
+        template<typename TT, typename QQ>
+        auto first_item() ->
+            typename std::enable_if<std::is_same<QQ, std::queue<TT>>::value,
+                                    const TT&>::type {
+            return m_buffer.front();
+        }
+
+        template<typename TT, typename QQ>
+        auto first_item() ->
+            typename std::enable_if<!std::is_same<QQ, std::queue<TT>>::value,
+                                    const TT&>::type {
+            return m_buffer.top();
+        }
+
+        Q m_buffer;
         std::mutex m_mut;
         std::condition_variable m_cv;
         bool m_wake{false};
     };
+
+    template<typename T>
+    using blocking_queue = blocking_queue_internal<T, std::queue<T>>;
+
+    template<typename T, typename C = std::less<T>>
+    using blocking_priority_queue
+        = blocking_queue_internal<T,
+                                  std::priority_queue<T, std::vector<T>, C>>;
 }
 
 #endif // OPENCBDC_TX_SRC_COMMON_BLOCKING_QUEUE_H_
