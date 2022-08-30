@@ -27,13 +27,16 @@ namespace cbdc::sentinel_2pc {
     auto controller::init() -> bool {
         auto skey = m_opts.m_sentinel_private_keys.find(m_sentinel_id);
         if(skey == m_opts.m_sentinel_private_keys.end()) {
-            m_logger->error("No private key specified");
-            return false;
-        }
-        m_privkey = skey->second;
+            if(m_opts.m_attestation_threshold > 0) {
+                m_logger->error("No private key specified");
+                return false;
+            }
+        } else {
+            m_privkey = skey->second;
 
-        auto pubkey = pubkey_from_privkey(m_privkey, m_secp.get());
-        m_logger->info("Sentinel public key:", cbdc::to_string(pubkey));
+            auto pubkey = pubkey_from_privkey(m_privkey, m_secp.get());
+            m_logger->info("Sentinel public key:", cbdc::to_string(pubkey));
+        }
 
         if(!m_coordinator_client.init()) {
             m_logger->error("Failed to start coordinator client");

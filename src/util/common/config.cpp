@@ -443,6 +443,9 @@ namespace cbdc::config {
             const auto sentinel_public_key
                 = cfg.get_string(sentinel_public_key_key);
             if(!sentinel_public_key.has_value()) {
+                if(opts.m_attestation_threshold == 0) {
+                    continue;
+                }
                 return "No public key specified for sentinel "
                      + std::to_string(i) + " (" + sentinel_public_key_key
                      + ")";
