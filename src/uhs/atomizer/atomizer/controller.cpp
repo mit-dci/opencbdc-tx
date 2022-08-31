@@ -58,11 +58,15 @@ namespace cbdc::atomizer {
     }
 
     auto controller::init() -> bool {
-        if(!m_watchtower_network.cluster_connect(
-               m_opts.m_watchtower_internal_endpoints)) {
-            m_logger->error("Failed to connect to watchtowers.");
-            return false;
+        m_watchtower_network.cluster_connect(
+            m_opts.m_watchtower_internal_endpoints,
+            false);
+        while(!m_watchtower_network.connected_to_one()) {
+            // TODO:  should we limit the number of attempts?
+            m_logger->warn("Waiting to connect to watchtowers...");
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
+        m_logger->info("Connected to watchtower network.");
 
         auto raft_params = nuraft::raft_params();
         raft_params.election_timeout_lower_bound_

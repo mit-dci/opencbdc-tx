@@ -39,16 +39,20 @@ namespace cbdc::sentinel {
                            shard.second,
                            "...");
             auto sock = std::make_unique<network::tcp_socket>();
-            if(!sock->connect(shard)) {
-                m_logger->error("failed to connect");
-                return false;
+            while(!sock->connect(shard)) {
+                m_logger->warn("Failed to connect to",
+                               shard.first,
+                               ":",
+                               shard.second,
+                               ".  Retrying...");
+                std::this_thread::sleep_for(std::chrono::seconds(1));
             }
 
             const auto peer_id = m_shard_network.add(std::move(sock));
             const auto& shard_range = m_opts.m_shard_ranges[i];
             m_shard_data.push_back(shard_info{shard_range, peer_id});
 
-            m_logger->info("done");
+            m_logger->info("Done");
         }
 
         m_shard_dist = decltype(m_shard_dist)(0, m_shard_data.size() - 1);

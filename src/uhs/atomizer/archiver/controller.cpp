@@ -103,10 +103,12 @@ namespace cbdc::archiver {
 
     auto controller::init_atomizer_connection() -> bool {
         m_atomizer_network.cluster_connect(m_opts.m_atomizer_endpoints, false);
-        if(!m_atomizer_network.connected_to_one()) {
-            m_logger->error("Failed to connect to any atomizers.");
-            return false;
+        while(!m_atomizer_network.connected_to_one()) {
+            // TODO:  should we limit the number of attempts?
+            m_logger->warn("Waiting to connect to atomizers...");
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
+        m_logger->info("Connected to atomizer network.");
 
         m_atomizer_handler_thread
             = m_atomizer_network.start_handler([&](auto&& pkt) {
