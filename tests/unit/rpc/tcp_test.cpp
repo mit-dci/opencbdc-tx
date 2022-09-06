@@ -126,10 +126,18 @@ TEST(tcp_rpc_test, send_fail_test) {
     auto client = cbdc::rpc::tcp_client<request, response>(
         {{cbdc::network::localhost, 55555},
          {cbdc::network::localhost, 55556}});
-    ASSERT_FALSE(client.init());
+    ASSERT_TRUE(client.init());
 
     auto req = request{0};
     auto resp = client.call(req);
+    ASSERT_FALSE(resp.has_value());
+
+    auto client2 = cbdc::rpc::tcp_client<request, response>(
+        {{cbdc::network::localhost, 55555}});
+    ASSERT_FALSE(client2.init());
+
+    req = request{0};
+    resp = client2.call(req);
     ASSERT_FALSE(resp.has_value());
 }
 

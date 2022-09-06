@@ -53,9 +53,11 @@ namespace cbdc::rpc {
 
         /// Initializes the client. Connects to the server endpoints and
         /// starts the response handler thread.
-        /// \return true.
+        /// \return false if there is only one endpoint and connecting failed.
+        ///         Otherwise true.
         [[nodiscard]] auto init() -> bool {
-            if(!m_net.cluster_connect(m_server_endpoints, true)) {
+            if(!m_net.cluster_connect(m_server_endpoints,
+                                      m_server_endpoints.size() <= 1)) {
                 return false;
             }
 
