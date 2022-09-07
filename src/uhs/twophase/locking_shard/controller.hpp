@@ -10,6 +10,7 @@
 #include "locking_shard.hpp"
 #include "state_machine.hpp"
 #include "status_server.hpp"
+#include "util/common/blocking_queue.hpp"
 #include "util/raft/node.hpp"
 #include "util/raft/rpc_server.hpp"
 #include "util/rpc/tcp_server.hpp"
@@ -25,7 +26,7 @@ namespace cbdc::locking_shard {
         /// \param logger log to use for output.
         controller(size_t shard_id,
                    size_t node_id,
-                   config::options opts,
+                   const cbdc::config::options& opts,
                    std::shared_ptr<logging::log> logger);
         ~controller() = default;
 
@@ -46,12 +47,24 @@ namespace cbdc::locking_shard {
         auto raft_callback(nuraft::cb_func::Type type,
                            nuraft::cb_func::Param* param)
             -> nuraft::cb_func::ReturnCode;
+        auto validate_request(cbdc::buffer request,
+                              cbdc::raft::rpc::validation_callback cb) -> bool;
+
+        auto enqueue_validation(cbdc::buffer request,
+                                cbdc::raft::rpc::validation_callback cb)
+            -> bool;
+        void validation_worker();
 
         config::options m_opts;
         std::shared_ptr<logging::log> m_logger;
         size_t m_shard_id;
         size_t m_node_id;
         std::string m_preseed_dir;
+        std::vector<std::thread> m_validation_threads;
+        using validation_request
+            = std::pair<cbdc::buffer, cbdc::raft::rpc::validation_callback>;
+        blocking_queue<validation_request> m_validation_queue;
+        std::atomic<bool> m_running{true};
 
         std::shared_ptr<state_machine> m_state_machine;
         std::shared_ptr<locking_shard> m_shard;
