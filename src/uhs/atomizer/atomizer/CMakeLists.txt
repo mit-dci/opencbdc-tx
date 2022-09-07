@@ -23,4 +23,5 @@ target_link_libraries(atomizer-raftd atomizer_raft
                                      ${NURAFT_LIBRARY}
                                      ${LEVELDB_LIBRARY}
                                      secp256k1
-                                     ${CMAKE_THREAD_LIBS_INIT})
+                                     ${CMAKE_THREAD_LIBS_INIT}
+                                     snappy)
