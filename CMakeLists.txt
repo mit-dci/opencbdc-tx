@@ -32,6 +32,7 @@ find_library(LEVELDB_LIBRARY leveldb REQUIRED)
 find_library(NURAFT_LIBRARY nuraft REQUIRED)
 find_library(GTEST_LIBRARY gtest REQUIRED)
 find_library(GTEST_MAIN_LIBRARY gtest_main REQUIRED)
+find_library(SNAPPY_LIBRARY snappy REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
