@@ -11,6 +11,7 @@
 #include "server.hpp"
 #include "state_machine.hpp"
 #include "uhs/twophase/locking_shard/locking_shard.hpp"
+#include "util/common/blocking_queue.hpp"
 #include "util/common/buffer.hpp"
 #include "util/common/random_source.hpp"
 #include "util/network/connection_manager.hpp"
@@ -136,6 +137,11 @@ namespace cbdc::coordinator {
             -> bool override;
 
       private:
+        using attestation_check_callback
+            = std::function<void(const transaction::compact_tx&, bool)>;
+        using queued_attestation_check
+            = std::pair<transaction::compact_tx, attestation_check_callback>;
+
         size_t m_node_id;
         size_t m_coordinator_id;
         cbdc::config::options m_opts;
@@ -164,6 +170,8 @@ namespace cbdc::coordinator {
         std::vector<std::pair<std::shared_ptr<std::thread>, std::atomic_bool>>
             m_exec_threads;
         std::shared_mutex m_exec_mut;
+        blocking_queue<queued_attestation_check> m_attestation_check_queue{};
+        std::vector<std::thread> m_attestation_check_threads{};
 
         std::thread m_start_thread;
         bool m_start_flag{false};
@@ -206,6 +214,10 @@ namespace cbdc::coordinator {
         void schedule_exec(std::function<void(size_t)>&& f);
 
         void join_execs();
+
+        auto check_tx_attestation(const transaction::compact_tx& tx,
+                                  attestation_check_callback cb) -> bool;
+        void attestation_check_worker();
     };
 }
 
