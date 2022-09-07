@@ -39,8 +39,7 @@ namespace cbdc::sentinel_2pc {
         }
 
         if(!m_coordinator_client.init()) {
-            m_logger->error("Failed to start coordinator client");
-            return false;
+            m_logger->warn("Failed to start coordinator client");
         }
 
         for(const auto& ep : m_opts.m_sentinel_endpoints) {
@@ -51,8 +50,7 @@ namespace cbdc::sentinel_2pc {
                 std::vector<network::endpoint_t>{ep},
                 m_logger);
             if(!client->init()) {
-                m_logger->error("Failed to start sentinel client");
-                return false;
+                m_logger->warn("Failed to start sentinel client");
             }
             m_sentinel_clients.emplace_back(std::move(client));
         }

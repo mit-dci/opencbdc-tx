@@ -50,20 +50,17 @@ namespace cbdc::shard {
         }
 
         if(!m_archiver_client.init()) {
-            m_logger->error("Failed to connect to archiver");
-            return false;
+            m_logger->warn("Failed to connect to archiver");
         }
 
         if(!m_watchtower_network.cluster_connect(
                m_opts.m_watchtower_internal_endpoints)) {
-            m_logger->error("Failed to connect to watchtowers.");
-            return false;
+            m_logger->warn("Failed to connect to watchtowers.");
         }
 
         m_atomizer_network.cluster_connect(m_opts.m_atomizer_endpoints, false);
         if(!m_atomizer_network.connected_to_one()) {
-            m_logger->error("Failed to connect to any atomizers");
-            return false;
+            m_logger->warn("Failed to connect to any atomizers");
         }
 
         m_atomizer_client = m_atomizer_network.start_handler([&](auto&& pkt) {

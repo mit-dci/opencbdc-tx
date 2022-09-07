@@ -82,8 +82,7 @@ auto main(int argc, char** argv) -> int {
 
     atomizer_network.cluster_connect(cfg.m_atomizer_endpoints, false);
     if(!atomizer_network.connected_to_one()) {
-        log->error("Failed to connect to any atomizers");
-        return -1;
+        log->warn("Failed to connect to any atomizers");
     }
 
     static std::atomic_bool atomizer_network_running = true;
@@ -112,8 +111,7 @@ auto main(int argc, char** argv) -> int {
         cfg.m_watchtower_client_endpoints[our_watchtower]);
 
     if(!watchtower_client->init()) {
-        log->error("Failed to connect to watchtower.");
-        return -1;
+        log->warn("Failed to connect to watchtower.");
     }
 
     auto blocking_watchtower_client
@@ -121,8 +119,7 @@ auto main(int argc, char** argv) -> int {
             cfg.m_watchtower_client_endpoints[our_watchtower]);
 
     if(!blocking_watchtower_client->init()) {
-        log->error("Failed to connect to watchtower.");
-        return -1;
+        log->warn("Failed to connect to watchtower.");
     }
 
     cbdc::transaction::wallet wal;
@@ -327,8 +324,7 @@ auto main(int argc, char** argv) -> int {
             auto bwc = cbdc::watchtower::blocking_client{
                 cfg.m_watchtower_client_endpoints[our_watchtower]};
             if(!bwc.init()) {
-                log->error("Failed to connect to watchtower.");
-                return -1;
+                log->warn("Failed to connect to watchtower.");
             }
             if(atomizer_network.send_to_one(cbdc::atomizer::request{msg})) {
                 log->info("Sent mint TX to atomizer. ID:",

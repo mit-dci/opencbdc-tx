@@ -185,8 +185,8 @@ TEST_F(sentinel_2pc_test, bad_coordinator_endpoint) {
                                                                 m_logger);
 
     // Check that the controller with the invalid coordinator endpoint
-    // fails to initialize correctly.
-    ASSERT_FALSE(ctl->init());
+    // still initializes correctly.
+    ASSERT_TRUE(ctl->init());
 }
 
 TEST_F(sentinel_2pc_test, bad_sentinel_client_endpoint) {
@@ -197,13 +197,13 @@ TEST_F(sentinel_2pc_test, bad_sentinel_client_endpoint) {
     auto client = cbdc::sentinel::rpc::client(bad_endpoints, m_logger);
     ASSERT_FALSE(client.init());
 
-    // Test that the controller fails to initialize when given a bad endpoint
+    // Test that the controller initializes even when given a bad endpoint
     // for a sentinel client.
     m_opts.m_sentinel_endpoints.emplace_back(bad_endpoint);
     auto ctl = std::make_unique<cbdc::sentinel_2pc::controller>(0,
                                                                 m_opts,
                                                                 m_logger);
-    ASSERT_FALSE(ctl->init());
+    ASSERT_TRUE(ctl->init());
 }
 
 TEST_F(sentinel_2pc_test, bad_rpc_server_endpoint) {
