@@ -38,8 +38,13 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  apt update
-  apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync
+  if [ -f "/etc/arch-release" ]; then
+    pacman -Syu
+    pacman -S wget cmake gtest lcov git rsync gcc make snappy
+  else
+    apt update
+    apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync
+  fi
 
   # GitHub Actions in .github/workflows/validation.yml will attempt to cache and reuse leveldb built in this block.
   # If a folder called leveldb-1.22 exists, skip the build step and go straight to install.
@@ -60,9 +65,14 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   make install
   cd ..
 
-  wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-  add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main"
-  apt install -y clang-format-13 clang-tidy-13
+  if [ -f "/etc/arch-release" ]; then
+    pacman -S llvm13
+  else
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+    add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-13 main"
+    apt install -y clang-format-13 clang-tidy-13
+  fi
+  
   ln -s -f $(which clang-format-13) /usr/local/bin/clang-format
   ln -s -f $(which clang-tidy-13) /usr/local/bin/clang-tidy
 fi
