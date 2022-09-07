@@ -106,7 +106,21 @@ namespace cbdc::coordinator {
         // Initialize NuRaft with the state machine we just created. Register
         // our callback function to notify us when we become a leader or
         // follower.
-        return m_raft_serv->init(m_raft_params);
+        if(!m_raft_serv->init(m_raft_params)) {
+            return false;
+        }
+
+        auto n_threads = std::thread::hardware_concurrency();
+
+        m_logger->info("Creating", n_threads, "attestation check threads");
+
+        for(size_t i = 0; i < n_threads; i++) {
+            m_attestation_check_threads.emplace_back([&]() {
+                attestation_check_worker();
+            });
+        }
+
+        return true;
     }
 
     auto controller::raft_callback(nuraft::cb_func::Type type,
@@ -665,6 +679,12 @@ namespace cbdc::coordinator {
         if(m_start_thread.joinable()) {
             m_start_thread.join();
         }
+
+        for(auto& t : m_attestation_check_threads) {
+            if(t.joinable()) {
+                t.join();
+            }
+        }
     }
 
     auto controller::sm_command_header::operator==(
@@ -681,6 +701,27 @@ namespace cbdc::coordinator {
                         rhs.m_discard_txs);
     }
 
+    void controller::attestation_check_worker() {
+        while(!m_quit) {
+            auto v = queued_attestation_check();
+            if(m_attestation_check_queue.pop(v)) {
+                auto [tx, cb] = v;
+                auto valid = transaction::validation::check_attestations(
+                    tx,
+                    m_opts.m_sentinel_public_keys,
+                    m_opts.m_attestation_threshold);
+                cb(std::move(tx), valid);
+            }
+        }
+    }
+
+    auto controller::check_tx_attestation(const transaction::compact_tx& tx,
+                                          attestation_check_callback cb)
+        -> bool {
+        m_attestation_check_queue.push({std::move(tx), std::move(cb)});
+        return true;
+    }
+
     auto controller::execute_transaction(transaction::compact_tx tx,
                                          callback_type result_callback)
         -> bool {
@@ -689,44 +730,46 @@ namespace cbdc::coordinator {
             return false;
         }
 
-        if(!transaction::validation::check_attestations(
-               tx,
-               m_opts.m_sentinel_public_keys,
-               m_opts.m_attestation_threshold)) {
-            m_logger->warn("Received invalid compact transaction",
-                           to_string(tx.m_id));
-            return false;
-        }
+        return check_tx_attestation(
+            std::move(tx),
+            [&,
+             res_cb = std::move(result_callback)](transaction::compact_tx tx2,
+                                                  bool result) {
+                if(!result) {
+                    m_logger->warn("Received invalid compact transaction",
+                                   to_string(tx.m_id));
+                    res_cb(false);
+                    return;
+                }
+                auto added = [&]() {
+                    // Wait until there's space in the current batch
+                    std::unique_lock<std::mutex> l(m_batch_mut);
+                    m_batch_cv.wait(l, [&]() {
+                        return m_current_txs->size() < m_batch_size
+                            || !m_running;
+                    });
+                    if(!m_running) {
+                        return false;
+                    }
 
-        auto added = [&]() {
-            // Wait until there's space in the current batch
-            std::unique_lock<std::mutex> l(m_batch_mut);
-            m_batch_cv.wait(l, [&]() {
-                return m_current_txs->size() < m_batch_size || !m_running;
+                    // Make sure the TX is not already in the current batch
+                    if(m_current_txs->find(tx2.m_id) != m_current_txs->end()) {
+                        return false;
+                    }
+                    // Add the tx to the current dtx batch and record its index
+                    auto idx = m_current_batch->add_tx(tx2);
+                    // Map the index of the tx to the transaction ID and
+                    // sentinel ID
+                    m_current_txs->emplace(
+                        tx2.m_id,
+                        std::make_pair(std::move(res_cb), idx));
+                    return true;
+                }();
+                if(added) {
+                    // If this was a new TX, notify the executor thread there's
+                    // work to do
+                    m_batch_cv.notify_one();
+                }
             });
-            if(!m_running) {
-                return false;
-            }
-
-            // Make sure the TX is not already in the current batch
-            if(m_current_txs->find(tx.m_id) != m_current_txs->end()) {
-                return false;
-            }
-            // Add the tx to the current dtx batch and record its index
-            auto idx = m_current_batch->add_tx(tx);
-            // Map the index of the tx to the transaction ID and sentinel
-            // ID
-            m_current_txs->emplace(
-                tx.m_id,
-                std::make_pair(std::move(result_callback), idx));
-            return true;
-        }();
-        if(added) {
-            // If this was a new TX, notify the executor thread there's work to
-            // do
-            m_batch_cv.notify_one();
-        }
-
-        return added;
     }
 }
