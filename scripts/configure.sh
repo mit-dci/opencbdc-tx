@@ -22,11 +22,25 @@ fi
 CPUS=1
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   CPUS=$(grep -c ^processor /proc/cpuinfo)
+  if [ -f "/etc/arch-release" ]; then
+    pacman -Syu
+    pacman -S wget cmake gtest lcov git rsync gcc make snappy llvm
+    $SUDO ln -s -f $(which clang-format) /usr/local/bin/clang-format
+    $SUDO ln -s -f $(which clang-tidy) /usr/local/bin/clang-tidy
+  else
+    apt update
+    apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync libsnappy-dev
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | $SUDO apt-key add -
+    $SUDO add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
+    $SUDO apt install -y clang-format-14 clang-tidy-14
+    $SUDO ln -s -f $(which clang-format-14) /usr/local/bin/clang-format
+    $SUDO ln -s -f $(which clang-tidy-14) /usr/local/bin/clang-tidy
+  fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   CPUS=$(sysctl -n hw.ncpu)
   # ensure development environment is set correctly for clang
   $SUDO xcode-select -switch /Library/Developer/CommandLineTools
-  brew install llvm@14 googletest lcov make wget cmake
+  brew install llvm@14 googletest lcov make wget cmake snappy
   CLANG_TIDY=/usr/local/bin/clang-tidy
   if [ ! -L "$CLANG_TIDY" ]; then
     $SUDO ln -s $(brew --prefix)/opt/llvm@14/bin/clang-tidy /usr/local/bin/clang-tidy
@@ -35,17 +49,6 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   if [ ! -L "$GMAKE" ]; then
     $SUDO ln -s $(xcode-select -p)/usr/bin/gnumake /usr/local/bin/gmake
   fi
-fi
-
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  apt update
-  apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync
-
-  wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | $SUDO apt-key add -
-  $SUDO add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
-  $SUDO apt install -y clang-format-14 clang-tidy-14
-  $SUDO ln -s -f $(which clang-format-14) /usr/local/bin/clang-format
-  $SUDO ln -s -f $(which clang-tidy-14) /usr/local/bin/clang-tidy
 fi
 
 LEVELDB_VERSION="1.23"
