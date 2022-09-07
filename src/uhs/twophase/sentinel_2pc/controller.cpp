@@ -88,6 +88,22 @@ namespace cbdc::sentinel_2pc {
             return false;
         }
 
+        auto n_threads = std::thread::hardware_concurrency() / 2;
+        if(n_threads < 1) {
+            n_threads = 1;
+        }
+        for(size_t i = 0; i < n_threads; i++) {
+            m_validation_threads.emplace_back([&]() {
+                validation_worker();
+            });
+        }
+
+        for(size_t i = 0; i < n_threads; i++) {
+            m_attestation_threads.emplace_back([&]() {
+                attestation_worker();
+            });
+        }
+
         m_rpc_server = std::make_unique<decltype(m_rpc_server)::element_type>(
             this,
             std::move(rpc_server));
@@ -95,33 +111,67 @@ namespace cbdc::sentinel_2pc {
         return true;
     }
 
+    void controller::validation_worker() {
+        while(m_running) {
+            auto v = queued_validation();
+            if(m_validation_queue.pop(v)) {
+                auto [tx, cb] = v;
+                cb(std::move(tx), transaction::validation::check_tx(tx));
+            }
+        }
+    }
+
+    auto controller::validate_tx(const transaction::full_tx& tx,
+                                 validation_callback cb) -> bool {
+        m_validation_queue.push({std::move(tx), std::move(cb)});
+        return true;
+    }
+
+    void controller::attestation_worker() {
+        while(m_running) {
+            auto v = queued_attestation();
+            if(m_attestation_queue.pop(v)) {
+                auto [tx, cb] = v;
+                auto compact_tx = cbdc::transaction::compact_tx(tx);
+                cb(std::move(tx), compact_tx.sign(m_secp.get(), m_privkey));
+            }
+        }
+    }
+
+    auto controller::attest_tx(const transaction::full_tx& tx,
+                               attestation_callback cb) -> bool {
+        m_attestation_queue.push({std::move(tx), std::move(cb)});
+        return true;
+    }
+
     auto controller::execute_transaction(
         transaction::full_tx tx,
         execute_result_callback_type result_callback) -> bool {
-        const auto validation_err = transaction::validation::check_tx(tx);
-        if(validation_err.has_value()) {
-            auto tx_id = transaction::tx_id(tx);
-            m_logger->debug(
-                "Rejected (",
-                transaction::validation::to_string(validation_err.value()),
-                ")",
-                to_string(tx_id));
-            result_callback(cbdc::sentinel::execute_response{
-                cbdc::sentinel::tx_status::static_invalid,
-                validation_err});
-            return true;
-        }
+        return controller::validate_tx(
+            std::move(tx),
+            [&, result_callback](
+                const transaction::full_tx& tx2,
+                std::optional<cbdc::transaction::validation::tx_error> err) {
+                auto tx_id = cbdc::transaction::tx_id(tx2);
+                if(err.has_value()) {
+                    m_logger->debug(
+                        "Rejected (",
+                        transaction::validation::to_string(err.value()),
+                        ")",
+                        to_string(tx_id));
+                    result_callback(cbdc::sentinel::execute_response{
+                        cbdc::sentinel::tx_status::static_invalid,
+                        err});
+                    return;
+                }
 
-        auto compact_tx = cbdc::transaction::compact_tx(tx);
-
-        if(m_opts.m_attestation_threshold > 0) {
-            auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
-            compact_tx.m_attestations.insert(attestation);
-        }
-
-        gather_attestations(tx, std::move(result_callback), compact_tx, {});
-
-        return true;
+                auto compact_tx = cbdc::transaction::compact_tx(tx2);
+                gather_attestations(std::move(tx2),
+                                    std::move(result_callback),
+                                    compact_tx,
+                                    {});
+                return;
+            });
     }
 
     void
@@ -143,15 +193,23 @@ namespace cbdc::sentinel_2pc {
     auto controller::validate_transaction(
         transaction::full_tx tx,
         validate_result_callback_type result_callback) -> bool {
-        const auto validation_err = transaction::validation::check_tx(tx);
-        if(validation_err.has_value()) {
-            result_callback(std::nullopt);
-            return true;
-        }
-        auto compact_tx = cbdc::transaction::compact_tx(tx);
-        auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
-        result_callback(std::move(attestation));
-        return true;
+        return controller::validate_tx(
+            std::move(tx),
+            [&, result_callback](
+                const transaction::full_tx& tx2,
+                std::optional<cbdc::transaction::validation::tx_error> err) {
+                if(err.has_value()) {
+                    result_callback(std::nullopt);
+                    return;
+                }
+                controller::attest_tx(
+                    std::move(tx2),
+                    [&, result_callback](
+                        const transaction::full_tx& /* tx3 */,
+                        std::optional<cbdc::sentinel::validate_response> res) {
+                        result_callback(std::move(res));
+                    });
+            });
     }
 
     void controller::validate_result_handler(
@@ -173,14 +231,44 @@ namespace cbdc::sentinel_2pc {
                             std::move(requested));
     }
 
+    void controller::stop() {
+        m_running = false;
+        for(auto& t : m_validation_threads) {
+            if(t.joinable()) {
+                t.join();
+            }
+        }
+
+        for(auto& t : m_attestation_threads) {
+            if(t.joinable()) {
+                t.join();
+            }
+        }
+    }
+
     void controller::gather_attestations(
         const transaction::full_tx& tx,
         execute_result_callback_type result_callback,
         const transaction::compact_tx& ctx,
         std::unordered_set<size_t> requested) {
         if(ctx.m_attestations.size() < m_opts.m_attestation_threshold) {
+            if(ctx.m_attestations.size() == 0) {
+                // Self-attest first
+                controller::attest_tx(
+                    std::move(tx),
+                    [&, ctx, result_callback](const transaction::full_tx& tx2,
+                                              validate_result res) {
+                        validate_result_handler(res,
+                                                tx2,
+                                                result_callback,
+                                                ctx,
+                                                {});
+                    });
+
+                return;
+            }
             auto success = false;
-            while(!success) {
+            while(!success && m_running) {
                 auto sentinel_id = m_dist(m_rand);
                 if(requested.find(sentinel_id) != requested.end()) {
                     continue;
@@ -209,14 +297,16 @@ namespace cbdc::sentinel_2pc {
     void
     controller::send_compact_tx(const transaction::compact_tx& ctx,
                                 execute_result_callback_type result_callback) {
-        auto cb =
-            [&, res_cb = std::move(result_callback)](std::optional<bool> res) {
-                result_handler(res, res_cb);
-            };
+        auto cb = [&, this, ctx, res_cb = std::move(result_callback)](
+                      std::optional<bool> res) {
+            result_handler(res, res_cb);
+        };
 
-        // TODO: add a "retry" error response to offload sentinels from this
+        // TODO: add a "retry" error response to offload sentinels from
+        // this
         //       infinite retry responsibility.
-        while(!m_coordinator_client.execute_transaction(ctx, cb)) {
+        while(!m_coordinator_client.execute_transaction(ctx, cb)
+              && m_running) {
             // TODO: the network currently doesn't provide a callback for
             //       reconnection events so we have to sleep here to
             //       prevent a needless spin. Instead, add such a callback

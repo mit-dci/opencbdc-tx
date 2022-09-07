@@ -63,6 +63,8 @@ auto main(int argc, char** argv) -> int {
 
     logger->info("Shutting down...");
 
+    ctl.stop();
+
     return 0;
 }
 // LCOV_EXCL_STOP
