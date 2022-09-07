@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,6 +24,87 @@ namespace cbdc {
     }
 
     auto transaction::wallet::mint_new_coins(const size_t n_outputs,
+                                             const uint32_t output_val,
+                                             cbdc::config::options& opts,
+                                             const size_t mintkey_index)
+        -> std::optional<transaction::full_tx> {
+        transaction::full_tx tx;
+
+        // Load private key from cfg given the index of the key
+        // in the file
+        auto skey = opts.m_minter_private_keys.find(mintkey_index);
+        if(skey == opts.m_minter_private_keys.end()) {
+            // not found
+            return std::nullopt;
+        }
+
+        const privkey_t seckey = skey->second;
+        const pubkey_t pubkey = pubkey_from_privkey(seckey, m_secp.get());
+        // TODO: Check it's not already in the wallet
+        // NOTE: we only need to save to the wallet to ensure
+        // m_witness_programs is updated as it's needed by
+        // confirm_transaction(). As long as minter private keys are in the cfg
+        // file, there's no other reason to actually save to the wallet
+        {
+            std::unique_lock<std::shared_mutex> lg(m_keys_mut);
+            m_pubkeys.push_back(pubkey);
+            m_keys.insert({pubkey, seckey});
+            m_witness_programs.insert(
+                {transaction::validation::get_p2pk_witness_commitment(pubkey),
+                 pubkey});
+        }
+
+        for(size_t i = 0; i < n_outputs; i++) {
+            transaction::output out;
+            out.m_witness_program_commitment
+                = transaction::validation::get_p2pk_witness_commitment(pubkey);
+            out.m_value = output_val;
+            tx.m_outputs.push_back(out);
+        }
+
+        // Note: This duplicates sign() logic and slightly alters it as
+        // there are no tx inputs. sign() expects inputs.
+        // TODO: refactor
+        const auto sighash = transaction::tx_id(tx);
+        tx.m_witness.resize(n_outputs);
+
+        // Sign tx
+        for(size_t i = 0; i < n_outputs; i++) {
+            auto& sig = tx.m_witness[i];
+            sig.resize(transaction::validation::p2pk_witness_len);
+            sig[0] = std::byte(
+                transaction::validation::witness_program_type::p2pk);
+            std::memcpy(
+                &sig[sizeof(transaction::validation::witness_program_type)],
+                pubkey.data(),
+                pubkey.size());
+
+            secp256k1_keypair keypair{};
+            [[maybe_unused]] const auto ret
+                = secp256k1_keypair_create(m_secp.get(),
+                                           &keypair,
+                                           seckey.data());
+            assert(ret == 1);
+
+            std::array<unsigned char, sig_len> sig_arr{};
+            [[maybe_unused]] const auto sign_ret
+                = secp256k1_schnorrsig_sign(m_secp.get(),
+                                            sig_arr.data(),
+                                            sighash.data(),
+                                            &keypair,
+                                            nullptr,
+                                            nullptr);
+            std::memcpy(&sig[transaction::validation::p2pk_witness_prog_len],
+                        sig_arr.data(),
+                        sizeof(sig_arr));
+            assert(sign_ret == 1);
+        }
+
+        return tx;
+    }
+
+    /*
+    auto transaction::wallet::mint_old_coins(const size_t n_outputs,
                                              const uint32_t output_val)
         -> transaction::full_tx {
         transaction::full_tx tx;
@@ -75,6 +157,7 @@ namespace cbdc {
 
         return tx;
     }
+    */
 
     auto transaction::wallet::send_to(const uint32_t amount,
                                       const pubkey_t& payee,
@@ -152,35 +235,6 @@ namespace cbdc {
             }
         }
         return ret;
-    }
-
-    auto transaction::wallet::generate_minter_key() -> pubkey_t {
-        if(m_pubkeys.empty()) {
-            // new wallet. create the minter key
-            return generate_key();
-        }
-        // first key is always the minter key
-        return m_pubkeys[0];
-    }
-
-    auto transaction::wallet::generate_test_minter_key() -> pubkey_t {
-        const privkey_t seckey
-            = cbdc::privkey_t{'t', 'e', 's', 't', 'i', 'n', 'g'};
-        pubkey_t ret = pubkey_from_privkey(seckey, m_secp.get());
-        {
-            std::unique_lock<std::shared_mutex> lg(m_keys_mut);
-            m_pubkeys.push_back(ret);
-            m_keys.insert({ret, seckey});
-            m_witness_programs.insert(
-                {transaction::validation::get_p2pk_witness_commitment(ret),
-                 ret});
-        }
-
-        return ret;
-    }
-
-    auto transaction::wallet::minter_pubkey_as_hex() -> std::string {
-        return to_string(generate_minter_key());
     }
 
     auto transaction::wallet::generate_key() -> pubkey_t {

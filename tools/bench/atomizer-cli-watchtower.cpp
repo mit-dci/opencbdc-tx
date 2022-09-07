@@ -304,8 +304,15 @@ auto main(int argc, char** argv) -> int {
 
     // Only mint when not using pre-seeded wallets
     if(cfg.m_seed_from == cfg.m_seed_to) {
-        const auto& mint_tx = wal.mint_new_coins(cfg.m_initial_mint_count,
-                                                 cfg.m_initial_mint_value);
+        const auto& omint_tx = wal.mint_new_coins(cfg.m_initial_mint_count,
+                                                  cfg.m_initial_mint_value,
+                                                  cfg,
+                                                  0);
+        if(!omint_tx.has_value()) {
+            log->error("Failed to create mint tx");
+            return -1;
+        }
+        auto mint_tx = omint_tx.value();
 
         cbdc::atomizer::tx_notify_request msg;
 

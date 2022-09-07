@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -54,29 +55,30 @@ namespace cbdc {
         return ss.str();
     }
 
-    auto client::mint_for_testing(size_t n_outputs, uint32_t output_val)
-        -> std::pair<std::optional<transaction::full_tx>,
-                     std::optional<cbdc::sentinel::execute_response>> {
-        m_wallet.generate_test_minter_key();
-        return mint(n_outputs, output_val);
-    }
-
-    auto client::mint(size_t n_outputs, uint32_t output_val)
+    auto
+    client::mint(size_t n_outputs, uint32_t output_val, size_t minter_index)
         -> std::pair<std::optional<transaction::full_tx>,
                      std::optional<cbdc::sentinel::execute_response>> {
         static constexpr auto null_return
             = std::make_pair(std::nullopt, std::nullopt);
 
-        auto mint_tx = m_wallet.mint_new_coins(n_outputs, output_val);
-
-        auto res = send_transaction(mint_tx);
+        auto mint_tx = m_wallet.mint_new_coins(n_outputs,
+                                               output_val,
+                                               m_opts,
+                                               minter_index);
+        if(!mint_tx.has_value()) {
+            m_logger->error("mint failed");
+            return null_return;
+        }
+        auto tx = mint_tx.value();
+        auto res = send_transaction(tx);
         if(!res.has_value()) {
             return null_return;
         }
 
         save();
 
-        return std::make_pair(mint_tx, res.value());
+        return std::make_pair(tx, res.value());
     }
 
     void client::sign_transaction(transaction::full_tx& tx) {

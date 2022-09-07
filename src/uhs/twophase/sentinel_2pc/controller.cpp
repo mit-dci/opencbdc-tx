@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -76,7 +77,8 @@ namespace cbdc::sentinel_2pc {
         transaction::full_tx tx,
         execute_result_callback_type result_callback) -> bool {
         const auto validation_err
-            = transaction::validation::check_tx(tx, m_opts.m_minter_pubkeys);
+            = transaction::validation::check_tx(tx,
+                                                m_opts.m_minter_public_keys);
         if(validation_err.has_value()) {
             auto tx_id = transaction::tx_id(tx);
             m_logger->debug(
@@ -122,7 +124,8 @@ namespace cbdc::sentinel_2pc {
         transaction::full_tx tx,
         validate_result_callback_type result_callback) -> bool {
         const auto validation_err
-            = transaction::validation::check_tx(tx, m_opts.m_minter_pubkeys);
+            = transaction::validation::check_tx(tx,
+                                                m_opts.m_minter_public_keys);
         if(validation_err.has_value()) {
             result_callback(std::nullopt);
             return true;

@@ -28,14 +28,7 @@ class config_validation_test : public ::testing::Test {
         m_twophase_opts.m_locking_shard_endpoints.emplace_back();
         m_twophase_opts.m_coordinator_endpoints.emplace_back();
 
-        m_example_config = "minter_count=2\n"
-                           "minter0="
-                           "\"d1fa877eb8ea6e66d207be5780c4261453313929fbec0f55"
-                           "2aaeb055a3563c13\"\n"
-                           "minter1="
-                           "\"ecc477729befbfdf71e0f86dafb2943f728fd8c183962012"
-                           "c7edf55e2d599f5a\"\n"
-                           "archiver0_endpoint=\"127.0.0.1:5558\"\n"
+        m_example_config = "archiver0_endpoint=\"127.0.0.1:5558\"\n"
                            "archiver0_db=\"ex_db\"\n"
                            "window_size=40000\n"
                            "shard0_loglevel=\"WARN\"\n"
@@ -128,27 +121,4 @@ TEST_F(config_validation_test, parsing_validation) {
 
     auto nonexistent = ex.get_string("lorem ipsum");
     EXPECT_FALSE(nonexistent.has_value());
-}
-
-class ConfigWithFileTest : public ::testing::Test {
-  protected:
-    void SetUp() override {
-        cbdc::test::load_config(m_basic_cfg_path, m_opts);
-    }
-    static constexpr auto m_basic_cfg_path = "config_tests.cfg";
-    cbdc::config::options m_opts{};
-};
-
-TEST_F(ConfigWithFileTest, load_from_file) {
-    const cbdc::pubkey_t good_key = cbdc::hash_from_hex(
-        "ecc477729befbfdf71e0f86dafb2943f728fd8c183962012c7edf55e2d599f5a");
-
-    EXPECT_TRUE(m_opts.m_minter_pubkeys.size() == 2);
-    EXPECT_TRUE(m_opts.m_minter_pubkeys.count(good_key) == 1);
-    EXPECT_TRUE(m_opts.m_minter_pubkeys.count(cbdc::hash_from_hex("aaa"))
-                == 0);
-
-    auto r1 = m_opts.m_minter_pubkeys.find(good_key);
-    EXPECT_TRUE(r1 != m_opts.m_minter_pubkeys.end());
-    EXPECT_EQ(good_key, *r1);
 }

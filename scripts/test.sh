@@ -28,7 +28,6 @@ run_test_suite () {
 }
 
 echo "Running unit tests..."
-cp tests/unit/*.cfg $BUILD_DIR
 run_test_suite "tests/unit/run_unit_tests" "unit_tests_coverage"
 
 echo "Running integration tests..."

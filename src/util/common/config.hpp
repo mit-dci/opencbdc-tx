@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -242,8 +243,13 @@ namespace cbdc::config {
         size_t m_initial_mint_count{defaults::initial_mint_count};
         /// Value for all outputs in the initial mint transaction.
         size_t m_initial_mint_value{defaults::initial_mint_value};
+
+        /// Map of private keys for minters keyed by the index value
+        /// in the configuration file.
+        std::unordered_map<size_t, privkey_t> m_minter_private_keys;
+
         /// Set of public keys belonging to authorized minters
-        std::unordered_set<pubkey_t, hashing::null> m_minter_pubkeys;
+        std::unordered_set<pubkey_t, hashing::null> m_minter_public_keys;
 
         /// Number of blocks to store in watchtower block caches.
         /// (0=unlimited). Defaults to 1 hour of blocks.

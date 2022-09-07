@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,14 +13,22 @@
 class WalletTest : public ::testing::Test {
   protected:
     void SetUp() override {
-        auto mint_tx = m_wallet.mint_new_coins(1, 100);
-        m_wallet.confirm_transaction(mint_tx);
+        const auto minter_sk0 = "000000000000000200000000000000000"
+                                "0000000000000000000000000000000";
+        const auto minter_pk0 = "3adb9db3beb997eec2623ea5002279ea9e"
+                                "337b5c705f3db453dbc1cc1fc9b0a8";
+        m_opts.m_minter_private_keys[0] = cbdc::hash_from_hex(minter_sk0);
+        m_opts.m_minter_public_keys.insert(cbdc::hash_from_hex(minter_pk0));
+
+        auto mint_tx = m_wallet.mint_new_coins(1, 100, m_opts, 0);
+        m_wallet.confirm_transaction(mint_tx.value());
     }
 
     void TearDown() override {
         std::filesystem::remove(m_wallet_file);
     }
 
+    cbdc::config::options m_opts{};
     cbdc::transaction::wallet m_wallet{};
     static constexpr auto m_wallet_file = "test_wallet.dat";
 };
@@ -100,10 +109,18 @@ TEST_F(WalletTest, fan_out_change) {
 class WalletTxTest : public ::testing::Test {
   protected:
     void SetUp() override {
-        auto mint_tx = m_sender.mint_new_coins(1, 100);
-        m_sender.confirm_transaction(mint_tx);
+        const auto minter_sk0 = "000000000000000200000000000000000"
+                                "0000000000000000000000000000000";
+        const auto minter_pk0 = "3adb9db3beb997eec2623ea5002279ea9e"
+                                "337b5c705f3db453dbc1cc1fc9b0a8";
+        m_opts.m_minter_private_keys[0] = cbdc::hash_from_hex(minter_sk0);
+        m_opts.m_minter_public_keys.insert(cbdc::hash_from_hex(minter_pk0));
+
+        auto mint_tx = m_sender.mint_new_coins(1, 100, m_opts, 0);
+        m_sender.confirm_transaction(mint_tx.value());
     }
 
+    cbdc::config::options m_opts{};
     cbdc::transaction::wallet m_sender{};
     cbdc::transaction::wallet m_receiver{};
 };
@@ -122,10 +139,18 @@ TEST_F(WalletTxTest, basic) {
 class WalletMultiTxTest : public ::testing::Test {
   protected:
     void SetUp() override {
-        auto mint_tx = m_sender.mint_new_coins(100, 100);
-        m_sender.confirm_transaction(mint_tx);
+        const auto minter_sk0 = "000000000000000200000000000000000"
+                                "0000000000000000000000000000000";
+        const auto minter_pk0 = "3adb9db3beb997eec2623ea5002279ea9e"
+                                "337b5c705f3db453dbc1cc1fc9b0a8";
+        m_opts.m_minter_private_keys[0] = cbdc::hash_from_hex(minter_sk0);
+        m_opts.m_minter_public_keys.insert(cbdc::hash_from_hex(minter_pk0));
+
+        auto mint_tx = m_sender.mint_new_coins(100, 100, m_opts, 0);
+        m_sender.confirm_transaction(mint_tx.value());
     }
 
+    cbdc::config::options m_opts{};
     cbdc::transaction::wallet m_sender{};
 };
 
@@ -200,18 +225,4 @@ TEST_F(WalletTest, load_save) {
     new_wal.load(m_wallet_file);
     ASSERT_EQ(m_wallet.balance(), new_wal.balance());
     ASSERT_EQ(m_wallet.count(), new_wal.count());
-}
-
-TEST_F(WalletTest, minter_key_generation) {
-    // always generates the same key
-    const auto k1 = m_wallet.generate_minter_key();
-    const auto k2 = m_wallet.generate_minter_key();
-    ASSERT_EQ(k1, k2);
-    const auto k3 = cbdc::hash_from_hex(m_wallet.minter_pubkey_as_hex());
-    ASSERT_EQ(k3, k1);
-
-    const auto tkey = m_wallet.generate_test_minter_key();
-    ASSERT_EQ(tkey,
-              cbdc::hash_from_hex("1f05f6173c4f7bef58f7e912c4cb1389097a38f1a9e"
-                                  "24c3674d67a0f142af244"));
 }

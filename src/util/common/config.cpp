@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -125,6 +126,10 @@ namespace cbdc::config {
         ss << sentinel_prefix << sentinel_id << config_separator;
     }
 
+    void get_minter_key_prefix(std::stringstream& ss, size_t minter_id) {
+        ss << minter_prefix << minter_id << config_separator;
+    }
+
     auto get_sentinel_loglevel_key(size_t sentinel_id) -> std::string {
         std::stringstream ss;
         get_sentinel_key_prefix(ss, sentinel_id);
@@ -241,11 +246,25 @@ namespace cbdc::config {
         return ss.str();
     }
 
-    auto get_minter_key(size_t minter_id) -> std::string {
+    auto get_minter_public_key_key(size_t minter_id) -> std::string {
         std::stringstream ss;
-        ss << minter_prefix << minter_id;
+        get_minter_key_prefix(ss, minter_id);
+        ss << public_key_postfix;
         return ss.str();
     }
+
+    auto get_minter_private_key_key(size_t minter_id) -> std::string {
+        std::stringstream ss;
+        get_minter_key_prefix(ss, minter_id);
+        ss << private_key_postfix;
+        return ss.str();
+    }
+
+    // auto get_minter_key(size_t minter_id) -> std::string {
+    //     std::stringstream ss;
+    //     ss << minter_prefix << minter_id;
+    //     return ss.str();
+    // }
 
     auto read_shard_endpoints(options& opts, const parser& cfg)
         -> std::optional<std::string> {
@@ -601,14 +620,25 @@ namespace cbdc::config {
         const auto minter_count = cfg.get_ulong(minter_count_key).value_or(0);
 
         for(size_t i{0}; i < minter_count; i++) {
-            const auto minter_k = get_minter_key(i);
-            const auto v = cfg.get_string(minter_k);
-            if(!v.has_value()) {
-                return "Missing minter setting: " + std::to_string(i) + " ("
-                     + minter_k + ")";
+            // get the private key
+            const auto mskk = get_minter_private_key_key(i);
+            const auto skv = cfg.get_string(mskk);
+            if(!skv.has_value()) {
+                return "Missing minter private key setting: "
+                     + std::to_string(i) + " (" + mskk + ")";
             }
-            const auto pubkey = cbdc::hash_from_hex(v.value());
-            opts.m_minter_pubkeys.insert(pubkey);
+            const auto secretkey = cbdc::hash_from_hex(skv.value());
+            opts.m_minter_private_keys[i] = secretkey;
+
+            // get the public key
+            const auto mpkk = get_minter_public_key_key(i);
+            const auto pkv = cfg.get_string(mpkk);
+            if(!pkv.has_value()) {
+                return "Missing minter public key setting: "
+                     + std::to_string(i) + " (" + mpkk + ")";
+            }
+            const auto pubkey = cbdc::hash_from_hex(pkv.value());
+            opts.m_minter_public_keys.insert(pubkey);
         }
         return std::nullopt;
     }

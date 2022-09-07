@@ -131,14 +131,9 @@ The following commands are all performed from within the second container we sta
 
 In each of the below commands, you should pass `atomizer-compose.cfg` instead of `2pc-compose.cfg` if you started the atomizer architecture.
 
-* First, make a demo wallet for minting coins
+* Mint new coins (e.g., 10 new UTXOs each with a value of 5 atomic units of currency using minter0 key to sign)
   ```terminal
-  # ./build/src/uhs/client/client-cli 2pc-compose.cfg mempool0.dat wallet0.dat demowallet
-  ```
-
-* Mint new coins (e.g., 10 new UTXOs each with a value of 5 atomic units of currency)
-  ```terminal
-  # ./build/src/uhs/client/client-cli 2pc-compose.cfg mempool0.dat wallet0.dat mint 10 5
+  # ./build/src/uhs/client/client-cli 2pc-compose.cfg mempool0.dat wallet0.dat mint 10 5 0
   [2021-08-17 15:11:57.686] [WARN ] Existing wallet file not found
   [2021-08-17 15:11:57.686] [WARN ] Existing mempool not found
   4bc23da407c3a8110145c5b6c38199c8ec3b0e35ea66bbfd78f0ed65304ce6fa

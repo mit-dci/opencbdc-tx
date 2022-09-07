@@ -62,7 +62,7 @@ class atomizer_end_to_end_test : public ::testing::Test {
 
         std::this_thread::sleep_for(m_block_wait_interval);
 
-        m_sender->mint_for_testing(10, 10);
+        m_sender->mint(10, 10, 0);
         std::this_thread::sleep_for(m_block_wait_interval);
         m_sender->sync();
 

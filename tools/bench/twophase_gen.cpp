@@ -74,8 +74,15 @@ auto main(int argc, char** argv) -> int {
             return -1;
         }
 
-        auto mint_tx = wallet.mint_new_coins(cfg.m_initial_mint_count,
-                                             cfg.m_initial_mint_value);
+        auto omint_tx = wallet.mint_new_coins(cfg.m_initial_mint_count,
+                                              cfg.m_initial_mint_value,
+                                              cfg,
+                                              0);
+        if(!omint_tx.has_value()) {
+            logger->error("Failed to create mint tx");
+            return -1;
+        }
+        auto mint_tx = omint_tx.value();
 
         auto compact_mint_tx = cbdc::transaction::compact_tx(mint_tx);
         auto secp = std::unique_ptr<secp256k1_context,

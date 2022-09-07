@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,17 +10,34 @@
 #include <gtest/gtest.h>
 #include <variant>
 
+// S: 0000000000000003000000000000000000000000000000000000000000000000
+// P: 4b72a5e9042f4abff48731c3b85047e229aab71cc52a6a98f583fd3a3f2e070d
+
 // TODO: Redo, removing dependence on Wallet.
 class WalletTxValidationTest : public ::testing::Test {
   protected:
     void SetUp() override {
+        const auto minter_sk0 = "000000000000000200000000000000000"
+                                "0000000000000000000000000000000";
+        const auto minter_pk0 = "3adb9db3beb997eec2623ea5002279ea9e"
+                                "337b5c705f3db453dbc1cc1fc9b0a8";
+        const auto minter_sk1 = "000000000000000300000000000000000000000000000"
+                                "0000000000000000000";
+        const auto minter_pk1 = "4b72a5e9042f4abff48731c3b85047e229aab71cc52a6"
+                                "a98f583fd3a3f2e070d";
+
+        m_opts.m_minter_private_keys[0] = cbdc::hash_from_hex(minter_sk0);
+        m_opts.m_minter_public_keys.insert(cbdc::hash_from_hex(minter_pk0));
+        m_opts.m_minter_private_keys[1] = cbdc::hash_from_hex(minter_sk1);
+        m_opts.m_minter_public_keys.insert(cbdc::hash_from_hex(minter_pk1));
+
         cbdc::transaction::wallet wallet1;
         cbdc::transaction::wallet wallet2;
 
-        auto mint_tx1 = wallet1.mint_new_coins(3, 100);
-        wallet1.confirm_transaction(mint_tx1);
-        auto mint_tx2 = wallet2.mint_new_coins(1, 100);
-        wallet2.confirm_transaction(mint_tx2);
+        auto mint_tx1 = wallet1.mint_new_coins(3, 100, m_opts, 0);
+        wallet1.confirm_transaction(mint_tx1.value());
+        auto mint_tx2 = wallet2.mint_new_coins(1, 100, m_opts, 1);
+        wallet2.confirm_transaction(mint_tx2.value());
 
         m_valid_tx = wallet1.send_to(20, wallet2.generate_key(), true).value();
         m_valid_tx_multi_inp
@@ -47,7 +65,7 @@ class WalletTxValidationTest : public ::testing::Test {
 TEST_F(WalletTxValidationTest, valid) {
     auto err
         = cbdc::transaction::validation::check_tx(m_valid_tx,
-                                                  m_opts.m_minter_pubkeys);
+                                                  m_opts.m_minter_public_keys);
     ASSERT_FALSE(err.has_value());
 }
 
@@ -56,7 +74,7 @@ TEST_F(WalletTxValidationTest, no_inputs) {
 
     auto err
         = cbdc::transaction::validation::check_tx(m_valid_tx,
-                                                  m_opts.m_minter_pubkeys);
+                                                  m_opts.m_minter_public_keys);
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
         std::holds_alternative<cbdc::transaction::validation::tx_error_code>(
@@ -76,7 +94,7 @@ TEST_F(WalletTxValidationTest, no_outputs) {
 
     auto err
         = cbdc::transaction::validation::check_tx(m_valid_tx,
-                                                  m_opts.m_minter_pubkeys);
+                                                  m_opts.m_minter_public_keys);
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
         std::holds_alternative<cbdc::transaction::validation::tx_error_code>(
@@ -94,7 +112,7 @@ TEST_F(WalletTxValidationTest, missing_witness) {
 
     auto err
         = cbdc::transaction::validation::check_tx(m_valid_tx,
-                                                  m_opts.m_minter_pubkeys);
+                                                  m_opts.m_minter_public_keys);
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
         std::holds_alternative<cbdc::transaction::validation::tx_error_code>(
@@ -112,7 +130,7 @@ TEST_F(WalletTxValidationTest, zero_output) {
 
     auto err
         = cbdc::transaction::validation::check_tx(m_valid_tx,
-                                                  m_opts.m_minter_pubkeys);
+                                                  m_opts.m_minter_public_keys);
 
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
@@ -134,7 +152,7 @@ TEST_F(WalletTxValidationTest, duplicate_input) {
 
     auto err
         = cbdc::transaction::validation::check_tx(m_valid_tx,
-                                                  m_opts.m_minter_pubkeys);
+                                                  m_opts.m_minter_public_keys);
 
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
@@ -153,7 +171,7 @@ TEST_F(WalletTxValidationTest, invalid_input_prevout) {
     m_valid_tx.m_inputs[0].m_prevout_data.m_value = 0;
     auto err
         = cbdc::transaction::validation::check_tx(m_valid_tx,
-                                                  m_opts.m_minter_pubkeys);
+                                                  m_opts.m_minter_public_keys);
 
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
@@ -172,7 +190,7 @@ TEST_F(WalletTxValidationTest, asymmetric_inout_set) {
     m_valid_tx.m_outputs[0].m_value--;
     auto err
         = cbdc::transaction::validation::check_tx(m_valid_tx,
-                                                  m_opts.m_minter_pubkeys);
+                                                  m_opts.m_minter_public_keys);
 
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
@@ -271,7 +289,7 @@ TEST_F(WalletTxValidationTest,
     m_valid_tx.m_witness[0][0] = std::byte(0xFF);
     auto err
         = cbdc::transaction::validation::check_tx(m_valid_tx,
-                                                  m_opts.m_minter_pubkeys);
+                                                  m_opts.m_minter_public_keys);
     ASSERT_TRUE(err.has_value());
     ASSERT_TRUE(
         std::holds_alternative<cbdc::transaction::validation::witness_error>(

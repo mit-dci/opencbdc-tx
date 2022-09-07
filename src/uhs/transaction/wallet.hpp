@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,8 +45,14 @@ namespace cbdc::transaction {
         /// \param n_outputs number of new spendable outputs to create.
         /// \param output_val value of the amount to associate with each output
         ///                   in the base unit of the currency.
+        /// \param opts cfg file options
+        /// \param minter_index the index of the minter key in the cfg file to use for signing
         /// \return the transaction which mints the new coins.
-        auto mint_new_coins(size_t n_outputs, uint32_t output_val) -> full_tx;
+        auto mint_new_coins(const size_t n_outputs,
+                            const uint32_t output_val,
+                            cbdc::config::options& opts,
+                            const size_t minter_index)
+            -> std::optional<transaction::full_tx>;
 
         /// \brief Generates a new send transaction with a set value.
         ///
@@ -116,26 +123,6 @@ namespace cbdc::transaction {
         static auto export_send_inputs(const full_tx& send_tx,
                                        const pubkey_t& payee)
             -> std::vector<input>;
-
-        /// Generates the key pair that can be used to mint new coins
-        /// \return the public key.
-        auto generate_minter_key() -> pubkey_t;
-
-        /// Return the minter's public key as a hex string that can be
-        /// used in the configuration file.
-        /// \return hex string
-        auto minter_pubkey_as_hex() -> std::string;
-
-        /// Generate a fixed public key for a minter.  This is
-        /// so pre-configured (testing/demo) files can be used with a known
-        /// minter's public key.
-        ///
-        /// This should only be used for testing and experimentation.
-        ///
-        /// Hexed version of the public key:
-        /// 1f05f6173c4f7bef58f7e912c4cb1389097a38f1a9e24c3674d67a0f142af244
-        /// \return a deterministic public key
-        auto generate_test_minter_key() -> pubkey_t;
 
         /// Generates a new public key at which this wallet can receive
         /// payments via \ref send_to.

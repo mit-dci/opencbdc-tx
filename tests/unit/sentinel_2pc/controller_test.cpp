@@ -15,6 +15,20 @@
 class sentinel_2pc_test : public ::testing::Test {
   protected:
     void SetUp() override {
+        const auto minter_sk0 = "000000000000000200000000000000000"
+                                "0000000000000000000000000000000";
+        const auto minter_pk0 = "3adb9db3beb997eec2623ea5002279ea9e"
+                                "337b5c705f3db453dbc1cc1fc9b0a8";
+        const auto minter_sk1 = "000000000000000300000000000000000000000000000"
+                                "0000000000000000000";
+        const auto minter_pk1 = "4b72a5e9042f4abff48731c3b85047e229aab71cc52a6"
+                                "a98f583fd3a3f2e070d";
+
+        m_opts.m_minter_private_keys[0] = cbdc::hash_from_hex(minter_sk0);
+        m_opts.m_minter_public_keys.insert(cbdc::hash_from_hex(minter_pk0));
+        m_opts.m_minter_private_keys[1] = cbdc::hash_from_hex(minter_sk1);
+        m_opts.m_minter_public_keys.insert(cbdc::hash_from_hex(minter_pk1));
+
         m_dummy_coordinator_net = std::make_unique<
             decltype(m_dummy_coordinator_net)::element_type>();
 
@@ -56,10 +70,11 @@ class sentinel_2pc_test : public ::testing::Test {
         cbdc::transaction::wallet wallet1;
         cbdc::transaction::wallet wallet2;
 
-        auto mint_tx1 = wallet1.mint_new_coins(3, 100);
-        wallet1.confirm_transaction(mint_tx1);
-        auto mint_tx2 = wallet2.mint_new_coins(1, 100);
-        wallet2.confirm_transaction(mint_tx2);
+        auto mint_tx1 = wallet1.mint_new_coins(3, 100, m_opts, 0);
+        wallet1.confirm_transaction(mint_tx1.value());
+        auto mint_tx2 = wallet2.mint_new_coins(1, 100, m_opts, 1);
+        wallet2.confirm_transaction(mint_tx2.value());
+
         m_logger = std::make_shared<cbdc::logging::log>(
             cbdc::logging::log_level::debug);
         m_ctl = std::make_unique<cbdc::sentinel_2pc::controller>(0,

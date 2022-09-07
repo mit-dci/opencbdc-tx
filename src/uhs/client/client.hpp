@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,19 +50,6 @@ namespace cbdc {
         /// \return USD formatted value.
         static auto print_amount(uint64_t val) -> std::string;
 
-        /// \brief Mint coins for testing.
-        ///
-        /// Provides a pre-calculated keypair to be used for configuration
-        /// files for testing and demo environments. Use the hexed public key:
-        /// 1f05f6173c4f7bef58f7e912c4cb1389097a38f1a9e24c3674d67a0f142af244 as
-        /// the value for minter0 in a configuration file.
-        /// \param n_outputs number of new spendable outputs to create.
-        /// \param output_val value of the amount to associate with each output in the base unit of the currency.
-        /// \return the transaction and sentinel response.
-        auto mint_for_testing(size_t n_outputs, uint32_t output_val)
-            -> std::pair<std::optional<transaction::full_tx>,
-                         std::optional<cbdc::sentinel::execute_response>>;
-
         /// \brief Creates the specified number spendable outputs each with the
         ///        specified value.
         ///
@@ -70,8 +58,9 @@ namespace cbdc {
         /// transaction to the system via \ref send_mint_tx.
         /// \param n_outputs number of new spendable outputs to create.
         /// \param output_val value of the amount to associate with each output in the base unit of the currency.
+        /// \param minter_index the index value of the minter key to use in the configuration file.
         /// \return the transaction and sentinel response.
-        auto mint(size_t n_outputs, uint32_t output_val)
+        auto mint(size_t n_outputs, uint32_t output_val, size_t minter_index)
             -> std::pair<std::optional<transaction::full_tx>,
                          std::optional<cbdc::sentinel::execute_response>>;
 
@@ -247,18 +236,6 @@ namespace cbdc {
         /// initialization logic here.
         /// \return true if the initialization succeeded.
         virtual auto init_derived() -> bool = 0;
-
-        /// \brief Sends the given minting transaction to a service that will
-        ///        accept and process it.
-        ///
-        /// TODO:  Remove. No longer needed
-        ///
-        /// Called by \ref mint to send the resulting transaction. Subclasses
-        /// should define custom transmission logic here.
-        /// \param mint_tx invalid transaction that mints new coins.
-        /// \return true if the transaction was sent successfully.
-        virtual auto send_mint_tx(const transaction::full_tx& mint_tx) -> bool
-            = 0;
 
         /// \brief Returns the set of transactions pending confirmation.
         ///

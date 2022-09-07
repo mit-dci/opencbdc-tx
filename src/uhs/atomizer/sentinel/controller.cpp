@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -87,7 +88,8 @@ namespace cbdc::sentinel {
     auto controller::execute_transaction(transaction::full_tx tx)
         -> std::optional<cbdc::sentinel::execute_response> {
         const auto res
-            = transaction::validation::check_tx(tx, m_opts.m_minter_pubkeys);
+            = transaction::validation::check_tx(tx,
+                                                m_opts.m_minter_public_keys);
         tx_status status{tx_status::pending};
         if(res.has_value()) {
             status = tx_status::static_invalid;
@@ -120,7 +122,8 @@ namespace cbdc::sentinel {
     auto controller::validate_transaction(transaction::full_tx tx)
         -> std::optional<validate_response> {
         const auto res
-            = transaction::validation::check_tx(tx, m_opts.m_minter_pubkeys);
+            = transaction::validation::check_tx(tx,
+                                                m_opts.m_minter_public_keys);
         if(res.has_value()) {
             return std::nullopt;
         }

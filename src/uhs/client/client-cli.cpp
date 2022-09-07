@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,18 +24,21 @@ static constexpr auto bech32_bits_per_symbol = 5;
 
 auto mint_command(cbdc::client& client, const std::vector<std::string>& args)
     -> bool {
-    static constexpr auto min_mint_arg_count = 7;
+    static constexpr auto min_mint_arg_count = 8;
     if(args.size() < min_mint_arg_count) {
-        std::cerr << "Mint requires args <n outputs> <output value>"
+        std::cerr << "Mint requires args <n outputs> <output value> <cfg file "
+                     "minter index>"
                   << std::endl;
         return false;
     }
 
     const auto n_outputs = std::stoull(args[5]);
     const auto output_val = std::stoul(args[6]);
+    const auto minter_index = std::stoul(args[7]);
 
-    const auto [tx, resp]
-        = client.mint(n_outputs, static_cast<uint32_t>(output_val));
+    const auto [tx, resp] = client.mint(n_outputs,
+                                        static_cast<uint32_t>(output_val),
+                                        minter_index);
     if(!tx.has_value()) {
         std::cout << "Could not generate valid mint tx." << std::endl;
         return false;
@@ -56,25 +60,6 @@ auto mint_command(cbdc::client& client, const std::vector<std::string>& args)
         }
     }
 
-    return true;
-}
-
-/// Generate a demo wallet for use with demo. It creates a minter public key
-/// to match the value pre-configued in the provided 'cfg' files.
-auto generate_demo_wallet_command(const std::vector<std::string>& args)
-    -> bool {
-    const auto wallet_file = args[3];
-    if(std::filesystem::exists(wallet_file)) {
-        std::cout << " " << wallet_file << " already exists" << std::endl;
-        return false;
-    }
-    cbdc::transaction::wallet wallet{};
-    const auto pk = wallet.generate_test_minter_key();
-    const auto hexed = cbdc::to_string(pk);
-    wallet.save(wallet_file);
-
-    std::cout << " Created demo wallet. Saved to: " << wallet_file << "\n"
-              << " Minter public key is: " << hexed << std::endl;
     return true;
 }
 
@@ -250,8 +235,6 @@ auto dispatch_command(const std::string& command,
     auto result = true;
     if(command == "mint") {
         result = mint_command(client, args);
-    } else if(command == "demowallet") {
-        result = generate_demo_wallet_command(args);
     } else if(command == "send") {
         result = send_command(client, args);
     } else if(command == "fan") {

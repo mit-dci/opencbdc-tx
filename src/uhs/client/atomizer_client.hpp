@@ -1,5 +1,6 @@
 // Copyright (c) 2021 MIT Digital Currency Initiative,
 //                    Federal Reserve Bank of Boston
+//               2022 MITRE Corporation
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,12 +52,6 @@ namespace cbdc {
         /// imported inputs.
         /// \return true if the initialization succeeded.
         auto init_derived() -> bool override;
-
-        /// Sends the given transaction directly to the atomizer cluster.
-        /// \param mint_tx transaction to send.
-        /// \return true if sending the transaction was successful.
-        auto send_mint_tx(const transaction::full_tx& mint_tx)
-            -> bool override;
 
       private:
         cbdc::network::connection_manager m_atomizer_network;
