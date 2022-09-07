@@ -70,8 +70,7 @@ auto main(int argc, char** argv) -> int {
         auto coordinator_client
             = cbdc::coordinator::rpc::client(cfg.m_coordinator_endpoints[0]);
         if(!coordinator_client.init()) {
-            logger->error("Failed to connect to coordinator");
-            return -1;
+            logger->warn("Failed to connect to coordinator");
         }
 
         auto mint_tx = wallet.mint_new_coins(cfg.m_initial_mint_count,
@@ -122,15 +121,13 @@ auto main(int argc, char** argv) -> int {
         cfg.m_shard_ranges,
         lookup_timeout);
     if(!status_client.init()) {
-        logger->error("Failed to connect to shard read-only endpoints");
-        return -1;
+        logger->warn("Failed to connect to shard read-only endpoints");
     }
 
     auto sentinel_client
         = cbdc::sentinel::rpc::client(cfg.m_sentinel_endpoints, logger);
     if(!sentinel_client.init()) {
-        logger->error("Failed to connect to sentinel");
-        return -1;
+        logger->warn("Failed to connect to sentinel");
     }
 
     auto confirmed_txs = std::queue<cbdc::transaction::full_tx>();

@@ -60,8 +60,7 @@ namespace cbdc::atomizer {
     auto controller::init() -> bool {
         if(!m_watchtower_network.cluster_connect(
                m_opts.m_watchtower_internal_endpoints)) {
-            m_logger->error("Failed to connect to watchtowers.");
-            return false;
+            m_logger->warn("Failed to connect to watchtowers.");
         }
 
         auto raft_params = nuraft::raft_params();
