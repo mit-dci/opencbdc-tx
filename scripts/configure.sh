@@ -56,7 +56,7 @@ tar xzvf ${LEVELDB_VERSION}.tar.gz
 rm -rf ${LEVELDB_VERSION}.tar.gz
 mv leveldb-${LEVELDB_VERSION} "leveldb-${LEVELDB_VERSION}-${CMAKE_BUILD_TYPE}"
 cd "leveldb-${LEVELDB_VERSION}-${CMAKE_BUILD_TYPE}"
-eval "cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLEVELDB_BUILD_TESTS=0 -DLEVELDB_BUILD_BENCHMARKS=0 -DBUILD_SHARED_LIBS=0 ."
+cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLEVELDB_BUILD_TESTS=0 -DLEVELDB_BUILD_BENCHMARKS=0 -DBUILD_SHARED_LIBS=0 .
 make -j$CPUS
 $SUDO make install
 cd ..
@@ -80,8 +80,8 @@ if [[ "$BUILD_RELEASE" == "1" ]]; then
 fi
 mkdir -p build
 cd build
-eval "cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DDISABLE_SSL=1 .."
-eval "make -j$CPUS static_lib"
+cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DDISABLE_SSL=1 ..
+make -j$CPUS static_lib
 
 echo -e "${green}Copying nuraft to /usr/local"
 $SUDO cp libnuraft.a /usr/local/lib
