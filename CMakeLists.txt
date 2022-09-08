@@ -33,7 +33,6 @@ find_library(NURAFT_LIBRARY nuraft REQUIRED)
 find_library(GTEST_LIBRARY gtest REQUIRED)
 find_library(GTEST_MAIN_LIBRARY gtest_main REQUIRED)
 
-message("Disabling Run Time Type Information (RTTI) features.")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
 include_directories(3rdparty 3rdparty/secp256k1/include /usr/local/include /opt/homebrew/include)
