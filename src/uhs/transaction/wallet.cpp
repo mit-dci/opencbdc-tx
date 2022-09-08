@@ -126,6 +126,7 @@ namespace cbdc {
         return ret;
     }
 
+    // todo: see if we can avoid calling `prove_output` and `add_proof`
     auto transaction::wallet::create_seeded_transaction(size_t seed_idx)
         -> std::optional<transaction::full_tx> {
         if(m_seed_from == m_seed_to) {

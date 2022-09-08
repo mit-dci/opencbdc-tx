@@ -205,13 +205,9 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
     // Create a second transaction
     auto tx2 = m_sender->create_transaction(33, addr);
 
-    // Append the first input of the first transaction to this second
-    // transaction, creating the double-spend. Also increase the output value
-    // to balance the inputs and outputs
-    tx2.value().m_inputs.push_back(tx.value().m_inputs[0]);
-    tx2.value().m_out_spend_data.value()[0].m_value
-        = tx2.value().m_out_spend_data.value()[0].m_value
-        + tx.value().m_inputs[0].m_spend_data.value().m_value;
+    // Replace first input with the one from the previous transaction
+    // to create a double-spend.
+    tx2.value().m_inputs[0] = tx.value().m_inputs[0];
 
     m_sender->sign_transaction(tx2.value());
 
@@ -226,9 +222,9 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
     ASSERT_TRUE(res3.has_value());
     ASSERT_TRUE(res3.value());
 
-    // Check if the outputs (excluding the appended double spend one) are
+    // Check if the outputs (excluding the replaced double spend one) are
     // still marked as unspent on the shard
-    for(size_t i = 0; i < tx2.value().m_inputs.size() - 1; i++) {
+    for(size_t i = 1; i < tx2.value().m_inputs.size() - 1; i++) {
         auto inp = tx2.value().m_inputs[i];
         auto res4 = m_sender->check_unspent(inp.m_prevout_data.m_id);
         ASSERT_TRUE(res4.has_value());
@@ -240,8 +236,11 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
         = m_sender->abandon_transaction(cbdc::transaction::tx_id(tx2.value()));
     ASSERT_TRUE(abandoned);
 
-    // Confirm to see if our balance is restored after abandoning
-    ASSERT_EQ(m_sender->balance(), 67UL);
+    // Confirm our balance is restored after abandoning.
+    // Note: this is 57 and not 67 because we /replaced/ an input in the
+    // transaction; the output which got overwritten was thus not
+    // returned to the spendable pool by abandoning the transaction.
+    ASSERT_EQ(m_sender->balance(), 57UL);
 }
 
 TEST_F(two_phase_end_to_end_test, invalid_transaction) {

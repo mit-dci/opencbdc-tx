@@ -165,9 +165,12 @@ namespace cbdc::transaction::validation {
         -> std::optional<tx_error>;
     auto check_input_set(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
-    auto check_proof(const compact_tx& tx) -> std::optional<proof_error>;
+    auto check_proof(const compact_tx& tx,
+                     const std::vector<commitment_t>& inp_comms)
+        -> std::optional<proof_error>;
     auto check_commitment_sum(
-        const std::vector<secp256k1_pedersen_commitment>& auxiliaries,
+        const std::vector<secp256k1_pedersen_commitment>& inputs,
+        const std::vector<secp256k1_pedersen_commitment>& outputs,
         uint64_t minted) -> bool;
     auto get_p2pk_witness_commitment(const pubkey_t& payee) -> hash_t;
     auto to_string(const tx_error& err) -> std::string;

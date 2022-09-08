@@ -74,8 +74,14 @@ namespace cbdc::transaction::validation {
             }
         }
 
+        std::vector<commitment_t> inputs{};
+        inputs.reserve(tx.m_inputs.size());
+        for(const auto& inp : tx.m_inputs) {
+            inputs.push_back(inp.m_prevout_data.m_auxiliary);
+        }
+
         const cbdc::transaction::compact_tx ctx(tx);
-        const auto proof_error = check_proof(ctx);
+        const auto proof_error = check_proof(ctx, inputs);
         if(proof_error) {
             return proof_error;
         }
@@ -260,21 +266,34 @@ namespace cbdc::transaction::validation {
         return std::nullopt;
     }
 
-    auto check_proof(const compact_tx& tx) -> std::optional<proof_error> {
-        // todo: verify the UHS ID itself
+    auto check_proof(const compact_tx& tx,
+                     const std::vector<commitment_t>& inps)
+        -> std::optional<proof_error> {
         auto* ctx = secp_context.get();
         static constexpr auto scratch_size = 100UL * 1024UL;
         secp256k1_scratch_space* scratch
             = secp256k1_scratch_space_create(ctx, scratch_size);
-        std::vector<secp256k1_pedersen_commitment> auxiliaries{};
+        std::vector<secp256k1_pedersen_commitment> in_comms{};
+        for(const auto& comm : inps) {
+            auto maybe_aux = deserialize_commitment(ctx, comm);
+            if(!maybe_aux.has_value()) {
+                return proof_error{proof_error_code::invalid_auxiliary};
+            }
+            auto aux = maybe_aux.value();
+            in_comms.push_back(aux);
+
+            // no need to validate range proofs for inputs
+        }
+        std::vector<secp256k1_pedersen_commitment> out_comms{};
         for(const auto& proof : tx.m_outputs) {
             auto maybe_aux = deserialize_commitment(ctx, proof.m_auxiliary);
             if(!maybe_aux.has_value()) {
                 return proof_error{proof_error_code::invalid_auxiliary};
             }
             auto aux = maybe_aux.value();
-            auxiliaries.push_back(aux);
+            out_comms.push_back(aux);
 
+            // todo: replace lower-bound with 1 instead of 0
             [[maybe_unused]] auto ret
                 = secp256k1_bulletproofs_rangeproof_uncompressed_verify(
                     ctx,
@@ -294,7 +313,7 @@ namespace cbdc::transaction::validation {
             }
         }
 
-        if(!check_commitment_sum(auxiliaries, 0)) {
+        if(!check_commitment_sum(in_comms, out_comms, 0)) {
             return proof_error{proof_error_code::wrong_sum};
         }
 
@@ -302,25 +321,34 @@ namespace cbdc::transaction::validation {
     }
 
     auto check_commitment_sum(
-        const std::vector<secp256k1_pedersen_commitment>& auxiliaries,
+        const std::vector<secp256k1_pedersen_commitment>& inputs,
+        const std::vector<secp256k1_pedersen_commitment>& outputs,
         uint64_t minted) -> bool {
-        std::vector<const secp256k1_pedersen_commitment*> aux_ptrs{};
-        aux_ptrs.reserve(auxiliaries.size());
-        for(const auto aux : auxiliaries) {
-            aux_ptrs.push_back(&aux);
+        std::vector<const secp256k1_pedersen_commitment*> in_ptrs{};
+        in_ptrs.reserve(inputs.size());
+        for(const auto& c : inputs) {
+            in_ptrs.push_back(&c);
         }
 
-        // non-standard-tx additional auxiliary
-        auto minting_aux = commit(secp_context.get(), minted, hash_t{});
+        std::vector<const secp256k1_pedersen_commitment*> out_ptrs{};
+        out_ptrs.reserve(outputs.size());
+        for(const auto& c : outputs) {
+            out_ptrs.push_back(&c);
+        }
+
+        // if this is a minting transaction, we need to balance the minted
+        // amount
+        secp256k1_pedersen_commitment minting_com{};
         if(minted != 0) {
-            aux_ptrs.push_back(&minting_aux.value());
+            minting_com = commit(secp_context.get(), minted, hash_t{}).value();
+            out_ptrs.push_back(&minting_com);
         }
 
         return secp256k1_pedersen_verify_tally(secp_context.get(),
-                                               aux_ptrs.data(),
-                                               auxiliaries.size() - 1,
-                                               &aux_ptrs.back(),
-                                               1)
+                                               in_ptrs.data(),
+                                               in_ptrs.size(),
+                                               out_ptrs.data(),
+                                               out_ptrs.size())
             == 1;
     }
 

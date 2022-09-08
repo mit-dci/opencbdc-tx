@@ -58,6 +58,7 @@ namespace cbdc::transaction {
         /// An auxiliary value used to prove preservation of balance
         commitment_t m_auxiliary{};
         /// The rangeproof guaranteeing that the output is greater than 0
+        // todo: std::optional<> and enforce its presence for the output-side
         rangeproof_t<> m_range{};
 
         auto operator==(const output& rhs) const -> bool;

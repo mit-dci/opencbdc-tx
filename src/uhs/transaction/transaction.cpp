@@ -283,35 +283,6 @@ namespace cbdc::transaction {
         return true;
     }
 
-    auto sign_nonces(
-        secp256k1_context* ctx,
-        std::vector<unsigned char> nonces,
-        const std::vector<std::pair<privkey_t, pubkey_t>>& spending_keys)
-        -> std::vector<signature_t> {
-        std::vector<signature_t> noncesigs{};
-        noncesigs.reserve(spending_keys.size());
-        for(size_t i = 0; i < spending_keys.size(); ++i) {
-            const auto& [sk, pk] = spending_keys[i];
-            secp256k1_keypair spending_kp{};
-            [[maybe_unused]] auto ret
-                = secp256k1_keypair_create(ctx, &spending_kp, sk.data());
-            assert(ret == 1);
-
-            signature_t noncesig{};
-            ret = secp256k1_schnorrsig_sign(ctx,
-                                            noncesig.data(),
-                                            nonces.data(),
-                                            &spending_kp,
-                                            nullptr,
-                                            nullptr);
-            assert(ret == 1);
-
-            noncesigs[i] = noncesig;
-        }
-
-        return noncesigs;
-    }
-
     auto add_proof(secp256k1_context* ctx,
                    secp256k1_bulletproofs_generators* gens,
                    random_source& rng,

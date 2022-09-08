@@ -44,6 +44,42 @@ class WalletTxValidationTest : public ::testing::Test {
                                                                       m_pub1};
 };
 
+TEST_F(WalletTxValidationTest, ins_and_outs) {
+    for(size_t i = 1; i <= 3; ++i) {
+        cbdc::transaction::wallet a{};
+        cbdc::transaction::wallet b{};
+
+        auto mint_tx = a.mint_new_coins(4, 5 * i);
+        a.confirm_transaction(mint_tx);
+
+        auto one_to_one = a.send_to(5 * i, b.generate_key(), true);
+        EXPECT_TRUE(one_to_one.has_value());
+        EXPECT_EQ(one_to_one.value().m_inputs.size(), 1);
+        EXPECT_EQ(one_to_one.value().m_outputs.size(), 1);
+        auto err = cbdc::transaction::validation::check_tx(one_to_one.value());
+        EXPECT_FALSE(err.has_value());
+
+        auto one_to_two = a.send_to(5 * i - 1, b.generate_key(), true);
+        EXPECT_TRUE(one_to_two.has_value());
+        EXPECT_EQ(one_to_two.value().m_inputs.size(), 1);
+        EXPECT_EQ(one_to_two.value().m_outputs.size(), 2);
+        err = cbdc::transaction::validation::check_tx(one_to_two.value());
+        EXPECT_FALSE(err.has_value());
+
+        auto two_to_two = a.send_to(5 * i + 1, b.generate_key(), true);
+        EXPECT_TRUE(two_to_two.has_value());
+        EXPECT_EQ(two_to_two.value().m_inputs.size(), 2);
+        EXPECT_EQ(two_to_two.value().m_outputs.size(), 2);
+        err = cbdc::transaction::validation::check_tx(two_to_two.value());
+        EXPECT_FALSE(err.has_value());
+
+        // todo: should we disallow transactions which send only minted
+        // outputs, and have only one output?
+        //
+        // reasoning: such a tx guarantees an output blinding factor of 0
+    }
+}
+
 TEST_F(WalletTxValidationTest, valid) {
     auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
     ASSERT_FALSE(err.has_value());
@@ -123,7 +159,7 @@ TEST_F(WalletTxValidationTest, duplicate_input) {
 
 TEST_F(WalletTxValidationTest, asymmetric_inout_set) {
     cbdc::transaction::compact_tx ctx(m_mint_tx1);
-    auto err = cbdc::transaction::validation::check_proof(ctx);
+    auto err = cbdc::transaction::validation::check_proof(ctx, {});
     ASSERT_TRUE(err.has_value());
     ASSERT_EQ(err.value().m_code,
               cbdc::transaction::validation::proof_error_code::wrong_sum);
