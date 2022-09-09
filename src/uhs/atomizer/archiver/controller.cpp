@@ -104,8 +104,7 @@ namespace cbdc::archiver {
     auto controller::init_atomizer_connection() -> bool {
         m_atomizer_network.cluster_connect(m_opts.m_atomizer_endpoints, false);
         if(!m_atomizer_network.connected_to_one()) {
-            m_logger->error("Failed to connect to any atomizers.");
-            return false;
+            m_logger->warn("Failed to connect to any atomizers.");
         }
 
         m_atomizer_handler_thread

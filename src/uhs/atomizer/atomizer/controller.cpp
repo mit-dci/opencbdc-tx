@@ -60,8 +60,7 @@ namespace cbdc::atomizer {
     auto controller::init() -> bool {
         if(!m_watchtower_network.cluster_connect(
                m_opts.m_watchtower_internal_endpoints)) {
-            m_logger->error("Failed to connect to watchtowers.");
-            return false;
+            m_logger->warn("Failed to connect to watchtowers.");
         }
 
         auto raft_params = nuraft::raft_params();
@@ -231,8 +230,7 @@ namespace cbdc::atomizer {
     void controller::err_return_handler(raft::result_type& r,
                                         nuraft::ptr<std::exception>& err) {
         if(err) {
-            std::cout << "Exception handling log entry: " << err->what()
-                      << std::endl;
+            m_logger->warn("Exception handling log entry:", err->what());
             return;
         }
 

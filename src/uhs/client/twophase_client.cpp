@@ -23,13 +23,11 @@ namespace cbdc {
 
     auto twophase_client::init_derived() -> bool {
         if(!m_coordinator_client.init()) {
-            m_logger->error("Failed to initialize coordinator client");
-            return false;
+            m_logger->warn("Failed to initialize coordinator client");
         }
 
         if(!m_shard_status_client.init()) {
-            m_logger->error("Failed to initialize shard status client");
-            return false;
+            m_logger->warn("Failed to initialize shard status client");
         }
 
         return true;

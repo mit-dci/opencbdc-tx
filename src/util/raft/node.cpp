@@ -55,13 +55,12 @@ namespace cbdc::raft {
             return false;
         }
 
-        std::cout << "Waiting for raft initialization";
+        m_raft_logger->info("Waiting for raft initialization");
         static constexpr auto wait_time = std::chrono::milliseconds(100);
         while(!m_raft_instance->is_initialized()) {
-            std::cout << "." << std::flush;
             std::this_thread::sleep_for(wait_time);
         }
-        std::cout << std::endl;
+        m_raft_logger->info("Raft initialization complete");
 
         return true;
     }
