@@ -126,7 +126,43 @@ namespace cbdc {
         return ret;
     }
 
-    // todo: see if we can avoid calling `prove_output` and `add_proof`
+    auto transaction::wallet::create_seeded_transaction(size_t seed_idx,
+        const commitment_t& comm,
+        const rangeproof_t<>& range) -> std::optional<transaction::full_tx> {
+        if(m_seed_from == m_seed_to) {
+            return std::nullopt;
+        }
+
+        transaction::full_tx tx;
+        tx.m_inputs.resize(1);
+        tx.m_outputs.resize(1);
+
+        transaction::input inp{};
+        inp.m_prevout.m_tx_id = {0};
+        inp.m_prevout.m_index = seed_idx;
+
+        auto spend = transaction::spend_data{{}, m_seed_value};
+
+        inp.m_prevout_data.m_witness_program_commitment = {0};
+        inp.m_prevout_data.m_auxiliary = comm;
+        inp.m_prevout_data.m_range = range;
+        inp.m_prevout_data.m_id = calculate_uhs_id(inp.m_prevout, inp.m_prevout_data, comm);
+        inp.m_spend_data = {spend};
+
+        tx.m_inputs[0] = inp;
+
+        transaction::output outp{};
+        outp.m_witness_program_commitment = m_seed_witness_commitment;
+        outp.m_auxiliary = comm;
+        outp.m_range = range;
+        tx.m_outputs[0] = outp;
+
+        auto outpoint = input_from_output(tx, 0).value().m_prevout;
+        outp.m_id = calculate_uhs_id(outpoint, outp, comm);
+
+        return tx;
+    }
+
     auto transaction::wallet::create_seeded_transaction(size_t seed_idx)
         -> std::optional<transaction::full_tx> {
         if(m_seed_from == m_seed_to) {

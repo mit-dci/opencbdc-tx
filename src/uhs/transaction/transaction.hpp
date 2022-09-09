@@ -77,8 +77,8 @@ namespace cbdc::transaction {
     ///              output to-be-spent
     /// \param put the \ref output to-be-spent
     /// \returns the hash serving as the UHS ID
-    auto calculate_uhs_id(const out_point& point, const output& put)
-        -> std::pair<hash_t, hash_t>;
+    auto calculate_uhs_id(const out_point& point, const output& put, const commitment_t& value)
+        -> hash_t;
 
     /// \brief Additional information a spender needs to spend an input
     struct spend_data {
@@ -252,6 +252,14 @@ namespace cbdc::transaction {
                           const std::vector<hash_t>& blinds,
                           std::vector<spend_data>& out_spend_data)
         -> std::vector<secp256k1_pedersen_commitment>;
+
+    /// \brief todo: add description
+    auto prove(secp256k1_context* ctx,
+               secp256k1_bulletproofs_generators* gens,
+               random_source& rng,
+               const spend_data& out_spend_data,
+               const secp256k1_pedersen_commitment* comm)
+        -> rangeproof_t<>;
 
     /// \brief Add cryptographic proof to a single output
     ///

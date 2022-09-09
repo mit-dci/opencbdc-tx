@@ -245,13 +245,12 @@ namespace cbdc::transaction {
         return auxiliaries;
     }
 
-    auto prove_output(secp256k1_context* ctx,
-                      secp256k1_bulletproofs_generators* gens,
-                      random_source& rng,
-                      output& put,
-                      const out_point& point,
-                      const spend_data& out_spend_data,
-                      const secp256k1_pedersen_commitment* auxiliary) -> bool {
+    auto prove(secp256k1_context* ctx,
+               secp256k1_bulletproofs_generators* gens,
+               random_source& rng,
+               const spend_data& out_spend_data,
+               const secp256k1_pedersen_commitment* comm)
+        -> rangeproof_t<> {
         rangeproof_t<> range{};
         size_t rangelen = range.size();
         static constexpr auto upper_bound = 64; // 2^64 - 1
@@ -265,7 +264,7 @@ namespace cbdc::transaction {
                 upper_bound,
                 out_spend_data.m_value,
                 0,
-                auxiliary, // the auxiliary commitment for this output
+                comm, // the commitment for this output
                 out_spend_data.m_blind.data(),
                 rng.random_hash().data(),
                 nullptr, // enc_data
@@ -273,6 +272,18 @@ namespace cbdc::transaction {
                 0        // extra_commit length
             );
         assert(ret == 1);
+
+        return range;
+    }
+
+    auto prove_output(secp256k1_context* ctx,
+                      secp256k1_bulletproofs_generators* gens,
+                      random_source& rng,
+                      output& put,
+                      const out_point& point,
+                      const spend_data& out_spend_data,
+                      const secp256k1_pedersen_commitment* auxiliary) -> bool {
+        auto range = prove(ctx, gens, rng, out_spend_data, auxiliary);
 
         put.m_range = range;
         put.m_auxiliary = serialize_commitment(ctx, *auxiliary);

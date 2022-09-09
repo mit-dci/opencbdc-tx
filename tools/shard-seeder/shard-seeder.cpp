@@ -8,6 +8,7 @@
 #include "uhs/transaction/validation.hpp"
 #include "uhs/transaction/wallet.hpp"
 #include "util/common/config.hpp"
+#include "util/common/commitment.hpp"
 #include "util/serialization/buffer_serializer.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/ostream_serializer.hpp"
@@ -23,6 +24,11 @@ static constexpr int leveldb_buffer_size
     = 16 * 1024 * 1024; // 16MB can hold ~ 500K UHS_IDs
 static constexpr int write_batch_size
     = 450000; // well within the write buffer size
+
+/// should be twice the bitcount of the range-proof's upper bound
+///
+/// e.g., if proving things in the range [0, 2^64-1], it should be 128.
+static const inline auto generator_count = 128;
 
 auto get_2pc_uhs_key(const cbdc::hash_t& uhs_id) -> std::string {
     auto ret = std::string();
@@ -67,6 +73,25 @@ auto main(int argc, char** argv) -> int {
                                         decltype(&secp256k1_context_destroy)>(
         secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
         &secp256k1_context_destroy);
+
+    struct GensDeleter {
+        explicit GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
+
+        void operator()(secp256k1_bulletproofs_generators* gens) const {
+            secp256k1_bulletproofs_generators_destroy(m_ctx, gens);
+        }
+
+        secp256k1_context* m_ctx;
+    };
+
+    static std::unique_ptr<secp256k1_bulletproofs_generators, GensDeleter>
+        bulletproof_gens{
+            secp256k1_bulletproofs_generators_create(secp_context.get(),
+                                                     generator_count),
+            GensDeleter(secp_context.get())};
+
+    cbdc::random_source rng(cbdc::config::random_source);
+
     auto pubkey = cbdc::pubkey_from_privkey(cfg.m_seed_privkey.value(),
                                             secp_context.get());
     auto witness_commitment
@@ -125,9 +150,16 @@ auto main(int argc, char** argv) -> int {
                     }
                     auto batch_size = 0;
                     leveldb::WriteBatch batch;
+                    auto value = cbdc::commit(secp_context.get(), cfg.m_seed_value, {}).value();
+                    auto range = cbdc::transaction::prove(secp_context.get(),
+                                                          bulletproof_gens.get(),
+                                                          rng,
+                                                          {{}, cfg.m_seed_value},
+                                                          &value);
+                    auto value_comm = cbdc::serialize_commitment(secp_context.get(), value);
                     for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
                         auto tx
-                            = wal.create_seeded_transaction(tx_idx).value();
+                            = wal.create_seeded_transaction(tx_idx, value_comm, range).value();
                         cbdc::transaction::compact_tx ctx(tx);
                         const cbdc::hash_t& output_hash
                             = cbdc::transaction::calculate_uhs_id(
