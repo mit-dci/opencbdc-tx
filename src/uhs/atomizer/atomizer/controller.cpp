@@ -230,8 +230,7 @@ namespace cbdc::atomizer {
     void controller::err_return_handler(raft::result_type& r,
                                         nuraft::ptr<std::exception>& err) {
         if(err) {
-            std::cout << "Exception handling log entry: " << err->what()
-                      << std::endl;
+            m_logger->warn("Exception handling log entry:", err->what());
             return;
         }
 
