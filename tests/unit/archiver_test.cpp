@@ -165,12 +165,11 @@ TEST_F(ArchiverTest, archiver_terminate) {
     ASSERT_FALSE(terminating_archiver->running());
 }
 
-// We only test the atomizer initialization in failure, given that
-// for a succesful init we need a running atomizer, which by definition
-// is an integration test, and as such needs to happen in the integration
-// test suite, not here.
+// TODO: To test for a succesful init we need a running atomizer, which by
+// definition is an integration test, and as such this test needs to either be
+// an integration test, or the atomizer needs to be mocked.
 TEST_F(ArchiverTest, archiver_atomizer_init_failure) {
-    ASSERT_FALSE(m_archiver->init_atomizer_connection());
+    ASSERT_TRUE(m_archiver->init_atomizer_connection());
 }
 
 // Test if the archiver properly initializes its server interface
@@ -283,10 +282,12 @@ TEST_F(ArchiverTest, get_block_non_existent) {
 
 // Test if the archiver is functional after calling the main init function
 TEST_F(ArchiverTest, init) {
-    // init should return false because we can't connect to an atomizer
-    // but it should still be functional given that the local initialization
-    // (level db, block height, sample collection) is done first.
-    ASSERT_FALSE(m_archiver->init());
+    // init should return true even though we can't connect to an atomizer to
+    // eliminate any startup order requirements.
+    // However, it should still be functional given that the local
+    // initialization (level db, block height, sample collection) is done
+    // first.
+    ASSERT_TRUE(m_archiver->init());
     m_archiver->digest_block(m_dummy_blocks[0]);
     auto blk = m_archiver->get_block(1);
     ASSERT_TRUE(blk.has_value());

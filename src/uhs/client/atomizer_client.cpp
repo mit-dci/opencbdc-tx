@@ -26,13 +26,11 @@ namespace cbdc {
     auto atomizer_client::init_derived() -> bool {
         m_atomizer_network.cluster_connect(m_opts.m_atomizer_endpoints);
         if(!m_atomizer_network.connected_to_one()) {
-            m_logger->error("Failed to connect to any atomizers");
-            return false;
+            m_logger->warn("Failed to connect to any atomizers");
         }
 
         if(!m_wc.init()) {
-            m_logger->error("Failed to initialize watchtower client");
-            return false;
+            m_logger->warn("Failed to initialize watchtower client");
         }
 
         return true;

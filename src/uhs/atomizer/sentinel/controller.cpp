@@ -40,8 +40,7 @@ namespace cbdc::sentinel {
                            "...");
             auto sock = std::make_unique<network::tcp_socket>();
             if(!sock->connect(shard)) {
-                m_logger->error("failed to connect");
-                return false;
+                m_logger->warn("failed to connect");
             }
 
             const auto peer_id = m_shard_network.add(std::move(sock));

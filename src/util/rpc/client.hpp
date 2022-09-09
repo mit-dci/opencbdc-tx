@@ -75,17 +75,15 @@ namespace cbdc::rpc {
                   response_callback_type response_callback) -> bool {
             auto [request_buf, request_id]
                 = make_request(std::move(request_payload));
-            auto ret = call_raw(
-                std::move(request_buf),
-                request_id,
-                [req_id = request_id, resp_cb = std::move(response_callback)](
-                    std::optional<response_type> resp) {
-                    if(!resp.has_value()) {
-                        return;
-                    }
-                    assert(resp.value().m_header.m_request_id == req_id);
-                    resp_cb(std::move(resp.value().m_payload));
-                });
+            auto ret = call_raw(std::move(request_buf),
+                                request_id,
+                                [resp_cb = std::move(response_callback)](
+                                    std::optional<response_type> resp) {
+                                    if(!resp.has_value()) {
+                                        return;
+                                    }
+                                    resp_cb(std::move(resp.value().m_payload));
+                                });
             return ret;
         }
 
