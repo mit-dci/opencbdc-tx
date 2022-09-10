@@ -4,20 +4,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "atomizer_client.hpp"
-#include "bech32/bech32.h"
-#include "bech32/util/strencodings.h"
 #include "client.hpp"
 #include "crypto/sha256.h"
 #include "twophase_client.hpp"
-#include "uhs/transaction/messages.hpp"
 #include "util/common/config.hpp"
 #include "util/serialization/util.hpp"
+#include "uhs/transaction/messages.hpp"
+#include "bech32/bech32.h"
+#include "bech32/util/strencodings.h"
 
 #include <future>
 #include <iostream>
-
-static constexpr auto bits_per_byte = 8;
-static constexpr auto bech32_bits_per_symbol = 5;
 
 auto mint_command(cbdc::client& client, const std::vector<std::string>& args)
     -> bool {
@@ -36,36 +33,6 @@ auto mint_command(cbdc::client& client, const std::vector<std::string>& args)
     std::cout << cbdc::to_string(cbdc::transaction::tx_id(mint_tx))
               << std::endl;
     return true;
-}
-
-auto decode_address(const std::string& addr_str)
-    -> std::optional<cbdc::hash_t> {
-    // TODO: if/when bech32m is merged into Bitcoin Core, switch to that.
-    //       see: https://github.com/bitcoin/bitcoin/pull/20861
-    // TODO: move address encoding/decoding into cbdc::client.
-    const auto [hrp, enc_data] = bech32::Decode(addr_str);
-    if(hrp != cbdc::config::bech32_hrp) {
-        std::cout << "Invalid address encoding" << std::endl;
-        return std::nullopt;
-    }
-    auto data = std::vector<uint8_t>();
-    ConvertBits<bech32_bits_per_symbol, bits_per_byte, false>(
-        [&](uint8_t c) {
-            data.push_back(c);
-        },
-        enc_data.begin(),
-        enc_data.end());
-
-    auto pubkey = cbdc::hash_t();
-    if(data[0] != static_cast<uint8_t>(cbdc::client::address_type::public_key)
-       || data.size() != pubkey.size() + 1) {
-        std::cout << "Address is not a supported type" << std::endl;
-        return std::nullopt;
-    }
-    data.erase(data.begin());
-    std::copy_n(data.begin(), pubkey.size(), pubkey.begin());
-
-    return pubkey;
 }
 
 void print_tx_result(
@@ -105,7 +72,7 @@ auto send_command(cbdc::client& client, const std::vector<std::string>& args)
 
     const auto value = std::stoul(args[5]);
     static constexpr auto address_arg_idx = 6;
-    auto pubkey = decode_address(args[address_arg_idx]);
+    auto pubkey = cbdc::address::decode(args[address_arg_idx]);
     if(!pubkey.has_value()) {
         std::cout << "Could not decode address" << std::endl;
         return false;
@@ -134,7 +101,7 @@ auto fan_command(cbdc::client& client, const std::vector<std::string>& args)
     const auto count = std::stoul(args[5]);
 
     static constexpr auto address_arg_idx = 7;
-    auto pubkey = decode_address(args[address_arg_idx]);
+    auto pubkey = cbdc::address::decode(args[address_arg_idx]);
     if(!pubkey.has_value()) {
         std::cout << "Could not decode address" << std::endl;
         return false;
@@ -163,7 +130,7 @@ void newaddress_command(cbdc::client& client) {
                 addr_vec.begin()
                     + sizeof(cbdc::client::address_type::public_key));
     auto data = std::vector<uint8_t>();
-    ConvertBits<bits_per_byte, bech32_bits_per_symbol, true>(
+    ConvertBits<cbdc::address::bits_per_byte, cbdc::address::bech32_bits_per_symbol, true>(
         [&](uint8_t c) {
             data.push_back(c);
         },
