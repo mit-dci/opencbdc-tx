@@ -63,3 +63,4 @@ cmake-build-*/
 build/gcov_data
 build/tests
 
+scripts/local_log/
