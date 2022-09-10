@@ -11,6 +11,14 @@
 #include "uhs/transaction/wallet.hpp"
 
 namespace cbdc {
+    namespace address {
+        static constexpr auto bits_per_byte = 8;
+        static constexpr auto bech32_bits_per_symbol = 5; 
+    
+        auto decode(const std::string& addr_str)
+        -> std::optional<cbdc::hash_t>;
+    }
+    
     /// External client for sending new transactions to the system.
     class client {
       public:
