@@ -35,6 +35,7 @@ CMakeCache.txt
 *.a
 *.log
 
+evpp/
 leveldb*/
 NuRaft*/
 benchmark-results/
@@ -64,3 +65,5 @@ build/gcov_data
 build/tests
 
 scripts/local_log/
+.cache/
+clang-*
