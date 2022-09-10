@@ -4,10 +4,10 @@ add_library(client atomizer_client.cpp
                    client.cpp
                    twophase_client.cpp)
 
+target_link_libraries(client bech32)
+
 add_executable(client-cli client-cli.cpp)
 target_link_libraries(client-cli client
-                                 atomizer
-                                 bech32
                                  atomizer
                                  watchtower
                                  sentinel
