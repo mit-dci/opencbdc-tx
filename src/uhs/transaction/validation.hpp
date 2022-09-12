@@ -63,6 +63,7 @@ namespace cbdc::transaction::validation {
         inconsistent_value,    ///< consistency proof did not verify
         out_of_range,          ///< range proof did not verify
         wrong_sum,             ///< auxiliaries did not sum as-required
+        missing_rangeproof,    ///< rangeproof missing in output
     };
 
     /// An error that may occur when verifying transaction proof
@@ -161,6 +162,8 @@ namespace cbdc::transaction::validation {
         -> std::optional<tx_error>;
     auto check_output_count(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
+    auto check_output_rangeproofs_exist(const transaction::full_tx& tx)
+        -> std::optional<proof_error>;
     auto check_witness_count(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
     auto check_input_set(const transaction::full_tx& tx)

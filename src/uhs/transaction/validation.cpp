@@ -80,6 +80,11 @@ namespace cbdc::transaction::validation {
             inputs.push_back(inp.m_prevout_data.m_auxiliary);
         }
 
+        const auto outproof_exists_err = check_output_rangeproofs_exist(tx);
+        if(outproof_exists_err) {
+            return tx_error{outproof_exists_err.value()};
+        }
+
         const cbdc::transaction::compact_tx ctx(tx);
         const auto proof_error = check_proof(ctx, inputs);
         if(proof_error) {
@@ -239,6 +244,16 @@ namespace cbdc::transaction::validation {
         return std::nullopt;
     }
 
+    auto check_output_rangeproofs_exist(const cbdc::transaction::full_tx& tx)
+        -> std::optional<proof_error> {
+        for(const auto& outp : tx.m_outputs) {
+            if(!outp.m_range.has_value()) {
+                return proof_error{proof_error_code::missing_rangeproof};
+            }
+        }
+        return std::nullopt;
+    }
+    
     auto check_witness_count(const cbdc::transaction::full_tx& tx)
         -> std::optional<tx_error> {
         if(tx.m_inputs.size() != tx.m_witness.size()) {
