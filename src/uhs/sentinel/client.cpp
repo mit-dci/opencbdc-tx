@@ -15,8 +15,8 @@ namespace cbdc::sentinel::rpc {
         : m_logger(std::move(logger)),
           m_client(std::move(endpoints)) {}
 
-    auto client::init() -> bool {
-        if(!m_client.init()) {
+    auto client::init(std::optional<bool> error_fatal) -> bool {
+        if(!m_client.init(error_fatal)) {
             m_logger->error("Failed to initialize sentinel RPC client");
             return false;
         }

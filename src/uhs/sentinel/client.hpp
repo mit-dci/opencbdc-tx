@@ -31,8 +31,11 @@ namespace cbdc::sentinel::rpc {
         auto operator=(client&&) -> client& = delete;
 
         /// Initializes the client. Establishes a connection to the sentinel.
+        /// \param error_fatal treat connection errors as fatal. See
+        ///                    tcp_client::init for further explanation.
         /// \return true if initialization succeeded.
-        auto init() -> bool;
+        /// \see \ref cbdc::rpc::tcp_client::init(std::optional<bool>)
+        auto init(std::optional<bool> error_fatal = std::nullopt) -> bool;
 
         /// Result type from execute_transaction.
         using execute_result_type
