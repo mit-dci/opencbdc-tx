@@ -53,11 +53,28 @@ namespace cbdc::rpc {
 
         /// Initializes the client. Connects to the server endpoints and
         /// starts the response handler thread.
-        /// \return false if there is only one endpoint and connecting failed.
-        ///         Otherwise true.
-        [[nodiscard]] auto init() -> bool {
+        /// \param error_fatal treat connection errors as fatal.
+        ///                    If this is set to true, failure to connect
+        ///                    to any of the endpoints will result in failure
+        ///                    to start the client and return false from this
+        ///                    function.
+        ///                    If this is set to false, any
+        ///                    connection error will be silently ignored and
+        ///                    the handler thread will be started. The client
+        ///                    will continue to retry connecting in the
+        ///                    background.
+        ///                    If this is std::nullopt, connection
+        ///                    errors are only treated as fatal when there is a
+        ///                    single endpoint.
+        /// \return false if there is a fatal connection error, true if the
+        /// client is connected and ready and the response handler is started.
+        [[nodiscard]] auto init(std::optional<bool> error_fatal = std::nullopt)
+            -> bool {
+            if(!error_fatal) {
+                error_fatal = m_server_endpoints.size() <= 1;
+            }
             if(!m_net.cluster_connect(m_server_endpoints,
-                                      m_server_endpoints.size() <= 1)) {
+                                      error_fatal.value())) {
                 return false;
             }
 

@@ -49,7 +49,7 @@ namespace cbdc::sentinel_2pc {
             auto client = std::make_unique<sentinel::rpc::client>(
                 std::vector<network::endpoint_t>{ep},
                 m_logger);
-            if(!client->init()) {
+            if(!client->init(false)) {
                 m_logger->warn("Failed to start sentinel client");
             }
             m_sentinel_clients.emplace_back(std::move(client));
