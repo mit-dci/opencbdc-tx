@@ -70,7 +70,7 @@ namespace cbdc::transaction {
 
     compact_output::compact_output(const output& put, const out_point& point)
         : m_auxiliary(put.m_auxiliary),
-          m_range(put.m_range),
+          m_range(put.m_range.value()),
           m_provenance(output_nested_hash(point, put)) {}
 
     compact_output::compact_output(const commitment_t& aux,
@@ -147,6 +147,9 @@ namespace cbdc::transaction {
             return std::nullopt;
         }
         ret.m_prevout_data = tx.m_outputs[i];
+        // The range proof is not required for the inputs & explicitly removed:
+        ret.m_prevout_data.m_range.reset();
+
         ret.m_prevout.m_index = i;
         ret.m_prevout.m_tx_id = txid;
 
