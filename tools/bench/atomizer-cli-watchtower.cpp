@@ -161,8 +161,8 @@ auto main(int argc, char** argv) -> int {
     static std::atomic_bool running = true;
     uint64_t best_watchtower_height = 0;
 
-    std::ofstream latency_log("latency_samples_" + std::to_string(cli_id)
-                              + ".txt");
+    std::ofstream latency_log("tx_samples_" + std::to_string(cli_id) + ".txt");
+
     assert(latency_log.good());
 
     std::ofstream utxo_set_log("utxo_set_size_" + std::to_string(cli_id)
@@ -216,7 +216,7 @@ auto main(int argc, char** argv) -> int {
                             if(tx_it != txs.end()) {
                                 const auto tx_delay
                                     = now - tx_it->second.first;
-                                latency_log << tx_delay << "\n";
+                                latency_log << now << " " << tx_delay << "\n";
                                 txs.erase(tx_it);
                             }
                             if(cfg.m_invalid_rate > 0.0
