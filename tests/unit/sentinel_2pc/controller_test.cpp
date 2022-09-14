@@ -260,3 +260,14 @@ TEST_F(sentinel_2pc_test, out_of_range_sentinel_id) {
                                                            m_logger);
     ASSERT_FALSE(ctl->init());
 }
+
+TEST_F(sentinel_2pc_test, no_sentinel_endpoints) {
+    m_opts.m_sentinel_endpoints.clear();
+    auto ctl = std::make_unique<cbdc::sentinel_2pc::controller>(0,
+                                                                m_opts,
+                                                                m_logger);
+
+    // Check that the controller fails to initialize if no sentinel endpoints
+    // are defined.
+    ASSERT_FALSE(ctl->init());
+}

@@ -25,6 +25,11 @@ namespace cbdc::sentinel_2pc {
                                                    .size())]) {}
 
     auto controller::init() -> bool {
+        if(m_opts.m_sentinel_endpoints.empty()) {
+            m_logger->error("No sentinel endpoints are defined.");
+            return false;
+        }
+
         if(m_sentinel_id >= m_opts.m_sentinel_endpoints.size()) {
             m_logger->error(
                 "The sentinel ID is too large for the number of sentinels.");
