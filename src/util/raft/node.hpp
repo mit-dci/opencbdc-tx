@@ -117,6 +117,8 @@ namespace cbdc::raft {
 
         nuraft::asio_service::options m_asio_opt;
         nuraft::raft_server::init_options m_init_opts;
+
+        std::shared_ptr<logging::log> m_log;
     };
 }
 
