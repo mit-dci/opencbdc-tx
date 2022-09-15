@@ -17,14 +17,15 @@ namespace cbdc::raft {
         : m_node_id(static_cast<uint32_t>(node_id)),
           m_blocking(blocking),
           m_port(raft_endpoints[m_node_id].second),
-          m_raft_logger(nuraft::cs_new<console_logger>(std::move(logger))),
+          m_raft_logger(nuraft::cs_new<console_logger>(logger)),
           m_smgr(nuraft::cs_new<state_manager>(
               static_cast<uint32_t>(m_node_id + 1),
               node_type + "_raft_log_" + std::to_string(m_node_id),
               node_type + "_raft_config_" + std::to_string(m_node_id) + ".dat",
               node_type + "_raft_state_" + std::to_string(m_node_id) + ".dat",
               std::move(raft_endpoints))),
-          m_sm(std::move(sm)) {
+          m_sm(std::move(sm)),
+          m_log(std::move(logger)) {
         m_asio_opt.thread_pool_size_ = asio_thread_pool_size;
         m_init_opts.raft_callback_ = std::move(raft_cb);
         if(m_node_id != 0) {
@@ -51,16 +52,16 @@ namespace cbdc::raft {
                                           m_init_opts);
 
         if(!m_raft_instance) {
-            std::cerr << "Failed to initialize raft launcher" << std::endl;
+            m_log->error("Failed to initialize raft launcher");
             return false;
         }
 
-        m_raft_logger->info("Waiting for raft initialization");
+        m_log->info("Waiting for raft initialization");
         static constexpr auto wait_time = std::chrono::milliseconds(100);
         while(!m_raft_instance->is_initialized()) {
             std::this_thread::sleep_for(wait_time);
         }
-        m_raft_logger->info("Raft initialization complete");
+        m_log->info("Raft initialization complete");
 
         return true;
     }
