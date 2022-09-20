@@ -146,7 +146,7 @@ namespace cbdc {
 
         inp.m_prevout_data.m_witness_program_commitment = {0};
         inp.m_prevout_data.m_auxiliary = comm;
-        inp.m_prevout_data.m_range = range;
+        inp.m_prevout_data.m_range.reset();
         inp.m_prevout_data.m_id = calculate_uhs_id(inp.m_prevout, inp.m_prevout_data, comm);
         inp.m_spend_data = {spend};
 
