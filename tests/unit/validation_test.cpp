@@ -54,22 +54,22 @@ TEST_F(WalletTxValidationTest, ins_and_outs) {
 
         auto one_to_one = a.send_to(5 * i, b.generate_key(), true);
         EXPECT_TRUE(one_to_one.has_value());
-        EXPECT_EQ(one_to_one.value().m_inputs.size(), 1);
-        EXPECT_EQ(one_to_one.value().m_outputs.size(), 1);
+        EXPECT_EQ(one_to_one.value().m_inputs.size(), 1UL);
+        EXPECT_EQ(one_to_one.value().m_outputs.size(), 1UL);
         auto err = cbdc::transaction::validation::check_tx(one_to_one.value());
         EXPECT_FALSE(err.has_value());
 
         auto one_to_two = a.send_to(5 * i - 1, b.generate_key(), true);
         EXPECT_TRUE(one_to_two.has_value());
-        EXPECT_EQ(one_to_two.value().m_inputs.size(), 1);
-        EXPECT_EQ(one_to_two.value().m_outputs.size(), 2);
+        EXPECT_EQ(one_to_two.value().m_inputs.size(), 1UL);
+        EXPECT_EQ(one_to_two.value().m_outputs.size(), 2UL);
         err = cbdc::transaction::validation::check_tx(one_to_two.value());
         EXPECT_FALSE(err.has_value());
 
         auto two_to_two = a.send_to(5 * i + 1, b.generate_key(), true);
         EXPECT_TRUE(two_to_two.has_value());
-        EXPECT_EQ(two_to_two.value().m_inputs.size(), 2);
-        EXPECT_EQ(two_to_two.value().m_outputs.size(), 2);
+        EXPECT_EQ(two_to_two.value().m_inputs.size(), 2UL);
+        EXPECT_EQ(two_to_two.value().m_outputs.size(), 2UL);
         err = cbdc::transaction::validation::check_tx(two_to_two.value());
         EXPECT_FALSE(err.has_value());
 

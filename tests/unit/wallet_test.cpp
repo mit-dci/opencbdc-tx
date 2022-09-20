@@ -155,13 +155,13 @@ TEST_F(WalletTest, spend_order) {
     m_wallet.send_to(1, 1, pubkey, false);
     auto tx1 = m_wallet.send_to(1, 1, pubkey, false);
     ASSERT_TRUE(tx1.has_value());
-    ASSERT_EQ(tx1->m_inputs[0].m_spend_data.value().m_value, 14);
+    ASSERT_EQ(tx1->m_inputs[0].m_spend_data.value().m_value, 14UL);
     auto tx2 = m_wallet.send_to(1, pubkey, false);
     ASSERT_TRUE(tx2.has_value());
-    ASSERT_EQ(tx2->m_inputs[0].m_spend_data.value().m_value, 22);
+    ASSERT_EQ(tx2->m_inputs[0].m_spend_data.value().m_value, 22UL);
     auto tx3 = m_wallet.send_to(1, 1, pubkey, false);
     ASSERT_TRUE(tx3.has_value());
-    ASSERT_EQ(tx3->m_inputs[0].m_spend_data.value().m_value, 33);
+    ASSERT_EQ(tx3->m_inputs[0].m_spend_data.value().m_value, 33UL);
 }
 
 TEST_F(WalletTest, load_save) {
