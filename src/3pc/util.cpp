@@ -71,6 +71,31 @@ namespace cbdc::threepc {
         return ret;
     }
 
+    auto read_cluster_endpoints(
+        const std::unordered_map<std::string, std::string>& opts,
+        const std::string& component_name)
+        -> std::optional<std::vector<std::vector<network::endpoint_t>>> {
+        auto ret = std::vector<std::vector<network::endpoint_t>>();
+
+        auto count_key = component_name + "_count";
+        auto it = opts.find(count_key);
+        if(it == opts.end()) {
+            return std::nullopt;
+        }
+        auto count = std::stoull(it->second);
+
+        for(size_t i = 0; i < count; i++) {
+            auto node_name = component_name + std::to_string(i);
+            auto eps = read_endpoints(opts, node_name);
+            if(!eps.has_value()) {
+                return std::nullopt;
+            }
+            ret.emplace_back(eps.value());
+        }
+
+        return ret;
+    }
+
     auto read_config(int argc, char** argv) -> std::optional<config> {
         // TODO: refactor, make config parsing generic
         auto opts = parse_args(argc, argv);
@@ -103,6 +128,18 @@ namespace cbdc::threepc {
             return std::nullopt;
         }
         cfg.m_ticket_machine_endpoints = ticket_machine_endpoints.value();
+
+        constexpr auto node_id_key = "node_id";
+        it = opts->find(node_id_key);
+        if(it != opts->end()) {
+            cfg.m_node_id = std::stoull(it->second);
+        }
+
+        auto shard_endpoints = read_cluster_endpoints(opts.value(), "shard");
+        if(!shard_endpoints.has_value()) {
+            return std::nullopt;
+        }
+        cfg.m_shard_endpoints = shard_endpoints.value();
 
         return cfg;
     }
