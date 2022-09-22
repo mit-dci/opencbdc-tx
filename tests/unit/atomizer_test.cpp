@@ -51,7 +51,8 @@ TEST_F(atomizer_test, test_with_transactions) {
 
             cbdc::transaction::output out;
             out.m_witness_program_commitment = {val++};
-
+            out.m_range = cbdc::rangeproof_t<>{'\0'};
+            
             tx.m_inputs.push_back(inp);
             tx.m_outputs.push_back(out);
 
