@@ -18,6 +18,11 @@ namespace cbdc::threepc {
         size_t m_component_id;
         /// Log level to use, defaults to WARN
         logging::log_level m_loglevel;
+        /// RPC endpoints for the nodes in the shard raft clusters.
+        std::vector<std::vector<network::endpoint_t>> m_shard_endpoints;
+        /// ID of the node within the component the instance should be, if
+        /// applicable.
+        std::optional<size_t> m_node_id;
     };
 
     /// Reads the configuration parameters from the program arguments.

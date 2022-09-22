@@ -1,5 +1,7 @@
 project(unit)
 
+add_subdirectory(3pc)
+
 add_executable(run_unit_tests archiver_test.cpp
                               atomizer/messages_test.cpp
                               atomizer_test.cpp
@@ -45,6 +47,7 @@ target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
                                      watchtower
                                      coordinator
                                      locking_shard
+                                     3pc_unit_tests
                                      raft
                                      rpc
                                      transaction
