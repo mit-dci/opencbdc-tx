@@ -1,0 +1,3 @@
+add_library(3pc_unit_tests)
+
+add_subdirectory(runtime_locking_shard)

@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS False)
 
+cmake_policy(SET CMP0076 NEW)
+
 try_compile(USE_STDFS_LIB ${CMAKE_BINARY_DIR} "${CMAKE_SOURCE_DIR}/cmake-tests/test-libstdc++fs.cpp" LINK_LIBRARIES "stdc++fs")
 check_cxx_compiler_flag(-Wshadow-all W_SHADOW_ALL)
 check_cxx_compiler_flag(-Wnewline-eof W_NEWLINE_EOF)
