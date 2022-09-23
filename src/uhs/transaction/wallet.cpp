@@ -189,8 +189,10 @@ namespace cbdc {
                                                  in_spend_data);
 
         inp.m_prevout_data.m_auxiliary = serialize_commitment(m_secp.get(), aux.front());
-        inp.m_prevout_data.m_id = transaction::calculate_uhs_id(
-            transaction::compact_output(inp.m_prevout_data, inp.m_prevout));
+        inp.m_prevout_data.m_id
+            = transaction::calculate_uhs_id(inp.m_prevout,
+                                            inp.m_prevout_data,
+                                            inp.m_prevout_data.m_auxiliary);
 
         inp.m_spend_data = in_spend_data.front();
         tx.m_inputs[0] = inp;
