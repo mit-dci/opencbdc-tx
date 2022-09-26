@@ -31,3 +31,5 @@ target_link_libraries(atomizer-cli-watchtower watchtower
                                               secp256k1
                                               ${NURAFT_LIBRARY}
                                               ${CMAKE_THREAD_LIBS_INIT})
+
+add_subdirectory(3pc)
