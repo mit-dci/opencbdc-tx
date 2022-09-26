@@ -31,8 +31,44 @@ namespace cbdc::test {
         const std::unordered_set<mock_system_module>& disabled_modules,
         config::options opts)
         : m_opts(std::move(opts)) {
+        m_module_endpoints.insert({mock_system_module::watchtower,
+                                   m_opts.m_watchtower_internal_endpoints});
+
+        m_module_endpoints.insert(
+            {mock_system_module::atomizer, m_opts.m_atomizer_endpoints});
+
+        auto coord_eps = std::vector<network::endpoint_t>();
+        for(const auto& node_eps : m_opts.m_coordinator_endpoints) {
+            coord_eps.insert(coord_eps.end(),
+                             node_eps.begin(),
+                             node_eps.end());
+        }
+        m_module_endpoints.insert(
+            {mock_system_module::coordinator, coord_eps});
+
+        m_module_endpoints.insert(
+            {mock_system_module::archiver, m_opts.m_archiver_endpoints});
+
+        m_module_endpoints.insert(
+            {mock_system_module::shard, m_opts.m_shard_endpoints});
+
+        m_module_endpoints.insert(
+            {mock_system_module::sentinel, m_opts.m_sentinel_endpoints});
+
         for(const auto& m : disabled_modules) {
-            m_modules.erase(m);
+            m_module_endpoints.erase(m);
+        }
+
+        for(auto& module_and_endpoints : m_module_endpoints) {
+            const auto& endpoints = module_and_endpoints.second;
+            if(endpoints.empty()) {
+                const auto& module = module_and_endpoints.first;
+                m_logger->warn(
+                    "The " + mock_system_module_string(module)
+                    + " module was selected to be mocked,\n"
+                      "but can't be because no endpoint was given.");
+                m_module_endpoints.erase(module);
+            }
         }
     }
 
@@ -49,32 +85,16 @@ namespace cbdc::test {
     }
 
     void mock_system::init() {
-        ASSERT_TRUE(start_servers(mock_system_module::watchtower,
-                                  m_opts.m_watchtower_internal_endpoints));
-        ASSERT_TRUE(start_servers(mock_system_module::atomizer,
-                                  m_opts.m_atomizer_endpoints));
-        auto coord_eps = std::vector<network::endpoint_t>();
-        for(const auto& node_eps : m_opts.m_coordinator_endpoints) {
-            coord_eps.insert(coord_eps.end(),
-                             node_eps.begin(),
-                             node_eps.end());
+        for(const auto& module_and_endpoints : m_module_endpoints) {
+            const auto& module = module_and_endpoints.first;
+            const auto& endpoints = module_and_endpoints.second;
+            start_servers(module, endpoints);
         }
-        ASSERT_TRUE(start_servers(mock_system_module::coordinator, coord_eps));
-        ASSERT_TRUE(start_servers(mock_system_module::archiver,
-                                  m_opts.m_archiver_endpoints));
-        ASSERT_TRUE(start_servers(mock_system_module::shard,
-                                  m_opts.m_shard_endpoints));
-        ASSERT_TRUE(start_servers(mock_system_module::sentinel,
-                                  m_opts.m_sentinel_endpoints));
     }
 
     auto mock_system::start_servers(
         const mock_system_module for_module,
         const std::vector<network::endpoint_t>& endpoints) -> bool {
-        if(m_modules.find(for_module) == m_modules.end()) {
-            return true;
-        }
-
         for(size_t i = 0; i < endpoints.size(); ++i) {
             const auto& ep = endpoints[i];
             auto network
