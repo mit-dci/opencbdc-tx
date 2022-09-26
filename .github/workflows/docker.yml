@@ -76,6 +76,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Pull submodules
+        run: git submodule init && git submodule update
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
@@ -119,6 +122,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Pull submodules
+        run: git submodule init && git submodule update
 
       - name: Docker meta
         id: meta
