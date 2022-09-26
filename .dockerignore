@@ -4,3 +4,18 @@ benchmarks
 plots
 .vscode
 .deps
+
+# E2E test results
+testruns
+
+# Helm Charts
+charts/
+
+# Prevent copying scripts that are unused in docker
+scripts/
+!scripts/test.sh
+!scripts/configure.sh
+!scripts/test-transaction.sh
+
+# Improves caching significantly
+.git

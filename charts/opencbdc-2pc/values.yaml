@@ -1,0 +1,126 @@
+---
+# values.yaml
+# -- This is used when deploying to multiple Kubernetes clusters. Since OpenCBDC RAFT clusters
+# often need to be spread across regions this provides the ability to only render/apply the
+# specific RAFT members for this Kubernetes cluster. When using this feature it is required that
+# values for component count and replicas need to be the same for each helm release in each cluster.
+currentCluster:
+
+# -- Similar to `currentCluster`, this is used when deploying multiple releases to multiple
+# Kubernetes clusters where OpenCBDC components need to communicate. This feature assists with
+# spreading RAFT members across clusters. Clusters list must be similar to:
+# ```[{"name": "<cluster-name>", "namespace": "<opencbdc-namespace>"}]```
+clusters: []
+
+# -- If set to `true`, each role will share a `Service` with it's peers. Otherwise, a unique
+# `Service` object will be created for each `StatefulSet`.
+sharedServices: true
+
+config:
+  defaultLogLevel: "INFO"
+  basePath: /opt/tx-processor/build/src/uhs/twophase
+  raftMountPath: /usr/share/opencbdc/raft
+  # -- If set to `true` there will be a shared `Service` for each component. E.g. coordinators will
+  # all have the same service in front of them. If set to `false` then each coordinator will have
+  # it's own service resource.
+  extraOptions:
+    attestation_threshold: "0"
+    # NOTE: Strings must be quoted like '"this"'
+    # stxo_cache_depth: "0"
+    # window_size: "100000"
+    # batch_size: "100000"
+    # batch_delay: "1"
+    # watchtower_block_cache_size: "10"
+    # watchtower_error_cache_size: "10000000"
+    # audit_interval: "0"
+    # attestation_threshold: "0"
+    # target_block_interval: "1"
+    # election_timeout_upper: "2000"
+    # election_timeout_lower: "1000"
+    # heartbeat: "500"
+    # raft_max_batch: "100000"
+    # snapshot_distance: "1000000000"
+    # loadgen_sendtx_input_count: "2"
+    # loadgen_sendtx_output_count: "2"
+    # loadgen_invalid_tx_rate: "0.000000"
+    # loadgen_fixed_tx_rate: "1.000000"
+  loadGenerators:
+    enabled: false
+    count: 1
+
+
+image:
+  repository: ghcr.io/mit-dci/opencbdc-tx
+  tag: latest
+  pullPolicy: IfNotPresent
+
+configMap:
+  name: opencbdc-config
+  mountPath: /usr/share/config
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+coordinators:
+  count: 1
+  replicas: 1
+  delayStart:
+    enabled: false
+    sleepTime: 30
+  resources: {}
+  endpoints:
+    main:
+      port: 7777
+    raft:
+      port: 7778
+
+shards:
+  count: 1
+  replicas: 1
+  delayStart:
+    enabled: false
+    sleepTime: 0
+  resources: {}
+  endpoints:
+    main:
+      port: 6666
+    raft:
+      port: 6667
+    readonly:
+      port: 6767
+  seeding:
+    enabled: false
+    seedCount: "100000000"
+    seedValue: "1000000"
+    seedPrivateKey:
+    seedSHA: ""
+    source:
+      provider: s3
+      providerConfig:
+        bucketName:
+        objectPrefix: ""
+        bucketRegion:
+        image:
+          repository: amazon/aws-cli
+          tag: latest
+          pullPolicy: IfNotPresent
+
+sentinels:
+  count: 1
+  delayStart:
+    enabled: false
+    sleepTime: 60
+  resources: {}
+  endpoints:
+    main:
+      port: 5555
+
+tolerations: {}
+nodeSelector: {}
+
+# -- Creates a Pod with the OpenCBDC Image that is used to run `kubectl exec` commands on for
+# debugging and testing the whole system. This is helpful to test `client-cli` commands for minting
+# and sending specifically.
+enableClient: false

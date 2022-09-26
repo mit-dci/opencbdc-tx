@@ -222,9 +222,21 @@ Running Unit & Integration Tests
 
 1. Build the container. Target `builder` stage as the tests need the dependencies.
    ```terminal
-   # docker build --target builder . -t opencbdc-tx-builder
+   # ./scripts/build-docker.sh
    ```
 2. Run Unit & Integration Tests
    ```terminal
    # docker run -ti opencbdc-tx-builder ./scripts/test.sh
    ```
+
+### E2E Testing with Kubernetes
+
+#### **Requirements**
+- Go (go test library used to run tests)
+- Minikube
+- Helm
+- Kubectl
+
+#### **Running tests**
+1. `./scripts/test-e2e-minikube.sh`
+1. Review results and logs at `testruns/<testrun-uuid>/`

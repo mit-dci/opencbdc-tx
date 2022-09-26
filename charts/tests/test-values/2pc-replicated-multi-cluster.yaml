@@ -1,0 +1,10 @@
+sentinels:
+  count: 3
+
+shards:
+  count: 2
+  replicas: 3
+
+coordinators:
+  count: 2
+  replicas: 3

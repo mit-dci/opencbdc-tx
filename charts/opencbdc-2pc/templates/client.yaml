@@ -1,0 +1,21 @@
+{{- if .Values.enableClient }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-client
+  labels:
+    date: "{{ .Release.Time }}"
+spec:
+  containers:
+  - name: client
+    image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+    imagePullPolicy: {{ $.Values.image.pullPolicy }}
+    command: ["/bin/bash", "-c", "trap : TERM INT; sleep infinity & wait"]
+    volumeMounts:
+      - name: {{ $.Values.configMap.name }}
+        mountPath: {{ $.Values.configMap.mountPath }}
+  volumes:
+    - name: {{ $.Values.configMap.name }}
+      configMap:
+        name: {{ $.Values.configMap.name }}
+{{- end }}

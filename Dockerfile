@@ -27,9 +27,6 @@ FROM $BASE_IMAGE AS builder
 # Copy source
 COPY . .
 
-# Update submodules
-RUN git submodule init && git submodule update
-
 # Build binaries
 RUN mkdir build && \
     cd build && \

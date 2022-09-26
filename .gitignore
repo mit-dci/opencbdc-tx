@@ -63,3 +63,5 @@ cmake-build-*/
 build/gcov_data
 build/tests
 
+# E2E Test results
+testruns/

@@ -1,0 +1,483 @@
+{{- /*
+Setup default list for all roles
+*/}}
+{{- $roles := list }}
+
+{{- /*
+Configured default kubernetes cluster list if not specified
+*/}}
+{{- $clusters := .Values.clusters | default (mustFromJson (printf "[{\"name\": \"local\", \"namespace\": \"%s\"}]" .Release.Namespace)) }}
+{{- $thisCluster := .Values.currentCluster | default "local" }}
+
+
+{{- /*
+Iterate through all sentinels and add to $roles.
+*/}}
+{{- $sentinels :=  list }}
+{{- range $_, $sentinelId := until ($.Values.sentinels.count | int) }}
+{{- $sentinel := dict }}
+{{- $_ := set $sentinel "basename" (printf "sentinel-%d" $sentinelId) }}
+{{- $_ := set $sentinel "role" "sentinel" }}
+{{- $_ := set $sentinel "id" $sentinelId }}
+{{- $sentinels = append $sentinels $sentinel }}
+{{- end }}
+
+{{- range $_, $sentinelChunk := chunk (len $clusters) $sentinels }}
+{{- range $clusterIndex, $sentinel := $sentinelChunk }}
+{{- $cluster := index $clusters $clusterIndex }}
+{{- $_ := set $sentinel "namespace" $cluster.namespace }}
+{{- if eq $thisCluster $cluster.name }}
+{{- $roles = append $roles $sentinel }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+
+{{- /*
+Iterate through all coordinators and set clusterId along with coordinatorId.
+*/}}
+{{- if eq (mod $.Values.coordinators.replicas 2) 0 }}
+{{- fail "coordinators.replicas must be an odd number!" }}
+{{- end }}
+{{- $coordinators := list }}
+{{- range $_, $coordinatorClusterId := until ($.Values.coordinators.count | int) }}
+{{- range $_, $coordinatorId := until ($.Values.coordinators.replicas | int) }}
+{{- $coordinator := dict }}
+{{- $_ := set $coordinator "clusterId" $coordinatorClusterId }}
+{{- $_ := set $coordinator "id" $coordinatorId }}
+{{- $coordinators = append $coordinators $coordinator }}
+{{- end }}
+{{- end }}
+
+{{- range $_, $coordinatorChunk := chunk (len $clusters) $coordinators }}
+{{- range $clusterIndex, $coordinator := $coordinatorChunk }}
+{{- $cluster := index $clusters $clusterIndex }}
+{{- $_ := set $coordinator "basename" (printf "coordinator-%d-%d" $coordinator.clusterId $coordinator.id) }}
+{{- $_ := set $coordinator "role" "coordinator" }}
+{{- $_ := set $coordinator "namespace" $cluster.namespace }}
+{{- if eq $thisCluster $cluster.name }}
+{{- $roles = append $roles $coordinator }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- /*
+Iterate through all shards and add to $roles.
+*/}}
+{{- if eq (mod $.Values.shards.replicas 2) 0 }}
+{{- fail "shards.replicas must be an odd number!" }}
+{{- end }}
+{{- $shards := list }}
+{{- range $_, $shardClusterId := until ($.Values.shards.count | int) }}
+{{- range $_, $shardId := until ($.Values.shards.replicas | int) }}
+{{- $shard := dict }}
+{{- $shardClusterRange := divf 256 $.Values.shards.count }}
+{{- $shardClusterStart := ceil (mulf (mod $shardClusterId $.Values.shards.count) $shardClusterRange) }}
+{{- $shardClusterEnd := ceil (subf (mulf $shardClusterRange (addf 1 (mod $shardClusterId $.Values.shards.count))) 1 ) }}
+{{- $_ := set $shard "clusterId" $shardClusterId }}
+{{- $_ := set $shard "id" $shardId }}
+{{- $_ := set $shard "shardClusterStart" $shardClusterStart }}
+{{- $_ := set $shard "shardClusterEnd" $shardClusterEnd }}
+{{- $shards = append $shards $shard }}
+{{- end }}
+{{- end }}
+
+{{- range $_, $shardChunk := (chunk (len $clusters) $shards) }}
+{{- range $clusterIndex, $shard := $shardChunk }}
+{{- $cluster := index $clusters $clusterIndex }}
+{{- $_ := set $shard "basename" (printf "shard-%d-%d" $shard.clusterId $shard.id) }}
+{{- $_ := set $shard "role" "shard" }}
+{{- $_ := set $shard "namespace" $cluster.namespace }}
+{{- if eq $thisCluster $cluster.name }}
+{{- $roles = append $roles $shard }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- range $_, $role := $roles }}
+{{- $roleSpec := get $.Values (printf "%ss" $role.role) }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $role.basename }}
+  labels:
+    app.kubernetes.io/name: {{ $role.role }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    opencbdc.hmltn.io/id: {{ $role.id | quote }}
+    opencbdc.hmltn.io/role: {{ $role.role }}
+    {{- if hasKey $role "clusterId" }}
+    opencbdc.hmltn.io/clusterId: {{ $role.clusterId | quote }}
+    {{- end }}
+spec:
+  {{- if $.Values.sharedServices }}
+  serviceName: {{ $role.role }}
+  {{- else }}
+  serviceName: {{ $role.basename }}
+  {{- end }}
+  selector:
+    matchLabels:
+      opencbdc.hmltn.io/id: {{ $role.id | quote }}
+      opencbdc.hmltn.io/role: {{ $role.role }}
+      {{- if hasKey $role "clusterId" }}
+      opencbdc.hmltn.io/clusterId: {{ $role.clusterId | quote }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $role.role }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+        opencbdc.hmltn.io/id: {{ $role.id | quote }}
+        opencbdc.hmltn.io/role: {{ $role.role }}
+        {{- if hasKey $role "clusterId" }}
+        opencbdc.hmltn.io/clusterId: {{ $role.clusterId | quote }}
+        {{- end }}
+    spec:
+      {{- with $.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "..serviceAccountName" $ }}
+      containers:
+        - name: {{ $role.role }}
+          image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          command:
+            - "/usr/bin/bash"
+            - "{{ $.Values.configMap.mountPath }}/start-{{ $role.role }}.sh"
+          env:
+          - name: {{ $role.role | upper }}_ID
+            value: {{ $role.id | quote }}
+          {{- if hasKey $role "clusterId" }}
+          - name: CLUSTER_ID
+            value: {{ $role.clusterId | quote }}
+          {{- end }}
+          ports:
+          - name: main
+            containerPort: {{ $roleSpec.endpoints.main.port }}
+            protocol: TCP
+          {{- if $roleSpec.endpoints.raft }}
+          - name: raft
+            containerPort: {{ $roleSpec.endpoints.raft.port }}
+            protocol: TCP
+          {{- end }}
+          {{- if $roleSpec.endpoints.readonly }}
+          - name: readonly
+            containerPort: {{ $roleSpec.endpoints.readonly.port }}
+            protocol: TCP
+          {{- end }}
+          resources:
+            {{- toYaml $roleSpec.resources | nindent 12 }}
+          volumeMounts:
+          - name: {{ $.Values.configMap.name }}
+            mountPath: {{ $.Values.configMap.mountPath }}
+          {{- if (dig "raftPersistentStorage" "enabled" false $roleSpec) }}
+          - name: raft-storage-{{ $role.role }}
+            mountPath: {{ $.Values.config.raftMountPath }}
+          {{- end }}
+          {{- if (and $.Values.shards.seeding.enabled (eq $role.role "shard")) }}
+          - name: shard-seed-data
+            mountPath: /shard-seed-data
+          {{- end }}
+      {{- if (and $.Values.shards.seeding.enabled (eq $role.role "shard")) }}
+      initContainers:
+        - name: init-shard-seed
+          image: "{{ $.Values.shards.seeding.image.repository }}:{{ $.Values.shards.seeding.image.tag }}"
+          imagePullPolicy: {{ $.Values.shards.seeding.image.pullPolicy }}
+          command:
+            - "/usr/bin/bash"
+            - "{{ $.Values.configMap.mountPath }}/fetch-seeds.sh"
+          volumeMounts:
+          - name: shard-seed-data
+            mountPath: /shard-seed-data
+          - name: {{ $.Values.configMap.name }}
+            mountPath: {{ $.Values.configMap.mountPath }}
+          env:
+          {{- if hasKey $role "shardClusterStart" }}
+          - name: CLUSTER_START
+            value: {{ $role.shardClusterStart | quote }}
+          {{- end }}
+          {{- if hasKey $role "shardClusterEnd" }}
+          - name: CLUSTER_END
+            value: {{ $role.shardClusterEnd | quote }}
+          {{- end }}
+      {{- end }}
+      volumes:
+        - name: {{ $.Values.configMap.name }}
+          configMap:
+            name: {{ $.Values.configMap.name }}
+        {{- if (and $.Values.shards.seeding.enabled (eq $role.role "shard")) }}
+        - name: shard-seed-data
+          emptyDir: {}
+        {{- end }}
+  {{- if (dig "raftPersistentStorage" "enabled" false $roleSpec) }}
+  volumeClaimTemplates:
+  - metadata:
+      name: raft-storage-{{ $role.role }}
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ dig "raftPersistentStorage" "size" "1Gi" $roleSpec }}
+  {{- end }}
+{{- if not $.Values.sharedServices }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $role.basename }}
+  labels:
+    opencbdc.hmltn.io/id: {{ $role.id | quote }}
+    opencbdc.hmltn.io/role: {{ $role.role }}
+    {{- if hasKey $role "clusterId" }}
+    opencbdc.hmltn.io/clusterId: {{ $role.clusterId | quote }}
+    {{- end }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: {{ $roleSpec.endpoints.main.port }}
+      targetPort: main
+      protocol: TCP
+      name: main
+    {{- if $roleSpec.endpoints.raft }}
+    - port: {{ $roleSpec.endpoints.raft.port }}
+      targetPort: raft
+      protocol: TCP
+      name: raft
+    {{- end }}
+    {{- if $roleSpec.endpoints.readonly }}
+    - port: {{ $roleSpec.endpoints.readonly.port }}
+      targetPort: readonly
+      protocol: TCP
+      name: readonly
+    {{- end }}
+  publishNotReadyAddresses: true
+  selector:
+    opencbdc.hmltn.io/id: {{ $role.id | quote }}
+    opencbdc.hmltn.io/role: {{ $role.role }}
+    {{- if hasKey $role "clusterId" }}
+    opencbdc.hmltn.io/clusterId: {{ $role.clusterId | quote }}
+    {{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.sharedServices }}
+{{- /*
+Service resources are created above for each role if this is not enabled.
+*/}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coordinator
+  labels:
+    opencbdc.hmltn.io/role: coordinator
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: {{ $.Values.coordinators.endpoints.main.port }}
+      targetPort: main
+      protocol: TCP
+      name: main
+    - port: {{ $.Values.coordinators.endpoints.raft.port }}
+      targetPort: raft
+      protocol: TCP
+      name: raft
+  publishNotReadyAddresses: true
+  selector:
+    opencbdc.hmltn.io/role: coordinator
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shard
+  labels:
+    opencbdc.hmltn.io/role: shard
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: {{ $.Values.shards.endpoints.main.port }}
+      targetPort: main
+      protocol: TCP
+      name: main
+    - port: {{ $.Values.shards.endpoints.raft.port }}
+      targetPort: raft
+      protocol: TCP
+      name: raft
+    - port: {{ $.Values.shards.endpoints.readonly.port }}
+      targetPort: readonly
+      protocol: TCP
+      name: readonly
+  publishNotReadyAddresses: true
+  selector:
+    opencbdc.hmltn.io/role: shard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentinel
+  labels:
+    opencbdc.hmltn.io/role: sentinel
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: {{ $.Values.sentinels.endpoints.main.port }}
+      targetPort: main
+      protocol: TCP
+      name: main
+  publishNotReadyAddresses: true
+  selector:
+    opencbdc.hmltn.io/role: sentinel
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Values.configMap.name }}
+data:
+  2pc.cfg: |-
+    2pc=1
+
+    {{- /*
+    Setup configuration for all sentinels
+    */}}
+    sentinel_count={{ len $sentinels }}
+    {{- range $sentinelId, $sentinel := $sentinels -}}
+    {{- $sentinelHostname :=  (printf "sentinel-%d-0.sentinel.%s.svc.cluster.local" $sentinel.id $sentinel.namespace) }}
+    sentinel{{ $sentinel.id }}_loglevel="{{ $.Values.config.defaultLogLevel }}"
+    sentinel{{ $sentinel.id }}_endpoint="{{ $sentinelHostname }}:{{ $.Values.sentinels.endpoints.main.port }}"
+    {{ end }}
+
+
+    {{- /*
+    Setup configuration for all coordinators
+    */}}
+    coordinator_count={{ $.Values.coordinators.count }}
+    {{- range $_, $coordinatorClusterId := until ($.Values.coordinators.count | int) }}
+    coordinator{{ $coordinatorClusterId }}_count={{ $.Values.coordinators.replicas }}
+    coordinator{{ $coordinatorClusterId }}_loglevel="{{ $.Values.config.defaultLogLevel }}"
+    {{- range $_, $coordinator := $coordinators }}
+    {{- if eq $coordinatorClusterId $coordinator.clusterId }}
+    {{- $coordinatorHostname :=  (printf "coordinator-%d-%d-0.coordinator.%s.svc.cluster.local" $coordinator.clusterId $coordinator.id $coordinator.namespace) }}
+    coordinator{{ $coordinatorClusterId }}_{{ $coordinator.id }}_endpoint="{{ $coordinatorHostname }}:{{ $.Values.coordinators.endpoints.main.port }}"
+    coordinator{{ $coordinatorClusterId }}_{{ $coordinator.id }}_raft_endpoint="{{ $coordinatorHostname }}:{{ $.Values.coordinators.endpoints.raft.port }}"
+    {{- end }}
+    {{- end }}
+    {{- end }}
+
+
+    {{- /*
+    Setup configuration for all shards
+    */}}
+    {{- $shardClusterCount := $.Values.shards.count }}
+    {{- $shardClusterRange := divf 256 $shardClusterCount }}
+    shard_count={{ $shardClusterCount }}
+    {{- range $_, $shardClusterId := until ($.Values.shards.count | int) }}
+    shard{{ $shardClusterId }}_count={{ $.Values.shards.replicas }}
+    shard{{ $shardClusterId }}_loglevel="{{ $.Values.config.defaultLogLevel }}"
+    {{- $shardClusterStart := ceil (mulf (mod $shardClusterId $shardClusterCount) $shardClusterRange) }}
+    {{- $shardClusterEnd := ceil (subf (mulf $shardClusterRange (addf 1 (mod $shardClusterId $shardClusterCount))) 1 ) }}
+    shard{{ $shardClusterId }}_start={{ $shardClusterStart }}
+    shard{{ $shardClusterId }}_end={{ $shardClusterEnd }}
+    {{- range $_, $shard := $shards }}
+    {{- if eq $shardClusterId $shard.clusterId }}
+    {{- $shardHostname :=  (printf "shard-%d-%d-0.shard.%s.svc.cluster.local" $shard.clusterId $shard.id $shard.namespace) }}
+    shard{{ $shardClusterId }}_{{ $shard.id }}_endpoint="{{ $shardHostname }}:{{ $.Values.shards.endpoints.main.port }}"
+    shard{{ $shardClusterId }}_{{ $shard.id }}_raft_endpoint="{{ $shardHostname }}:{{ $.Values.shards.endpoints.raft.port }}"
+    shard{{ $shardClusterId }}_{{ $shard.id }}_readonly_endpoint="{{ $shardHostname }}:{{ $.Values.shards.endpoints.readonly.port }}"
+    {{- end }}
+    {{- end }}
+    {{- end }}
+
+    {{- if $.Values.config.loadGenerators.enabled }}
+    loadgen_count={{ $.Values.config.loadGenerators.count }}
+    {{- end }}
+    {{- if $.Values.shards.seeding.enabled }}
+    seed_from=0
+    seed_to={{ $.Values.shards.seeding.seedCount }}
+    seed_privkey="{{ required "'shards.seeding.seedPrivateKey' must be set when 'shards.seeding.enabled=true'!" $.Values.shards.seeding.seedPrivateKey }}"
+    seed_value={{ $.Values.shards.seeding.seedValue }}
+    {{- end }}
+
+    {{- range $key, $value := $.Values.config.extraOptions }}
+    {{ printf "%s=%s" $key (toString $value) }}
+    {{- end }}
+
+  start-coordinator.sh: |-
+    #!/usr/bin/env sh
+    {{- $coordinatorSpec := get $.Values "coordinators" }}
+    {{- if (dig "raftPersistentStorage" "enabled" false $coordinatorSpec) }}
+    cd {{ $.Values.config.raftMountPath }}
+    {{- end }}
+    {{- if .Values.coordinators.delayStart.enabled }}
+      echo "sleeping {{ $.Values.coordinators.delayStart.sleepTime }} seconds for other components to start"
+      sleep {{ $.Values.coordinators.delayStart.sleepTime }}
+    {{- end }}
+    echo "{{ $.Values.config.basePath }}/coordinator/coordinatord {{ $.Values.configMap.mountPath }}/2pc.cfg ${CLUSTER_ID} ${COORDINATOR_ID}"
+    {{ $.Values.config.basePath }}/coordinator/coordinatord {{ $.Values.configMap.mountPath }}/2pc.cfg ${CLUSTER_ID} ${COORDINATOR_ID}
+
+  start-shard.sh: |-
+    #!/usr/bin/env sh
+    {{- $shardSpec := get $.Values "shards" }}
+
+    {{- if $shardSpec.seeding.enabled }}
+    echo "Print shard seeding shared volume mount: \n" && ls -lah /shard-seed-data
+    {{- $shardPreseedName :=  printf "2pc_shard_preseed_%s_${CLUSTER_ID}" $.Values.shards.seeding.seedCount }}
+
+      {{- if (dig "raftPersistentStorage" "enabled" false $shardSpec) }}
+    mv /shard-seed-data/{{ $shardPreseedName }} {{ $.Values.config.raftMountPath }}/{{ $shardPreseedName }}
+    echo "Print working dir with shard seeds included: \n" && ls -lah
+
+      {{- else }}
+    mv /shard-seed-data/{{ $shardPreseedName }} ${PWD}/{{ $shardPreseedName }}
+    echo "Print working dir with shard seeds included: \n" && ls -lah
+
+      {{- end }}
+
+    {{- end }}
+
+    {{- if (dig "raftPersistentStorage" "enabled" false $shardSpec) }}
+    cd {{ $.Values.config.raftMountPath }}
+    {{- end }}
+
+    {{- if .Values.shards.delayStart.enabled }}
+    echo "sleeping {{ $.Values.shard.delayStart.sleepTime }} seconds for other components to start"
+    sleep {{ $.Values.shards.delayStart.sleepTime }}
+    {{- end }}
+
+    echo "{{ $.Values.config.basePath }}/locking_shard/locking-shardd {{ $.Values.configMap.mountPath }}/2pc.cfg ${CLUSTER_ID} ${SHARD_ID}"
+    {{ $.Values.config.basePath }}/locking_shard/locking-shardd {{ $.Values.configMap.mountPath }}/2pc.cfg ${CLUSTER_ID} ${SHARD_ID}
+
+  start-sentinel.sh: |-
+    #!/usr/bin/env sh
+    {{- if .Values.sentinels.delayStart.enabled }}
+      echo "sleeping {{ $.Values.sentinels.delayStart.sleepTime }} seconds for other components to start"
+      sleep {{ $.Values.sentinels.delayStart.sleepTime }}
+    {{- end }}
+    echo "{{ $.Values.config.basePath }}/sentinel_2pc/sentineld-2pc {{ $.Values.configMap.mountPath }}/2pc.cfg ${SENTINEL_ID}"
+    {{ $.Values.config.basePath }}/sentinel_2pc/sentineld-2pc {{ $.Values.configMap.mountPath }}/2pc.cfg $SENTINEL_ID}
+
+  fetch-seeds.sh: |-
+    #!/usr/bin/env sh
+    set -x
+    {{- $shardSeedSHA := eq $.Values.shards.seeding.seedSHA "" | ternary "" (printf "_%s" $.Values.shards.seeding.seedSHA) }}
+    {{- $shardSeedFileName := printf "2pc_shard_preseed_%s_${CLUSTER_START}_${CLUSTER_END}%s.tar" $.Values.shards.seeding.seedCount $shardSeedSHA }}
+    echo "Using shard seed: {{ $shardSeedFileName }}"
+    {{- with $.Values.shards.seeding }}
+    {{- if .enabled }}
+    aws s3 cp s3://{{ .source.s3.bucketName }}/{{ trimPrefix "/" (get .source.s3 "objectPrefix") }}{{ $shardSeedFileName }} /shard-seed-data --region={{ .source.s3.bucketRegion }}
+    tar -xvf /shard-seed-data/{{ $shardSeedFileName }} --directory /shard-seed-data/
+    rm -f /shard-seed-data/{{ $shardSeedFileName }}
+    {{- end }}
+    {{- end }}
