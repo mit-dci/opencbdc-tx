@@ -37,7 +37,7 @@ namespace cbdc::test {
     /// \return string representation of the mock system module value.
     auto mock_system_module_string(mock_system_module mod) -> std::string;
 
-    /// Establishes dummy listeners for each enabled system component. For
+    /// Establishes dummy listeners for each enabled system module. For
     /// testing only.
     class mock_system {
       public:
@@ -55,16 +55,16 @@ namespace cbdc::test {
 
         /// Launches servers for enabled modules. Raises googletest ASSERTs on
         /// failures. Following initialization, integration tests can connect
-        /// to mock endpoints for each enabled component configured in the
+        /// to mock endpoints for each enabled module configured in the
         /// options set provided to the constructor.
         void init();
 
         /// Callers in integration tests can use this method to verify that
         /// modules under test transmit the messages they expect to
-        /// counterpart components.
+        /// counterpart modules.
         ///
         /// It registers an expected type of message to be received by a
-        /// particular component (specifiable both by module type and by
+        /// particular module (specifiable both by module type and by
         /// number—e.g., atomizer3). It then populates a future with the
         /// result, allowing callers to validate their expectations.
         ///
@@ -72,18 +72,18 @@ namespace cbdc::test {
         /// \param for_module kind of module expected to receive the message.
         /// \param reply_with optional message for the module to send back
         ///        over the network.
-        /// \param component_id which specific component of kind `for_module`
+        /// \param module_id which specific component of kind `for_module`
         ///        should receive the message. (defaults to `0`)
         /// \return a future containing the deserialized message after the
         ///         module receives it.
         template<typename T>
         auto expect(mock_system_module for_module,
                     std::optional<cbdc::buffer>&& reply_with = std::nullopt,
-                    uint64_t component_id = 0) -> std::future<T> {
+                    uint64_t module_id = 0) -> std::future<T> {
             auto res_promise = std::make_shared<std::promise<T>>();
             auto res_future = res_promise->get_future();
             const std::lock_guard<std::mutex> guard(m_handler_lock);
-            auto idx = std::make_pair(for_module, component_id);
+            auto idx = std::make_pair(for_module, module_id);
             m_expect_handlers.try_emplace(
                 idx,
                 std::queue<cbdc::network::packet_handler_t>{});
@@ -129,13 +129,9 @@ namespace cbdc::test {
       private:
         std::mutex m_handler_lock;
         cbdc::config::options m_opts;
-        std::unordered_set<mock_system_module> m_modules{
-            mock_system_module::watchtower,
-            mock_system_module::atomizer,
-            mock_system_module::coordinator,
-            mock_system_module::archiver,
-            mock_system_module::shard,
-            mock_system_module::sentinel};
+        std::unordered_map<mock_system_module,
+                           std::vector<cbdc::network::endpoint_t>>
+            m_module_endpoints;
         std::map<std::pair<mock_system_module, uint64_t>,
                  std::queue<cbdc::network::packet_handler_t>>
             m_expect_handlers;
@@ -150,7 +146,14 @@ namespace cbdc::test {
             std::vector<std::shared_ptr<cbdc::network::connection_manager>>>
             m_networks;
         std::vector<std::thread> m_server_handlers;
+        std::shared_ptr<cbdc::logging::log> m_logger{
+            std::make_shared<cbdc::logging::log>(
+                cbdc::logging::log_level::trace)};
 
+        /// Starts servers for a mocked module.
+        /// \param for_module module for which to start servers
+        /// \param endpoints the network endpoints for the servers
+        /// \return true if the servers are started successfully
         auto start_servers(mock_system_module for_module,
                            const std::vector<network::endpoint_t>& endpoints)
             -> bool;
