@@ -35,6 +35,8 @@ find_library(NURAFT_LIBRARY nuraft REQUIRED)
 find_library(GTEST_LIBRARY gtest REQUIRED)
 find_library(GTEST_MAIN_LIBRARY gtest_main REQUIRED)
 find_package(benchmark REQUIRED)
+find_library(LUA_LIBRARY lua REQUIRED)
+set(LUA_LIBRARY "${LUA_LIBRARY}" "-ldl")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 

@@ -6,10 +6,17 @@
 #ifndef CBDC_UNIVERSE0_SRC_3PC_UTIL_H_
 #define CBDC_UNIVERSE0_SRC_3PC_UTIL_H_
 
+#include "broker/interface.hpp"
 #include "util/common/config.hpp"
 #include "util/common/logging.hpp"
 
 namespace cbdc::threepc {
+    /// Execution/transaction model
+    enum class runner_type {
+        /// Transaction semantics defined using Lua.
+        lua
+    };
+
     /// Configuration parameters for a phase two system.
     struct config {
         /// RPC endpoints for the nodes in the ticket machine raft cluster.
@@ -23,6 +30,10 @@ namespace cbdc::threepc {
         /// ID of the node within the component the instance should be, if
         /// applicable.
         std::optional<size_t> m_node_id;
+        /// RPC endpoints for the agents.
+        std::vector<network::endpoint_t> m_agent_endpoints;
+        /// Type of execution environment to use in the agent.
+        runner_type m_runner_type{runner_type::lua};
     };
 
     /// Reads the configuration parameters from the program arguments.
@@ -31,6 +42,18 @@ namespace cbdc::threepc {
     /// \return configuration parametrs or std::nullopt if there was an error
     ///         while parsing the arguments.
     auto read_config(int argc, char** argv) -> std::optional<config>;
+
+    /// Asynchronously inserts the given row into the cluster.
+    /// \param broker broker to use for inserting the row.
+    /// \param key key at which to insert value.
+    /// \param value value to insert at given key.
+    /// \param result_callback function to call on insertion success or
+    ///                        failure.
+    /// \return true if request was initiated successfully.
+    auto put_row(const std::shared_ptr<broker::interface>& broker,
+                 broker::key_type key,
+                 broker::value_type value,
+                 const std::function<void(bool)>& result_callback) -> bool;
 }
 
 #endif
