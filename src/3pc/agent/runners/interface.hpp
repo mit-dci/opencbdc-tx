@@ -149,6 +149,7 @@ namespace cbdc::threepc::agent::runner {
                runner::interface::run_callback_type result_callback,
                runner::interface::try_lock_callback_type try_lock_callback,
                std::shared_ptr<secp256k1_context> secp,
+               std::shared_ptr<thread_pool> t_pool,
                runner::interface::ticket_number_type ticket_number)
             -> std::unique_ptr<runner::interface> {
             return std::make_unique<T>(std::move(logger),
@@ -159,6 +160,7 @@ namespace cbdc::threepc::agent::runner {
                                        std::move(result_callback),
                                        std::move(try_lock_callback),
                                        std::move(secp),
+                                       std::move(t_pool),
                                        ticket_number);
         }
     };

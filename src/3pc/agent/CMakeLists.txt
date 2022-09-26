@@ -5,3 +5,23 @@ add_library(agent impl.cpp
                   server_interface.cpp
                   client.cpp
                   format.cpp)
+
+add_subdirectory(runners)
+
+add_executable(agentd agentd.cpp)
+target_link_libraries(agentd broker
+                             directory
+                             ticket_machine
+                             runtime_locking_shard
+                             threepc
+                             lua_runner
+                             agent
+                             runners
+                             rpc
+                             network
+                             serialization
+                             common
+                             crypto
+                             secp256k1
+                             ${LUA_LIBRARY}
+                             ${CMAKE_THREAD_LIBS_INIT})
