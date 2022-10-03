@@ -58,8 +58,8 @@ namespace cbdc::transaction {
         /// An auxiliary value used to prove preservation of balance
         commitment_t m_auxiliary{};
         /// The rangeproof guaranteeing that the output is greater than 0
-        /// This rangeproof is only required when functioning as a transaction output,
-        /// and is removed when converted into a transaction input.
+        /// This rangeproof is only required when functioning as a transaction
+        /// output, and is removed when converted into a transaction input.
         std::optional<rangeproof_t<>> m_range{};
 
         auto operator==(const output& rhs) const -> bool;
@@ -78,8 +78,9 @@ namespace cbdc::transaction {
     ///              output to-be-spent
     /// \param put the \ref output to-be-spent
     /// \returns the hash serving as the UHS ID
-    auto calculate_uhs_id(const out_point& point, const output& put, const commitment_t& value)
-        -> hash_t;
+    auto calculate_uhs_id(const out_point& point,
+                          const output& put,
+                          const commitment_t& value) -> hash_t;
 
     /// \brief Additional information a spender needs to spend an input
     struct spend_data {
@@ -259,8 +260,7 @@ namespace cbdc::transaction {
                secp256k1_bulletproofs_generators* gens,
                random_source& rng,
                const spend_data& out_spend_data,
-               const secp256k1_pedersen_commitment* comm)
-        -> rangeproof_t<>;
+               const secp256k1_pedersen_commitment* comm) -> rangeproof_t<>;
 
     /// \brief Add cryptographic proof to a single output
     ///

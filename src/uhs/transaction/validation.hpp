@@ -169,7 +169,7 @@ namespace cbdc::transaction::validation {
     auto check_input_set(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
     auto check_proof(const compact_tx& tx,
-                     const std::vector<commitment_t>& inp_comms)
+                     const std::vector<commitment_t>& inps)
         -> std::optional<proof_error>;
     auto check_commitment_sum(
         const std::vector<secp256k1_pedersen_commitment>& inputs,

@@ -253,7 +253,7 @@ namespace cbdc::transaction::validation {
         }
         return std::nullopt;
     }
-    
+
     auto check_witness_count(const cbdc::transaction::full_tx& tx)
         -> std::optional<tx_error> {
         if(tx.m_inputs.size() != tx.m_witness.size()) {

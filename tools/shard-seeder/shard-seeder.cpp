@@ -7,8 +7,8 @@
 #include "uhs/transaction/transaction.hpp"
 #include "uhs/transaction/validation.hpp"
 #include "uhs/transaction/wallet.hpp"
-#include "util/common/config.hpp"
 #include "util/common/commitment.hpp"
+#include "util/common/config.hpp"
 #include "util/serialization/buffer_serializer.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/ostream_serializer.hpp"
@@ -150,16 +150,24 @@ auto main(int argc, char** argv) -> int {
                     }
                     auto batch_size = 0;
                     leveldb::WriteBatch batch;
-                    auto value = cbdc::commit(secp_context.get(), cfg.m_seed_value, {}).value();
-                    auto range = cbdc::transaction::prove(secp_context.get(),
-                                                          bulletproof_gens.get(),
-                                                          rng,
-                                                          {{}, cfg.m_seed_value},
-                                                          &value);
-                    auto value_comm = cbdc::serialize_commitment(secp_context.get(), value);
+                    auto value = cbdc::commit(secp_context.get(),
+                                              cfg.m_seed_value,
+                                              {})
+                                     .value();
+                    auto range
+                        = cbdc::transaction::prove(secp_context.get(),
+                                                   bulletproof_gens.get(),
+                                                   rng,
+                                                   {{}, cfg.m_seed_value},
+                                                   &value);
+                    auto value_comm
+                        = cbdc::serialize_commitment(secp_context.get(),
+                                                     value);
                     for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
-                        auto tx
-                            = wal.create_seeded_transaction(tx_idx, value_comm, range).value();
+                        auto tx = wal.create_seeded_transaction(tx_idx,
+                                                                value_comm,
+                                                                range)
+                                      .value();
                         cbdc::transaction::compact_tx ctx(tx);
                         const cbdc::hash_t& output_hash
                             = cbdc::transaction::calculate_uhs_id(

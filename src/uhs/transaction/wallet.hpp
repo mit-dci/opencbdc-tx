@@ -227,8 +227,9 @@ namespace cbdc::transaction {
 
         /// \brief todo: document overload
         auto create_seeded_transaction(size_t seed_idx,
-            const commitment_t& comm,
-            const rangeproof_t<>& range) -> std::optional<transaction::full_tx>;
+                                       const commitment_t& comm,
+                                       const rangeproof_t<>& range)
+            -> std::optional<transaction::full_tx>;
 
         /// Given a set of credit inputs, add the UTXOs and update the wallet's
         /// balance.

@@ -252,8 +252,7 @@ namespace cbdc::transaction {
                secp256k1_bulletproofs_generators* gens,
                random_source& rng,
                const spend_data& out_spend_data,
-               const secp256k1_pedersen_commitment* comm)
-        -> rangeproof_t<> {
+               const secp256k1_pedersen_commitment* comm) -> rangeproof_t<> {
         rangeproof_t<> range{};
         size_t rangelen = range.size();
         static constexpr auto upper_bound = 64; // 2^64 - 1

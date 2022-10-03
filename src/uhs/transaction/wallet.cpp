@@ -62,7 +62,7 @@ namespace cbdc {
             std::unique_lock<std::shared_mutex> ul(m_utxos_mut);
             for(size_t i = 0; i < ret.m_outputs.size(); ++i) {
                 transaction::output put = ret.m_outputs[i];
-                put.m_range.reset();   // remove range proofs for inputs
+                put.m_range.reset(); // remove range proofs for inputs
                 transaction::out_point point{id, i};
                 transaction::input inp{point,
                                        put,
@@ -127,9 +127,11 @@ namespace cbdc {
         return ret;
     }
 
-    auto transaction::wallet::create_seeded_transaction(size_t seed_idx,
-        const commitment_t& comm,
-        const rangeproof_t<>& range) -> std::optional<transaction::full_tx> {
+    auto
+    transaction::wallet::create_seeded_transaction(size_t seed_idx,
+                                                   const commitment_t& comm,
+                                                   const rangeproof_t<>& range)
+        -> std::optional<transaction::full_tx> {
         if(m_seed_from == m_seed_to) {
             return std::nullopt;
         }
@@ -147,7 +149,8 @@ namespace cbdc {
         inp.m_prevout_data.m_witness_program_commitment = {0};
         inp.m_prevout_data.m_auxiliary = comm;
         inp.m_prevout_data.m_range.reset();
-        inp.m_prevout_data.m_id = calculate_uhs_id(inp.m_prevout, inp.m_prevout_data, comm);
+        inp.m_prevout_data.m_id
+            = calculate_uhs_id(inp.m_prevout, inp.m_prevout_data, comm);
         inp.m_spend_data = {spend};
 
         tx.m_inputs[0] = inp;
@@ -188,7 +191,8 @@ namespace cbdc {
                                                  {},
                                                  in_spend_data);
 
-        inp.m_prevout_data.m_auxiliary = serialize_commitment(m_secp.get(), aux.front());
+        inp.m_prevout_data.m_auxiliary
+            = serialize_commitment(m_secp.get(), aux.front());
         inp.m_prevout_data.m_id
             = transaction::calculate_uhs_id(inp.m_prevout,
                                             inp.m_prevout_data,
