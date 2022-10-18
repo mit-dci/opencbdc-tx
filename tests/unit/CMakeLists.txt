@@ -5,6 +5,7 @@ add_executable(run_unit_tests archiver_test.cpp
                               atomizer_test.cpp
                               buffer_test.cpp
                               common/hash_test.cpp
+                              config_gen_test.cpp
                               config_test.cpp
                               coordinator/messages_test.cpp
                               locking_shard/format_test.cpp
@@ -50,6 +51,7 @@ target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
                                      transaction
                                      network
                                      common
+                                     config_generator
                                      serialization
                                      crypto
                                      secp256k1
