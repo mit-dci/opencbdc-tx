@@ -12,6 +12,7 @@ on:
       - trunk
 
 jobs:
+
   docker-build-and-publish-base:
     runs-on: ubuntu-20.04
     steps:
