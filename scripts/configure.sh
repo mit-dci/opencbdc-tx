@@ -2,6 +2,8 @@
 
 echo "Configuring..."
 
+echo "test local pipeline changes"
+
 green="\033[0;32m"
 cyan="\033[0;36m"
 end="\033[0m"
