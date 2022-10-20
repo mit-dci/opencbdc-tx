@@ -1,0 +1,61 @@
+---
+name: docker pull_request
+
+# Runs on a pull request to trunk as well as updates to the pull request
+on:
+  pull_request:
+    branches:
+      - trunk
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      ########################
+      # CI Setup             #
+      ########################
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: "2"
+
+      # For PRs, this action compares between the commit and trunk
+      - name: Get specific changed files
+        id: changed-files-specific
+        uses: tj-actions/changed-files@v32
+        with:
+          files: |
+            Dockerfile
+            **/configure.sh
+
+      ########################
+      # Build Base           #
+      ########################
+      - name: Build docker base image (pull_request with base changes)
+        if: ${{ steps.changed-files-specific.outputs.any_changed == 'true' }}
+        run: docker build --target base -t opencbdc-tx-base-local .
+
+      ########################
+      # Submodules           #
+      ########################
+      - name: Pull submodules
+        run: git submodule init && git submodule update
+
+      ########################
+      # Build Application    #
+      ########################
+      - name: Build twophase docker image (pull_request with base changes)
+        if: ${{ steps.changed-files-specific.outputs.any_changed == 'true' }}
+        run: docker build --target twophase --build-arg BASE_IMAGE=opencbdc-tx-base-local .
+
+      - name: Build atomizer docker image (pull_request with base changes)
+        if: ${{ steps.changed-files-specific.outputs.any_changed == 'true' }}
+        run: docker build --target atomizer --build-arg BASE_IMAGE=opencbdc-tx-base-local .
+
+      - name: Build twophase docker image (pull_request with no base changes)
+        if: ${{ steps.changed-files-specific.outputs.any_changed == 'false' }}
+        run: DOCKER_BUILDKIT=1 docker build --target twophase .
+
+      - name: Build atomizer docker image (pull_request with no base changes)
+        if: ${{ steps.changed-files-specific.outputs.any_changed == 'false' }}
+        run: DOCKER_BUILDKIT=1 docker build --target atomizer .

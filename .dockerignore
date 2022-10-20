@@ -19,3 +19,4 @@ scripts/
 
 # Improves caching significantly
 .git
+.github

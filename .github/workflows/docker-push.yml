@@ -1,0 +1,41 @@
+---
+name: docker push
+
+# Runs on a push to any branch except trunk
+# This CI will run on mit/opencbdc-tx only if the branch was created there
+# This CI is run on pushes to branches on forks
+on:
+  push:
+    branches-ignore:
+      - 'trunk'
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      ########################
+      # CI Setup             #
+      ########################
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      ########################
+      # Build Base           #
+      ########################
+      - name: Build docker base image (push)
+        run: docker build --target base -t opencbdc-tx-base-local .
+
+      ########################
+      # Submodules           #
+      ########################
+      - name: Pull submodules
+        run: git submodule init && git submodule update
+
+      ########################
+      # Build Application    #
+      ########################
+      - name: Build twophase docker image (push/pull_request with base changes)
+        run: docker build --target twophase --build-arg BASE_IMAGE=opencbdc-tx-base-local -t opencbdc-tx-twophase-local .
+
+      - name: Build atomizer docker image (push/pull_request with base changes)
+        run: docker build --target atomizer --build-arg BASE_IMAGE=opencbdc-tx-base-local -t opencbdc-tx-atomizer-local .
