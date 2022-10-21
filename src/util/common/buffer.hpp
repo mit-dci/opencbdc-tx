@@ -71,6 +71,21 @@ namespace cbdc {
         /// \return a hex encoded string.
         [[nodiscard]] auto to_hex() const -> std::string;
 
+        /// Creates a new buffer from the provided hex string optionally
+        /// prefixed with a prefix sequence
+        /// \param hex string-encoded hex representation of this buffer.
+        /// \param prefix text at start of hex string. Defaults to "0x".
+        /// \return a new buffer.
+        static auto from_hex_prefixed(const std::string& hex,
+                                      const std::string& prefix = "0x")
+            -> std::optional<buffer>;
+
+        /// Returns a hex string representation of the contents of the
+        /// buffer prefixed with a prefix sequence
+        /// \return a hex encoded string.
+        [[nodiscard]] auto to_hex_prefixed(const std::string& prefix
+                                           = "0x") const -> std::string;
+
       private:
         std::vector<std::byte> m_data{};
     };

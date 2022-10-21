@@ -53,3 +53,49 @@ TEST(BufferTest, from_hex_empty) {
     auto from = cbdc::buffer::from_hex(data);
     ASSERT_EQ(from.has_value(), false);
 }
+
+TEST(BufferTest, to_from_hex_prefixed) {
+    std::string data = "hello";
+
+    auto buf = cbdc::buffer();
+    buf.extend(data.size());
+    std::memcpy(buf.data(), data.data(), data.size());
+    auto hex = buf.to_hex_prefixed();
+    ASSERT_EQ(hex, "0x68656c6c6f");
+
+    auto from = cbdc::buffer::from_hex_prefixed(hex);
+    ASSERT_EQ(from.value(), buf);
+}
+
+TEST(BufferTest, from_hex_invalid_char_prefixed) {
+    std::string data = "0xZZ11ff";
+
+    auto buf = cbdc::buffer();
+    buf.extend(data.size());
+    std::memcpy(buf.data(), data.data(), data.size());
+
+    auto from = cbdc::buffer::from_hex_prefixed(data);
+    ASSERT_EQ(from.has_value(), false);
+}
+
+TEST(BufferTest, from_hex_invalid_len_prefixed) {
+    std::string data = "0x11ffa";
+
+    auto buf = cbdc::buffer();
+    buf.extend(data.size());
+    std::memcpy(buf.data(), data.data(), data.size());
+
+    auto from = cbdc::buffer::from_hex_prefixed(data);
+    ASSERT_TRUE(from.has_value());
+}
+
+TEST(BufferTest, from_hex_empty_prefixed) {
+    std::string data;
+
+    auto buf = cbdc::buffer();
+    buf.extend(data.size());
+    std::memcpy(buf.data(), data.data(), data.size());
+
+    auto from = cbdc::buffer::from_hex_prefixed(data);
+    ASSERT_EQ(from.has_value(), false);
+}

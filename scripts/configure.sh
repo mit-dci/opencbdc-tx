@@ -41,7 +41,7 @@ fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   apt update
-  apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync
+  apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync unzip
 
   wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | $SUDO apt-key add -
   $SUDO add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
@@ -106,3 +106,80 @@ cd lua-5.4.3
 make -j$CPUS
 $SUDO make install
 cd ..
+
+CURL_VERSION="7.83.1"
+wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz
+rm -rf curl-${CURL_VERSION}
+tar xzvf curl-${CURL_VERSION}.tar.gz
+rm -rf curl-${CURL_VERSION}.tar.gz
+mkdir -p curl-${CURL_VERSION}/build
+cd curl-${CURL_VERSION}/build
+../configure --disable-shared --without-ssl --without-libpsl --without-libidn2 --without-brotli --without-zstd --without-zlib
+make -j$CPUS
+$SUDO make install
+cd ../..
+
+JSONCPP_VERSION="1.9.5"
+wget https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/${JSONCPP_VERSION}.tar.gz
+rm -rf jsoncpp-${JSONCPP_VERSION}
+tar xzvf ${JSONCPP_VERSION}.tar.gz
+rm -rf ${JSONCPP_VERSION}.tar.gz
+mkdir -p jsoncpp-${JSONCPP_VERSION}/build
+cd jsoncpp-${JSONCPP_VERSION}/build
+cmake .. -DBUILD_SHARED_LIBS=NO -DBUILD_STATIC_LIBS=YES -DJSONCPP_WITH_TESTS=OFF -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
+make -j$CPUS
+$SUDO make install
+cd ../..
+
+wget https://github.com/ethereum/evmc/archive/eda05c6866ac06bd93d62b605cbec5839d85c221.zip
+rm -rf evmc-eda05c6866ac06bd93d62b605cbec5839d85c221
+unzip eda05c6866ac06bd93d62b605cbec5839d85c221.zip
+rm eda05c6866ac06bd93d62b605cbec5839d85c221.zip
+cd evmc-eda05c6866ac06bd93d62b605cbec5839d85c221
+mkdir build
+cd build
+cmake ..
+make -j$CPUS
+$SUDO make install
+cd ../..
+
+wget https://github.com/ethereum/evmone/archive/be870917e8cefd2b125bd27375dd9d2409ff1f68.zip
+rm -rf evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
+unzip be870917e8cefd2b125bd27375dd9d2409ff1f68.zip
+rm be870917e8cefd2b125bd27375dd9d2409ff1f68.zip
+cd evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
+rm -rf evmc
+mv ../evmc-eda05c6866ac06bd93d62b605cbec5839d85c221 ./evmc
+mkdir ./evmc/.git
+cmake -S . -B build -DBUILD_SHARED_LIBS=OFF
+cmake --build build --parallel
+cd build
+$SUDO make install
+cd ../..
+rm -rf evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
+
+wget https://github.com/chfast/ethash/archive/e3e002ecc25ca699349aa62fa38e7b7cc5f653af.zip
+rm -rf ethash-e3e002ecc25ca699349aa62fa38e7b7cc5f653af
+unzip e3e002ecc25ca699349aa62fa38e7b7cc5f653af.zip
+rm e3e002ecc25ca699349aa62fa38e7b7cc5f653af.zip
+cd ethash-e3e002ecc25ca699349aa62fa38e7b7cc5f653af
+mkdir build
+cd build
+cmake -DETHASH_BUILD_ETHASH=OFF -DETHASH_BUILD_TESTS=OFF ..
+cmake --build . --parallel
+$SUDO cp ./lib/keccak/libkeccak.a /usr/local/lib
+$SUDO cp -r ../include/ethash /usr/local/include
+cd ../..
+
+wget https://gnu.askapache.com/libmicrohttpd/libmicrohttpd-0.9.75.tar.gz
+rm -rf libmicrohttpd-0.9.75
+tar xzvf libmicrohttpd-0.9.75.tar.gz
+rm libmicrohttpd-0.9.75.tar.gz
+cd libmicrohttpd-0.9.75
+mkdir build
+cd build
+../configure --disable-curl --disable-examples --disable-doc --disable-shared --disable-https
+make -j $CPUS
+$SUDO make install
+cd ../../
+rm -rf libmicrohttpd-0.9.75
