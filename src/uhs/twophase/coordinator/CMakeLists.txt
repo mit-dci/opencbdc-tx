@@ -20,5 +20,4 @@ target_link_libraries(coordinatord coordinator
                                    ${NURAFT_LIBRARY}
                                    ${LEVELDB_LIBRARY}
                                    secp256k1
-                                   ${CMAKE_THREAD_LIBS_INIT}
-                                   snappy)
+                                   ${CMAKE_THREAD_LIBS_INIT})

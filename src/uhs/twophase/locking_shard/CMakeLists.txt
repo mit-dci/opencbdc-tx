@@ -22,5 +22,4 @@ target_link_libraries(locking-shardd locking_shard
                                      secp256k1
                                      ${NURAFT_LIBRARY}
                                      ${LEVELDB_LIBRARY}
-                                     ${CMAKE_THREAD_LIBS_INIT}
-                                     snappy)
+                                     ${CMAKE_THREAD_LIBS_INIT})
