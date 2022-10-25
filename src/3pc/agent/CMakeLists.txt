@@ -14,8 +14,10 @@ target_link_libraries(agentd broker
                              ticket_machine
                              runtime_locking_shard
                              threepc
+                             evm_runner
                              lua_runner
                              agent
+                             json_rpc_http
                              runners
                              rpc
                              network
@@ -24,4 +26,6 @@ target_link_libraries(agentd broker
                              crypto
                              secp256k1
                              ${LUA_LIBRARY}
+                             ${JSON_LIBRARY}
+                             ${MHD_LIBRARY}
                              ${CMAKE_THREAD_LIBS_INIT})
