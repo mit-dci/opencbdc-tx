@@ -1,0 +1,17 @@
+{
+  "name": "3pc-evm-loadgen",
+  "version": "1.0.0",
+  "description": "Load generator for 3PC EVM",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "python3 -m pip install -r requirements.txt",
+    "build": "npx hardhat compile && python3 gen_header.py && clang-format -i cpp_header/contracts.hpp && cp cpp_header/contracts.hpp ../bench/3pc/evm/"
+  },
+  "author": "MIT Digital Currency Initiative, Federal Reserve Bank of Boston",
+  "license": "MIT",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.6.0",
+    "hardhat": "^2.9.5",
+    "chai": "^4.2.0"
+  }
+}
