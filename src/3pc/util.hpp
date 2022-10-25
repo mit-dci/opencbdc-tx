@@ -11,6 +11,14 @@
 #include "util/common/logging.hpp"
 
 namespace cbdc::threepc {
+    /// Type of load to generate for benchmarking
+    enum class load_type {
+        /// Base token transfer
+        transfer,
+        /// ERC20 token transfer
+        erc20
+    };
+
     /// Execution/transaction model
     enum class runner_type {
         /// Transaction semantics defined using Lua.
@@ -36,6 +44,13 @@ namespace cbdc::threepc {
         std::vector<network::endpoint_t> m_agent_endpoints;
         /// Type of execution environment to use in the agent.
         runner_type m_runner_type{runner_type::evm};
+        /// The number of simultaneous load generator threads
+        size_t m_loadgen_accounts;
+        /// Type of transactions load generators should produce
+        load_type m_load_type;
+        /// The percentage of transactions that are using the same account
+        /// to simulate contention
+        double m_contention_rate;
     };
 
     /// Reads the configuration parameters from the program arguments.
