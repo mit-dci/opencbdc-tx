@@ -147,6 +147,34 @@ namespace cbdc::threepc {
         }
         cfg.m_agent_endpoints = agent_endpoints.value();
 
+        constexpr auto loadgen_txtype_key = "loadgen_txtype";
+        it = opts->find(loadgen_txtype_key);
+        if(it != opts->end()) {
+            const auto& val = it->second;
+            if(val == "transfer") {
+                cfg.m_load_type = load_type::transfer;
+            } else if(val == "erc20") {
+                cfg.m_load_type = load_type::erc20;
+            } else {
+                return std::nullopt;
+            }
+        }
+
+        cfg.m_contention_rate = 0.0;
+        constexpr auto contention_rate_key = "contention_rate";
+        it = opts->find(contention_rate_key);
+        if(it != opts->end()) {
+            cfg.m_contention_rate = std::stod(it->second);
+        }
+
+        constexpr auto default_loadgen_accounts = 1000;
+        cfg.m_loadgen_accounts = default_loadgen_accounts;
+        constexpr auto loadgen_accounts_key = "loadgen_accounts";
+        it = opts->find(loadgen_accounts_key);
+        if(it != opts->end()) {
+            cfg.m_loadgen_accounts = std::stoull(it->second);
+        }
+
         constexpr auto runner_type_key = "runner_type";
         it = opts->find(runner_type_key);
         if(it != opts->end()) {
