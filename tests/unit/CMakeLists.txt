@@ -55,5 +55,4 @@ target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
                                      secp256k1
                                      ${LEVELDB_LIBRARY}
                                      ${NURAFT_LIBRARY}
-                                     ${CMAKE_THREAD_LIBS_INIT}
-                                     snappy)
+                                     ${CMAKE_THREAD_LIBS_INIT})

@@ -28,7 +28,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   CPUS=$(sysctl -n hw.ncpu)
   # ensure development environment is set correctly for clang
   $SUDO xcode-select -switch /Library/Developer/CommandLineTools
-  brew install llvm@14 googletest lcov make wget cmake snappy
+  brew install llvm@14 googletest lcov make wget cmake
   CLANG_TIDY=/usr/local/bin/clang-tidy
   if [ ! -L "$CLANG_TIDY" ]; then
     $SUDO ln -s $(brew --prefix)/opt/llvm@14/bin/clang-tidy /usr/local/bin/clang-tidy
@@ -41,7 +41,7 @@ fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   apt update
-  apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync libsnappy-dev
+  apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync
 
   wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | $SUDO apt-key add -
   $SUDO add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
@@ -58,7 +58,7 @@ tar xzvf ${LEVELDB_VERSION}.tar.gz
 rm -rf ${LEVELDB_VERSION}.tar.gz
 mv leveldb-${LEVELDB_VERSION} "leveldb-${LEVELDB_VERSION}-${CMAKE_BUILD_TYPE}"
 cd "leveldb-${LEVELDB_VERSION}-${CMAKE_BUILD_TYPE}"
-cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLEVELDB_BUILD_TESTS=0 -DLEVELDB_BUILD_BENCHMARKS=0 -DBUILD_SHARED_LIBS=0 .
+cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLEVELDB_BUILD_TESTS=0 -DLEVELDB_BUILD_BENCHMARKS=0 -DBUILD_SHARED_LIBS=0 -DHAVE_SNAPPY=0 .
 make -j$CPUS
 $SUDO make install
 cd ..
