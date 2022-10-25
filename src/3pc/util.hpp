@@ -14,7 +14,9 @@ namespace cbdc::threepc {
     /// Execution/transaction model
     enum class runner_type {
         /// Transaction semantics defined using Lua.
-        lua
+        lua,
+        /// Ethereum-style transactions using EVM.
+        evm,
     };
 
     /// Configuration parameters for a phase two system.
@@ -33,7 +35,7 @@ namespace cbdc::threepc {
         /// RPC endpoints for the agents.
         std::vector<network::endpoint_t> m_agent_endpoints;
         /// Type of execution environment to use in the agent.
-        runner_type m_runner_type{runner_type::lua};
+        runner_type m_runner_type{runner_type::evm};
     };
 
     /// Reads the configuration parameters from the program arguments.
