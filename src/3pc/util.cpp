@@ -151,7 +151,9 @@ namespace cbdc::threepc {
         it = opts->find(runner_type_key);
         if(it != opts->end()) {
             const auto& val = it->second;
-            if(val == "lua") {
+            if(val == "evm") {
+                cfg.m_runner_type = runner_type::evm;
+            } else if(val == "lua") {
                 cfg.m_runner_type = runner_type::lua;
             } else {
                 return std::nullopt;
