@@ -13,4 +13,4 @@ target_link_libraries(shard-seeder transaction
                                    ${LEVELDB_LIBRARY}
                                    ${CMAKE_THREAD_LIBS_INIT}
                                    secp256k1
-                                   snappy)
+                                   ${SNAPPY_LIBRARY})

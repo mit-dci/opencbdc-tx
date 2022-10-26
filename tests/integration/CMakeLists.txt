@@ -38,4 +38,4 @@ target_link_libraries(run_integration_tests ${GTEST_LIBRARY}
                                             ${LEVELDB_LIBRARY}
                                             ${NURAFT_LIBRARY}
                                             ${CMAKE_THREAD_LIBS_INIT}
-                                            snappy)
+                                            ${SNAPPY_LIBRARY})

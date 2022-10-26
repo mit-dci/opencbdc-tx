@@ -23,4 +23,4 @@ target_link_libraries(locking-shardd locking_shard
                                      ${NURAFT_LIBRARY}
                                      ${LEVELDB_LIBRARY}
                                      ${CMAKE_THREAD_LIBS_INIT}
-                                     snappy)
+                                     ${SNAPPY_LIBRARY})

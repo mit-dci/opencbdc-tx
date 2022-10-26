@@ -16,4 +16,4 @@ target_link_libraries(archiverd archiver
                                 ${NURAFT_LIBRARY}
                                 secp256k1
                                 ${CMAKE_THREAD_LIBS_INIT}
-                                snappy)
+                                ${SNAPPY_LIBRARY})
