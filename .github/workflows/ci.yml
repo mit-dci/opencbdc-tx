@@ -45,7 +45,7 @@ jobs:
   unit-and-integration-test:
     name: Unit and Integration Tests
     runs-on: ubuntu-20.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
         with:
