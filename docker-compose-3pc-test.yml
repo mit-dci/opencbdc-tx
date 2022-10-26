@@ -1,0 +1,111 @@
+version: '3'
+
+services:
+
+  agent0:
+    build: .
+    image: opencbdc-tx
+    container_name: opencbdc-agent0
+    tty: true
+    restart: always
+    command: ./scripts/wait-for-it.sh -s ticket0:7777 -t 60 -- ./scripts/wait-for-it.sh -s shard0:5556 -t 60 -- build/src/3pc/agent/agentd --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:8080 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN --telemetry=1
+    ports:
+      - 8080:8080
+    depends_on:
+      - ticket0
+      - shard0
+    networks:
+      3pc-network:
+        ipv4_address: 172.16.1.30
+    environment:
+      - TESTRUN_ID=dev-${TESTRUN_ID}
+      - TESTRUN_ROLE=agent0
+      - EC2_INSTANCE_ID=dev000
+      - AWS_REGION=dev
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+
+  ticket0:
+    build: .
+    image: opencbdc-tx
+    tty: true
+    container_name: opencbdc-ticket0
+    command: ./scripts/wait-for-it.sh -s shard0:5556 -t 60 -- ./build/src/3pc/ticket_machine/ticket_machined --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:6666 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN --telemetry=1
+    networks:
+      3pc-network:
+        ipv4_address: 172.16.1.40
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 7777"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    environment:
+      - TESTRUN_ID=dev-${TESTRUN_ID}
+      - TESTRUN_ROLE=ticket0
+      - EC2_INSTANCE_ID=dev001
+      - AWS_REGION=dev
+    restart: always
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+
+  shard0:
+    build: .
+    image: opencbdc-tx
+    container_name: opencbdc-shard0
+    tty: true
+    command: ./build/src/3pc/runtime_locking_shard/runtime_locking_shardd --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:6666 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN --telemetry=1
+    ports:
+      - 5556:5556
+    networks:
+      3pc-network:
+        ipv4_address: 172.16.1.50
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 5556"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    environment:
+      - TESTRUN_ID=dev-${TESTRUN_ID}
+      - TESTRUN_ROLE=shard0
+      - EC2_INSTANCE_ID=dev002
+      - AWS_REGION=dev
+    restart: always
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+
+  loadgen0:
+    build: .
+    image: opencbdc-tx
+    container_name: opencbdc-loadgen0
+    tty: true
+    command: ./build/tools/bench/3pc/evm/evm_bench --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:8080 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loadgen_accounts=8192 --loadgen_txtype=erc20 --telemetry=1
+    networks:
+      3pc-network:
+        ipv4_address: 172.16.1.60
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 5556"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    environment:
+      - TESTRUN_ID=dev-${TESTRUN_ID}
+      - TESTRUN_ROLE=loadgen0
+      - EC2_INSTANCE_ID=dev003
+      - AWS_REGION=dev
+    restart: always
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+
+networks:
+  3pc-network:
+    name: 3pc-network
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 172.16.1.0/16
+         gateway: 172.16.1.1
