@@ -70,12 +70,39 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Build and push (PR cache)
+        if: steps.changed-files-specific.outputs.any_changed == 'true' && github.event_name == 'pull_request'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          target: base
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=docker,dest=/tmp/base.tar
+
+      - name: Upload base artifact (PR)
+        if: steps.changed-files-specific.outputs.any_changed == 'true' && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v2
+        with:
+          name: base
+          path: /tmp/base.tar
+
   docker-build-and-publish-all:
     runs-on: ubuntu-20.04
     needs: docker-build-and-publish-base
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: "2"
+
+      - name: Get specific changed files
+        id: changed-files-specific
+        uses: tj-actions/changed-files@v32
+        with:
+          files: |
+            Dockerfile
+            **/configure.sh
 
       - name: Pull submodules
         run: git submodule init && git submodule update
@@ -100,6 +127,21 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
+      # For PRs that have base image changes, pull base image artifact built in docker-build-and-publish-base
+      - name: Download base image artifact
+        if: steps.changed-files-specific.outputs.any_changed == 'true' && github.event_name == 'pull_request'
+        uses: actions/download-artifact@v2
+        with:
+          name: base
+          path: /tmp
+
+      # For PRs that have base image changes, load base image artifact built in docker-build-and-publish-base
+      - name: Load Docker base image artifact
+        if: steps.changed-files-specific.outputs.any_changed == 'true' && github.event_name == 'pull_request'
+        run: |
+          docker load --input /tmp/base.tar
+          docker image ls -a
+
       - name: Login to GitHub Container Registry
         if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         uses: docker/login-action@v1
@@ -108,7 +150,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push (twophase)
+      - name: Build and push twophase
+        if: ! (steps.changed-files-specific.outputs.any_changed == 'true' && github.event_name == 'pull_request')
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -119,7 +162,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build and push (atomizer)
+      - name: Build and push atomizer
+        if: ! (steps.changed-files-specific.outputs.any_changed == 'true' && github.event_name == 'pull_request')
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -129,3 +173,31 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Build and push twophase (PR, with base changes)
+        if: steps.changed-files-specific.outputs.any_changed == 'true' && github.event_name == 'pull_request'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          target: twophase
+          push: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BASE_IMAGE=localhost:5000/opencbdc-tx/base
+
+      - name: Build and push atomizer (PR, with base changes)
+        if: steps.changed-files-specific.outputs.any_changed == 'true' && github.event_name == 'pull_request'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          target: atomizer
+          push: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BASE_IMAGE=localhost:5000/opencbdc-tx/base
