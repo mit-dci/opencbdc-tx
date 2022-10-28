@@ -35,6 +35,16 @@ namespace cbdc::threepc::agent::runner {
         return evmc::hex(evmc::bytes(v.bytes, sizeof(v.bytes)));
     }
 
+    auto to_hex_trimmed(const evmc::bytes32& b,
+                        const std::string& prefix = "0x") -> std::string;
+
+    /// Adds an entry to a bloom value
+    /// \param bloom the existing bloom value
+    /// \param entry the entry to add
+    /// \see https://ethereum.github.io/execution-specs/autoapi/ethereum/
+    ///      paris/bloom/index.html
+    void add_to_bloom(cbdc::buffer& bloom, const cbdc::buffer& entry);
+
     /// Parses hexadecimal representation in string format to T
     /// \tparam T type to convert from hex to.
     /// \param hex hex string to parse. May be prefixed with 0x

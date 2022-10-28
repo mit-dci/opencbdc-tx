@@ -3,16 +3,15 @@ version: '3'
 services:
 
   agent0:
-    build: .
+    build:
+      context: .
+      target: threepc
     image: opencbdc-tx
     tty: true
     restart: always
     command: ./scripts/wait-for-it.sh -s ticket0:7777 -t 60 -- ./scripts/wait-for-it.sh -s shard0:5556 -t 60 -- ./build/src/3pc/agent/agentd --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:8080 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN
     ports:
       - 8080:8080
-    depends_on:
-      - ticket0
-      - shard0
     networks:
       - 3pc-network
     healthcheck:
@@ -22,7 +21,9 @@ services:
       retries: 5
 
   ticket0:
-    build: .
+    build:
+      context: .
+      target: threepc
     image: opencbdc-tx
     tty: true
     command: ./scripts/wait-for-it.sh -s shard0:5556 -t 60 -- ./build/src/3pc/ticket_machine/ticket_machined --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:6666 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN
@@ -36,7 +37,9 @@ services:
     restart: always
 
   shard0:
-    build: .
+    build:
+      context: .
+      target: threepc
     image: opencbdc-tx
     tty: true
     command: ./build/src/3pc/runtime_locking_shard/runtime_locking_shardd --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:6666 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN

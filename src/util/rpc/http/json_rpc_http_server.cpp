@@ -10,9 +10,11 @@
 #include <thread>
 
 namespace cbdc::rpc {
-    json_rpc_http_server::json_rpc_http_server(network::endpoint_t endpoint)
+    json_rpc_http_server::json_rpc_http_server(network::endpoint_t endpoint,
+                                               bool enable_cors)
         : m_host(endpoint.first),
-          m_port(endpoint.second) {}
+          m_port(endpoint.second),
+          m_enable_cors(enable_cors) {}
 
     json_rpc_http_server::~json_rpc_http_server() {
         // Set running flag
@@ -92,6 +94,9 @@ namespace cbdc::rpc {
             new_req->m_connection = connection;
             auto* server = static_cast<json_rpc_http_server*>(cls);
             new_req->m_server = server;
+            new_req->m_origin = MHD_lookup_connection_value(connection,
+                                                            MHD_HEADER_KIND,
+                                                            "Origin");
             *con_cls = new_req.get();
             {
                 std::unique_lock l(server->m_requests_mut);
@@ -102,6 +107,12 @@ namespace cbdc::rpc {
         }
 
         auto* req = static_cast<request*>(*con_cls);
+
+        // cors response if enabled
+        if(method == std::string("OPTIONS") && req->m_server->m_enable_cors) {
+            send_cors_response(req);
+            return MHD_YES;
+        }
 
         if(method != std::string("POST")) {
             req->m_code = MHD_HTTP_METHOD_NOT_ALLOWED;
@@ -134,12 +145,62 @@ namespace cbdc::rpc {
         return MHD_YES;
     }
 
+    auto json_rpc_http_server::send_cors_response(request* request_info)
+        -> bool {
+        std::string response = "";
+        auto* result = MHD_create_response_from_buffer(
+            response.size(),
+            static_cast<void*>(response.data()),
+            MHD_RESPMEM_MUST_COPY);
+        if(!request_info->m_origin) {
+            request_info->m_origin = "*";
+        }
+        MHD_add_response_header(result,
+                                "Access-Control-Allow-Origin",
+                                request_info->m_origin);
+
+        MHD_add_response_header(result,
+                                "Access-Control-Allow-Methods",
+                                "POST");
+        MHD_add_response_header(result,
+                                "Access-Control-Allow-Headers",
+                                "Content-Type");
+        MHD_add_response_header(result, "Access-Control-Max-Age", "600");
+        MHD_add_response_header(result, "Vary", "Origin");
+        MHD_add_response_header(result,
+                                "Vary",
+                                "Access-Control-Request-Method");
+        MHD_add_response_header(result,
+                                "Vary",
+                                "Access-Control-Request-Headers");
+        auto ret = MHD_queue_response(request_info->m_connection, 200, result);
+        MHD_destroy_response(result);
+        const auto* inf = MHD_get_connection_info(
+            request_info->m_connection,
+            MHD_CONNECTION_INFO_CONNECTION_SUSPENDED);
+        if(inf->suspended == MHD_YES) {
+            MHD_resume_connection(request_info->m_connection);
+        }
+        return ret == MHD_YES;
+    }
+
     auto json_rpc_http_server::send_response(std::string response,
                                              request* request_info) -> bool {
         auto* result = MHD_create_response_from_buffer(
             response.size(),
             static_cast<void*>(response.data()),
             MHD_RESPMEM_MUST_COPY);
+
+        if(request_info->m_server->m_enable_cors) {
+            if(!request_info->m_origin) {
+                request_info->m_origin = "*";
+            }
+            MHD_add_response_header(result,
+                                    "Access-Control-Allow-Origin",
+                                    request_info->m_origin);
+            MHD_add_response_header(result, "Vary", "Origin");
+        }
+
         MHD_add_response_header(result, "Content-Type", "application/json");
         auto ret = MHD_queue_response(request_info->m_connection,
                                       request_info->m_code,
@@ -177,19 +238,25 @@ namespace cbdc::rpc {
             params = req["params"];
         }
 
+        uint64_t id = 0;
+        if(req["id"].isUInt64()) {
+            id = req["id"].asUInt64();
+        }
+
         MHD_suspend_connection(request_info->m_connection);
 
         auto maybe_sent
             = m_cb(method,
                    params,
-                   [this, request_info](std::optional<Json::Value> resp) {
-                       handle_response(request_info, std::move(resp));
+                   [this, request_info, id](std::optional<Json::Value> resp) {
+                       handle_response(id, request_info, std::move(resp));
                    });
         return maybe_sent;
     }
 
     void
-    json_rpc_http_server::handle_response(request* request_info,
+    json_rpc_http_server::handle_response(uint64_t id,
+                                          request* request_info,
                                           std::optional<Json::Value> resp) {
         if(!resp.has_value()) {
             request_info->m_code = MHD_HTTP_INTERNAL_SERVER_ERROR;
@@ -201,7 +268,7 @@ namespace cbdc::rpc {
 
         auto resp_payload = resp.value();
         resp_payload["jsonrpc"] = "2.0";
-        resp_payload["id"] = 0;
+        resp_payload["id"] = id;
 
         request_info->m_code = MHD_HTTP_OK;
         auto resp_str = Json::writeString(m_builder, resp_payload);

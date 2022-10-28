@@ -6,6 +6,7 @@
 #ifndef CBDC_UNIVERSE0_SRC_3PC_AGENT_RUNNERS_EVM_MESSAGES_H_
 #define CBDC_UNIVERSE0_SRC_3PC_AGENT_RUNNERS_EVM_MESSAGES_H_
 
+#include "3pc/agent/runners/interface.hpp"
 #include "util/common/hash.hpp"
 
 #include <evmc/evmc.hpp>
@@ -117,6 +118,53 @@ namespace cbdc::threepc::agent::runner {
         std::vector<evm_log> m_logs{};
         /// EVM output data.
         std::vector<uint8_t> m_output_data{};
+        /// Ticket number that ran this TX - needed to map
+        /// to pretend blocks
+        cbdc::threepc::agent::runner::interface::ticket_number_type
+            m_ticket_number {};
+        /// Timestamp of the transaction - needed to provide
+        /// a timestamp in pretend blocks
+        uint64_t m_timestamp{};
+    };
+
+    /// EVM pretend block is a pairing of the blocknumber (equal to the ticket
+    /// number) and the transactions (currently always a single one) "inside
+    /// the block" (executed by that ticket)
+    struct evm_pretend_block {
+        /// Ticket number
+        interface::ticket_number_type m_ticket_number {};
+        /// Transactions executed by the ticket
+        std::vector<evm_tx_receipt> m_transactions{};
+    };
+
+    /// Describes the parameters of a query on EVM logs - used to transfer
+    /// these parameters from the getLogs API method to the runner
+    struct evm_log_query {
+        /// The addresses for which logs are queried
+        std::vector<evmc::address> m_addresses{};
+        /// The topics for which logs are queried
+        std::vector<evmc::bytes32> m_topics{};
+        /// The start of the block range to query logs for
+        cbdc::threepc::agent::runner::interface::ticket_number_type
+            m_from_block {};
+        /// The end of the block range to query logs for
+        cbdc::threepc::agent::runner::interface::ticket_number_type
+            m_to_block {};
+    };
+
+    /// Index data for evm logs. This is the value stored under a key
+    /// calculated from the ticket number and the address, and it packs all
+    /// of the logs for that address. We store a copy of the logs here, which
+    /// is less efficient for storage, but prevents retrieving all logs for
+    /// a transaction through its receipt, discarding the logs that are not
+    /// related to a particular address
+    struct evm_log_index {
+        /// Ticket number that emitted the logs
+        interface::ticket_number_type m_ticket_number {};
+        /// TXID that emitted the logs
+        cbdc::hash_t m_txid{};
+        /// The logs that were emitted
+        std::vector<evm_log> m_logs;
     };
 
     // Type for account code keys.

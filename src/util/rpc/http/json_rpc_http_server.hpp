@@ -32,7 +32,9 @@ namespace cbdc::rpc {
 
         /// Construct a new server.
         /// \param endpoint network endpoint to listen on.
-        explicit json_rpc_http_server(network::endpoint_t endpoint);
+        /// \param enable_cors true if CORS should be enabled.
+        explicit json_rpc_http_server(network::endpoint_t endpoint,
+                                      bool enable_cors = false);
 
         /// Stop the server.
         ~json_rpc_http_server();
@@ -56,6 +58,7 @@ namespace cbdc::rpc {
             MHD_Connection* m_connection{};
             std::stringstream m_request;
             json_rpc_http_server* m_server{};
+            const char* m_origin{};
             unsigned int m_code{};
         };
 
@@ -69,7 +72,7 @@ namespace cbdc::rpc {
         std::map<request*, std::unique_ptr<request>> m_requests;
 
         std::atomic<bool> m_running{true};
-
+        bool m_enable_cors;
         // std::atomic<size_t> m_requests_started{};
 
         static auto callback(void* cls,
@@ -81,12 +84,14 @@ namespace cbdc::rpc {
                              size_t* upload_data_size,
                              void** con_cls) -> MHD_Result;
 
+        static auto send_cors_response(request* request_info) -> bool;
         static auto send_response(std::string response, request* request_info)
             -> bool;
 
         auto handle_request(request* request_info) -> bool;
 
-        void handle_response(request* request_info,
+        void handle_response(uint64_t id,
+                             request* request_info,
                              std::optional<Json::Value> resp);
 
         static void request_complete(void* cls,
