@@ -33,6 +33,7 @@ namespace cbdc::threepc::agent::runner {
           m_dry_run(dry_run),
           m_ticket_number(ticket_number) {
         m_receipt.m_tx = m_tx;
+        m_receipt.m_ticket_number = m_ticket_number;
     }
 
     auto evm_host::get_account(const evmc::address& addr, bool write) const
@@ -387,6 +388,60 @@ namespace cbdc::threepc::agent::runner {
         return EVMC_ACCESS_COLD;
     }
 
+    auto evm_host::ticket_number_key(
+        std::optional<interface::ticket_number_type> tn) const
+        -> cbdc::buffer {
+        if(!tn) {
+            tn = m_ticket_number;
+        }
+        auto tn_buf = cbdc::make_buffer(tn.value());
+        CSHA256 sha;
+        hash_t tn_hash;
+
+        sha.Write(tn_buf.c_ptr(), tn_buf.size());
+        sha.Finalize(tn_hash.data());
+
+        return make_buffer(tn_hash);
+    }
+
+    auto evm_host::log_index_key(
+        evmc::address addr,
+        std::optional<interface::ticket_number_type> tn) const
+        -> cbdc::buffer {
+        if(!tn) {
+            tn = m_ticket_number;
+        }
+        auto tn_buf = cbdc::make_buffer(tn.value());
+        CSHA256 sha;
+        hash_t log_index_hash;
+        sha.Write(addr.bytes, sizeof(addr.bytes));
+        sha.Write(tn_buf.c_ptr(), tn_buf.size());
+        sha.Finalize(log_index_hash.data());
+
+        return make_buffer(log_index_hash);
+    }
+
+    auto evm_host::get_log_index_keys() const -> std::vector<cbdc::buffer> {
+        auto logs = get_sorted_logs();
+        auto keys = std::vector<cbdc::buffer>();
+        for(auto& log : logs) {
+            keys.push_back(log_index_key(log.first));
+        }
+        return keys;
+    }
+
+    auto evm_host::get_sorted_logs() const
+        -> std::unordered_map<evmc::address, std::vector<evm_log>> {
+        auto ret = std::unordered_map<evmc::address, std::vector<evm_log>>();
+        for(const auto& log : m_receipt.m_logs) {
+            if(ret.find(log.m_addr) == ret.end()) {
+                ret.insert({log.m_addr, {}});
+            }
+            ret[log.m_addr].push_back(log);
+        }
+        return ret;
+    }
+
     auto evm_host::get_state_updates() const
         -> runtime_locking_shard::state_update_type {
         auto ret = runtime_locking_shard::state_update_type();
@@ -426,9 +481,20 @@ namespace cbdc::threepc::agent::runner {
         }
 
         const auto tx = std::make_shared<evm_tx>(m_tx);
-        auto tid = make_buffer(tx_id(*tx));
+        auto txid = tx_id(*tx);
+        auto tid = make_buffer(txid);
         auto r = make_buffer(m_receipt);
         ret[tid] = r;
+        ret[ticket_number_key()] = tid;
+
+        auto ordered_logs = get_sorted_logs();
+        for(auto& addr_log : ordered_logs) {
+            auto log_idx = evm_log_index();
+            log_idx.m_ticket_number = m_ticket_number;
+            log_idx.m_txid = txid;
+            log_idx.m_logs = addr_log.second;
+            ret[log_index_key(addr_log.first)] = make_buffer(log_idx);
+        }
         return ret;
     }
 
@@ -482,6 +548,10 @@ namespace cbdc::threepc::agent::runner {
         }
         m_receipt.m_gas_used
             = evmc::uint256be(static_cast<uint64_t>(gas_used));
+        m_receipt.m_timestamp = static_cast<uint64_t>(
+            std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::system_clock::now().time_since_epoch())
+                .count());
     }
 
     void evm_host::revert() {

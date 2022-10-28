@@ -135,7 +135,8 @@ auto main(int argc, char** argv) -> int {
             cfg.value());
     } else if(cfg->m_runner_type == cbdc::threepc::runner_type::evm) {
         auto rpc_server = std::make_unique<cbdc::rpc::json_rpc_http_server>(
-            cfg->m_agent_endpoints[cfg->m_component_id]);
+            cfg->m_agent_endpoints[cfg->m_component_id],
+            true);
         server = std::make_unique<cbdc::threepc::agent::rpc::http_server>(
             std::move(rpc_server),
             broker,

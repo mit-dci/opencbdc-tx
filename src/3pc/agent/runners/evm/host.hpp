@@ -91,6 +91,16 @@ namespace cbdc::threepc::agent::runner {
                             const evmc::bytes32& key) noexcept
             -> evmc_access_status final;
 
+        using indexed_logs_type
+            = std::unordered_map<evmc::address, std::vector<evm_log>>;
+
+        /// Return the keys of the log indexes - these are sha256(addr, ticket)
+        /// and will get value 1 - to indicate there are logs for the given
+        /// address in the given ticket. The logs for the specific ticket can
+        /// then be fetched and filtered on topic and address.
+        /// \return list of keys to set to 1 for the log index
+        auto get_log_index_keys() const -> std::vector<cbdc::buffer>;
+
         /// Return the changes to the state resulting from transaction
         /// execution.
         /// \return list of updates keys and values.
@@ -120,6 +130,19 @@ namespace cbdc::threepc::agent::runner {
         /// Return the receipt from executing the transaction.
         /// \return transaction receipt.
         auto get_tx_receipt() const -> evm_tx_receipt;
+
+        /// Return the key for the host's ticket number, which is the hash
+        /// of the ticket number's serialized representation to uniformly
+        /// distribute all ticket-to-tx mappings across the shards
+        /// @return ticket number key
+        auto ticket_number_key(std::optional<interface::ticket_number_type> tn
+                               = std::nullopt) const -> cbdc::buffer;
+
+        /// Return the key for the indicator of the existence of logs for
+        /// a particular address at a particular ticket
+        auto log_index_key(evmc::address addr,
+                           std::optional<interface::ticket_number_type> tn
+                           = std::nullopt) const -> cbdc::buffer;
 
       private:
         std::shared_ptr<logging::log> m_log;
@@ -166,6 +189,9 @@ namespace cbdc::threepc::agent::runner {
         [[nodiscard]] auto get_account_code(const evmc::address& addr,
                                             bool write) const
             -> std::optional<evm_account_code>;
+
+        auto get_sorted_logs() const
+            -> std::unordered_map<evmc::address, std::vector<evm_log>>;
 
         void transfer(const evmc::address& from,
                       const evmc::address& to,

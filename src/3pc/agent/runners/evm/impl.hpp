@@ -29,6 +29,18 @@ namespace cbdc::threepc::agent::runner {
         get_transaction,
         /// Return the receipt for a transaction.
         get_transaction_receipt,
+        /// Return just the ticket number to simulate getting the
+        /// latest block
+        get_block_number,
+        /// Return a pretend block that is based on the ticket
+        /// number, and the transaction (potentially) corresponding
+        /// to it
+        get_block,
+        /// Query the logs for a particular address, block range and
+        /// topic filter
+        get_logs,
+        /// Read a specific key of an account's storage
+        read_account_storage,
     };
 
     /// Executes EVM transactions, implementing the runner interface.
@@ -79,6 +91,9 @@ namespace cbdc::threepc::agent::runner {
         auto run_execute_transaction(const evmc::address& from, bool dry_run)
             -> bool;
         auto run_get_account() -> bool;
+        auto run_get_block() -> bool;
+        auto run_get_logs() -> bool;
+        auto run_get_block_number() -> bool;
         [[nodiscard]] auto check_base_gas(bool dry_run) const
             -> std::pair<evmc::uint256be, bool>;
         [[nodiscard]] auto make_tx_context(const evmc::address& from,
@@ -90,13 +105,29 @@ namespace cbdc::threepc::agent::runner {
         void handle_lock_from_account(
             const broker::interface::try_lock_return_type& res);
 
+        void lock_ticket_number_key();
+        void lock_index_keys(const std::function<void()>& callback);
         void schedule_exec();
 
         void schedule(const std::function<void()>& fn);
 
         void schedule_run();
-
         void do_run();
+        static auto make_pretend_block(interface::ticket_number_type tn)
+            -> evm_pretend_block;
+
+        void handle_get_logs_try_lock_response(
+            const evm_log_query& qry,
+            const std::shared_ptr<std::vector<evm_log_index>>& log_indexes,
+            const std::shared_ptr<std::atomic<size_t>>& acquired,
+            const std::shared_ptr<std::mutex>& log_indexes_mut,
+            size_t key_count,
+            const broker::interface::try_lock_return_type& res);
+
+        void handle_complete_get_logs(
+            const evm_log_query& qry,
+            const std::shared_ptr<std::mutex>& log_indexes_mut,
+            const std::shared_ptr<std::vector<evm_log_index>>& log_indexes);
     };
 }
 

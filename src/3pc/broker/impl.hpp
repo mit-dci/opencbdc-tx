@@ -79,6 +79,13 @@ namespace cbdc::threepc::broker {
         /// \return true if requests to all shards were initiated successfully.
         auto recover(recover_callback_type result_callback) -> bool override;
 
+        /// Get the highest ticket number that was used. This is not to be
+        /// used for calculating a next ticket number, but is used to calculate
+        /// the pretend height of the chain in the evm runner, which is derived
+        /// from ticket numbers
+        /// \return highest ticket number that was used
+        auto highest_ticket() -> ticket_number_type override;
+
       private:
         enum class ticket_state : uint8_t {
             begun,
@@ -95,6 +102,7 @@ namespace cbdc::threepc::broker {
         std::shared_ptr<logging::log> m_log;
 
         mutable std::recursive_mutex m_mut;
+        ticket_number_type m_highest_ticket{};
 
         enum class shard_state_type : uint8_t {
             begun,

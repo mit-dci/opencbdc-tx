@@ -66,6 +66,25 @@ namespace cbdc {
 
     auto operator>>(serializer& deser,
                     threepc::agent::runner::evm_dryrun_tx& tx) -> serializer&;
+
+    auto operator>>(serializer& deser,
+                    threepc::agent::runner::evm_pretend_block& b)
+        -> serializer&;
+    auto operator<<(serializer& ser,
+                    const threepc::agent::runner::evm_pretend_block& b)
+        -> serializer&;
+
+    auto operator>>(serializer& deser,
+                    threepc::agent::runner::evm_log_query& lq) -> serializer&;
+    auto operator<<(serializer& ser,
+                    const threepc::agent::runner::evm_log_query& lq)
+        -> serializer&;
+
+    auto operator>>(serializer& deser,
+                    threepc::agent::runner::evm_log_index& idx) -> serializer&;
+    auto operator<<(serializer& ser,
+                    const threepc::agent::runner::evm_log_index& idx)
+        -> serializer&;
 }
 
 #endif
