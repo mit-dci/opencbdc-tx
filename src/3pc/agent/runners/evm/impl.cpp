@@ -5,6 +5,7 @@
 
 #include "impl.hpp"
 
+#include "crypto/sha256.h"
 #include "format.hpp"
 #include "host.hpp"
 #include "math.hpp"
@@ -56,8 +57,8 @@ namespace cbdc::threepc::agent::runner {
         static constexpr uint8_t invalid_function = 255;
         uint8_t f = invalid_function;
         std::memcpy(&f, m_function.data(), sizeof(uint8_t));
-        if(f > static_cast<uint8_t>(
-               evm_runner_function::get_transaction_receipt)) {
+        if(f
+           > static_cast<uint8_t>(evm_runner_function::read_account_storage)) {
             m_log->error("Unknown EVM runner function ", f);
             m_result_callback(error_code::function_load);
             return;
@@ -83,6 +84,19 @@ namespace cbdc::threepc::agent::runner {
             case evm_runner_function::get_transaction_receipt:
                 success = run_get_transaction_receipt();
                 break;
+            case evm_runner_function::get_block_number:
+                success = run_get_block_number();
+                break;
+            case evm_runner_function::get_block:
+                success = run_get_block();
+                break;
+            case evm_runner_function::get_logs:
+                success = run_get_logs();
+                break;
+            case evm_runner_function::read_account_storage:
+                success = run_get_account(); // m_param contains the right key
+                                             // already
+                break;
             default:
                 m_result_callback(error_code::function_load);
                 break;
@@ -94,7 +108,7 @@ namespace cbdc::threepc::agent::runner {
     }
 
     auto evm_runner::run_get_account() -> bool {
-        auto success = m_try_lock_callback(
+        return m_try_lock_callback(
             m_param,
             broker::lock_type::read,
             [this](const broker::interface::try_lock_return_type& res) {
@@ -108,8 +122,222 @@ namespace cbdc::threepc::agent::runner {
                 ret[m_param] = v;
                 m_result_callback(ret);
             });
+    }
+
+    auto evm_runner::run_get_block_number() -> bool {
+        return m_try_lock_callback(
+            m_param,
+            broker::lock_type::read,
+            [this](const broker::interface::try_lock_return_type&) {
+                auto ret = runtime_locking_shard::state_update_type();
+                ret[m_param]
+                    = cbdc::make_buffer(evmc::uint256be(m_ticket_number));
+                m_result_callback(ret);
+            });
+    }
+
+    auto evm_runner::make_pretend_block(interface::ticket_number_type tn)
+        -> evm_pretend_block {
+        evm_pretend_block blk;
+        blk.m_ticket_number = tn;
+        blk.m_transactions = {};
+        return blk;
+    }
+
+    auto evm_runner::run_get_block() -> bool {
+        // m_param contains the raw serialized block number - need to decrypt
+        // that first and then hash it to get to the key the
+        // block(ticket)number to txid mapping is stored under in the shard.
+
+        auto maybe_tn = cbdc::from_buffer<evmc::uint256be>(m_param);
+        if(!maybe_tn) {
+            return false;
+        }
+        auto tn = to_uint64(maybe_tn.value());
+        auto tn_key = m_host->ticket_number_key(tn);
+        auto success = m_try_lock_callback(
+            tn_key,
+            broker::lock_type::read,
+            [this, tn](const broker::interface::try_lock_return_type& res) {
+                if(!std::holds_alternative<broker::value_type>(res)) {
+                    auto ret = runtime_locking_shard::state_update_type();
+                    auto blk = make_pretend_block(tn);
+                    ret[m_param] = make_buffer(blk);
+                    m_result_callback(ret);
+                    return;
+                }
+
+                auto v = std::get<broker::value_type>(res);
+                auto maybe_txid = from_buffer<cbdc::hash_t>(v);
+                if(!maybe_txid) {
+                    auto ret = runtime_locking_shard::state_update_type();
+                    auto blk = make_pretend_block(tn);
+                    ret[m_param] = make_buffer(blk);
+                    m_result_callback(ret);
+                    return;
+                }
+
+                auto tx_success = m_try_lock_callback(
+                    v,
+                    broker::lock_type::read,
+                    [this,
+                     tn](const broker::interface::try_lock_return_type& res2) {
+                        if(!std::holds_alternative<broker::value_type>(res2)) {
+                            m_log->error(
+                                "Ticket number had TXID, but TX not found");
+                            m_result_callback(error_code::function_load);
+                            return;
+                        }
+
+                        auto v2 = std::get<broker::value_type>(res2);
+                        auto maybe_tx_receipt
+                            = from_buffer<evm_tx_receipt>(v2);
+                        if(!maybe_tx_receipt) {
+                            m_log->error("Ticket number had TXID, but TX "
+                                         "receipt could not be deserialized");
+                            m_result_callback(error_code::function_load);
+                            return;
+                        }
+
+                        auto ret = runtime_locking_shard::state_update_type();
+                        auto blk = make_pretend_block(tn);
+                        blk.m_transactions.push_back(maybe_tx_receipt.value());
+                        ret[m_param] = make_buffer(blk);
+                        m_result_callback(ret);
+                        return;
+                    });
+                if(!tx_success) {
+                    m_log->error("Could not send request for TX data");
+                    m_result_callback(error_code::function_load);
+                    return;
+                }
+            });
 
         return success;
+    }
+
+    auto evm_runner::run_get_logs() -> bool {
+        m_log->info(m_ticket_number, "run_get_logs started");
+        // m_param contains the serialized evm_log_query
+        auto maybe_qry = cbdc::from_buffer<evm_log_query>(m_param);
+        if(!maybe_qry) {
+            return false;
+        }
+        auto qry = maybe_qry.value();
+
+        // First, determine the keys to query for log existence
+        auto keys = std::vector<cbdc::buffer>();
+        for(auto blk = qry.m_from_block; blk <= qry.m_to_block; blk++) {
+            for(auto& it : qry.m_addresses) {
+                keys.push_back(m_host->log_index_key(it, blk));
+            }
+        }
+
+        m_log->info(m_ticket_number,
+                    "getting",
+                    keys.size(),
+                    "keys from shards");
+
+        auto log_indexes_mut = std::make_shared<std::mutex>();
+        auto log_indexes = std::make_shared<std::vector<evm_log_index>>();
+        auto acquired = std::make_shared<std::atomic<size_t>>();
+        for(auto& key : keys) {
+            auto success = m_try_lock_callback(
+                key,
+                broker::lock_type::read,
+                [this,
+                 acquired,
+                 log_indexes,
+                 log_indexes_mut,
+                 key_count = keys.size(),
+                 qry](const broker::interface::try_lock_return_type& res) {
+                    handle_get_logs_try_lock_response(qry,
+                                                      log_indexes,
+                                                      acquired,
+                                                      log_indexes_mut,
+                                                      key_count,
+                                                      res);
+                });
+            if(!success) {
+                m_log->error("Unable to lock logs index key");
+                m_result_callback(error_code::internal_error);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    void evm_runner::handle_get_logs_try_lock_response(
+        const evm_log_query& qry,
+        const std::shared_ptr<std::vector<evm_log_index>>& log_indexes,
+        const std::shared_ptr<std::atomic<size_t>>& acquired,
+        const std::shared_ptr<std::mutex>& log_indexes_mut,
+        size_t key_count,
+        const broker::interface::try_lock_return_type& res) {
+        if(!std::holds_alternative<broker::value_type>(res)) {
+            m_log->error("Unable to read log key");
+            m_result_callback(error_code::function_load);
+            return;
+        }
+
+        m_log->info(m_ticket_number, "got value from shard");
+
+        auto v = std::get<broker::value_type>(res);
+        auto maybe_logs = cbdc::from_buffer<evm_log_index>(v);
+        if(maybe_logs) {
+            // Found potentially relevant logs, add
+            std::unique_lock<std::mutex> lck(*log_indexes_mut);
+            log_indexes->push_back(maybe_logs.value());
+        }
+        auto acq = (*acquired)++;
+        if(acq + 1 == key_count) {
+            handle_complete_get_logs(qry, log_indexes_mut, log_indexes);
+        }
+    }
+
+    void evm_runner::handle_complete_get_logs(
+        const evm_log_query& qry,
+        const std::shared_ptr<std::mutex>& log_indexes_mut,
+        const std::shared_ptr<std::vector<evm_log_index>>& log_indexes) {
+        m_log->info(m_ticket_number,
+                    "completed all queries, filtering",
+                    log_indexes->size(),
+                    "logs");
+
+        // Scanned them all - finish
+        std::unique_lock<std::mutex> lck(*log_indexes_mut);
+
+        // Filter the final logs by topics
+        auto final_logs = std::vector<evm_log_index>();
+        for(auto& log_idx : *log_indexes) {
+            auto match = false;
+            for(auto& log : log_idx.m_logs) {
+                for(auto& have_topic : log.m_topics) {
+                    for(const auto& want_topic : qry.m_topics) {
+                        if(have_topic == want_topic) {
+                            match = true;
+                            break;
+                        }
+                    }
+                    if(match) {
+                        break;
+                    }
+                }
+            }
+            if(match) {
+                final_logs.push_back(log_idx);
+            }
+        }
+
+        m_log->info(m_ticket_number,
+                    "returning",
+                    final_logs.size(),
+                    "filtered log indexes");
+
+        auto ret = runtime_locking_shard::state_update_type();
+        ret[m_param] = make_buffer(final_logs);
+        m_result_callback(ret);
     }
 
     auto evm_runner::run_get_transaction_receipt() -> bool {
@@ -347,15 +575,44 @@ namespace cbdc::threepc::agent::runner {
                 m_host->revert();
             }
 
-            m_log->trace("Result status: ", result.status_code);
-
-            auto gas_used = m_msg.gas - result.gas_left;
-            m_host->finalize(result.gas_left, gas_used);
-            auto state_updates = m_host->get_state_updates();
-            m_result_callback(state_updates);
             auto out_buf = cbdc::buffer();
             out_buf.append(result.output_data, result.output_size);
             m_log->trace("EVM output data:", out_buf.to_hex());
+
+            m_log->trace("Result status: ", result.status_code);
+            auto fn = [this, gas_left = result.gas_left]() {
+                auto gas_used = m_msg.gas - gas_left;
+                m_host->finalize(gas_left, gas_used);
+                auto state_updates = m_host->get_state_updates();
+                m_result_callback(state_updates);
+            };
+            lock_index_keys(fn);
+        }
+    }
+
+    void evm_runner::lock_index_keys(const std::function<void()>& callback) {
+        auto keys = m_host->get_log_index_keys();
+        if(keys.empty()) {
+            callback();
+            return;
+        }
+        auto acquired = std::make_shared<std::atomic<size_t>>();
+        for(auto& key : keys) {
+            auto success = m_try_lock_callback(
+                key,
+                broker::lock_type::write,
+                [acquired, callback, key_count = keys.size()](
+                    const broker::interface::try_lock_return_type&) {
+                    auto acq = (*acquired)++;
+                    if(acq + 1 == key_count) {
+                        callback();
+                    }
+                });
+            if(!success) {
+                m_log->error("Unable to lock logs index key");
+                m_result_callback(error_code::internal_error);
+                return;
+            }
         }
     }
 
@@ -368,10 +625,14 @@ namespace cbdc::threepc::agent::runner {
         }
         auto v = std::get<broker::value_type>(res);
         auto from_acc = evm_account();
+
+        // TODO: Start at zero?
+        // auto exp_nonce = evmc::uint256be(0);
         if(v.size() > 0) {
             auto maybe_from_acc = cbdc::from_buffer<evm_account>(v);
             if(maybe_from_acc.has_value()) {
                 from_acc = maybe_from_acc.value();
+                // exp_nonce = from_acc.m_nonce + evmc::uint256be(1);
             }
         }
 
@@ -421,12 +682,32 @@ namespace cbdc::threepc::agent::runner {
                     return;
                 }
                 m_log->trace(m_ticket_number, "locked TXID key");
-                schedule_exec();
+                lock_ticket_number_key();
             });
         if(!maybe_sent) {
             m_log->error("Failed to send try_lock request for TX receipt");
             m_result_callback(error_code::internal_error);
             return;
+        }
+    }
+
+    void evm_runner::lock_ticket_number_key() {
+        auto maybe_sent = m_try_lock_callback(
+            m_host->ticket_number_key(),
+            broker::lock_type::write,
+            [this](const broker::interface::try_lock_return_type& r) {
+                if(!std::holds_alternative<broker::value_type>(r)) {
+                    m_log->debug("Failed to lock key for ticket_number");
+                    m_result_callback(error_code::wounded);
+                    return;
+                }
+                m_log->trace(m_ticket_number, "locked ticket_number key");
+                schedule_exec();
+            });
+        if(!maybe_sent) {
+            m_log->error(
+                "Failed to send try_lock request for ticket_number key");
+            m_result_callback(error_code::internal_error);
         }
     }
 

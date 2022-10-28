@@ -84,9 +84,12 @@ WORKDIR /opt/tx-processor
 
 # Only copy essential binaries
 COPY --from=builder /opt/tx-processor/build/src/3pc/agent/agentd ./build/src/3pc/agent/agentd
-COPY --from=builder /opt/tx-processor/build/src/3pc/runtime_locking_shard/runtime_locking_shardd ./build/src/runtime_locking_shard/runtime_locking_shardd
+COPY --from=builder /opt/tx-processor/build/src/3pc/runtime_locking_shard/runtime_locking_shardd ./build/src/3pc/runtime_locking_shard/runtime_locking_shardd
 COPY --from=builder /opt/tx-processor/build/src/3pc/ticket_machine/ticket_machined ./build/src/3pc/ticket_machine/ticket_machined
 
 # Copy load generators
 COPY --from=builder /opt/tx-processor/build/tools/bench/3pc/evm/evm_bench ./build/tools/bench/3pc/evm/evm_bench
 COPY --from=builder /opt/tx-processor/build/tools/bench/3pc/lua/lua_bench ./build/tools/bench/3pc/lua/lua_bench
+
+# Copy wait script
+COPY --from=builder /opt/tx-processor/scripts/wait-for-it.sh ./scripts/wait-for-it.sh

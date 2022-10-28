@@ -179,6 +179,13 @@ namespace cbdc::threepc::broker {
         [[nodiscard]] virtual auto
         recover(recover_callback_type result_callback) -> bool
             = 0;
+
+        /// Get the highest ticket number that was used. This is not to be
+        /// used for calculating a next ticket number, but is used to calculate
+        /// the pretend height of the chain in the evm runner, which is derived
+        /// from ticket numbers
+        /// \return highest ticket number that was used
+        virtual auto highest_ticket() -> ticket_number_type = 0;
     };
 }
 

@@ -15,6 +15,7 @@ scripts/
 !scripts/test.sh
 !scripts/configure.sh
 !scripts/test-transaction.sh
+!scripts/wait-for-it.sh
 
 # Improves caching significantly
 .git

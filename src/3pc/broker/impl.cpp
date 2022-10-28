@@ -49,6 +49,9 @@ namespace cbdc::threepc::broker {
                                       ticket_number_range_type& n) {
                                   {
                                       std::unique_lock l(m_mut);
+                                      if(m_highest_ticket < n.second) {
+                                          m_highest_ticket = n.second;
+                                      }
                                       m_tickets.emplace(
                                           n.first,
                                           std::make_shared<state>(
@@ -62,6 +65,10 @@ namespace cbdc::threepc::broker {
                                       error_code::ticket_number_assignment);
                               }},
                    res.value());
+    }
+
+    auto impl::highest_ticket() -> ticket_number_type {
+        return m_highest_ticket;
     }
 
     void impl::handle_lock(

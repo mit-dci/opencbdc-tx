@@ -101,13 +101,14 @@ namespace cbdc {
                     const threepc::agent::runner::evm_tx_receipt& r)
         -> serializer& {
         return ser << r.m_tx << r.m_create_address << r.m_gas_used << r.m_logs
-                   << r.m_output_data;
+                   << r.m_output_data << r.m_ticket_number << r.m_timestamp;
     }
 
     auto operator>>(serializer& deser,
                     threepc::agent::runner::evm_tx_receipt& r) -> serializer& {
         return deser >> r.m_tx >> r.m_create_address >> r.m_gas_used
-            >> r.m_logs >> r.m_output_data;
+            >> r.m_logs >> r.m_output_data >> r.m_ticket_number
+            >> r.m_timestamp;
     }
 
     auto operator<<(serializer& ser, const threepc::agent::runner::code_key& k)
@@ -129,5 +130,39 @@ namespace cbdc {
     auto operator>>(serializer& deser, threepc::agent::runner::storage_key& k)
         -> serializer& {
         return deser >> k.m_addr >> k.m_key;
+    }
+
+    auto operator>>(serializer& deser,
+                    threepc::agent::runner::evm_pretend_block& b)
+        -> serializer& {
+        return deser >> b.m_ticket_number >> b.m_transactions;
+    }
+    auto operator<<(serializer& ser,
+                    const threepc::agent::runner::evm_pretend_block& b)
+        -> serializer& {
+        return ser << b.m_ticket_number << b.m_transactions;
+    }
+
+    auto operator>>(serializer& deser,
+                    threepc::agent::runner::evm_log_query& lq) -> serializer& {
+        return deser >> lq.m_addresses >> lq.m_from_block >> lq.m_to_block
+            >> lq.m_topics;
+    }
+    auto operator<<(serializer& ser,
+                    const threepc::agent::runner::evm_log_query& lq)
+        -> serializer& {
+        return ser << lq.m_addresses << lq.m_from_block << lq.m_to_block
+                   << lq.m_topics;
+    }
+
+    auto operator>>(serializer& deser,
+                    threepc::agent::runner::evm_log_index& idx)
+        -> serializer& {
+        return deser >> idx.m_ticket_number >> idx.m_txid >> idx.m_logs;
+    }
+    auto operator<<(serializer& ser,
+                    const threepc::agent::runner::evm_log_index& idx)
+        -> serializer& {
+        return ser << idx.m_ticket_number << idx.m_txid << idx.m_logs;
     }
 }
