@@ -69,6 +69,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Pull submodules
+        run: git submodule init && git submodule update
+
       - name: Docker meta twophase
         id: meta-twophase
         uses: docker/metadata-action@v3
