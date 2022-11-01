@@ -58,7 +58,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push base
-        if: steps.changed-files-specific.outputs.any_changed == 'true'
+        if: ${{ steps.changed-files-specific.outputs.any_changed == 'true' || github.event_name == 'pull_request' }}
         uses: docker/build-push-action@v2
         with:
           context: .
