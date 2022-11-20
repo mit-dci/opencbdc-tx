@@ -36,6 +36,11 @@ RUN mkdir build && \
 # Create 2PC Deployment Image
 FROM $IMAGE_VERSION AS twophase
 
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libsnappy-dev && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
+
 # Set working directory
 WORKDIR /opt/tx-processor
 
@@ -56,6 +61,11 @@ COPY --from=builder /opt/tx-processor/2pc-compose.cfg ./2pc-compose.cfg
 
 # Create Atomizer Deployment Image
 FROM $IMAGE_VERSION AS atomizer
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends libsnappy-dev && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /opt/tx-processor
