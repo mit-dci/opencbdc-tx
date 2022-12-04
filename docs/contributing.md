@@ -9,6 +9,31 @@ Central Banks are currently considering the potential utility of Central Bank Di
 Some Central Banks have [already started issuing](https://cbdctracker.org/) CBDCs, and many others have begun experiments.
 This project is an opportunity for programmers worldwide to help tackle the most pressing problems and answer the most difficult questions surrounding the development and implementation of CBDCs.
 
+# Quickstart Guide & Important Links
+
+Interested in contributing?
+We suggest reading through this document, but here are some resources for jumping in immediately.
+
+1. **Join the Community**.
+   Most of our discussions happen on Zulip—please [join our Zulip](https://opencbdc.zulipchat.com/register).
+1. **Have a new research idea?**
+   Please [submit a proposal](https://github.com/mit-dci/opencbdc-tx/issues/new?assignees=halosghost&labels=feedback%2Fproposal&template=research.yaml&title=%5BA+short%2C+descriptive+title%5D).
+1. **Contributions**.
+   We are looking for contributions in a wide range of disciplines.
+   If you think your expertise could be useful in some capacity, please don't hesitate to [reach out](mailto:opencbdc@mit.edu).
+
+   - Technical contributions can be made directly in GitHub.
+     For example, we are currently looking for help refactoring code and/or otherwise improving code quality, adding additional support for strong privacy guarantees, and exploring progammability.
+     - Hands-on contributions include developing current designs, as well as ideating designs to be implemented
+   - We're also looking for experts in critial areas of emerging research to share their insights.
+     For example, we'd love additional insights on topics such as (but certainly not limited to) offline payments, privacy, community management, distributed systems, design, and more.
+   - Individuals and organizations can donate engineering, research, or other resources to help towards this effort.
+     Please feel free to [contact us](mailto:opencbdc@mit.edu) to discuss further.
+
+**Have more questions?**
+Please read the rest of this guide, as it should answer a good chunk of questions.
+If you still need help or just want to chat about contributing, we can be reached at [opencbdc@mit.edu](mailto:opencbdc@mit.edu).
+
 # OpenCBDC's Guiding Principles
 
 OpenCBDC is a *technical* endeavor to research, develop, design, and test software for hypothetical Central Bank Digital Currencies (CBDCs).
