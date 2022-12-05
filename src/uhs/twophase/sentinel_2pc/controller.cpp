@@ -49,8 +49,16 @@ namespace cbdc::sentinel_2pc {
             m_logger->info("Sentinel public key:", cbdc::to_string(pubkey));
         }
 
-        if(!m_coordinator_client.init()) {
-            m_logger->warn("Failed to start coordinator client");
+        auto retry_delay = std::chrono::seconds(1);
+        auto retry_threshold = 4;
+        while(!m_coordinator_client.init() && retry_threshold-- > 0) {
+            m_logger->warn("Failed to start coordinator client.");
+
+            std::this_thread::sleep_for(retry_delay);
+            if(retry_threshold > 0) {
+                retry_delay *= 2;
+                m_logger->warn("Retrying...");
+            }
         }
 
         for(const auto& ep : m_opts.m_sentinel_endpoints) {
