@@ -1,7 +1,5 @@
 project(unit)
 
-add_subdirectory(3pc)
-
 add_executable(run_unit_tests archiver_test.cpp
                               atomizer/messages_test.cpp
                               atomizer_test.cpp
@@ -31,6 +29,8 @@ add_executable(run_unit_tests archiver_test.cpp
                               watchtower/tx_error_messages_test.cpp
                               watchtower/watchtower_test.cpp)
 
+add_subdirectory(3pc)
+
 target_compile_options(run_unit_tests PRIVATE -ftest-coverage -fprofile-arcs)
 target_link_options(run_unit_tests PRIVATE --coverage)
 target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
@@ -48,6 +48,14 @@ target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
                                      coordinator
                                      locking_shard
                                      3pc_unit_tests
+                                     evm_runner
+                                     lua_runner
+                                     directory
+                                     ticket_machine
+                                     broker
+                                     runtime_locking_shard
+                                     agent
+                                     runners
                                      raft
                                      rpc
                                      transaction
@@ -58,4 +66,6 @@ target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
                                      secp256k1
                                      ${LEVELDB_LIBRARY}
                                      ${NURAFT_LIBRARY}
+                                     ${JSON_LIBRARY}
+                                     ${LUA_LIBRARY}
                                      ${CMAKE_THREAD_LIBS_INIT})
