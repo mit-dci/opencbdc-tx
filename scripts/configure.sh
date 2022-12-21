@@ -28,7 +28,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   CPUS=$(sysctl -n hw.ncpu)
   # ensure development environment is set correctly for clang
   $SUDO xcode-select -switch /Library/Developer/CommandLineTools
-  brew install llvm@14 googletest google-benchmark lcov make wget cmake
+  brew install llvm@14 googletest google-benchmark lcov make wget cmake curl
   CLANG_TIDY=/usr/local/bin/clang-tidy
   if [ ! -L "$CLANG_TIDY" ]; then
     $SUDO ln -s $(brew --prefix)/opt/llvm@14/bin/clang-tidy /usr/local/bin/clang-tidy
@@ -107,17 +107,20 @@ make -j$CPUS
 $SUDO make install
 cd ..
 
-CURL_VERSION="7.83.1"
-wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz
-rm -rf curl-${CURL_VERSION}
-tar xzvf curl-${CURL_VERSION}.tar.gz
-rm -rf curl-${CURL_VERSION}.tar.gz
-mkdir -p curl-${CURL_VERSION}/build
-cd curl-${CURL_VERSION}/build
-../configure --disable-shared --without-ssl --without-libpsl --without-libidn2 --without-brotli --without-zstd --without-zlib
-make -j$CPUS
-$SUDO make install
-cd ../..
+if [[ "$OSTYPE" != "darwin"* ]]; then
+  # <NOTE> For Mac Silicon: this curl install creates problems for building tools/bench/3pc/evm/
+  CURL_VERSION="7.83.1"
+  wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz
+  rm -rf curl-${CURL_VERSION}
+  tar xzvf curl-${CURL_VERSION}.tar.gz
+  rm -rf curl-${CURL_VERSION}.tar.gz
+  mkdir -p curl-${CURL_VERSION}/build
+  cd curl-${CURL_VERSION}/build
+  ../configure --disable-shared --without-ssl --without-libpsl --without-libidn2 --without-brotli --without-zstd --without-zlib
+  make -j$CPUS
+  $SUDO make install
+  cd ../..
+fi
 
 JSONCPP_VERSION="1.9.5"
 wget https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/${JSONCPP_VERSION}.tar.gz
@@ -151,7 +154,12 @@ cd evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
 rm -rf evmc
 mv ../evmc-eda05c6866ac06bd93d62b605cbec5839d85c221 ./evmc
 mkdir ./evmc/.git
-cmake -S . -B build -DBUILD_SHARED_LIBS=OFF
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  # Mac Silicon: clang 'ar' does not allow empty member list, fails w/ -DBUILD_SHARED_LIBS=OFF
+  cmake -S . -B build
+else
+  cmake -S . -B build -DBUILD_SHARED_LIBS=OFF
+fi
 cmake --build build --parallel
 cd build
 $SUDO make install
