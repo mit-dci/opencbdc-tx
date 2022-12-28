@@ -39,15 +39,21 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
   fi
 fi
 
+PYTHON_TIDY=/usr/local/bin/run-clang-tidy.py
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  apt update
-  apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync
+  if [ -f "/etc/arch-release" ]; then
+    pacman -S --needed base-devel wget cmake gtest lcov git rsync llvm clang
+    $SUDO ln -s -f $(which run-clang-tidy) $PYTHON_TIDY
+  else
+    apt update
+    apt install -y build-essential wget cmake libgtest-dev lcov git software-properties-common rsync
 
-  wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | $SUDO apt-key add -
-  $SUDO add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
-  $SUDO apt install -y clang-format-14 clang-tidy-14
-  $SUDO ln -s -f $(which clang-format-14) /usr/local/bin/clang-format
-  $SUDO ln -s -f $(which clang-tidy-14) /usr/local/bin/clang-tidy
+    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | $SUDO apt-key add -
+    $SUDO add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
+    $SUDO apt install -y clang-format-14 clang-tidy-14
+    $SUDO ln -s -f $(which clang-format-14) /usr/local/bin/clang-format
+    $SUDO ln -s -f $(which clang-tidy-14) /usr/local/bin/clang-tidy
+  fi
 fi
 
 LEVELDB_VERSION="1.23"
@@ -91,7 +97,6 @@ $SUDO cp -r ../include/libnuraft /usr/local/include
 
 cd ../..
 
-PYTHON_TIDY=/usr/local/bin/run-clang-tidy.py
 if [ ! -f "${PYTHON_TIDY}" ]; then
   echo -e "${green}Copying run-clang-tidy to /usr/local/bin"
   wget https://raw.githubusercontent.com/llvm/llvm-project/e837ce2a32369b2e9e8e5d60270c072c7dd63827/clang-tools-extra/clang-tidy/tool/run-clang-tidy.py
