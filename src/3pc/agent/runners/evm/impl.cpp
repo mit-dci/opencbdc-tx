@@ -499,7 +499,7 @@ namespace cbdc::threepc::agent::runner {
         auto tx_ctx = evmc_tx_context();
         // TODO: consider setting block height to the TX ticket number
         tx_ctx.block_number = 1;
-        auto now = std::chrono::high_resolution_clock::now();
+        auto now = std::chrono::system_clock::now();
         auto timestamp
             = std::chrono::time_point_cast<std::chrono::seconds>(now);
         tx_ctx.block_timestamp = timestamp.time_since_epoch().count();
