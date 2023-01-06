@@ -38,7 +38,7 @@ namespace cbdc::threepc::agent::runner {
         b_vec.resize(sizeof(b.bytes));
         std::memcpy(b_vec.data(), &b.bytes[0], sizeof(b.bytes));
         size_t offset = 0;
-        while(b_vec.at(offset) == 0x00 && offset < b_vec.size()) {
+        while(offset < b_vec.size() && b_vec.at(offset) == 0x00) {
             offset++;
         }
         if(offset >= sizeof(b.bytes)) {
