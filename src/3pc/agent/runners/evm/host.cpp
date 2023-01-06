@@ -542,8 +542,9 @@ namespace cbdc::threepc::agent::runner {
             auto maybe_acc = get_account(m_tx_context.tx_origin, true);
             assert(maybe_acc.has_value());
             auto& acc = maybe_acc.value();
-            acc.m_balance = acc.m_balance
-                          + evmc::uint256be(static_cast<uint64_t>(gas_left));
+            auto gas_refund = evmc::uint256be(static_cast<uint64_t>(gas_left))
+                            * m_tx_context.tx_gas_price;
+            acc.m_balance = acc.m_balance + gas_refund;
             m_accounts[m_tx_context.tx_origin] = {acc, true};
         }
         m_receipt.m_gas_used
