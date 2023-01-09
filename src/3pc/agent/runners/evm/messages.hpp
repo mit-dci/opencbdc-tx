@@ -55,7 +55,7 @@ namespace cbdc::threepc::agent::runner {
     /// Type alias for a list of storage key accesses.
     using evm_access_list = std::vector<evm_access_tuple>;
 
-    /// EVM transaction types.
+    ///  EVM transaction types.
     enum class evm_tx_type : uint8_t {
         legacy = 0,
         access_list = 1,
@@ -125,6 +125,8 @@ namespace cbdc::threepc::agent::runner {
         /// Timestamp of the transaction - needed to provide
         /// a timestamp in pretend blocks
         uint64_t m_timestamp{};
+        // Success flag.
+        bool m_success{false};
     };
 
     /// EVM pretend block is a pairing of the blocknumber (equal to the ticket
