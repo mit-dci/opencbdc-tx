@@ -400,6 +400,7 @@ namespace cbdc::threepc::agent::runner {
         res["gasUsed"] = to_hex_trimmed(rcpt.m_gas_used);
         res["cumulativeGasUsed"] = to_hex_trimmed(rcpt.m_gas_used);
         res["logs"] = Json::Value(Json::arrayValue);
+        res["status"] = rcpt.m_success ? "0x1" : "0x0";
 
         auto bloom = cbdc::buffer();
         constexpr auto bits_in_32_bytes = 256;

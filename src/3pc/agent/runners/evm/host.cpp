@@ -278,6 +278,8 @@ namespace cbdc::threepc::agent::runner {
             std::memcpy(m_receipt.m_output_data.data(),
                         res.output_data,
                         res.output_size);
+            m_receipt.m_success
+                = res.status_code == evmc_status_code::EVMC_SUCCESS;
         }
 
         return res;
@@ -327,10 +329,13 @@ namespace cbdc::threepc::agent::runner {
         auto res = execute(msg, code_buf.data(), code_buf.size());
 
         if(msg.depth == 0) {
+            // TODO: refactor branch into call epilog method
             m_receipt.m_output_data.resize(res.output_size);
             std::memcpy(m_receipt.m_output_data.data(),
                         res.output_data,
                         res.output_size);
+            m_receipt.m_success
+                = res.status_code == evmc_status_code::EVMC_SUCCESS;
         }
 
         return res;
