@@ -45,6 +45,8 @@ If you would like to join our technical discussions and help workshop proposals,
 
 For more information on how to contribute, please see our [Contribution Guide](docs/contributing.md)!
 
+If you want to dive straight in, take a look at our issue tracker's list of [good first issues](https://github.com/mit-dci/opencbdc-tx/labels/difficulty%2F01-good-first-issue).
+
 # Get the Code
 
 1. [Install Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)

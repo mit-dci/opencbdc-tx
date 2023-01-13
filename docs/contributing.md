@@ -25,6 +25,7 @@ We suggest reading through this document, but here are some resources for jumpin
    - Technical contributions can be made directly in GitHub.
      For example, we are currently looking for help refactoring code and/or otherwise improving code quality, adding additional support for strong privacy guarantees, and exploring progammability.
      - Hands-on contributions include developing current designs, as well as ideating designs to be implemented
+     - Take a look at our issue tracker's list of [good first issues](https://github.com/mit-dci/opencbdc-tx/labels/difficulty%2F01-good-first-issue).
    - We're also looking for experts in critial areas of emerging research to share their insights.
      For example, we'd love additional insights on topics such as (but certainly not limited to) offline payments, privacy, community management, distributed systems, design, and more.
    - Individuals and organizations can donate engineering, research, or other resources to help towards this effort.
