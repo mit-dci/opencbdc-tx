@@ -60,7 +60,7 @@ If you just want to run the system, see "Run the Code" below.
   ```terminal
   # ./scripts/configure.sh
   ```
-2. Run the build
+1. Run the build
   ```terminal
   # ./scripts/build.sh
   ```
@@ -220,23 +220,25 @@ In each of the below commands, you should pass `atomizer-compose.cfg` instead of
 
 Running Unit & Integration Tests
 
-1. Build the container. Target `builder` stage as the tests need the dependencies.
+1. Build all docker images
    ```terminal
-   # ./scripts/build-docker.sh
+   $ ./scripts/build-docker.sh
    ```
-2. Run Unit & Integration Tests
+1. Run Unit & Integration Tests
    ```terminal
-   # docker run -ti opencbdc-tx-builder ./scripts/test.sh
+   $ docker run -ti opencbdc-tx-builder ./scripts/test.sh
    ```
 
 ### E2E Testing with Kubernetes
 
-#### **Requirements**
+#### Requirements
 - Go (go test library used to run tests)
 - Minikube
 - Helm
 - Kubectl
 
-#### **Running tests**
+#### Running tests
+
+1. `./scripts/build-docker.sh`
 1. `./scripts/test-e2e-minikube.sh`
 1. Review results and logs at `testruns/<testrun-uuid>/`
