@@ -36,45 +36,43 @@ namespace cbdc::threepc::agent::runner {
                  bool dry_run,
                  interface::ticket_number_type ticket_number);
 
-        [[nodiscard]] auto
-        account_exists(const evmc::address& addr) const noexcept -> bool final;
+        [[nodiscard]] bool
+        account_exists(const evmc::address& addr) const noexcept override;
 
-        [[nodiscard]] auto get_storage(const evmc::address& addr,
-                                       const evmc::bytes32& key) const noexcept
-            -> evmc::bytes32 final;
+        [[nodiscard]] evmc::bytes32
+        get_storage(const evmc::address& addr,
+                    const evmc::bytes32& key) const noexcept override final;
 
-        auto set_storage(const evmc::address& addr,
-                         const evmc::bytes32& key,
-                         const evmc::bytes32& value) noexcept
-            -> evmc_storage_status final;
+        evmc_storage_status
+        set_storage(const evmc::address& addr,
+                    const evmc::bytes32& key,
+                    const evmc::bytes32& value) noexcept override final;
 
-        [[nodiscard]] auto
-        get_balance(const evmc::address& addr) const noexcept
-            -> evmc::uint256be final;
+        [[nodiscard]] evmc::uint256be
+        get_balance(const evmc::address& addr) const noexcept override final;
 
-        [[nodiscard]] auto
-        get_code_size(const evmc::address& addr) const noexcept
-            -> size_t final;
+        [[nodiscard]] size_t
+        get_code_size(const evmc::address& addr) const noexcept override final;
 
-        [[nodiscard]] auto
-        get_code_hash(const evmc::address& addr) const noexcept
-            -> evmc::bytes32 final;
+        [[nodiscard]] evmc::bytes32
+        get_code_hash(const evmc::address& addr) const noexcept override final;
 
-        auto copy_code(const evmc::address& addr,
-                       size_t code_offset,
-                       uint8_t* buffer_data,
-                       size_t buffer_size) const noexcept -> size_t final;
+        size_t copy_code(const evmc::address& addr,
+                         size_t code_offset,
+                         uint8_t* buffer_data,
+                         size_t buffer_size) const noexcept override final;
 
-        void selfdestruct(const evmc::address& addr,
-                          const evmc::address& beneficiary) noexcept final;
+        void
+        selfdestruct(const evmc::address& addr,
+                     const evmc::address& beneficiary) noexcept override final;
 
-        auto call(const evmc_message& msg) noexcept -> evmc::result final;
+        evmc::result call(const evmc_message& msg) noexcept override final;
 
-        [[nodiscard]] auto get_tx_context() const noexcept
-            -> evmc_tx_context final;
+        [[nodiscard]] evmc_tx_context
+        get_tx_context() const noexcept override final;
 
-        [[nodiscard]] auto get_block_hash(int64_t number) const noexcept
-            -> evmc::bytes32 final;
+        [[nodiscard]] evmc::bytes32
+        get_block_hash(int64_t number) const noexcept override final;
 
         void emit_log(
             const evmc::address& addr,
@@ -82,14 +80,14 @@ namespace cbdc::threepc::agent::runner {
             size_t data_size,
             // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,modernize-avoid-c-arrays)
             const evmc::bytes32 topics[],
-            size_t topics_count) noexcept final;
+            size_t topics_count) noexcept override final;
 
-        auto access_account(const evmc::address& addr) noexcept
-            -> evmc_access_status final;
+        evmc_access_status
+        access_account(const evmc::address& addr) noexcept override final;
 
-        auto access_storage(const evmc::address& addr,
-                            const evmc::bytes32& key) noexcept
-            -> evmc_access_status final;
+        evmc_access_status
+        access_storage(const evmc::address& addr,
+                       const evmc::bytes32& key) noexcept override final;
 
         using indexed_logs_type
             = std::unordered_map<evmc::address, std::vector<evm_log>>;
