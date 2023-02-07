@@ -4,8 +4,7 @@
   "description": "Load generator for 3PC EVM",
   "main": "index.js",
   "scripts": {
-    "postinstall": "python3 -m pip install -r requirements.txt",
-    "build": "npx hardhat compile && python3 gen_header.py && clang-format -i cpp_header/contracts.hpp && cp cpp_header/contracts.hpp ../bench/3pc/evm/"
+    "build": "npx hardhat compile && python3 gen_header.py && clang-format -i cpp_header/contracts.hpp"
   },
   "author": "MIT Digital Currency Initiative, Federal Reserve Bank of Boston",
   "license": "MIT",
