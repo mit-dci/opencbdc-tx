@@ -164,7 +164,7 @@ run_test_suite () {
 if [[ "$RUN_UNIT_TESTS" == "true" ]]
 then
     echo "Running unit tests..."
-    find "${REPO_TOP_DIR}"/tests/unit/ -name '*.cfg' \
+    find "${REPO_TOP_DIR}"/config/unit/ -name '*.cfg' \
         -exec rsync \{\} "$BUILD_DIR" \;
     run_test_suite "tests/unit/run_unit_tests" "unit_tests_coverage"
 else
@@ -175,7 +175,8 @@ echo
 if [[ "$RUN_INTEGRATION_TESTS" == "true" ]]
 then
     echo "Running integration tests..."
-    cp "${REPO_TOP_DIR}"/tests/integration/*.cfg "$BUILD_DIR"
+    cp "${REPO_TOP_DIR}"/config/integration/*.cfg "${BUILD_DIR}"
+    cp "${REPO_TOP_DIR}"/tools/config_generator/*.tmpl "${BUILD_DIR}"/tools/config_generator
     run_test_suite "tests/integration/run_integration_tests" \
         "integration_tests_coverage"
 else
