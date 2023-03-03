@@ -143,35 +143,32 @@ namespace cbdc::threepc::agent {
             // If this is a dry-run and the function key is empty, the
             // runner will handle retrieving any keys directly.
             handle_function(broker::value_type());
-            return;
-        }
-
-        // for one-byte functions, don't resolve but use the one byte and
-        // pass it along. This is used in the EVM runner to distinguish
-        // between sending a transaction or querying something (account
-        // data for instance). Since we don't know the from here for EVM,
-        // since it relies on the signature check, we only pass the
-        // transaction as m_param and let the runner figure it out.
-        if(get_function().size() == 1) {
+        } else if(get_function().size() == 1) {
+            // for one-byte functions, don't resolve but use the one byte and
+            // pass it along. This is used in the EVM runner to distinguish
+            // between sending a transaction or querying something (account
+            // data for instance). Since we don't know the from here for EVM,
+            // since it relies on the signature check, we only pass the
+            // transaction as m_param and let the runner figure it out.
             handle_function(broker::value_type(get_function()));
-            return;
-        }
+        } else {
+            m_log->trace("do_start ", get_function().to_hex());
 
-        m_log->trace("do_start ", get_function().to_hex());
-
-        auto tl_success = m_broker->try_lock(
-            m_ticket_number.value(),
-            get_function(),
-            m_initial_lock_type,
-            [this](const broker::interface::try_lock_return_type& lock_res) {
-                handle_function(lock_res);
-            });
-        if(!tl_success) {
-            m_state = state::function_get_failed;
-            m_log->error("Failed to contact broker to retrieve "
-                         "function code");
-            m_result = error_code::broker_unreachable;
-            do_result();
+            auto tl_success = m_broker->try_lock(
+                m_ticket_number.value(),
+                get_function(),
+                m_initial_lock_type,
+                [this](
+                    const broker::interface::try_lock_return_type& lock_res) {
+                    handle_function(lock_res);
+                });
+            if(!tl_success) {
+                m_state = state::function_get_failed;
+                m_log->error("Failed to contact broker to retrieve "
+                             "function code");
+                m_result = error_code::broker_unreachable;
+                do_result();
+            }
         }
     }
 
