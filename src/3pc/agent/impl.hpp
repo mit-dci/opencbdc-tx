@@ -124,7 +124,7 @@ namespace cbdc::threepc::agent {
         broker::held_locks_set_type m_requested_locks{};
         bool m_restarted{false};
 
-        void handle_begin(broker::interface::begin_return_type res);
+        void handle_begin(broker::interface::ticketnum_or_errcode_type res);
 
         void
         handle_function(const broker::interface::try_lock_return_type& res);
