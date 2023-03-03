@@ -96,10 +96,10 @@ namespace cbdc::threepc::agent {
 
         m_result = std::nullopt;
         m_state = state::begin_sent;
-        auto success
-            = m_broker->begin([&](broker::interface::begin_return_type res) {
-                  handle_begin(res);
-              });
+        auto success = m_broker->begin(
+            [&](broker::interface::ticketnum_or_errcode_type res) {
+                handle_begin(res);
+            });
 
         if(!success) {
             m_state = state::begin_failed;
@@ -111,7 +111,7 @@ namespace cbdc::threepc::agent {
         return true;
     }
 
-    void impl::handle_begin(broker::interface::begin_return_type res) {
+    void impl::handle_begin(broker::interface::ticketnum_or_errcode_type res) {
         std::unique_lock l(m_mut);
         if(m_state != state::begin_sent) {
             m_log->warn("handle_begin while not in begin_sent state");
