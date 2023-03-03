@@ -195,13 +195,11 @@ namespace cbdc::threepc::agent::rpc {
             -> std::optional<threepc::agent::runner::evm_log_query>;
 
         auto fetch_block(Json::Value params,
-                         const server_type::result_callback_type& callback,
                          const std::function<void(interface::exec_return_type,
                                                   cbdc::buffer)>& res_cb)
             -> bool;
 
-        auto exec_tx(const server_type::result_callback_type& callback,
-                     runner::evm_runner_function f_type,
+        auto exec_tx(runner::evm_runner_function f_type,
                      cbdc::buffer& runner_params,
                      bool dry_run,
                      std::function<void(interface::exec_return_type)> res_cb)
