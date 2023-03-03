@@ -443,25 +443,27 @@ namespace cbdc::threepc::agent::runner {
         return run_execute_transaction(dryrun_tx.m_from, true);
     }
 
-    auto evm_runner::check_base_gas(bool dry_run) const
+    auto evm_runner::check_base_gas(const evm_tx& evmtx, bool dry_run)
         -> std::pair<evmc::uint256be, bool> {
         constexpr auto base_gas = evmc::uint256be(21000);
         constexpr auto creation_gas = evmc::uint256be(32000);
 
         auto min_gas = base_gas;
-        if(!m_tx.m_to.has_value()) {
+        if(!evmtx.m_to.has_value()) {
             min_gas = min_gas + creation_gas;
         }
 
         return std::make_pair(min_gas,
-                              !(m_tx.m_gas_limit < min_gas && !dry_run));
+                              !(evmtx.m_gas_limit < min_gas && !dry_run));
     }
 
-    auto evm_runner::make_message(const evmc::address& from, bool dry_run)
+    auto evm_runner::make_message(const evmc::address& from,
+                                  const evm_tx& evmtx,
+                                  bool dry_run)
         -> std::pair<evmc_message, bool> {
         auto msg = evmc_message();
 
-        auto [min_gas, enough_gas] = check_base_gas(dry_run);
+        auto [min_gas, enough_gas] = check_base_gas(evmtx, dry_run);
         if(!enough_gas) {
             return std::make_pair(msg, false);
         }
@@ -469,33 +471,34 @@ namespace cbdc::threepc::agent::runner {
         // Note that input_data is a const reference to the input buffer. The
         // buffer itself must remain in scope while msg is being used. Wrap tx
         // in a shared_ptr and provide it to the thread using msg.
-        msg.input_data = m_tx.m_input.data();
-        msg.input_size = m_tx.m_input.size();
+        msg.input_data = evmtx.m_input.data();
+        msg.input_size = evmtx.m_input.size();
         msg.depth = 0;
 
         // Determine transaction type
-        if(!m_tx.m_to.has_value()) {
+        if(!evmtx.m_to.has_value()) {
             // Create contract transaction
             msg.kind = EVMC_CREATE;
         } else {
             // Send transaction
             msg.kind = EVMC_CALL;
-            msg.recipient = m_tx.m_to.value();
+            msg.recipient = evmtx.m_to.value();
         }
 
         msg.sender = from;
-        msg.value = m_tx.m_value;
+        msg.value = evmtx.m_value;
         if(dry_run) {
             msg.gas = std::numeric_limits<int64_t>::max();
         } else {
             msg.gas
-                = static_cast<int64_t>(to_uint64(m_tx.m_gas_limit - min_gas));
+                = static_cast<int64_t>(to_uint64(evmtx.m_gas_limit - min_gas));
         }
         return std::make_pair(msg, true);
     }
 
     auto evm_runner::make_tx_context(const evmc::address& from,
-                                     bool dry_run) const -> evmc_tx_context {
+                                     const evm_tx& evmtx,
+                                     bool dry_run) -> evmc_tx_context {
         auto tx_ctx = evmc_tx_context();
         // TODO: consider setting block height to the TX ticket number
         tx_ctx.block_number = 1;
@@ -505,9 +508,9 @@ namespace cbdc::threepc::agent::runner {
         tx_ctx.block_timestamp = timestamp.time_since_epoch().count();
         if(!dry_run) {
             tx_ctx.tx_origin = from;
-            tx_ctx.tx_gas_price = m_tx.m_gas_price;
+            tx_ctx.tx_gas_price = evmtx.m_gas_price;
             tx_ctx.block_gas_limit
-                = static_cast<int64_t>(to_uint64(m_tx.m_gas_limit));
+                = static_cast<int64_t>(to_uint64(evmtx.m_gas_limit));
         } else {
             tx_ctx.block_gas_limit = std::numeric_limits<int64_t>::max();
         }
@@ -516,7 +519,7 @@ namespace cbdc::threepc::agent::runner {
 
     auto evm_runner::run_execute_transaction(const evmc::address& from,
                                              bool dry_run) -> bool {
-        auto tx_ctx = make_tx_context(from, dry_run);
+        auto tx_ctx = make_tx_context(from, m_tx, dry_run);
 
         m_host = std::make_unique<evm_host>(m_log,
                                             m_try_lock_callback,
@@ -525,7 +528,7 @@ namespace cbdc::threepc::agent::runner {
                                             dry_run,
                                             m_ticket_number);
 
-        auto [msg, enough_gas] = make_message(from, dry_run);
+        auto [msg, enough_gas] = make_message(from, m_tx, dry_run);
         if(!enough_gas) {
             m_log->trace("TX does not have enough base gas");
             m_result_callback(error_code::exec_error);
