@@ -94,12 +94,15 @@ namespace cbdc::threepc::agent::runner {
         auto run_get_block() -> bool;
         auto run_get_logs() -> bool;
         auto run_get_block_number() -> bool;
-        [[nodiscard]] auto check_base_gas(bool dry_run) const
+        [[nodiscard]] static auto check_base_gas(const evm_tx& tx,
+                                                 bool dry_run)
             -> std::pair<evmc::uint256be, bool>;
-        [[nodiscard]] auto make_tx_context(const evmc::address& from,
-                                           bool dry_run) const
+        [[nodiscard]] static auto make_tx_context(const evmc::address& from,
+                                                  const evm_tx& tx,
+                                                  bool dry_run)
             -> evmc_tx_context;
-        auto make_message(const evmc::address& from, bool dry_run)
+        static auto
+        make_message(const evmc::address& from, const evm_tx& tx, bool dry_run)
             -> std::pair<evmc_message, bool>;
 
         void handle_lock_from_account(
