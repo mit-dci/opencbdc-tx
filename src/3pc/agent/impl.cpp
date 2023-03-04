@@ -191,7 +191,7 @@ namespace cbdc::threepc::agent {
         res_cb(std::move(res));
     }
 
-    auto impl::handle_try_lock_request(
+    auto impl::do_try_lock_request(
         broker::key_type key,
         broker::lock_type locktype,
         broker::interface::try_lock_callback_type res_cb) -> bool {
@@ -199,13 +199,13 @@ namespace cbdc::threepc::agent {
         std::unique_lock l(m_mut);
         assert(m_ticket_number.has_value());
         if(m_state != state::function_started) {
-            m_log->warn("handle_try_lock_request while not in "
+            m_log->warn("do_try_lock_request while not in "
                         "function_started state");
             return false;
         }
 
         if(m_dry_run && locktype == broker::lock_type::write) {
-            m_log->warn("handle_try_lock_request of type write when "
+            m_log->warn("do_try_lock_request of type write when "
                         "m_dry_run = true");
             return false;
         }
@@ -271,7 +271,7 @@ namespace cbdc::threepc::agent {
                                      static_cast<int>(it.second),
                                      "for",
                                      m_ticket_number.value());
-                        auto success = handle_try_lock_request(
+                        auto success = do_try_lock_request(
                             it.first,
                             it.second,
                             [this, reacquired, v, reacq_locks](
@@ -335,7 +335,7 @@ namespace cbdc::threepc::agent {
             [this](broker::key_type key,
                    broker::lock_type locktype,
                    broker::interface::try_lock_callback_type res_cb) -> bool {
-                return handle_try_lock_request(std::move(key),
+                return do_try_lock_request(std::move(key),
                                                locktype,
                                                std::move(res_cb));
             },
