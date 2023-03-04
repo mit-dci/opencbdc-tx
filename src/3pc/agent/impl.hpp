@@ -145,7 +145,7 @@ namespace cbdc::threepc::agent {
 
         void do_commit();
 
-        [[nodiscard]] auto handle_try_lock_request(
+        [[nodiscard]] auto do_try_lock_request(
             broker::key_type key,
             broker::lock_type locktype,
             broker::interface::try_lock_callback_type res_cb) -> bool;
