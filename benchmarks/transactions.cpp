@@ -97,10 +97,14 @@ static void Nto1_tx(benchmark::State& state) {
             GTEST_LOG_(ERROR) << state.range(0) << "-2 transaction invalid";
             return;
         }
-        ASSERT_EQ(wallet_a.balance(), SWEEP_MAX * 2 - 2 * state.range(0));
-        ASSERT_EQ(wallet_a.count(), SWEEP_MAX - state.range(0));
-        ASSERT_EQ(wallet_b.balance(), state.range(0) * 2);
-        ASSERT_EQ(wallet_b.count(), 1);
+        ASSERT_EQ(
+            wallet_a.balance(),
+            static_cast<unsigned long>(SWEEP_MAX * 2 - 2 * state.range(0)));
+        ASSERT_EQ(wallet_a.count(),
+                  static_cast<unsigned long>(SWEEP_MAX - state.range(0)));
+        ASSERT_EQ(wallet_b.balance(),
+                  static_cast<unsigned long>(state.range(0) * 2));
+        ASSERT_EQ(wallet_b.count(), 1UL);
     }
     state.SetComplexityN(state.range(0));
 }
@@ -117,10 +121,14 @@ static void Nto2_tx(benchmark::State& state) {
             GTEST_LOG_(ERROR) << state.range(0) << "-2 transaction invalid";
             return;
         }
-        ASSERT_EQ(wallet_a.balance(), SWEEP_MAX * 2 - 2 * state.range(0) + 1);
-        ASSERT_EQ(wallet_a.count(), SWEEP_MAX - state.range(0) + 1);
-        ASSERT_EQ(wallet_b.balance(), state.range(0) * 2 - 1);
-        ASSERT_EQ(wallet_b.count(), 1);
+        ASSERT_EQ(wallet_a.balance(),
+                  static_cast<unsigned long>(SWEEP_MAX * 2 - 2 * state.range(0)
+                                             + 1));
+        ASSERT_EQ(wallet_a.count(),
+                  static_cast<unsigned long>(SWEEP_MAX - state.range(0) + 1));
+        ASSERT_EQ(wallet_b.balance(),
+                  static_cast<unsigned long>(state.range(0) * 2 - 1));
+        ASSERT_EQ(wallet_b.count(), 1UL);
     }
     state.SetComplexityN(state.range(0));
 }
