@@ -33,12 +33,12 @@ namespace cbdc::threepc::agent::rpc {
         /// parameters.
         /// \param function key where function bytecode is located.
         /// \param param parameter to call function with.
-        /// \param dry_run true if agent should skip writing any state changes.
+        /// \param is_readonly_run true if agent should skip writing any state changes.
         /// \param result_callback function to call with execution result.
         /// \return true if the request was sent successfully.
         auto exec(runtime_locking_shard::key_type function,
                   parameter_type param,
-                  bool dry_run,
+                  bool is_readonly_run,
                   const interface::exec_callback_type& result_callback)
             -> bool;
 

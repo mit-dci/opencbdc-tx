@@ -201,7 +201,7 @@ namespace cbdc::threepc::agent::rpc {
 
         auto exec_tx(runner::evm_runner_function f_type,
                      cbdc::buffer& runner_params,
-                     bool dry_run,
+                     bool is_readonly_run,
                      std::function<void(interface::exec_return_type)> res_cb)
             -> bool;
 

@@ -19,7 +19,7 @@ namespace cbdc::threepc::agent {
                parameter_type param,
                exec_callback_type result_callback,
                broker::lock_type initial_lock_type,
-               bool dry_run,
+               bool is_readonly_run,
                std::shared_ptr<secp256k1_context> secp,
                std::shared_ptr<thread_pool> t_pool)
         : interface(std::move(function),
@@ -29,9 +29,9 @@ namespace cbdc::threepc::agent {
           m_cfg(std::move(cfg)),
           m_runner_factory(std::move(runner_factory)),
           m_broker(std::move(broker)),
-          m_initial_lock_type(dry_run ? broker::lock_type::read
+          m_initial_lock_type(is_readonly_run ? broker::lock_type::read
                                       : initial_lock_type),
-          m_dry_run(dry_run),
+          m_is_readonly_run(is_readonly_run),
           m_secp(std::move(secp)),
           m_threads(std::move(t_pool)) {}
 
@@ -139,7 +139,7 @@ namespace cbdc::threepc::agent {
                || m_state == state::rollback_complete);
         m_state = state::function_get_sent;
 
-        if(m_dry_run && get_function().size() == 0) {
+        if(m_is_readonly_run && get_function().size() == 0) {
             // If this is a dry-run and the function key is empty, the
             // runner will handle retrieving any keys directly.
             handle_function(broker::value_type());
@@ -204,9 +204,9 @@ namespace cbdc::threepc::agent {
             return false;
         }
 
-        if(m_dry_run && locktype == broker::lock_type::write) {
+        if(m_is_readonly_run && locktype == broker::lock_type::write) {
             m_log->warn("do_try_lock_request of type write when "
-                        "m_dry_run = true");
+                        "m_is_readonly_run = true");
             return false;
         }
 
@@ -227,7 +227,7 @@ namespace cbdc::threepc::agent {
             return true;
         }
 
-        auto actual_lock_type = m_dry_run ? broker::lock_type::read : locktype;
+        auto actual_lock_type = m_is_readonly_run ? broker::lock_type::read : locktype;
         return m_broker->try_lock(
             m_ticket_number.value(),
             std::move(key),
@@ -328,7 +328,7 @@ namespace cbdc::threepc::agent {
             m_cfg,
             std::move(v),
             get_param(),
-            m_dry_run,
+            m_is_readonly_run,
             [this](const runner::interface::run_return_type& run_res) {
                 handle_run(run_res);
             },
@@ -366,7 +366,7 @@ namespace cbdc::threepc::agent {
                      "Agent requesting commit for",
                      m_ticket_number.value());
         auto payload = return_type();
-        if(!m_dry_run) {
+        if(!m_is_readonly_run) {
             payload = std::get<broker::state_update_type>(m_result.value());
         }
         auto maybe_success = m_broker->commit(
