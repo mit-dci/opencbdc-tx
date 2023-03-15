@@ -66,7 +66,7 @@ namespace cbdc::threepc::agent::rpc {
                     m_cleanup_queue.push(id);
                 },
                 runner::lua_runner::initial_lock_type,
-                req.m_dry_run,
+                req.m_is_readonly_run,
                 m_secp,
                 m_threads);
             {
