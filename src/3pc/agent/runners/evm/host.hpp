@@ -27,13 +27,13 @@ namespace cbdc::threepc::agent::runner {
         /// \param tx_context evmc context in which the transaction will
         ///                   execute.
         /// \param tx transaction to execute.
-        /// \param dry_run true if no state changes should be applied.
+        /// \param is_readonly_run true if no state changes should be applied.
         /// \param ticket_number ticket number for transaction.
         evm_host(std::shared_ptr<logging::log> log,
                  interface::try_lock_callback_type try_lock_callback,
                  evmc_tx_context tx_context,
                  evm_tx tx,
-                 bool dry_run,
+                 bool is_readonly_run,
                  interface::ticket_number_type ticket_number);
 
         [[nodiscard]] bool
@@ -159,7 +159,7 @@ namespace cbdc::threepc::agent::runner {
         evmc_tx_context m_tx_context;
         std::unique_ptr<evmc::VM> m_vm;
         evm_tx m_tx;
-        bool m_dry_run;
+        bool m_is_readonly_run;
 
         mutable std::set<evmc::address> m_accessed_addresses;
         std::set<std::pair<evmc::address, evmc::bytes32>>

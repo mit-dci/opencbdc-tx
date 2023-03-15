@@ -71,7 +71,7 @@ namespace cbdc::threepc::agent::runner {
             const cbdc::threepc::config& cfg,
             runtime_locking_shard::value_type function,
             parameter_type param,
-            bool dry_run,
+            bool is_readonly_run,
             runner::interface::run_callback_type result_callback,
             runner::interface::try_lock_callback_type try_lock_callback,
             std::shared_ptr<secp256k1_context>,
@@ -83,7 +83,7 @@ namespace cbdc::threepc::agent::runner {
         /// \param cfg config reference.
         /// \param function key of function bytecode to execute.
         /// \param param parameter to pass to function.
-        /// \param dry_run true if runner execution should not result in state
+        /// \param is_readonly_run true if runner execution should not result in state
         ///                changes.
         /// \param result_callback function to call with function execution
         ///                        result.
@@ -97,7 +97,7 @@ namespace cbdc::threepc::agent::runner {
                   const cbdc::threepc::config& cfg,
                   runtime_locking_shard::value_type function,
                   parameter_type param,
-                  bool dry_run,
+                  bool is_readonly_run,
                   run_callback_type result_callback,
                   try_lock_callback_type try_lock_callback,
                   std::shared_ptr<secp256k1_context> secp,
@@ -124,7 +124,7 @@ namespace cbdc::threepc::agent::runner {
         const cbdc::threepc::config& m_cfg;
         runtime_locking_shard::value_type m_function;
         parameter_type m_param;
-        bool m_dry_run;
+        bool m_is_readonly_run;
         run_callback_type m_result_callback;
         try_lock_callback_type m_try_lock_callback;
         std::shared_ptr<secp256k1_context> m_secp;
@@ -145,7 +145,7 @@ namespace cbdc::threepc::agent::runner {
                cbdc::threepc::config cfg,
                runtime_locking_shard::value_type function,
                parameter_type param,
-               bool dry_run,
+               bool is_readonly_run,
                runner::interface::run_callback_type result_callback,
                runner::interface::try_lock_callback_type try_lock_callback,
                std::shared_ptr<secp256k1_context> secp,
@@ -156,7 +156,7 @@ namespace cbdc::threepc::agent::runner {
                                        std::move(cfg),
                                        std::move(function),
                                        std::move(param),
-                                       dry_run,
+                                       is_readonly_run,
                                        std::move(result_callback),
                                        std::move(try_lock_callback),
                                        std::move(secp),

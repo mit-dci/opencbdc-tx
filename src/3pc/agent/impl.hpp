@@ -67,7 +67,7 @@ namespace cbdc::threepc::agent {
         ///                        result.
         /// \param initial_lock_type type of lock to acquire on initial
         ///                          function code.
-        /// \param dry_run true if the agent should skip writing state changes.
+        /// \param is_readonly_run true if the agent should skip writing state changes.
         /// \param secp secp256k1 context.
         /// \param t_pool shared thread pool between all agents.
         impl(std::shared_ptr<logging::log> logger,
@@ -78,7 +78,7 @@ namespace cbdc::threepc::agent {
              parameter_type param,
              exec_callback_type result_callback,
              broker::lock_type initial_lock_type,
-             bool dry_run,
+             bool is_readonly_run,
              std::shared_ptr<secp256k1_context> secp,
              std::shared_ptr<thread_pool> t_pool);
 
@@ -116,7 +116,7 @@ namespace cbdc::threepc::agent {
         bool m_permanent_error{false};
         mutable std::recursive_mutex m_mut;
         broker::lock_type m_initial_lock_type;
-        bool m_dry_run;
+        bool m_is_readonly_run;
         std::shared_ptr<secp256k1_context> m_secp;
         std::shared_ptr<thread_pool> m_threads;
         std::optional<hash_t> m_tx_id;

@@ -51,7 +51,7 @@ namespace cbdc::threepc::agent::runner {
                    const cbdc::threepc::config& cfg,
                    runtime_locking_shard::value_type function,
                    parameter_type param,
-                   bool dry_run,
+                   bool is_readonly_run,
                    run_callback_type result_callback,
                    try_lock_callback_type try_lock_callback,
                    std::shared_ptr<secp256k1_context> secp,
@@ -88,21 +88,21 @@ namespace cbdc::threepc::agent::runner {
         auto run_get_account_code() -> bool;
         auto run_get_transaction() -> bool;
         auto run_get_transaction_receipt() -> bool;
-        auto run_execute_transaction(const evmc::address& from, bool dry_run)
+        auto run_execute_transaction(const evmc::address& from, bool is_readonly_run)
             -> bool;
         auto run_get_account() -> bool;
         auto run_get_block() -> bool;
         auto run_get_logs() -> bool;
         auto run_get_block_number() -> bool;
         [[nodiscard]] static auto check_base_gas(const evm_tx& tx,
-                                                 bool dry_run)
+                                                 bool is_readonly_run)
             -> std::pair<evmc::uint256be, bool>;
         [[nodiscard]] static auto make_tx_context(const evmc::address& from,
                                                   const evm_tx& tx,
-                                                  bool dry_run)
+                                                  bool is_readonly_run)
             -> evmc_tx_context;
         static auto
-        make_message(const evmc::address& from, const evm_tx& tx, bool dry_run)
+        make_message(const evmc::address& from, const evm_tx& tx, bool is_readonly_run)
             -> std::pair<evmc_message, bool>;
 
         void handle_lock_from_account(

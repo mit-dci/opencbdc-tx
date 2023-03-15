@@ -21,7 +21,7 @@ namespace cbdc::threepc::agent::runner {
                            const cbdc::threepc::config& cfg,
                            runtime_locking_shard::value_type function,
                            parameter_type param,
-                           bool dry_run,
+                           bool is_readonly_run,
                            run_callback_type result_callback,
                            try_lock_callback_type try_lock_callback,
                            std::shared_ptr<secp256k1_context> secp,
@@ -31,7 +31,7 @@ namespace cbdc::threepc::agent::runner {
                     cfg,
                     std::move(function),
                     std::move(param),
-                    dry_run,
+                    is_readonly_run,
                     std::move(result_callback),
                     std::move(try_lock_callback),
                     std::move(secp),
@@ -443,7 +443,7 @@ namespace cbdc::threepc::agent::runner {
         return run_execute_transaction(dryrun_tx.m_from, true);
     }
 
-    auto evm_runner::check_base_gas(const evm_tx& evmtx, bool dry_run)
+    auto evm_runner::check_base_gas(const evm_tx& evmtx, bool is_readonly_run)
         -> std::pair<evmc::uint256be, bool> {
         constexpr auto base_gas = evmc::uint256be(21000);
         constexpr auto creation_gas = evmc::uint256be(32000);
@@ -454,16 +454,16 @@ namespace cbdc::threepc::agent::runner {
         }
 
         return std::make_pair(min_gas,
-                              !(evmtx.m_gas_limit < min_gas && !dry_run));
+                              !(evmtx.m_gas_limit < min_gas && !is_readonly_run));
     }
 
     auto evm_runner::make_message(const evmc::address& from,
                                   const evm_tx& evmtx,
-                                  bool dry_run)
+                                  bool is_readonly_run)
         -> std::pair<evmc_message, bool> {
         auto msg = evmc_message();
 
-        auto [min_gas, enough_gas] = check_base_gas(evmtx, dry_run);
+        auto [min_gas, enough_gas] = check_base_gas(evmtx, is_readonly_run);
         if(!enough_gas) {
             return std::make_pair(msg, false);
         }
@@ -487,7 +487,7 @@ namespace cbdc::threepc::agent::runner {
 
         msg.sender = from;
         msg.value = evmtx.m_value;
-        if(dry_run) {
+        if(is_readonly_run) {
             msg.gas = std::numeric_limits<int64_t>::max();
         } else {
             msg.gas
@@ -498,7 +498,7 @@ namespace cbdc::threepc::agent::runner {
 
     auto evm_runner::make_tx_context(const evmc::address& from,
                                      const evm_tx& evmtx,
-                                     bool dry_run) -> evmc_tx_context {
+                                     bool is_readonly_run) -> evmc_tx_context {
         auto tx_ctx = evmc_tx_context();
         // TODO: consider setting block height to the TX ticket number
         tx_ctx.block_number = 1;
@@ -506,7 +506,7 @@ namespace cbdc::threepc::agent::runner {
         auto timestamp
             = std::chrono::time_point_cast<std::chrono::seconds>(now);
         tx_ctx.block_timestamp = timestamp.time_since_epoch().count();
-        if(!dry_run) {
+        if(!is_readonly_run) {
             tx_ctx.tx_origin = from;
             tx_ctx.tx_gas_price = evmtx.m_gas_price;
             tx_ctx.block_gas_limit
@@ -518,17 +518,17 @@ namespace cbdc::threepc::agent::runner {
     }
 
     auto evm_runner::run_execute_transaction(const evmc::address& from,
-                                             bool dry_run) -> bool {
-        auto tx_ctx = make_tx_context(from, m_tx, dry_run);
+                                             bool is_readonly_run) -> bool {
+        auto tx_ctx = make_tx_context(from, m_tx, is_readonly_run);
 
         m_host = std::make_unique<evm_host>(m_log,
                                             m_try_lock_callback,
                                             tx_ctx,
                                             m_tx,
-                                            dry_run,
+                                            is_readonly_run,
                                             m_ticket_number);
 
-        auto [msg, enough_gas] = make_message(from, m_tx, dry_run);
+        auto [msg, enough_gas] = make_message(from, m_tx, is_readonly_run);
         if(!enough_gas) {
             m_log->trace("TX does not have enough base gas");
             m_result_callback(error_code::exec_error);
@@ -536,7 +536,7 @@ namespace cbdc::threepc::agent::runner {
         }
         m_msg = msg;
 
-        if(!dry_run) {
+        if(!is_readonly_run) {
             m_log->trace(m_ticket_number,
                          "reading from account [",
                          to_hex(from),

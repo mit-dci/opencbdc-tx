@@ -1309,7 +1309,7 @@ namespace cbdc::threepc::agent::rpc {
         const server_type::result_callback_type& callback,
         runner::evm_runner_function f_type,
         cbdc::buffer& runner_params,
-        bool dry_run,
+        bool is_readonly_run,
         std::function<void(interface::exec_return_type)> res_cb) -> bool {
         auto function = cbdc::buffer();
         function.append(&f_type, sizeof(f_type));
@@ -1350,7 +1350,7 @@ namespace cbdc::threepc::agent::rpc {
                     m_cleanup_queue.push(id);
                 },
                 runner::evm_runner::initial_lock_type,
-                dry_run,
+                is_readonly_run,
                 m_secp,
                 m_threads);
             {
