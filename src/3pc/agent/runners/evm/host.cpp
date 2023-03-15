@@ -564,10 +564,6 @@ namespace cbdc::threepc::agent::runner {
         m_accounts = m_init_state;
     }
 
-    auto evm_host::get_tx_receipt() const -> evm_tx_receipt {
-        return m_receipt;
-    }
-
     auto evm_host::is_precompile(const evmc::address& addr) -> bool {
         auto addr_copy = addr;
         constexpr auto precompile_suffix_sz = sizeof(uint16_t);
