@@ -800,7 +800,7 @@ namespace cbdc::generate_config {
             std::pair<std::string, std::string> key_pair = create_key_pair();
             set_param_to_config_file(seed_privkey, key_pair.first);
         }
-        std::cout << "SUCCESS";
+        std::cerr << "SUCCESS\n";
         return m_new_config.str();
     }
 }

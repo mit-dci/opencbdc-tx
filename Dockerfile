@@ -52,7 +52,7 @@ COPY --from=builder /opt/tx-processor/scripts/test-transaction.sh ./scripts/test
 COPY --from=builder /opt/tx-processor/build/src/uhs/client/client-cli ./build/src/uhs/client/client-cli
 
 # Copy 2PC config
-COPY --from=builder /opt/tx-processor/2pc-compose.cfg ./2pc-compose.cfg
+COPY --from=builder /opt/tx-processor/config/general/2pc-compose.cfg ./config/general/2pc-compose.cfg
 
 # Create Atomizer Deployment Image
 FROM $IMAGE_VERSION AS atomizer
@@ -74,4 +74,4 @@ COPY --from=builder /opt/tx-processor/scripts/test-transaction.sh ./scripts/test
 COPY --from=builder /opt/tx-processor/build/src/uhs/client/client-cli ./build/src/uhs/client/client-cli
 
 # Copy atomizer config
-COPY --from=builder /opt/tx-processor/atomizer-compose.cfg ./atomizer-compose.cfg
+COPY --from=builder /opt/tx-processor/config/general/atomizer-compose.cfg ./config/general/atomizer-compose.cfg

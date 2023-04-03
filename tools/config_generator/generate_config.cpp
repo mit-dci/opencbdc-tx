@@ -63,7 +63,7 @@ auto main(int argc, char** argv) -> int {
     }
     cbdc::generate_config::config_generator new_config_gen(args[1], port_num);
     auto cfg_or_err = new_config_gen.generate_configuration_file();
-    std::cerr << cfg_or_err << std::endl;
+    std::cout << cfg_or_err << std::endl;
     std::cout << std::endl;
     return 0;
 }

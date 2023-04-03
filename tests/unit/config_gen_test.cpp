@@ -35,8 +35,9 @@ TEST_F(config_generation_validation_test,
     cbdc::generate_config::config_generator new_config_gen(
         template_file_atomizer,
         port_num);
+    testing::internal::CaptureStderr();
     auto cfg_or_err = new_config_gen.generate_configuration_file();
-    ASSERT_EQ(cfg_or_err, "SUCCESS");
+    ASSERT_NE(testing::internal::GetCapturedStderr().find("SUCCESS"), -1);
     // TODO
     // Reload generate file and check values
     // Delete generated file
@@ -49,8 +50,9 @@ TEST_F(config_generation_validation_test,
     // necessarily know which one
     cbdc::generate_config::config_generator new_config_gen(template_file_2pc,
                                                            port_num);
+    testing::internal::CaptureStderr();
     auto cfg_or_err = new_config_gen.generate_configuration_file();
-    ASSERT_EQ(cfg_or_err, "SUCCESS");
+    ASSERT_NE(testing::internal::GetCapturedStderr().find("SUCCESS"), -1);
     // TODO
     // Reload generate file and check values
     // Delete generated file
