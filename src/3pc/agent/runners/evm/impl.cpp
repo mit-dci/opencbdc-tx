@@ -453,8 +453,9 @@ namespace cbdc::threepc::agent::runner {
             min_gas = min_gas + creation_gas;
         }
 
-        return std::make_pair(min_gas,
-                              !(evmtx.m_gas_limit < min_gas && !is_readonly_run));
+        return std::make_pair(
+            min_gas,
+            !(evmtx.m_gas_limit < min_gas && !is_readonly_run));
     }
 
     auto evm_runner::make_message(const evmc::address& from,

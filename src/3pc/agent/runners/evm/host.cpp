@@ -122,7 +122,8 @@ namespace cbdc::threepc::agent::runner {
         }
         auto& acc = maybe_acc.value();
 
-        auto maybe_storage = get_account_storage(addr, key, !m_is_readonly_run);
+        auto maybe_storage
+            = get_account_storage(addr, key, !m_is_readonly_run);
         auto prev_value = maybe_storage.value_or(evmc::bytes32{});
 
         auto modified = acc.m_modified.find(key) != acc.m_modified.end();

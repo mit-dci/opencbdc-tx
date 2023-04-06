@@ -1,16 +1,19 @@
 # TODO: Renable bugprone-easily-swappable-parameters
 Checks: '
-clang-analyzer-*,
-bugprone-*,
--bugprone-easily-swappable-parameters,
-modernize-*,
-performance-*,
-portability-*,
-cppcoreguidelines-*,
--cppcoreguidelines-pro-bounds-array-to-pointer-decay,
-readability-*,
-google-explicit-constructor,
--readability-identifier-length'
+    clang-analyzer-*,
+    bugprone-*,
+    -bugprone-easily-swappable-parameters,
+    modernize-*,
+    performance-*,
+    portability-*,
+    cppcoreguidelines-*,
+    -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+    readability-*,
+    google-explicit-constructor,
+    -readability-identifier-length'
+CheckOptions:
+    - {key: cppcoreguidelines-explicit-virtual-functions.AllowOverrideAndFinal, value: true}
+    - {key: modernize-use-override.AllowOverrideAndFinal, value: true}
 WarningsAsErrors: '*'
 FormatStyle: 'file'
 HeaderFilterRegex: 'hpp'
