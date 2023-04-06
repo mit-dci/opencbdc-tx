@@ -48,7 +48,8 @@ namespace cbdc::threepc::agent::rpc {
         const std::string& method,
         const Json::Value& params,
         const server_type::result_callback_type& callback) -> bool {
-        m_log->trace("http_server::request_handler() received request", method);
+        m_log->trace("http_server::request_handler() received request",
+                     method);
 
         auto maybe_handled = handle_supported(method, params, callback);
         if(maybe_handled.has_value()) {

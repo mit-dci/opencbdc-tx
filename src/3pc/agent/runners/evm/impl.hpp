@@ -88,8 +88,8 @@ namespace cbdc::threepc::agent::runner {
         auto run_get_account_code() -> bool;
         auto run_get_transaction() -> bool;
         auto run_get_transaction_receipt() -> bool;
-        auto run_execute_transaction(const evmc::address& from, bool is_readonly_run)
-            -> bool;
+        auto run_execute_transaction(const evmc::address& from,
+                                     bool is_readonly_run) -> bool;
         auto run_get_account() -> bool;
         auto run_get_block() -> bool;
         auto run_get_logs() -> bool;
@@ -101,8 +101,9 @@ namespace cbdc::threepc::agent::runner {
                                                   const evm_tx& tx,
                                                   bool is_readonly_run)
             -> evmc_tx_context;
-        static auto
-        make_message(const evmc::address& from, const evm_tx& tx, bool is_readonly_run)
+        static auto make_message(const evmc::address& from,
+                                 const evm_tx& tx,
+                                 bool is_readonly_run)
             -> std::pair<evmc_message, bool>;
 
         void handle_lock_from_account(

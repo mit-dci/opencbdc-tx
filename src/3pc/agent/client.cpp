@@ -22,7 +22,8 @@ namespace cbdc::threepc::agent::rpc {
                       bool is_readonly_run,
                       const interface::exec_callback_type& result_callback)
         -> bool {
-        auto req = request{std::move(function), std::move(param), is_readonly_run};
+        auto req
+            = request{std::move(function), std::move(param), is_readonly_run};
         return m_client->call(std::move(req),
                               [result_callback](std::optional<response> resp) {
                                   assert(resp.has_value());
