@@ -145,10 +145,11 @@ namespace cbdc::threepc::agent {
 
         void do_commit();
 
-        [[nodiscard]] auto do_try_lock_request(
-            broker::key_type key,
-            broker::lock_type locktype,
-            broker::interface::try_lock_callback_type res_cb) -> bool;
+        [[nodiscard]] auto
+        do_try_lock_request(broker::key_type key,
+                            broker::lock_type locktype,
+                            broker::interface::try_lock_callback_type res_cb)
+            -> bool;
 
         void
         handle_rollback(broker::interface::rollback_return_type rollback_res);

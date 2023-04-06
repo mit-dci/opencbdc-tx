@@ -30,7 +30,7 @@ namespace cbdc::threepc::agent {
           m_runner_factory(std::move(runner_factory)),
           m_broker(std::move(broker)),
           m_initial_lock_type(is_readonly_run ? broker::lock_type::read
-                                      : initial_lock_type),
+                                              : initial_lock_type),
           m_is_readonly_run(is_readonly_run),
           m_secp(std::move(secp)),
           m_threads(std::move(t_pool)) {}
@@ -140,7 +140,7 @@ namespace cbdc::threepc::agent {
         m_state = state::function_get_sent;
 
         if(m_is_readonly_run && get_function().size() == 0) {
-            // If this is a dry-run and the function key is empty, the
+            // If this is a read-only run and the function key is empty, the
             // runner will handle retrieving any keys directly.
             handle_function(broker::value_type());
         } else if(get_function().size() == 1) {
@@ -191,10 +191,11 @@ namespace cbdc::threepc::agent {
         res_cb(std::move(res));
     }
 
-    auto impl::do_try_lock_request(
-        broker::key_type key,
-        broker::lock_type locktype,
-        broker::interface::try_lock_callback_type res_cb) -> bool {
+    auto
+    impl::do_try_lock_request(broker::key_type key,
+                              broker::lock_type locktype,
+                              broker::interface::try_lock_callback_type res_cb)
+        -> bool {
         // TODO: permissions for keys
         std::unique_lock l(m_mut);
         assert(m_ticket_number.has_value());
@@ -227,7 +228,8 @@ namespace cbdc::threepc::agent {
             return true;
         }
 
-        auto actual_lock_type = m_is_readonly_run ? broker::lock_type::read : locktype;
+        auto actual_lock_type
+            = m_is_readonly_run ? broker::lock_type::read : locktype;
         return m_broker->try_lock(
             m_ticket_number.value(),
             std::move(key),
@@ -336,8 +338,8 @@ namespace cbdc::threepc::agent {
                    broker::lock_type locktype,
                    broker::interface::try_lock_callback_type res_cb) -> bool {
                 return do_try_lock_request(std::move(key),
-                                               locktype,
-                                               std::move(res_cb));
+                                           locktype,
+                                           std::move(res_cb));
             },
             m_secp,
             m_restarted ? nullptr : m_threads,
