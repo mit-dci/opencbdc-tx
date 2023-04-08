@@ -85,10 +85,6 @@ namespace cbdc::threepc::agent::rpc {
             return handle_call(params, callback);
         }
 
-        if(method == "eth_estimateGas") {
-            return handle_estimate_gas(params, callback);
-        }
-
         if(method == "eth_gasPrice") {
             return handle_gas_price(params, callback);
         }
@@ -166,6 +162,10 @@ namespace cbdc::threepc::agent::rpc {
 
         if(method == "web3_sha3") {
             return handle_sha3(params, callback);
+        }
+
+        if(method == "eth_estimateGas") {
+            return handle_estimate_gas(params, callback);
         }
 
         return std::nullopt;
