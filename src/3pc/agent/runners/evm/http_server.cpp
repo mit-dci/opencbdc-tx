@@ -293,7 +293,8 @@ namespace cbdc::threepc::agent::rpc {
         auto& tx = maybe_tx.value();
         auto runner_params = make_buffer(*tx);
 
-        return exec_tx(runner::evm_runner_function::execute_transaction,
+        return exec_tx(callback,
+                       runner::evm_runner_function::execute_transaction,
                        runner_params,
                        false,
                        [callback, tx](const interface::exec_return_type&) {
@@ -373,6 +374,7 @@ namespace cbdc::threepc::agent::rpc {
         }
         auto runner_params = std::move(maybe_runner_params.value());
         return exec_tx(
+            callback,
             runner::evm_runner_function::read_account,
             runner_params,
             true,
@@ -423,6 +425,7 @@ namespace cbdc::threepc::agent::rpc {
         }
         auto runner_params = std::move(maybe_runner_params.value());
         return exec_tx(
+            callback,
             runner::evm_runner_function::read_account,
             runner_params,
             true,
@@ -477,6 +480,7 @@ namespace cbdc::threepc::agent::rpc {
         auto runner_params = cbdc::make_buffer(
             storage_key{maybe_addr.value(), maybe_key.value()});
         return exec_tx(
+            callback,
             runner::evm_runner_function::read_account_storage,
             runner_params,
             true,
@@ -512,6 +516,7 @@ namespace cbdc::threepc::agent::rpc {
         }
         auto runner_params = std::move(maybe_runner_params.value());
         return exec_tx(
+            callback,
             runner::evm_runner_function::get_transaction_receipt,
             runner_params,
             true,
@@ -786,6 +791,7 @@ namespace cbdc::threepc::agent::rpc {
         auto qry = maybe_qry.value();
         auto runner_params = cbdc::make_buffer(qry);
         return exec_tx(
+            callback,
             runner::evm_runner_function::get_logs,
             runner_params,
             true,
@@ -813,6 +819,7 @@ namespace cbdc::threepc::agent::rpc {
         }
         auto runner_params = std::move(maybe_runner_params.value());
         return exec_tx(
+            callback,
             runner::evm_runner_function::get_transaction_receipt,
             runner_params,
             true,
@@ -862,6 +869,7 @@ namespace cbdc::threepc::agent::rpc {
         }
         auto runner_params = std::move(maybe_runner_params.value());
         return exec_tx(
+            callback,
             runner::evm_runner_function::read_account_code,
             runner_params,
             true,
@@ -901,6 +909,7 @@ namespace cbdc::threepc::agent::rpc {
 
     auto http_server::fetch_block(
         Json::Value params,
+        const server_type::result_callback_type& callback,
         const std::function<void(interface::exec_return_type, cbdc::buffer)>&
             res_cb) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isString()
@@ -923,6 +932,7 @@ namespace cbdc::threepc::agent::rpc {
         }
 
         return exec_tx(
+            callback,
             runner::evm_runner_function::get_block,
             runner_params,
             true,
@@ -937,6 +947,7 @@ namespace cbdc::threepc::agent::rpc {
         auto include_tx_details = params[1].asBool();
         return fetch_block(
             params,
+            callback,
             [this, callback, include_tx_details](
                 interface::exec_return_type res,
                 const cbdc::buffer& runner_params) {
@@ -1015,6 +1026,7 @@ namespace cbdc::threepc::agent::rpc {
         const server_type::result_callback_type& callback) -> bool {
         return fetch_block(
             std::move(params),
+            callback,
             [callback](interface::exec_return_type res,
                        const cbdc::buffer& runner_params) {
                 auto& updates = std::get<return_type>(res);
@@ -1116,6 +1128,7 @@ namespace cbdc::threepc::agent::rpc {
 
         return fetch_block(
             shadow_params,
+            callback,
             [this, callback, params](interface::exec_return_type res,
                                      const cbdc::buffer& runner_params) {
                 auto& updates = std::get<return_type>(res);
@@ -1226,7 +1239,8 @@ namespace cbdc::threepc::agent::rpc {
         auto& tx = maybe_tx.value();
         auto runner_params = make_buffer(*tx);
 
-        return exec_tx(runner::evm_runner_function::dryrun_transaction,
+        return exec_tx(callback,
+                       runner::evm_runner_function::dryrun_transaction,
                        runner_params,
                        true,
                        [callback, tx](interface::exec_return_type res) {
@@ -1280,7 +1294,8 @@ namespace cbdc::threepc::agent::rpc {
 
         auto& tx = maybe_tx.value();
         auto runner_params = make_buffer(*tx);
-        return exec_tx(runner::evm_runner_function::execute_transaction,
+        return exec_tx(callback,
+                       runner::evm_runner_function::execute_transaction,
                        runner_params,
                        false,
                        [callback, tx](const interface::exec_return_type&) {
@@ -1292,12 +1307,27 @@ namespace cbdc::threepc::agent::rpc {
     }
 
     auto http_server::exec_tx(
+        const server_type::result_callback_type& callback,
         runner::evm_runner_function f_type,
         cbdc::buffer& runner_params,
         bool is_readonly_run,
         std::function<void(interface::exec_return_type)> res_cb) -> bool {
         auto function = cbdc::buffer();
         function.append(&f_type, sizeof(f_type));
+        auto cb = [res_cb, callback](interface::exec_return_type res) {
+            if(!std::holds_alternative<return_type>(res)) {
+                auto ec = std::get<interface::error_code>(res);
+                auto ret = Json::Value();
+                ret["error"] = Json::Value();
+                ret["error"]["code"]
+                    = error_code::execution_error - static_cast<int>(ec);
+                ret["error"]["message"] = "Execution error";
+                callback(ret);
+                return;
+            }
+
+            res_cb(res);
+        };
 
         auto id = m_next_id++;
         auto a = [&]() {
