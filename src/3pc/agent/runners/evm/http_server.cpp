@@ -1307,29 +1307,40 @@ namespace cbdc::threepc::agent::rpc {
     }
 
     auto http_server::exec_tx(
-        const server_type::result_callback_type& callback,
+        const server_type::result_callback_type& json_ret_callback,
         runner::evm_runner_function f_type,
         cbdc::buffer& runner_params,
         bool is_readonly_run,
-        std::function<void(interface::exec_return_type)> res_cb) -> bool {
+        const std::function<void(interface::exec_return_type)>& res_success_cb)
+        -> bool {
         auto function = cbdc::buffer();
         function.append(&f_type, sizeof(f_type));
-        auto cb = [res_cb, callback](interface::exec_return_type res) {
-            if(!std::holds_alternative<return_type>(res)) {
-                auto ec = std::get<interface::error_code>(res);
-                auto ret = Json::Value();
-                ret["error"] = Json::Value();
-                ret["error"]["code"]
-                    = error_code::execution_error - static_cast<int>(ec);
-                ret["error"]["message"] = "Execution error";
-                callback(ret);
-                return;
-            }
-
-            res_cb(res);
-        };
-
         auto id = m_next_id++;
+
+        const auto res_cb_for_agent =
+            [this, id, res_success_cb, json_ret_callback](
+                interface::exec_return_type res) {
+                const auto success = std::holds_alternative<return_type>(res);
+                if(success) {
+                    res_success_cb(res);
+                    m_cleanup_queue.push(id);
+                } else {
+                    // Handle error:
+                    const auto ec = std::get<interface::error_code>(res);
+
+                    if(ec == interface::error_code::retry) {
+                        m_retry_queue.push(id);
+                    } else {
+                        auto ret = Json::Value();
+                        ret["error"] = Json::Value();
+                        ret["error"]["code"] = error_code::execution_error
+                                             - static_cast<int>(ec);
+                        ret["error"]["message"] = "Execution error";
+                        json_ret_callback(ret);
+                    }
+                }
+            };
+
         auto a = [&]() {
             auto agent = std::make_shared<impl>(
                 m_log,
@@ -1338,18 +1349,7 @@ namespace cbdc::threepc::agent::rpc {
                 m_broker,
                 function,
                 runner_params,
-                [this, id, res_cb](interface::exec_return_type res) {
-                    auto success = std::holds_alternative<return_type>(res);
-                    if(!success) {
-                        auto ec = std::get<interface::error_code>(res);
-                        if(ec == interface::error_code::retry) {
-                            m_retry_queue.push(id);
-                            return;
-                        }
-                    }
-                    res_cb(res);
-                    m_cleanup_queue.push(id);
-                },
+                res_cb_for_agent,
                 runner::evm_runner::initial_lock_type,
                 is_readonly_run,
                 m_secp,

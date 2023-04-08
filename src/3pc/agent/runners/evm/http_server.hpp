@@ -200,12 +200,13 @@ namespace cbdc::threepc::agent::rpc {
                                                   cbdc::buffer)>& res_cb)
             -> bool;
 
-        auto exec_tx(const server_type::result_callback_type& callback,
-                     runner::evm_runner_function f_type,
-                     cbdc::buffer& runner_params,
-                     bool is_readonly_run,
-                     std::function<void(interface::exec_return_type)> res_cb)
-            -> bool;
+        auto
+        exec_tx(const server_type::result_callback_type& json_ret_callback,
+                runner::evm_runner_function f_type,
+                cbdc::buffer& runner_params,
+                bool is_readonly_run,
+                const std::function<void(interface::exec_return_type)>&
+                    res_success_cb) -> bool;
 
         auto
         handle_unsupported(const std::string& method,
