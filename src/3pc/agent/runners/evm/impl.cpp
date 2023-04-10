@@ -155,10 +155,35 @@ namespace cbdc::threepc::agent::runner {
         }
         auto tn = to_uint64(maybe_tn.value());
         auto tn_key = m_host->ticket_number_key(tn);
+        auto cb
+            = [this, tn](const broker::interface::try_lock_return_type& res2) {
+                  if(!std::holds_alternative<broker::value_type>(res2)) {
+                      m_log->error("Ticket number had TXID, but TX not found");
+                      m_result_callback(error_code::function_load);
+                      return;
+                  }
+
+                  auto v2 = std::get<broker::value_type>(res2);
+                  auto maybe_tx_receipt = from_buffer<evm_tx_receipt>(v2);
+                  if(!maybe_tx_receipt) {
+                      m_log->error("Ticket number had TXID, but TX "
+                                   "receipt could not be deserialized");
+                      m_result_callback(error_code::function_load);
+                      return;
+                  }
+
+                  auto ret = runtime_locking_shard::state_update_type();
+                  auto blk = make_pretend_block(tn);
+                  blk.m_transactions.push_back(maybe_tx_receipt.value());
+                  ret[m_param] = make_buffer(blk);
+                  m_result_callback(ret);
+                  return;
+              };
         auto success = m_try_lock_callback(
             tn_key,
             broker::lock_type::read,
-            [this, tn](const broker::interface::try_lock_return_type& res) {
+            [this, tn, cb](
+                const broker::interface::try_lock_return_type& res) {
                 if(!std::holds_alternative<broker::value_type>(res)) {
                     auto ret = runtime_locking_shard::state_update_type();
                     auto blk = make_pretend_block(tn);
@@ -177,35 +202,8 @@ namespace cbdc::threepc::agent::runner {
                     return;
                 }
 
-                auto tx_success = m_try_lock_callback(
-                    v,
-                    broker::lock_type::read,
-                    [this,
-                     tn](const broker::interface::try_lock_return_type& res2) {
-                        if(!std::holds_alternative<broker::value_type>(res2)) {
-                            m_log->error(
-                                "Ticket number had TXID, but TX not found");
-                            m_result_callback(error_code::function_load);
-                            return;
-                        }
-
-                        auto v2 = std::get<broker::value_type>(res2);
-                        auto maybe_tx_receipt
-                            = from_buffer<evm_tx_receipt>(v2);
-                        if(!maybe_tx_receipt) {
-                            m_log->error("Ticket number had TXID, but TX "
-                                         "receipt could not be deserialized");
-                            m_result_callback(error_code::function_load);
-                            return;
-                        }
-
-                        auto ret = runtime_locking_shard::state_update_type();
-                        auto blk = make_pretend_block(tn);
-                        blk.m_transactions.push_back(maybe_tx_receipt.value());
-                        ret[m_param] = make_buffer(blk);
-                        m_result_callback(ret);
-                        return;
-                    });
+                auto tx_success
+                    = m_try_lock_callback(v, broker::lock_type::read, cb);
                 if(!tx_success) {
                     m_log->error("Could not send request for TX data");
                     m_result_callback(error_code::function_load);
@@ -290,8 +288,7 @@ namespace cbdc::threepc::agent::runner {
             std::unique_lock<std::mutex> lck(*log_indexes_mut);
             log_indexes->push_back(maybe_logs.value());
         }
-        auto acq = (*acquired)++;
-        if(acq + 1 == key_count) {
+        if(++(*acquired) == key_count) {
             handle_complete_get_logs(qry, log_indexes_mut, log_indexes);
         }
     }
@@ -329,6 +326,7 @@ namespace cbdc::threepc::agent::runner {
                 final_logs.push_back(log_idx);
             }
         }
+        lck.unlock();
 
         m_log->info(m_ticket_number,
                     "returning",
@@ -607,8 +605,7 @@ namespace cbdc::threepc::agent::runner {
                 broker::lock_type::write,
                 [acquired, callback, key_count = keys.size()](
                     const broker::interface::try_lock_return_type&) {
-                    auto acq = (*acquired)++;
-                    if(acq + 1 == key_count) {
+                    if(++(*acquired) == key_count) {
                         callback();
                     }
                 });
@@ -631,12 +628,10 @@ namespace cbdc::threepc::agent::runner {
         auto from_acc = evm_account();
 
         // TODO: Start at zero?
-        // auto exp_nonce = evmc::uint256be(0);
         if(v.size() > 0) {
             auto maybe_from_acc = cbdc::from_buffer<evm_account>(v);
             if(maybe_from_acc.has_value()) {
                 from_acc = maybe_from_acc.value();
-                // exp_nonce = from_acc.m_nonce + evmc::uint256be(1);
             }
         }
 
