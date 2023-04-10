@@ -78,32 +78,6 @@ namespace cbdc::threepc::agent::runner {
         }
     }
 
-    auto parse_bytes32(const std::string& bytes)
-        -> std::optional<evmc::bytes32> {
-        static constexpr size_t bytes_size = 32;
-        if(bytes.size() < bytes_size * 2) {
-            return std::nullopt;
-        }
-
-        auto bytes_to_parse = bytes;
-        if(bytes_to_parse.substr(0, 2) == "0x") {
-            bytes_to_parse = bytes_to_parse.substr(2);
-        }
-        auto maybe_bytes = cbdc::buffer::from_hex(bytes_to_parse);
-        if(!maybe_bytes.has_value()) {
-            return std::nullopt;
-        }
-        if(maybe_bytes.value().size() != bytes_size) {
-            return std::nullopt;
-        }
-
-        auto bytes_val = evmc::bytes32();
-        std::memcpy(bytes_val.bytes,
-                    maybe_bytes.value().data(),
-                    maybe_bytes.value().size());
-        return bytes_val;
-    }
-
     auto uint256be_from_hex(const std::string& hex)
         -> std::optional<evmc::uint256be> {
         auto maybe_bytes = cbdc::buffer::from_hex_prefixed(hex);
