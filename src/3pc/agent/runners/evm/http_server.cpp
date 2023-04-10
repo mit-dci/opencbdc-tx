@@ -632,6 +632,12 @@ namespace cbdc::threepc::agent::rpc {
                 = uint256be_from_hex(params[0]["blockhash"].asString());
             if(!maybe_block_num) {
                 m_log->warn("Invalid blockNumber / hash parameter");
+                // return error to user through callback
+                ret["error"] = Json::Value();
+                ret["error"]["code"] = error_code::invalid_block_parameter;
+                ret["error"]["message"]
+                    = "Invalid blockNumber / hash parameter";
+                callback(ret);
                 return false;
             }
             qry.m_from_block = to_uint64(maybe_block_num.value());
@@ -646,6 +652,10 @@ namespace cbdc::threepc::agent::rpc {
                     = uint256be_from_hex(params[0]["fromBlock"].asString());
                 if(!maybe_block_num) {
                     m_log->warn("Invalid fromBlock parameter");
+                    ret["error"] = Json::Value();
+                    ret["error"]["code"] = error_code::invalid_block_parameter;
+                    ret["error"]["message"] = "Invalid fromBlock parameter";
+                    callback(ret);
                     return false;
                 }
                 qry.m_from_block = to_uint64(maybe_block_num.value());
@@ -658,6 +668,10 @@ namespace cbdc::threepc::agent::rpc {
                     = uint256be_from_hex(params[0]["toBlock"].asString());
                 if(!maybe_block_num) {
                     m_log->warn("Invalid toBlock parameter");
+                    ret["error"] = Json::Value();
+                    ret["error"]["code"] = error_code::invalid_block_parameter;
+                    ret["error"]["message"] = "Invalid toBlock parameter";
+                    callback(ret);
                     return false;
                 }
                 qry.m_to_block = to_uint64(maybe_block_num.value());
@@ -779,6 +793,12 @@ namespace cbdc::threepc::agent::rpc {
         const server_type::result_callback_type& callback) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isObject()) {
             m_log->warn("Invalid parameters to getLogs");
+            auto ret = Json::Value();
+            ret["error"] = Json::Value();
+            // TODO: Is this the correct error code?
+            ret["error"]["code"] = error_code::invalid_block_parameter;
+            ret["error"]["message"] = "Invalid parameters to getLogs";
+            callback(ret);
             return false;
         }
 
@@ -808,6 +828,12 @@ namespace cbdc::threepc::agent::rpc {
         const server_type::result_callback_type& callback) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isString()) {
             m_log->warn("Invalid parameters to getTransactionReceipt");
+            auto ret = Json::Value();
+            ret["error"] = Json::Value();
+            ret["error"]["code"] = error_code::invalid_block_parameter;
+            ret["error"]["message"]
+                = "Invalid parameters to getTransactionReceipt";
+            callback(ret);
             return false;
         }
         auto params_str = params[0].asString();
@@ -856,7 +882,12 @@ namespace cbdc::threepc::agent::rpc {
         Json::Value params,
         const server_type::result_callback_type& callback) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isString()) {
-            m_log->warn("Invalid parameters to getBalance");
+            m_log->warn("Invalid parameters to getCode");
+            auto ret = Json::Value();
+            ret["error"] = Json::Value();
+            ret["error"]["code"] = error_code::invalid_block_parameter;
+            ret["error"]["message"] = "Invalid parameters to getCode";
+            callback(ret);
             return false;
         }
 
@@ -865,6 +896,12 @@ namespace cbdc::threepc::agent::rpc {
             = cbdc::buffer::from_hex(params_str.substr(2));
         if(!maybe_runner_params.has_value()) {
             m_log->warn("Unable to decode params", params_str);
+            auto ret = Json::Value();
+            ret["error"] = Json::Value();
+            ret["error"]["code"] = error_code::execution_error;
+            ret["error"]["message"]
+                = "Unable to decode getCode parameters: " + params_str;
+            callback(ret);
             return false;
         }
         auto runner_params = std::move(maybe_runner_params.value());
@@ -915,6 +952,12 @@ namespace cbdc::threepc::agent::rpc {
         if(!params.isArray() || params.empty() || !params[0].isString()
            || (params.size() > 1 && !params[1].isBool())) {
             m_log->warn("Invalid parameters to getBlock", params.size());
+            auto ret = Json::Value();
+            ret["error"] = Json::Value();
+            ret["error"]["code"] = error_code::invalid_block_parameter;
+            ret["error"]["message"] = "Invalid parameters to getBlock (size: "
+                                    + std::to_string(params.size()) + ")";
+            callback(ret);
             return false;
         }
 
@@ -926,6 +969,12 @@ namespace cbdc::threepc::agent::rpc {
             auto maybe_block_num = uint256be_from_hex(params[0].asString());
             if(!maybe_block_num) {
                 m_log->warn("Invalid blockNumber / hash parameter");
+                auto ret = Json::Value();
+                ret["error"] = Json::Value();
+                ret["error"]["code"] = error_code::invalid_block_parameter;
+                ret["error"]["message"]
+                    = "Invalid blockNumber / hash parameter";
+                callback(ret);
                 return false;
             }
             runner_params = cbdc::make_buffer(maybe_block_num.value());
@@ -1120,6 +1169,13 @@ namespace cbdc::threepc::agent::rpc {
            || !params[1].isString()) {
             m_log->warn("Invalid parameters to "
                         "getTransacionByBlock{Hash/Number}AndIndex");
+            auto ret = Json::Value();
+            ret["error"] = Json::Value();
+            ret["error"]["code"] = error_code::invalid_block_parameter;
+            ret["error"]["message"]
+                = "Invalid parameters to "
+                  "getTransacionByBlock{Hash/Number}AndIndex";
+            callback(ret);
             return false;
         }
 
@@ -1227,12 +1283,23 @@ namespace cbdc::threepc::agent::rpc {
         -> bool {
         if(!params.isArray() || params.empty() || !params[0].isObject()) {
             m_log->warn("Parameter to call is invalid");
+            auto ret = Json::Value();
+            ret["error"] = Json::Value();
+            ret["error"]["code"] = error_code::invalid_block_parameter;
+            ret["error"]["message"] = "Parameter to call is invalid";
+            callback(ret);
             return false;
         }
 
         auto maybe_tx = dryrun_tx_from_json(params[0]);
         if(!maybe_tx) {
             m_log->warn("Parameter is not a valid transaction");
+            auto ret = Json::Value();
+            ret["error"] = Json::Value();
+            ret["error"]["code"] = error_code::invalid_transaction_index;
+            ret["error"]["message"]
+                = "Parameter to call is not a valid transaction";
+            callback(ret);
             return false;
         }
 
@@ -1283,12 +1350,23 @@ namespace cbdc::threepc::agent::rpc {
         const server_type::result_callback_type& callback) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isObject()) {
             m_log->warn("Invalid parameters to sendTransaction");
+            auto ret = Json::Value();
+            ret["error"] = Json::Value();
+            ret["error"]["code"] = error_code::invalid_block_parameter;
+            ret["error"]["message"] = "Invalid parameters to sendTransaction";
+            callback(ret);
             return false;
         }
 
         auto maybe_tx = tx_from_json(params[0]);
         if(!maybe_tx) {
             m_log->warn("Parameter is not a valid transaction");
+            auto ret = Json::Value();
+            ret["error"] = Json::Value();
+            ret["error"]["code"] = error_code::invalid_transaction_index;
+            ret["error"]["message"]
+                = "Parameter to sendTransaction is not a valid transaction";
+            callback(ret);
             return false;
         }
 
