@@ -6,9 +6,9 @@
 #ifndef CBDC_UNIVERSE0_SRC_3PC_AGENT_SERVER_INTERFACE_H_
 #define CBDC_UNIVERSE0_SRC_3PC_AGENT_SERVER_INTERFACE_H_
 
-#include "agent/impl.hpp"
-#include "broker/interface.hpp"
-#include "directory/interface.hpp"
+#include "3pc/agent/impl.hpp"
+#include "3pc/broker/interface.hpp"
+#include "3pc/directory/interface.hpp"
 #include "interface.hpp"
 #include "messages.hpp"
 #include "util/common/blocking_queue.hpp"

@@ -6,11 +6,11 @@
 #ifndef CBDC_UNIVERSE0_SRC_3PC_AGENT_HTTP_SERVER_H_
 #define CBDC_UNIVERSE0_SRC_3PC_AGENT_HTTP_SERVER_H_
 
+#include "3pc/agent/impl.hpp"
 #include "3pc/agent/runners/evm/impl.hpp"
-#include "agent/impl.hpp"
-#include "agent/server_interface.hpp"
-#include "broker/interface.hpp"
-#include "directory/interface.hpp"
+#include "3pc/agent/server_interface.hpp"
+#include "3pc/broker/interface.hpp"
+#include "3pc/directory/interface.hpp"
 #include "messages.hpp"
 #include "util/common/blocking_queue.hpp"
 #include "util/common/thread_pool.hpp"

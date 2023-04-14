@@ -73,7 +73,6 @@ namespace cbdc::rpc {
         std::vector<std::string> m_endpoints;
         long m_timeout;
         std::unique_ptr<event_handler> m_ev_handler;
-        std::shared_ptr<cbdc::logging::log> m_log;
 
         Json::StreamWriterBuilder m_builder;
 
@@ -109,6 +108,9 @@ namespace cbdc::rpc {
         static auto timer_callback(CURLM* multi_handle,
                                    long timeout_ms,
                                    json_rpc_http_client* c) -> int;
+
+      protected:
+        std::shared_ptr<cbdc::logging::log> m_log;
     };
 }
 
