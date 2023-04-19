@@ -33,7 +33,7 @@ namespace cbdc::threepc::agent::rpc {
         /// \param srv pointer to an HTTP JSON-RPC server.
         /// \param broker broker instance.
         /// \param log log instance.
-        /// \param cfg system configuration options.
+        /// \param cfg system configuration options.
         http_server(std::unique_ptr<server_type> srv,
                     std::shared_ptr<broker::interface> broker,
                     std::shared_ptr<logging::log> log,
@@ -56,23 +56,23 @@ namespace cbdc::threepc::agent::rpc {
         std::unique_ptr<server_type> m_srv;
 
         enum error_code : int {
-            wallet_not_supported = -32602,
-            mining_not_supported = -32604,
-            time_travel_not_supported = -32605,
-            compiler_not_supported = -32606,
-            coinbase_not_supported = -32607,
-            uncles_not_supported = -32001,
-            unknown_method = -32699,
-            internal_error = -32002,
-            not_found = -32001,
-            invalid_address = -32201,
-            invalid_topic = -32202,
-            from_block_after_to = -32204,
-            invalid_block_parameter = -32203,
-            block_range_too_large = -32205,
-            invalid_transaction_index = -32003,
-            invalid_block_identifier = -32302,
-            execution_error = -33000,
+            wallet_not_supported = -32001,
+            mining_not_supported = -32002,
+            time_travel_not_supported = -32003,
+            compiler_not_supported = -32004,
+            coinbase_not_supported = -32005,
+            uncles_not_supported = -32006,
+            unknown_method = -32099,
+            internal_error = -32603,
+            not_found = -32014,
+            invalid_address = -32015,
+            invalid_topic = -32016,
+            from_block_after_to = -32022,
+            invalid_block_parameter = -32017,
+            block_range_too_large = -32024,
+            invalid_transaction_index = -32018,
+            invalid_block_identifier = -32019,
+            execution_error = -32088,
         };
 
         auto request_handler(const std::string& method,
