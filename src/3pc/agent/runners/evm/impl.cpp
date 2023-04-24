@@ -155,35 +155,11 @@ namespace cbdc::threepc::agent::runner {
         }
         auto tn = to_uint64(maybe_tn.value());
         auto tn_key = m_host->ticket_number_key(tn);
-        auto cb
-            = [this, tn](const broker::interface::try_lock_return_type& res2) {
-                  if(!std::holds_alternative<broker::value_type>(res2)) {
-                      m_log->error("Ticket number had TXID, but TX not found");
-                      m_result_callback(error_code::function_load);
-                      return;
-                  }
 
-                  auto v2 = std::get<broker::value_type>(res2);
-                  auto maybe_tx_receipt = from_buffer<evm_tx_receipt>(v2);
-                  if(!maybe_tx_receipt) {
-                      m_log->error("Ticket number had TXID, but TX "
-                                   "receipt could not be deserialized");
-                      m_result_callback(error_code::function_load);
-                      return;
-                  }
-
-                  auto ret = runtime_locking_shard::state_update_type();
-                  auto blk = make_pretend_block(tn);
-                  blk.m_transactions.push_back(maybe_tx_receipt.value());
-                  ret[m_param] = make_buffer(blk);
-                  m_result_callback(ret);
-                  return;
-              };
         auto success = m_try_lock_callback(
             tn_key,
             broker::lock_type::read,
-            [this, tn, cb](
-                const broker::interface::try_lock_return_type& res) {
+            [this, tn](const broker::interface::try_lock_return_type& res) {
                 if(!std::holds_alternative<broker::value_type>(res)) {
                     auto ret = runtime_locking_shard::state_update_type();
                     auto blk = make_pretend_block(tn);
@@ -202,16 +178,43 @@ namespace cbdc::threepc::agent::runner {
                     return;
                 }
 
-                auto tx_success
-                    = m_try_lock_callback(v, broker::lock_type::read, cb);
-                if(!tx_success) {
-                    m_log->error("Could not send request for TX data");
-                    m_result_callback(error_code::function_load);
-                    return;
-                }
+                lock_tx_receipt(v, tn);
             });
 
         return success;
+    }
+
+    void evm_runner::lock_tx_receipt(const broker::value_type& value,
+                                     const ticket_number_type& ticket_number) {
+        auto cb = [this, ticket_number](
+                      const broker::interface::try_lock_return_type& res) {
+            if(!std::holds_alternative<broker::value_type>(res)) {
+                m_log->error("Ticket number had TXID, but TX not found");
+                m_result_callback(error_code::function_load);
+                return;
+            }
+
+            auto v = std::get<broker::value_type>(res);
+            auto maybe_tx_receipt = from_buffer<evm_tx_receipt>(v);
+            if(!maybe_tx_receipt) {
+                m_log->error("Ticket number had TXID, but TX "
+                             "receipt could not be deserialized");
+                m_result_callback(error_code::function_load);
+                return;
+            }
+
+            auto ret = runtime_locking_shard::state_update_type();
+            auto blk = make_pretend_block(ticket_number);
+            blk.m_transactions.push_back(maybe_tx_receipt.value());
+            ret[m_param] = make_buffer(blk);
+            m_result_callback(ret);
+            return;
+        };
+
+        if(!m_try_lock_callback(value, broker::lock_type::read, cb)) {
+            m_log->error("Could not send request for TX data");
+            m_result_callback(error_code::function_load);
+        }
     }
 
     auto evm_runner::run_get_logs() -> bool {
