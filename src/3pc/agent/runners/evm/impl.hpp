@@ -132,6 +132,9 @@ namespace cbdc::threepc::agent::runner {
             const evm_log_query& qry,
             const std::shared_ptr<std::mutex>& log_indexes_mut,
             const std::shared_ptr<std::vector<evm_log_index>>& log_indexes);
+
+        void lock_tx_receipt(const broker::value_type& value,
+                             const ticket_number_type& ticket_number);
     };
 }
 
