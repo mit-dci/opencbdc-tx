@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CBDC_UNIVERSE0_SRC_3PC_AGENT_MESSAGES_H_
-#define CBDC_UNIVERSE0_SRC_3PC_AGENT_MESSAGES_H_
+#ifndef OPENCBDC_TX_SRC_3PC_AGENT_MESSAGES_H_
+#define OPENCBDC_TX_SRC_3PC_AGENT_MESSAGES_H_
 
 #include "interface.hpp"
 

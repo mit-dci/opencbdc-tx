@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CBDC_UNIVERSE0_SRC_3PC_AGENT_HTTP_SERVER_H_
-#define CBDC_UNIVERSE0_SRC_3PC_AGENT_HTTP_SERVER_H_
+#ifndef OPENCBDC_TX_SRC_3PC_AGENT_HTTP_SERVER_H_
+#define OPENCBDC_TX_SRC_3PC_AGENT_HTTP_SERVER_H_
 
 #include "3pc/agent/impl.hpp"
 #include "3pc/agent/runners/evm/impl.hpp"
