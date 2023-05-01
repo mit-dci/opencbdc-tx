@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CBDC_UNIVERSE0_SRC_3PC_AGENT_INIT_ADDRESSES_H_
-#define CBDC_UNIVERSE0_SRC_3PC_AGENT_INIT_ADDRESSES_H_
+#ifndef OPENCBDC_TX_SRC_3PC_AGENT_INIT_ADDRESSES_H_
+#define OPENCBDC_TX_SRC_3PC_AGENT_INIT_ADDRESSES_H_
 
 #include <string>
 #include <vector>
@@ -270,4 +270,4 @@ namespace cbdc::threepc::agent {
            std::string("0fea15f94381c47d17f758c794e19c8174bee776")};
 }
 
-#endif // CBDC_UNIVERSE0_SRC_3PC_AGENT_INIT_ADDRESSES_H_
+#endif // OPENCBDC_TX_SRC_3PC_AGENT_INIT_ADDRESSES_H_
