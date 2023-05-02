@@ -220,7 +220,7 @@ namespace cbdc::test::evm_contracts {
 
     auto data_erc20_balance_of(evmc::address account) -> cbdc::buffer {
         auto buf = cbdc::buffer();
-        const auto selector_balance_of = std::string("balance_of(address)");
+        const auto selector_balance_of = std::string("balanceOf(address)");
         auto selector_hash = cbdc::keccak_data(selector_balance_of.data(),
                                                selector_balance_of.size());
         buf.append(selector_hash.data(), selector_size);
@@ -243,7 +243,7 @@ namespace cbdc::test::evm_contracts {
         -> cbdc::buffer {
         auto buf = cbdc::buffer();
         const auto selector_decrease_allowance
-            = std::string("decrease_allowance(address,uint256)");
+            = std::string("decreaseAllowance(address,uint256)");
         auto selector_hash
             = cbdc::keccak_data(selector_decrease_allowance.data(),
                                 selector_decrease_allowance.size());
@@ -259,7 +259,7 @@ namespace cbdc::test::evm_contracts {
         -> cbdc::buffer {
         auto buf = cbdc::buffer();
         const auto selector_increase_allowance
-            = std::string("increase_allowance(address,uint256)");
+            = std::string("increaseAllowance(address,uint256)");
         auto selector_hash
             = cbdc::keccak_data(selector_increase_allowance.data(),
                                 selector_increase_allowance.size());
@@ -290,7 +290,7 @@ namespace cbdc::test::evm_contracts {
 
     auto data_erc20_total_supply() -> cbdc::buffer {
         auto buf = cbdc::buffer();
-        const auto selector_total_supply = std::string("total_supply()");
+        const auto selector_total_supply = std::string("totalSupply()");
         auto selector_hash = cbdc::keccak_data(selector_total_supply.data(),
                                                selector_total_supply.size());
         buf.append(selector_hash.data(), selector_size);
@@ -316,7 +316,7 @@ namespace cbdc::test::evm_contracts {
                                   evmc::uint256be amount) -> cbdc::buffer {
         auto buf = cbdc::buffer();
         const auto selector_transfer_from
-            = std::string("transfer_from(address,address,uint256)");
+            = std::string("transferFrom(address,address,uint256)");
         auto selector_hash = cbdc::keccak_data(selector_transfer_from.data(),
                                                selector_transfer_from.size());
         buf.append(selector_hash.data(), selector_size);

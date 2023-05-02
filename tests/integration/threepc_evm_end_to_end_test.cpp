@@ -6,6 +6,7 @@
 #include "3pc/agent/impl.hpp"
 #include "3pc/agent/runners/evm/address.hpp"
 #include "3pc/agent/runners/evm/http_server.hpp"
+#include "3pc/agent/runners/evm/math.hpp"
 #include "3pc/agent/runners/evm/rlp.hpp"
 #include "3pc/agent/runners/evm/signature.hpp"
 #include "3pc/agent/runners/evm/util.hpp"
@@ -79,23 +80,34 @@ class threepc_evm_end_to_end_test : public ::testing::Test {
                                 const evmc::address& from_addr,
                                 const cbdc::privkey_t& from_privkey,
                                 const evmc::address& to_addr,
-                                int erc20_value);
+                                const evmc::uint256be& erc20_value);
 
     void test_erc20_get_balance(const evmc::address& contract_address,
                                 const evmc::address& acct_address,
-                                const cbdc::privkey_t& acct_privkey);
+                                const cbdc::privkey_t& acct_privkey,
+                                const evmc::uint256be& expected_balance);
+
+    void test_erc20_decimals(const evmc::address& contract_address,
+                             const evmc::address& from_address,
+                             const cbdc::privkey_t& from_privkey,
+                             const evmc::uint256be& expected_decimals);
+
+    void test_erc20_total_supply(const evmc::address& contract_address,
+                                 const evmc::address& from_address,
+                                 const cbdc::privkey_t& from_privkey,
+                                 const evmc::uint256be& expected_total_supply);
 
     // Used by to execute transaction where where one single result str output
     // data is expected in the tx receipt.
     void
-    test_erc20_tx_compare_resultstr_(const evmc::address& contract_address,
-                                     const evmc::address& from_address,
-                                     const cbdc::privkey_t& from_privkey,
-                                     const cbdc::buffer& input_data,
-                                     const std::string& expected_resultstr);
+    test_erc20_tx_get_raw_output_data_(const evmc::address& contract_address,
+                                       const evmc::address& from_address,
+                                       const cbdc::privkey_t& from_privkey,
+                                       const cbdc::buffer& input_data,
+                                       std::string& out_raw_output_data);
 
     std::shared_ptr<cbdc::logging::log> m_log{
-        std::make_shared<cbdc::logging::log>(cbdc::logging::log_level::trace)};
+        std::make_shared<cbdc::logging::log>(cbdc::logging::log_level::info)};
     cbdc::threepc::config m_cfg{};
     std::shared_ptr<cbdc::threepc::broker::interface> m_broker;
 
@@ -112,10 +124,15 @@ class threepc_evm_end_to_end_test : public ::testing::Test {
     evmc::address m_acct0_ethaddr;
     evmc::address m_acct1_ethaddr;
 
-    static constexpr unsigned int m_init_acct_balance = 1000000;
+    evmc::uint256be m_init_acct_balance;
 };
 
 void threepc_evm_end_to_end_test::init_accounts() {
+    // 1x10^24: i.e. 1mm with 18 decimals:
+    m_init_acct_balance = cbdc::threepc::agent::runner::uint256be_from_hex(
+                              "0xd3c21bcecceda1000000")
+                              .value();
+
     m_acct0_privkey = cbdc::hash_from_hex(
         "96c92064b84b7a4e8f32f66014b1ba431c8fdf4382749328310cc9ec765bb76a");
     m_acct1_privkey = cbdc::hash_from_hex(
@@ -175,12 +192,12 @@ void threepc_evm_end_to_end_test::init_jsonrpc_server_and_client(
         m_log);
 }
 
-void threepc_evm_end_to_end_test::test_erc20_tx_compare_resultstr_(
+void threepc_evm_end_to_end_test::test_erc20_tx_get_raw_output_data_(
     const evmc::address& contract_address,
     const evmc::address& from_address,
     const cbdc::privkey_t& from_privkey,
     const cbdc::buffer& input_data,
-    const std::string& expected_resultstr) {
+    std::string& out_raw_output_data) {
     const auto make_evmtx_ = [&]() -> cbdc::threepc::agent::runner::evm_tx {
         auto etx = cbdc::threepc::agent::runner::evm_tx();
         etx.m_to = contract_address;
@@ -241,10 +258,7 @@ void threepc_evm_end_to_end_test::test_erc20_tx_compare_resultstr_(
               etx.m_value);
 
     ASSERT_TRUE(txreceipt.isMember("output_data"));
-    const std::string x = txreceipt["output_data"].asString();
-    std::string resultstr;
-    gtest_erc20_output_hex_to_ascii(x, resultstr);
-    ASSERT_EQ(resultstr, expected_resultstr);
+    out_raw_output_data = txreceipt["output_data"].asString();
 }
 
 void threepc_evm_end_to_end_test::test_erc20_name(
@@ -256,12 +270,17 @@ void threepc_evm_end_to_end_test::test_erc20_name(
                 std::string(__FUNCTION__) + "()",
                 "Confirming that contract name is:",
                 expected_name);
-    test_erc20_tx_compare_resultstr_(
+    std::string raw_output_data;
+    test_erc20_tx_get_raw_output_data_(
         contract_address,
         from_address,
         from_privkey,
         cbdc::test::evm_contracts::data_erc20_name(),
-        expected_name);
+        raw_output_data);
+
+    std::string formatted_resultstr;
+    gtest_erc20_output_hex_to_ascii(raw_output_data, formatted_resultstr);
+    ASSERT_EQ(formatted_resultstr, expected_name);
 }
 
 void threepc_evm_end_to_end_test::test_erc20_symbol(
@@ -273,12 +292,65 @@ void threepc_evm_end_to_end_test::test_erc20_symbol(
                 std::string(__FUNCTION__) + "()",
                 "Confirming that contract symbol is:",
                 expected_symbol);
-    test_erc20_tx_compare_resultstr_(
+    std::string raw_output_data;
+    test_erc20_tx_get_raw_output_data_(
         contract_address,
         from_address,
         from_privkey,
         cbdc::test::evm_contracts::data_erc20_symbol(),
-        expected_symbol);
+        raw_output_data);
+
+    std::string formatted_resultstr;
+    gtest_erc20_output_hex_to_ascii(raw_output_data, formatted_resultstr);
+    ASSERT_EQ(formatted_resultstr, expected_symbol);
+}
+
+void threepc_evm_end_to_end_test::test_erc20_decimals(
+    const evmc::address& contract_address,
+    const evmc::address& from_address,
+    const cbdc::privkey_t& from_privkey,
+    const evmc::uint256be& expected_decimals) {
+    m_log->info(
+        gtest_descr(),
+        std::string(__FUNCTION__) + "()",
+        "Confirming that number of decimals is:",
+        cbdc::threepc::agent::runner::to_hex_trimmed(expected_decimals));
+    std::string raw_output_data;
+    test_erc20_tx_get_raw_output_data_(
+        contract_address,
+        from_address,
+        from_privkey,
+        cbdc::test::evm_contracts::data_erc20_decimals(),
+        raw_output_data);
+
+    const auto decimals
+        = cbdc::threepc::agent::runner::uint256be_from_hex(raw_output_data);
+    ASSERT_TRUE(decimals.has_value());
+    ASSERT_EQ(decimals.value(), expected_decimals);
+}
+
+void threepc_evm_end_to_end_test::test_erc20_total_supply(
+    const evmc::address& contract_address,
+    const evmc::address& from_address,
+    const cbdc::privkey_t& from_privkey,
+    const evmc::uint256be& expected_total_supply) {
+    m_log->info(
+        gtest_descr(),
+        std::string(__FUNCTION__) + "()",
+        "Confirming that total supply is:",
+        cbdc::threepc::agent::runner::to_hex_trimmed(expected_total_supply));
+    std::string raw_output_data;
+    test_erc20_tx_get_raw_output_data_(
+        contract_address,
+        from_address,
+        from_privkey,
+        cbdc::test::evm_contracts::data_erc20_total_supply(),
+        raw_output_data);
+
+    const auto decimals
+        = cbdc::threepc::agent::runner::uint256be_from_hex(raw_output_data);
+    ASSERT_TRUE(decimals.has_value());
+    ASSERT_EQ(decimals.value(), expected_total_supply);
 }
 
 void threepc_evm_end_to_end_test::test_erc20_deploy_contract(
@@ -368,71 +440,28 @@ void threepc_evm_end_to_end_test::test_erc20_deploy_contract(
 void threepc_evm_end_to_end_test::test_erc20_get_balance(
     const evmc::address& contract_address,
     const evmc::address& acct_address,
-    const cbdc::privkey_t& acct_privkey) {
-    const auto make_evmtx_ = [&]() -> cbdc::threepc::agent::runner::evm_tx {
-        auto etx = cbdc::threepc::agent::runner::evm_tx();
-        // NOTE etx.m_to is empty for contract deployment
-        etx.m_to = contract_address;
-        etx.m_nonce = m_rpc_client->get_transaction_count(acct_address);
-        // NOTE etx.m_value is unset
-        etx.m_gas_price = evmc::uint256be(0);
-        etx.m_gas_limit = evmc::uint256be(0xffffffff);
-
-        const cbdc::buffer& input_data
-            = cbdc::test::evm_contracts::data_erc20_balance_of(acct_address);
-        etx.m_input.resize(input_data.size());
-        std::memcpy(etx.m_input.data(), input_data.data(), input_data.size());
-
-        auto sighash = cbdc::threepc::agent::runner::sig_hash(etx);
-        etx.m_sig = cbdc::threepc::agent::runner::eth_sign(acct_privkey,
-                                                           sighash,
-                                                           etx.m_type,
-                                                           m_secp_context);
-        return etx;
-    };
-
-    m_log->info(gtest_descr(),
-                std::string(__FUNCTION__) + "()",
-                "acct address:",
-                cbdc::threepc::agent::runner::to_hex(acct_address),
-                "Contract:",
-                cbdc::threepc::agent::runner::to_hex(contract_address));
-    const auto etx = make_evmtx_();
-
-    // Send the transaction:
-    std::string txid{};
-    m_rpc_client->send_transaction(etx, txid);
-
-    // Retrieve the receipt and check it:
-    Json::Value txreceipt;
-    m_rpc_client->get_transaction_receipt(txid, txreceipt);
-
-    ASSERT_TRUE(txreceipt.isMember("from"));
-    ASSERT_EQ(txreceipt["from"],
-              "0x" + cbdc::threepc::agent::runner::to_hex(acct_address));
-
-    ASSERT_TRUE(txreceipt.isMember("to"));
-    ASSERT_EQ(txreceipt["to"],
-              "0x" + cbdc::threepc::agent::runner::to_hex(contract_address));
-
-    ASSERT_TRUE(txreceipt.isMember("transactionHash"));
-    ASSERT_EQ(txreceipt["transactionHash"], txid);
-
-    ASSERT_TRUE(txreceipt.isMember("status"));
-    m_log->error(
+    const cbdc::privkey_t& acct_privkey,
+    const evmc::uint256be& expected_balance) {
+    m_log->info(
         gtest_descr(),
         std::string(__FUNCTION__) + "()",
-        "TODO: TEMPORARILY HIDING AN ERROR HERE ON ERC20 BALANCE CHECK");
-    // ASSERT_EQ(txreceipt["status"], "0x1"); // TODO - THERE IS AN ISSUE HERE
+        "Confirming that balance of address",
+        cbdc::threepc::agent::runner::to_hex(acct_address),
+        "is",
+        cbdc::threepc::agent::runner::to_hex_trimmed(expected_balance));
 
-    ASSERT_TRUE(txreceipt.isMember("success"));
-    ASSERT_EQ(txreceipt["success"], "0x1");
+    std::string raw_output_data;
+    test_erc20_tx_get_raw_output_data_(
+        contract_address,
+        acct_address,
+        acct_privkey,
+        cbdc::test::evm_contracts::data_erc20_balance_of(acct_address),
+        raw_output_data);
 
-    ASSERT_TRUE(txreceipt.isMember("transaction"));
-    ASSERT_TRUE(txreceipt["transaction"].isMember("value"));
-    ASSERT_EQ(cbdc::threepc::agent::runner::uint256be_from_hex(
-                  txreceipt["transaction"]["value"].asString()),
-              etx.m_value);
+    const auto decimals
+        = cbdc::threepc::agent::runner::uint256be_from_hex(raw_output_data);
+    ASSERT_TRUE(decimals.has_value());
+    ASSERT_EQ(decimals.value(), expected_balance);
 }
 
 void threepc_evm_end_to_end_test::test_erc20_send_tokens(
@@ -440,7 +469,7 @@ void threepc_evm_end_to_end_test::test_erc20_send_tokens(
     const evmc::address& from_address,
     const cbdc::privkey_t& from_privkey,
     const evmc::address& to_address,
-    int erc20_value) {
+    const evmc::uint256be& erc20_value) {
     const auto make_evmtx_ = [&]() -> cbdc::threepc::agent::runner::evm_tx {
         auto etx = cbdc::threepc::agent::runner::evm_tx();
         etx.m_to = contract_address;
@@ -450,9 +479,8 @@ void threepc_evm_end_to_end_test::test_erc20_send_tokens(
         etx.m_gas_limit = evmc::uint256be(0xffffffff);
 
         const cbdc::buffer& input_data
-            = cbdc::test::evm_contracts::data_erc20_transfer(
-                to_address,
-                evmc::uint256be(erc20_value));
+            = cbdc::test::evm_contracts::data_erc20_transfer(to_address,
+                                                             erc20_value);
         etx.m_input.resize(input_data.size());
         std::memcpy(etx.m_input.data(), input_data.data(), input_data.size());
 
@@ -511,8 +539,8 @@ void threepc_evm_end_to_end_test::test_erc20_send_tokens(
     ASSERT_TRUE(txreceipt["logs"].size() == 1);
     ASSERT_TRUE(txreceipt["logs"][0].isMember("data"));
     ASSERT_TRUE(txreceipt["logs"][0]["data"].isString());
-    ASSERT_EQ(std::stoi(txreceipt["logs"][0]["data"].asString(), nullptr, 16),
-              erc20_value);
+    ASSERT_EQ(txreceipt["logs"][0]["data"].asString(),
+              "0x" + cbdc::threepc::agent::runner::to_hex(erc20_value));
 
     ASSERT_TRUE(txreceipt["logs"][0].isMember("address"));
     ASSERT_TRUE(txreceipt["logs"][0]["address"].isString());
@@ -525,12 +553,12 @@ void threepc_evm_end_to_end_test::test_erc20_send_tokens(
 }
 
 TEST_F(threepc_evm_end_to_end_test, native_transfer) {
-    const int send_value = 1000;
+    const auto send_value{evmc::uint256be(1000)};
     const auto make_evmtx_ = [&]() -> cbdc::threepc::agent::runner::evm_tx {
         auto etx = cbdc::threepc::agent::runner::evm_tx();
         etx.m_to = m_acct1_ethaddr;
         etx.m_nonce = m_rpc_client->get_transaction_count(m_acct0_ethaddr);
-        etx.m_value = evmc::uint256be(send_value);
+        etx.m_value = send_value;
         etx.m_gas_price = evmc::uint256be(0);
         etx.m_gas_limit = evmc::uint256be(0xffffffff);
         auto sighash = cbdc::threepc::agent::runner::sig_hash(etx);
@@ -584,13 +612,15 @@ TEST_F(threepc_evm_end_to_end_test, native_transfer) {
     m_rpc_client->get_balance(m_acct0_ethaddr, sender_balance);
     ASSERT_TRUE(sender_balance.has_value());
     ASSERT_EQ(sender_balance.value(),
-              evmc::uint256be(m_init_acct_balance - send_value));
+              cbdc::threepc::agent::runner::operator-(m_init_acct_balance,
+                                                      send_value));
 
     std::optional<evmc::uint256be> receiver_balance;
     m_rpc_client->get_balance(etx.m_to.value(), receiver_balance);
     ASSERT_TRUE(receiver_balance.has_value());
     ASSERT_EQ(receiver_balance.value(),
-              evmc::uint256be(m_init_acct_balance + send_value));
+              cbdc::threepc::agent::runner::operator+(m_init_acct_balance,
+                                                      send_value));
 }
 
 TEST_F(threepc_evm_end_to_end_test, erc20_all) {
@@ -609,12 +639,63 @@ TEST_F(threepc_evm_end_to_end_test, erc20_all) {
                       m_acct0_privkey,
                       "TOK");
 
-    const auto token_value = m_init_acct_balance;
+    test_erc20_decimals(
+        contract_address,
+        m_acct0_ethaddr,
+        m_acct0_privkey,
+        cbdc::threepc::agent::runner::uint256be_from_hex("0x12").value());
+
+    test_erc20_total_supply(contract_address,
+                            m_acct0_ethaddr,
+                            m_acct0_privkey,
+                            m_init_acct_balance);
+
+    test_erc20_get_balance(contract_address,
+                           m_acct0_ethaddr,
+                           m_acct0_privkey,
+                           m_init_acct_balance);
+
+    test_erc20_get_balance(contract_address,
+                           m_acct1_ethaddr,
+                           m_acct1_privkey,
+                           evmc::uint256be{});
+
+    const auto txfer_amount
+        = cbdc::threepc::agent::runner::uint256be_from_hex("0xF423F").value();
+
+    // Send ERC20 tokens from acct0 --> acct1 & confirm
     test_erc20_send_tokens(contract_address,
                            m_acct0_ethaddr,
                            m_acct0_privkey,
                            m_acct1_ethaddr,
-                           token_value);
+                           txfer_amount);
 
-    test_erc20_get_balance(contract_address, m_acct1_ethaddr, m_acct1_privkey);
+    test_erc20_get_balance(
+        contract_address,
+        m_acct0_ethaddr,
+        m_acct0_privkey,
+        cbdc::threepc::agent::runner::operator-(m_init_acct_balance,
+                                                txfer_amount));
+
+    test_erc20_get_balance(contract_address,
+                           m_acct1_ethaddr,
+                           m_acct1_privkey,
+                           txfer_amount);
+
+    // Send ERC20 tokens back from acct1 --> acct0 & confirm
+    test_erc20_send_tokens(contract_address,
+                           m_acct1_ethaddr,
+                           m_acct1_privkey,
+                           m_acct0_ethaddr,
+                           txfer_amount);
+
+    test_erc20_get_balance(contract_address,
+                           m_acct0_ethaddr,
+                           m_acct0_privkey,
+                           m_init_acct_balance);
+
+    test_erc20_get_balance(contract_address,
+                           m_acct1_ethaddr,
+                           m_acct1_privkey,
+                           evmc::uint256be{});
 }

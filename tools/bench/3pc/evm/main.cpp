@@ -67,6 +67,7 @@ auto main(int argc, char** argv) -> int {
     for(size_t i = 1; i < bench.account_count() - 1; i += 2) {
         bench.schedule_tx(i, i + 1);
     }
+    log->flush();
 
     success = std::optional<bool>();
     while(!success.has_value()) {
