@@ -93,7 +93,7 @@ with open('cpp_header/contracts.hpp', 'w+') as f:
                 f.write('    auto buf = cbdc::buffer();\n')
 
                 # Write the method selector calculation
-                f.write('    const auto selector_{name} = std::string("{name}('.format_map(dict({'name':to_snake(abi['name'])})))
+                f.write('    const auto selector_{name} = std::string("{name_raw}('.format_map(dict({'name':to_snake(abi['name']),'name_raw':abi['name']})))
                 inp_idx = 0
                 for inp in abi['inputs']:
                     if inp_idx > 0:
