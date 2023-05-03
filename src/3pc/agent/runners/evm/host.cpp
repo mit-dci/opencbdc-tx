@@ -717,7 +717,7 @@ namespace cbdc::threepc::agent::runner {
         // Make VM instance if we didn't already
         if(!m_vm) {
             m_vm = std::make_unique<evmc::VM>(evmc_create_evmone());
-            if(!(*m_vm)) {
+            if(!(*m_vm) || !m_vm->is_abi_compatible()) {
                 m_log->error("Unable to load EVM implementation");
                 auto res = evmc::make_result(evmc_status_code::EVMC_FAILURE,
                                              msg.gas,
