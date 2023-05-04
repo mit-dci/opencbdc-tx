@@ -18,8 +18,9 @@ The design decisions we made to achieve these goals will help inform policy make
 **NOTE:** In cases where there are significant changes to the repository that might need manual intervention down-stream (or other important updates), we will [make a NEWS post](NEWS.md).
 
 # Architecture
-
-We explored two system architectures for transaction settlement, both based on an [unspent transaction output (UTXO)](https://en.wikipedia.org/wiki/Unspent_transaction_output) data model and transaction format.
+There are two main architectures as follows:
+## UTXO & UHS-Based Transaction Processor
+We explored two system architectures for transaction settlement based on an [unspent transaction output (UTXO)](https://en.wikipedia.org/wiki/Unspent_transaction_output) data model and transaction format.
 Both architectures implement the same schema representing an [unspent hash set (UHS)](https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-May/015967.html) abstraction.
 One architecture provides [linearizability](https://en.wikipedia.org/wiki/linearizability) of transactions, whereas the other only provides [serializability](https://en.wikipedia.org/wiki/Serializability).
 By relaxing the ordering constraint, the peak transaction throughput supported by the system scales horizontally with the number of nodes, but the transaction history is unavailable making the system harder to audit retroactively.
@@ -36,8 +37,19 @@ Both architectures handle multiple geo-distributed datacenter outages with a [re
     - Maximum demonstrated throughput ~1.7M transactions per second.
     - Geo-replicated latency <1 second.
 
-Read the [architecture guide](docs/architecture.md) for a detailed description of the system components and implementation of each architecture.
+Read the [2PC & Atomizer architecture guide](docs/architecture.md) for a detailed description of the system components and implementation of each architecture.
 
+## Generic Smart Contract Platform ("3PC")
+We built a system that is capable of performing parallel executions of generic smart contracts.
+- The architecture consists of:
+    1) a distributed key-value data store with [ACID](https://en.wikipedia.org/wiki/ACID) database properties
+        - this back-end data store is not constrained to any type of data and is agnostic to the execution later
+    2) a generic computation layer that executes programs (i.e. smart contracts) and uses the back-end database to store state. This computation layer, therefore, defines the data models and transaction semantics.
+        - We have implemented EVM and Lua as two working examples
+
+- This architecture enables parallel execution of smart contracts (where keys are independent). Therefore throughput is horizontally scalable with additional servers.
+
+Read the [Programmability Architecture Guide](docs/programmability_architecture.md) for more details.
 # Contributing
 
 You can [sign up](https://dci.mit.edu/opencbdc-interest) to receive updates from technical working groups and to learn more about our work.
@@ -73,8 +85,9 @@ Note that if you have not already installed the xcode cli tools you will need to
 ```terminal
 # xcode-select --install
 ```
-
-# Run the Code
+# Run the Code: Programmability architecture
+See the [Programmability User Guide](docs/programmability_user_guide.md) for detailed instructions on starting a EVM server node and running various client operations including deploying and executing EVM smart contracts.
+# Run the Code: 2PC & Atomizer architectures
 
 The easiest way to compile the code and run the system locally is using [Docker](https://www.docker.com).
 
@@ -117,16 +130,16 @@ To run the system with our pre-built image proceed to the [next section](#launch
         ```terminal
         $ docker compose --file docker-compose-2pc.yml up --build
         ```
-    1. Atomizer architecture:
+    2. Atomizer architecture:
         ```terminal
         $ docker compose --file docker-compose-atomizer.yml up --build
         ```
-1. Launch a container in which to run wallet commands
+2. Launch a container in which to run wallet commands
     1. 2PC architecture:
         ```terminal
         $ docker run --network 2pc-network -ti opencbdc-tx-twophase /bin/bash
         ```
-    1. Atomizer architecture:
+    2. Atomizer architecture:
         ```terminal
         $ docker run --network atomizer-network -ti opencbdc-tx-atomizer /bin/bash
         ```
