@@ -4,7 +4,7 @@ set -e
 echo "Linting..."
 
 check_files=$(git ls-files \
-              | grep -v -E ".jpg|3rdparty" | cat)
+              | grep -v -E ".jpg|.svg|3rdparty" | cat)
 
 whitespace_files=$(printf '%s' "${check_files[@]}" | xargs egrep -l " +$" | cat)
 
