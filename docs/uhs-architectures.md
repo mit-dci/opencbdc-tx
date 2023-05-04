@@ -1,6 +1,6 @@
-# Overview
+# Overview of UHS-based Architectures
 
-This document describes the high-level operation of both of the system architectures.
+This document describes the high-level operation of both of the Unspent Hash Set (UHS)-based system architectures.
 It describes each of the system components and how they interact with each other.
 It also describes the data model implemented by both architectures and provides some discussion of its limitations.
 The intention is to provide a more accurate and lower-level picture than the description in our research paper so that it is clearer what functionality to expect when reading the code.
