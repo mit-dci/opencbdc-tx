@@ -292,7 +292,9 @@ namespace cbdc::threepc::agent::runner {
         }
 
         // Transfer message value from sender account to recipient
+        bool is_native_value_transfer{false};
         if(!evmc::is_zero(msg.value) && msg.kind == EVMC_CALL) {
+            is_native_value_transfer = true;
             // TODO: do DELETEGATECALL and CALLCODE transfer value as
             // well?
             transfer(msg.sender, msg.recipient, msg.value);
@@ -303,13 +305,20 @@ namespace cbdc::threepc::agent::runner {
                 ? msg.code_address
                 : msg.recipient;
 
-        auto code_size = get_code_size(code_addr);
+        const auto code_size = get_code_size(code_addr);
         if(code_size == 0) {
             // TODO: deduct simple send fixed gas amount
             auto res = evmc::make_result(evmc_status_code::EVMC_SUCCESS,
                                          msg.gas,
                                          nullptr,
                                          0);
+
+            // TODO: Is it possible to have a case where this is not a native
+            // value transfer (i.e. is else-block needed here)?
+            if(is_native_value_transfer) {
+                m_receipt.m_success = true;
+            }
+
             return evmc::result(res);
         }
 
