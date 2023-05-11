@@ -596,7 +596,7 @@ TEST_F(threepc_evm_end_to_end_test, native_transfer) {
     ASSERT_EQ(txreceipt["transactionHash"], txid);
 
     ASSERT_TRUE(txreceipt.isMember("status"));
-    ASSERT_EQ(txreceipt["status"], "0x0");
+    ASSERT_EQ(txreceipt["status"], "0x1");
 
     ASSERT_TRUE(txreceipt.isMember("success"));
     ASSERT_EQ(txreceipt["success"], "0x1");
