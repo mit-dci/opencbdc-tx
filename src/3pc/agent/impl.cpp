@@ -89,7 +89,7 @@ namespace cbdc::threepc::agent {
             case state::function_get_error:
                 [[fallthrough]];
             case state::commit_error:
-            case state::function_error:
+            case state::function_exception:
             case state::finish_complete:
                 return true;
         }
@@ -211,12 +211,6 @@ namespace cbdc::threepc::agent {
             return false;
         }
 
-        auto it = m_requested_locks.find(key);
-        if(it == m_requested_locks.end()
-           || it->second == broker::lock_type::read) {
-            m_requested_locks[key] = locktype;
-        }
-
         if(m_wounded) {
             m_log->debug(
                 "Skipping lock request because ticket is already wounded");
@@ -226,6 +220,12 @@ namespace cbdc::threepc::agent {
                     runtime_locking_shard::error_code::wounded,
                     std::nullopt});
             return true;
+        }
+
+        auto it = m_requested_locks.find(key);
+        if(it == m_requested_locks.end()
+           || it->second == broker::lock_type::read) {
+            m_requested_locks[key] = locktype;
         }
 
         auto actual_lock_type
@@ -401,24 +401,33 @@ namespace cbdc::threepc::agent {
             return;
         }
         std::visit(
-            overloaded{
-                [&](runtime_locking_shard::state_update_type states) {
-                    m_result = std::move(states);
-                    do_commit();
-                },
-                [&](runner::interface::error_code e) {
-                    if(e == runner::interface::error_code::wounded
-                       || e == runner::interface::error_code::internal_error) {
-                        m_state = state::function_failed;
-                    } else {
-                        m_state = state::function_error;
-                        m_log->error(this,
-                                     "function execution failed for",
-                                     m_ticket_number.value());
-                    }
-                    m_result = error_code::function_execution;
-                    do_result();
-                }},
+            overloaded{[&](runtime_locking_shard::state_update_type states) {
+                           m_result = std::move(states);
+                           do_commit();
+                       },
+                       [&](runner::interface::error_code e) {
+                           if(e == runner::interface::error_code::wounded) {
+                               m_state = state::function_failed;
+                           } else if(e
+                                     == runner::interface::error_code::
+                                         internal_error) {
+                               // Unexpected exception (e.g. write lock request
+                               // within a read-only transaction such as one
+                               // invoked via invocation of eth_call)
+                               m_state = state::function_exception;
+                               m_log->error(
+                                   this,
+                                   "Unexpected internal error encountered for",
+                                   m_ticket_number.value());
+                           } else {
+                               m_state = state::function_exception;
+                               m_log->error(this,
+                                            "function execution failed for",
+                                            m_ticket_number.value());
+                           }
+                           m_result = error_code::function_execution;
+                           do_result();
+                       }},
             res);
         m_log->trace(this,
                      "Agent handle_run complete for",
@@ -527,7 +536,7 @@ namespace cbdc::threepc::agent {
             case state::function_get_error:
                 [[fallthrough]];
             case state::commit_error:
-            case state::function_error:
+            case state::function_exception:
                 do_rollback(true);
                 return;
 
@@ -591,7 +600,7 @@ namespace cbdc::threepc::agent {
         std::unique_lock l(m_mut);
         assert(m_state == state::commit_failed
                || m_state == state::rollback_sent
-               || m_state == state::function_error
+               || m_state == state::function_exception
                || m_state == state::function_failed
                || m_state == state::commit_error
                || m_state == state::function_get_failed
