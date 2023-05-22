@@ -34,7 +34,7 @@ namespace cbdc::threepc::agent {
             /// Function execution failed.
             function_failed,
             /// Function error during execution.
-            function_error,
+            function_exception,
             /// Commit request sent to broker.
             commit_sent,
             /// Commit request failed.
@@ -145,6 +145,8 @@ namespace cbdc::threepc::agent {
 
         void do_commit();
 
+        /// Request the broker to attempt to lock the parameterized key
+        /// \return true is returned unless the system is in an unexpected state
         [[nodiscard]] auto
         do_try_lock_request(broker::key_type key,
                             broker::lock_type locktype,
