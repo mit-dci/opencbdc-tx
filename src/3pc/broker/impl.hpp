@@ -42,8 +42,9 @@ namespace cbdc::threepc::broker {
         /// \param key key to lock.
         /// \param locktype type of lock to acquire.
         /// \param result_callback function to call with try_lock request.
-        /// \return true if request to the directory was initiated
+        /// \return true: if request to the directory was initiated
         ///         successfully.
+        ///         false: only if an unexpected exception was encountered
         auto try_lock(ticket_number_type ticket_number,
                       key_type key,
                       lock_type locktype,
