@@ -39,15 +39,15 @@ Both architectures handle multiple geo-distributed datacenter outages with a [re
 
 Read the [2PC & Atomizer architecture guide](docs/architecture.md) for a detailed description of the system components and implementation of each architecture.
 
-## Generic Smart Contract Platform ("3PC")
-We built a system that is capable of performing parallel executions of generic smart contracts.
+## Parallel Virtual Machine ("PVM") for Smart Contracts
+We built a system that is capable of performing parallel executions of virtual machines for generic smart contract support.
 - The architecture consists of:
     1) a distributed key-value data store with [ACID](https://en.wikipedia.org/wiki/ACID) database properties
         - this back-end data store is not constrained to any type of data and is agnostic to the execution later
-    2) a generic computation layer that executes programs (i.e. smart contracts) and uses the back-end database to store state. This computation layer, therefore, defines the data models and transaction semantics.
-        - We have implemented EVM and Lua as two working examples
-
-- This architecture enables parallel execution of smart contracts (where keys are independent). Therefore throughput is horizontally scalable with additional servers.
+    2) a generic virtual machine layer that executes programs (i.e. smart contracts) and uses the distributed key-value data store to record state. This virtual machine layer, therefore, defines the data models and transaction semantics.
+        - We have implemented the Ethereum Virtual Machine (EVM) and Lua based virtual machine as two working examples
+- This architecture enables parallel execution of smart contracts which can be scaled horizontally where keys are independent.
+- Unmodified smart contracts from the Ethereum ecosystem can be deployed directly onto our EVM implementation.
 
 Read the [Programmability Architecture Guide](docs/programmability_architecture.md) for more details.
 # Contributing
