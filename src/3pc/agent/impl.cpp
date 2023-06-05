@@ -40,7 +40,6 @@ namespace cbdc::threepc::agent {
         switch(m_state) {
             // In these states we can start again from the beginning
             case state::init:
-                [[fallthrough]];
             case state::begin_sent:
             case state::begin_failed:
                 break;
@@ -69,7 +68,6 @@ namespace cbdc::threepc::agent {
 
             // Rollback first so we can start fresh
             case state::function_get_sent:
-                [[fallthrough]];
             case state::function_get_failed:
             case state::function_failed:
             case state::function_started:
@@ -87,7 +85,6 @@ namespace cbdc::threepc::agent {
 
             // End states, cannot re-run exec
             case state::function_get_error:
-                [[fallthrough]];
             case state::commit_error:
             case state::function_exception:
             case state::finish_complete:
@@ -375,16 +372,7 @@ namespace cbdc::threepc::agent {
             m_ticket_number.value(),
             payload,
             [this](broker::interface::commit_return_type commit_res) {
-                if(commit_res.has_value()) {
-                    if(std::holds_alternative<
-                           runtime_locking_shard::shard_error>(
-                           commit_res.value())) {
-                        auto err
-                            = std::get<runtime_locking_shard::shard_error>(
-                                commit_res.value());
-                    }
-                }
-                handle_commit(commit_res);
+                handle_commit(std::move(commit_res));
             });
         if(!maybe_success) {
             m_state = state::commit_failed;
@@ -491,18 +479,25 @@ namespace cbdc::threepc::agent {
             // No results should be reported in these states, fatal bugs
             case state::init:
                 m_log->fatal("Result reported in initial state");
+                // System terminated by fatal()
             case state::begin_sent:
                 m_log->fatal("Result reported in begin_sent state");
+                // System terminated by fatal()
             case state::function_get_sent:
                 m_log->fatal("Result reported in function_get_sent state");
+                // System terminated by fatal()
             case state::commit_sent:
                 m_log->fatal("Result reported in commit_sent state");
+                // System terminated by fatal()
             case state::finish_sent:
                 m_log->fatal("Result reported in finish_sent state");
+                // System terminated by fatal()
             case state::function_started:
                 m_log->fatal("Result reported in function_started state");
+                // System terminated by fatal()
             case state::rollback_sent:
                 m_log->fatal("Result reported in rollback_sent state");
+                // System terminated by fatal()
             case state::rollback_complete:
                 if(!std::holds_alternative<error_code>(m_result.value())
                    || std::get<error_code>(m_result.value())
@@ -510,7 +505,7 @@ namespace cbdc::threepc::agent {
                     m_log->fatal("Result reported in rollback_complete state "
                                  "when result is not retry");
                 }
-                [[fallthrough]];
+                break;
 
             // Failure due to transient problems, should retry
             case state::begin_failed:
@@ -518,7 +513,6 @@ namespace cbdc::threepc::agent {
                 break;
 
             case state::function_get_failed:
-                [[fallthrough]];
             case state::function_failed:
             case state::commit_failed:
                 do_rollback(false);
@@ -534,7 +528,6 @@ namespace cbdc::threepc::agent {
 
             // Failure due to permanent error, abort completely
             case state::function_get_error:
-                [[fallthrough]];
             case state::commit_error:
             case state::function_exception:
                 do_rollback(true);

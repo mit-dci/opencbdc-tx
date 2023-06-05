@@ -12,6 +12,8 @@ namespace cbdc::threepc::directory {
                             key_location_callback_type result_callback)
         -> bool {
         auto key_hash = m_siphash(key);
+        // NOTE: using modulo creates a small bias from a true
+        // uniform distribution
         auto shard = key_hash % m_n_shards;
         result_callback(shard);
         return true;

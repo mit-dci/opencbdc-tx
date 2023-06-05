@@ -961,7 +961,6 @@ namespace cbdc::threepc::broker {
             for(auto& [sidx, t_state] : ticket->m_shard_states) {
                 switch(t_state.m_state) {
                     case shard_state_type::begun:
-                        [[fallthrough]];
                     case shard_state_type::prepared:
                     case shard_state_type::wounded:
                         break;

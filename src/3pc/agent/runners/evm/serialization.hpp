@@ -39,8 +39,8 @@ namespace cbdc::threepc::agent::runner {
     /// \param buf buffer containing the transaction to decode
     /// \param logger logger to output any parsing errors to
     /// \param chain_id the expected chain ID for the transaction. If the
-    // transaction contains a different chain ID this method will return
-    // std::nullopt
+    /// transaction contains a different chain ID this method will return
+    /// std::nullopt
     /// \return the evm_tx that was decoded or std::nullopt if no valid
     ///         value could be decoded
     auto tx_decode(const cbdc::buffer& buf,
@@ -60,8 +60,8 @@ namespace cbdc::threepc::agent::runner {
     /// Converts a given Json::Value to an evm_tx
     /// \param json Json::Value containing the transaction to decode
     /// \param chain_id the expected chain ID for the transaction. If the
-    // transaction contains a different chain ID this method will return
-    // std::nullopt
+    /// transaction contains a different chain ID this method will return
+    /// std::nullopt
     /// \return the evm_tx that was decoded or std::nullopt if no valid
     ///         value could be decoded
     auto tx_from_json(const Json::Value& json,
@@ -72,8 +72,8 @@ namespace cbdc::threepc::agent::runner {
     /// Converts a given Json::Value to an evm_dryrun_tx
     /// \param json Json::Value containing the transaction to decode
     /// \param chain_id the expected chain ID for the transaction. If the
-    // transaction contains a different chain ID this method will return
-    // std::nullopt
+    /// transaction contains a different chain ID this method will return
+    /// std::nullopt
     /// \return the evm_dryrun_tx that was decoded or std::nullopt if no valid
     ///         value could be decoded
     auto dryrun_tx_from_json(const Json::Value& json,

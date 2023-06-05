@@ -9,8 +9,7 @@
 #include "interface.hpp"
 
 namespace cbdc::threepc::directory {
-    /// Implementation of a directory. Uses siphash to uniformly map keys to
-    /// shard IDs based on a fixed number of shards. Thread-safe.
+    /// Implementation of a directory which map keys to shard IDs. Thread-safe.
     class impl : public interface {
       public:
         /// Constructor.

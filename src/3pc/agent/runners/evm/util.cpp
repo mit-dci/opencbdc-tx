@@ -112,7 +112,8 @@ namespace cbdc::threepc::agent::runner {
 
         auto successes = std::vector<std::future<bool>>();
 
-        for(const auto& init_addr_hex : cbdc::threepc::agent::init_addresses) {
+        for(const auto& init_addr_hex :
+            cbdc::threepc::agent::init_addresses_for_testing) {
             log->info("Seeding address ", init_addr_hex);
             auto init_addr = cbdc::buffer::from_hex(init_addr_hex).value();
             auto seed_success = std::make_shared<std::promise<bool>>();

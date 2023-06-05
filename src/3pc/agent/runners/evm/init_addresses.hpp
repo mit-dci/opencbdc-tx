@@ -10,8 +10,8 @@
 #include <vector>
 
 namespace cbdc::threepc::agent {
-    /// List of initial addresses to mint accounts for.
-    const std::vector<std::string> init_addresses
+    /// List of initial addresses to mint accounts for testing
+    const std::vector<std::string> init_addresses_for_testing
         = {std::string("01a151cc5ed14d110cc0e6b64360913de9f453f1"),
            std::string("13333383a6c55d9b699c4d57e3b0c85759f0efca"),
            std::string("9269d13036f74f5e7c1560b2daad6181fb71e682"),
