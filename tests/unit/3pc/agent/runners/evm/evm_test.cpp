@@ -312,6 +312,8 @@ TEST_F(evm_test, simple_send) {
 }
 
 TEST_F(evm_test, contract_deploy) {
+    // See tools/bench/3pc/evm/contracts for the source Solidity contract and
+    // other details on the generation of the following bytecode
     auto bytecode
         = cbdc::buffer::from_hex(
               "608060405234801561001057600080fd5b5061002d61002261003260201b602"

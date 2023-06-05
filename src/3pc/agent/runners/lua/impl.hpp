@@ -34,8 +34,8 @@ namespace cbdc::threepc::agent::runner {
 
         /// Begins function execution. Retrieves the function bytecode using a
         /// read lock and executes it with the given parameter.
-        /// \return true.
-        auto run() -> bool override;
+        /// \return true unless a internal system error has occurred
+        [[nodiscard]] auto run() -> bool override;
 
         /// Lock type to acquire when requesting the function code.
         static constexpr auto initial_lock_type = broker::lock_type::read;

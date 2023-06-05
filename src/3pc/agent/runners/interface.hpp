@@ -113,8 +113,8 @@ namespace cbdc::threepc::agent::runner {
 
         /// Begins function execution. Retrieves the function bytecode using a
         /// read lock and executes it with the given parameter.
-        /// \return true.
-        virtual auto run() -> bool = 0;
+        /// \return true unless a internal system error has occurred
+        [[nodiscard]] virtual auto run() -> bool = 0;
 
         friend class lua_runner;
         friend class evm_runner;

@@ -16,10 +16,8 @@ namespace cbdc::rpc {
     }
 
     auto kqueue_event_handler::init() -> bool {
-        if((m_kq = kqueue()) == -1) {
-            return false;
-        }
-        return true;
+        m_kq = kqueue();
+        return m_kq != -1;
     }
 
     void kqueue_event_handler::set_timeout(long timeout_ms) {

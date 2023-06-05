@@ -68,8 +68,9 @@ namespace cbdc::threepc::agent::runner {
         auto operator=(evm_runner&&) -> evm_runner& = delete;
 
         /// Begin executing the transaction asynchronously.
-        /// \return true if execution was initiated successfully.
-        auto run() -> bool override;
+        /// \return true if execution was initiated successfully
+        /// returns false if an internal system error has occurred
+        [[nodiscard]] auto run() -> bool override;
 
         /// Initial lock type for the agent to request when retrieving the
         /// function key.

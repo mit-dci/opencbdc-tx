@@ -46,7 +46,6 @@ namespace cbdc {
             // Discard, done and get don't have a payload
             case coordinator::state_machine::command::discard:
             case coordinator::state_machine::command::done:
-                [[fallthrough]];
             case coordinator::state_machine::command::get: {
                 break;
             }
