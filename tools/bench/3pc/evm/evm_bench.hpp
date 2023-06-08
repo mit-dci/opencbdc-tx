@@ -19,6 +19,7 @@
 #include <secp256k1.h>
 
 class evm_bench {
+    /// This class is used for bench testing the evm runner.
   public:
     evm_bench(size_t loadgen_id,
               size_t mint_tree_depth,
@@ -26,16 +27,29 @@ class evm_bench {
               std::shared_ptr<cbdc::logging::log> log,
               std::shared_ptr<geth_client> client);
 
+    /// Mint accounts in the tree to the given depth
+    /// \param depth depth of accounts into the tree to mint
     void mint_tree(size_t depth);
 
+    /// Send transaction bytecode with callback corresponding
+    /// to a native transfer or ERC-20 deployment and transfer.
     void deploy();
 
+    /// Schedule a value 1 transacton to be sent
+    /// from `from` to `to`.
+    /// \param from ID to send transaction from
+    /// \param to ID to send transaction to
     void schedule_tx(size_t from, size_t to);
 
+    /// Set m_running to false.
     void stop();
 
+    /// Return false if error encountered, not running or done without
+    /// success. Return true if done successfully or no tx in flight
+    /// without error. Otherwise call m_client->pump().
     auto pump() -> std::optional<bool>;
 
+    /// Return the number of accounts.
     auto account_count() const -> size_t;
 
   private:

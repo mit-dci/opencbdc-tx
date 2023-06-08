@@ -19,6 +19,8 @@ namespace cbdc::threepc::agent::runner {
     /// database. Manages the cached state during contract execution to support
     /// committing the final state updates or reverting while still charging
     /// gas.
+    /// Undocumented functions below are inhereted from evmc::Host and are
+    /// documented upstream.
     class evm_host : public evmc::Host {
       public:
         /// Constructs a new host instance.
