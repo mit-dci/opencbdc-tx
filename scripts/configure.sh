@@ -108,7 +108,7 @@ $SUDO make install
 cd ..
 
 if [[ "$OSTYPE" != "darwin"* ]]; then
-  # <NOTE> For Mac Silicon: this curl install creates problems for building tools/bench/3pc/evm/
+  # <NOTE> For Mac Silicon: this curl install creates problems for building tools/bench/parsec/evm/
   CURL_VERSION="7.83.1"
   wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz
   rm -rf curl-${CURL_VERSION}

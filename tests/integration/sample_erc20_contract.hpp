@@ -6,14 +6,15 @@
 #ifndef OPENCBDC_TEST_INTEGRATION_SAMPLE_ERC20_CONTRACT_H_
 #define OPENCBDC_TEST_INTEGRATION_SAMPLE_ERC20_CONTRACT_H_
 
-#include "3pc/agent/runners/evm/hash.hpp"
+#include "parsec/agent/runners/evm/hash.hpp"
 #include "util/common/buffer.hpp"
 
 #include <evmc/evmc.hpp>
 
 /**
  * This sample EVM contract bytecode and ABI interface have been copied from
- * tools/bench/3pc/evm/contracts where the originating Solidity code looks as
+ * tools/bench/parsec/evm/contracts where the originating Solidity code looks
+as
  * follows and was compiled using hardhat.
 
 pragma solidity ^0.8.0;
