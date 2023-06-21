@@ -6,7 +6,7 @@
 #ifndef OPENCBDC_TEST_INTEGRATION_GTEST_EVM_JSONRPC_CLIENT_H_
 #define OPENCBDC_TEST_INTEGRATION_GTEST_EVM_JSONRPC_CLIENT_H_
 
-#include "3pc/agent/runners/evm/messages.hpp"
+#include "parsec/agent/runners/evm/messages.hpp"
 #include "util/rpc/http/json_rpc_http_client.hpp"
 
 namespace cbdc::test {
@@ -18,7 +18,7 @@ namespace cbdc::test {
             long timeout,
             const std::shared_ptr<cbdc::logging::log>& log);
 
-        void send_transaction(const cbdc::threepc::agent::runner::evm_tx& tx,
+        void send_transaction(const cbdc::parsec::agent::runner::evm_tx& tx,
                               std::string& out_txid);
 
         void get_transaction_receipt(const std::string& txid,

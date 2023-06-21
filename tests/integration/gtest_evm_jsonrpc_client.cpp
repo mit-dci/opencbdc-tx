@@ -5,17 +5,17 @@
 
 #include "gtest_evm_jsonrpc_client.hpp"
 
-#include "3pc/agent/runners/evm/address.hpp"
-#include "3pc/agent/runners/evm/rlp.hpp"
-#include "3pc/agent/runners/evm/serialization.hpp"
-#include "3pc/agent/runners/evm/util.hpp"
+#include "parsec/agent/runners/evm/address.hpp"
+#include "parsec/agent/runners/evm/rlp.hpp"
+#include "parsec/agent/runners/evm/serialization.hpp"
+#include "parsec/agent/runners/evm/util.hpp"
 
 #include <gtest/gtest.h>
 #include <thread>
 
 namespace cbdc::test {
     static std::string gtest_descr() {
-        // e.g.:  "GTEST: threepc_evm_end_to_end_test.native_transfer"
+        // e.g.:  "GTEST: parsec_evm_end_to_end_test.native_transfer"
         return std::string("GTEST: ")
              + ::testing::UnitTest::GetInstance()
                    ->current_test_info()
@@ -37,9 +37,9 @@ namespace cbdc::test {
         get_transaction_count_str_(addr, txcount_str);
         m_log->debug(gtest_descr(),
                      std::string(__FUNCTION__) + "()",
-                     "0x" + cbdc::threepc::agent::runner::to_hex(addr),
+                     "0x" + cbdc::parsec::agent::runner::to_hex(addr),
                      txcount_str);
-        return cbdc::threepc::agent::runner::uint256be_from_hex(txcount_str)
+        return cbdc::parsec::agent::runner::uint256be_from_hex(txcount_str)
             .value();
     }
 
@@ -47,7 +47,7 @@ namespace cbdc::test {
         const evmc::address& addr,
         std::string& out_txcount_str) {
         auto params = Json::Value();
-        params.append("0x" + cbdc::threepc::agent::runner::to_hex(addr));
+        params.append("0x" + cbdc::parsec::agent::runner::to_hex(addr));
         params.append("latest");
 
         std::atomic<bool> tx_done{false};
@@ -72,9 +72,9 @@ namespace cbdc::test {
     }
 
     void gtest_evm_jsonrpc_client::send_transaction(
-        const cbdc::threepc::agent::runner::evm_tx& etx,
+        const cbdc::parsec::agent::runner::evm_tx& etx,
         std::string& out_txid) {
-        const auto rlp_tx_buf = cbdc::threepc::agent::runner::tx_encode(etx);
+        const auto rlp_tx_buf = cbdc::parsec::agent::runner::tx_encode(etx);
         const auto rlp_tx_hex = "0x" + rlp_tx_buf.to_hex();
 
         auto params = Json::Value();
@@ -152,7 +152,7 @@ namespace cbdc::test {
         const evmc::address& addr,
         std::optional<evmc::uint256be>& out_balance) {
         auto params = Json::Value();
-        params.append("0x" + cbdc::threepc::agent::runner::to_hex(addr));
+        params.append("0x" + cbdc::parsec::agent::runner::to_hex(addr));
 
         std::atomic<bool> tx_done{false};
         call("eth_getBalance",
@@ -164,9 +164,8 @@ namespace cbdc::test {
                  ASSERT_TRUE(v.isMember(m_json_result_key));
 
                  auto res_str = v[m_json_result_key].asString();
-                 out_balance
-                     = cbdc::threepc::agent::runner::uint256be_from_hex(
-                         res_str);
+                 out_balance = cbdc::parsec::agent::runner::uint256be_from_hex(
+                     res_str);
 
                  tx_done = true;
              });

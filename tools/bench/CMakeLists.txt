@@ -32,4 +32,4 @@ target_link_libraries(atomizer-cli-watchtower watchtower
                                               ${NURAFT_LIBRARY}
                                               ${CMAKE_THREAD_LIBS_INIT})
 
-add_subdirectory(3pc)
+add_subdirectory(parsec)

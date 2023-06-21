@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+
+  loadgen0:
+    build:
+      context: .
+      target: parsec
+    image: opencbdc-tx
+    tty: true
+    command: ./scripts/wait-for-it.sh -s agent0:8080 -t 60 -- ./build/tools/bench/parsec/evm/evm_bench --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:8080 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loadgen_accounts=8192 --loadgen_txtype=erc20 --telemetry=1
+    networks:
+      - parsec-network
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 5556"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+
+networks:
+  parsec-network:
+    name: parsec-network
+    driver: bridge

@@ -1,0 +1,16 @@
+{
+  "name": "parsec-evm-loadgen",
+  "version": "1.0.0",
+  "description": "Load generator for PARSEC EVM",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx hardhat compile && python3 gen_header.py && clang-format -i cpp_header/contracts.hpp"
+  },
+  "author": "MIT Digital Currency Initiative, Federal Reserve Bank of Boston",
+  "license": "MIT",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.6.0",
+    "hardhat": "^2.9.5",
+    "chai": "^4.2.0"
+  }
+}

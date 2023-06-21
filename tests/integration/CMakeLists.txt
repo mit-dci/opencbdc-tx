@@ -10,7 +10,7 @@ add_executable(run_integration_tests mock_system.cpp
                                      shard_integration_test.cpp
                                      replicated_shard_integration_tests.cpp
                                      replicated_atomizer_integration_tests.cpp
-                                     threepc_evm_end_to_end_test.cpp
+                                     parsec_evm_end_to_end_test.cpp
                                      two_phase_end_to_end_test.cpp
                                      watchtower_integration_test.cpp)
 

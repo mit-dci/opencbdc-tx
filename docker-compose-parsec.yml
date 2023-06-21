@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+
+  agent0:
+    build:
+      context: .
+      target: parsec
+    image: opencbdc-tx-parsec
+    tty: true
+    restart: always
+    command: ./scripts/wait-for-it.sh -s ticket0:7777 -t 60 -- ./scripts/wait-for-it.sh -s shard0:5556 -t 60 -- ./build/src/parsec/agent/agentd --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:8080 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN --runner_type="evm"
+    ports:
+      - 8080:8080
+    networks:
+      - parsec-network
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 6666"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  ticket0:
+    build:
+      context: .
+      target: parsec
+    image: opencbdc-tx-parsec
+    tty: true
+    command: ./scripts/wait-for-it.sh -s shard0:5556 -t 60 -- ./build/src/parsec/ticket_machine/ticket_machined --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:6666 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN
+    networks:
+      - parsec-network
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 7777"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  shard0:
+    build:
+      context: .
+      target: parsec
+    image: opencbdc-tx-parsec
+    tty: true
+    command: ./build/src/parsec/runtime_locking_shard/runtime_locking_shardd --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:6666 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN
+    networks:
+      - parsec-network
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -ltn | grep -c 5556"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+networks:
+  parsec-network:
+    name: parsec-network
