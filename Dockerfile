@@ -76,20 +76,20 @@ COPY --from=builder /opt/tx-processor/build/src/uhs/client/client-cli ./build/sr
 # Copy atomizer config
 COPY --from=builder /opt/tx-processor/atomizer-compose.cfg ./atomizer-compose.cfg
 
-# Create 3PC Deployment Image
-FROM $IMAGE_VERSION AS threepc
+# Create PArSEC Deployment Image
+FROM $IMAGE_VERSION AS parsec
 
 # Set working directory
 WORKDIR /opt/tx-processor
 
 # Only copy essential binaries
-COPY --from=builder /opt/tx-processor/build/src/3pc/agent/agentd ./build/src/3pc/agent/agentd
-COPY --from=builder /opt/tx-processor/build/src/3pc/runtime_locking_shard/runtime_locking_shardd ./build/src/3pc/runtime_locking_shard/runtime_locking_shardd
-COPY --from=builder /opt/tx-processor/build/src/3pc/ticket_machine/ticket_machined ./build/src/3pc/ticket_machine/ticket_machined
+COPY --from=builder /opt/tx-processor/build/src/parsec/agent/agentd ./build/src/parsec/agent/agentd
+COPY --from=builder /opt/tx-processor/build/src/parsec/runtime_locking_shard/runtime_locking_shardd ./build/src/parsec/runtime_locking_shard/runtime_locking_shardd
+COPY --from=builder /opt/tx-processor/build/src/parsec/ticket_machine/ticket_machined ./build/src/parsec/ticket_machine/ticket_machined
 
 # Copy load generators
-COPY --from=builder /opt/tx-processor/build/tools/bench/3pc/evm/evm_bench ./build/tools/bench/3pc/evm/evm_bench
-COPY --from=builder /opt/tx-processor/build/tools/bench/3pc/lua/lua_bench ./build/tools/bench/3pc/lua/lua_bench
+COPY --from=builder /opt/tx-processor/build/tools/bench/parsec/evm/evm_bench ./build/tools/bench/parsec/evm/evm_bench
+COPY --from=builder /opt/tx-processor/build/tools/bench/parsec/lua/lua_bench ./build/tools/bench/parsec/lua/lua_bench
 
 # Copy wait script
 COPY --from=builder /opt/tx-processor/scripts/wait-for-it.sh ./scripts/wait-for-it.sh

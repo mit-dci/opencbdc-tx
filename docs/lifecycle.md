@@ -26,7 +26,7 @@ The [Working Groups](contributing.md#The-Hub-and-Spoke-Model) each guide one of 
 If you're interested in contributing to an area guided by one of the Working Groups, you should attend their next meeting and propose some work you are interested in conducting.
 
 The [Leaders](contributing.md#Leader) and other Participants will discuss with you some ideas and whether or not your contribution should be pursued right now (e.g., perhaps there is other work that needs to be finished before your contribution is possible; this is an excellent opportunity to try and contribute to that effort first!).
-E.g., if you're interested in implementing contingent payments (e.g., only paying someone when they've completed a bit of work for you, but cryptographically ensuring they get paid for their labor upon completion), that would most likely be under the purview of the Programmability Working Group.
+E.g., if you're interested in implementing contingent payments (e.g., only paying someone when they've completed a bit of work for you, but cryptographically ensuring they get paid for their labor upon completion), that would most likely be under the purview of the PArSEC Working Group.
 
 If your contribution wouldn't fall under the purview of any of the active Working Groups, you can open a [proposal](https://github.com/mit-dci/opencbdc-tx/labels/feedback%2Fproposal) on the main repository for the [Maintainers](contributing.md#Maintainer) to review.
 
