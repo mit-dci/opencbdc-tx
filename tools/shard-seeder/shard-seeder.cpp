@@ -3,9 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "uhs/transaction/messages.hpp"
 #include "uhs/transaction/transaction.hpp"
 #include "uhs/transaction/validation.hpp"
 #include "uhs/transaction/wallet.hpp"
+#include "uhs/twophase/locking_shard/format.hpp"
 #include "util/common/config.hpp"
 #include "util/serialization/buffer_serializer.hpp"
 #include "util/serialization/format.hpp"
@@ -129,15 +131,14 @@ auto main(int argc, char** argv) -> int {
                     for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
                         tx.m_inputs[0].m_prevout.m_index = tx_idx;
                         cbdc::transaction::compact_tx ctx(tx);
-                        const cbdc::hash_t& output_hash = ctx.m_uhs_outputs[0];
+                        const cbdc::hash_t& output_hash
+                            = ctx.m_uhs_outputs[0].m_id;
                         if(output_hash[0] >= shard_start
                            && output_hash[0] <= shard_end) {
-                            std::array<char, sizeof(output_hash)> hash_arr{};
-                            std::memcpy(hash_arr.data(),
-                                        output_hash.data(),
-                                        sizeof(output_hash));
-                            leveldb::Slice hash_key(hash_arr.data(),
-                                                    output_hash.size());
+                            auto out_buf
+                                = cbdc::make_buffer(ctx.m_uhs_outputs[0]);
+                            leveldb::Slice hash_key(out_buf.c_str(),
+                                                    out_buf.size());
                             batch.Put(hash_key, leveldb::Slice());
                             batch_size++;
                             if(batch_size >= write_batch_size) {
@@ -162,10 +163,14 @@ auto main(int argc, char** argv) -> int {
                     for(size_t tx_idx = 0; tx_idx != num_utxos; tx_idx++) {
                         tx.m_inputs[0].m_prevout.m_index = tx_idx;
                         cbdc::transaction::compact_tx ctx(tx);
-                        const cbdc::hash_t& output_hash = ctx.m_uhs_outputs[0];
+                        const cbdc::hash_t& output_hash
+                            = ctx.m_uhs_outputs[0].m_id;
                         if(output_hash[0] >= shard_start
                            && output_hash[0] <= shard_end) {
-                            ser << output_hash;
+                            auto uhs = ctx.m_uhs_outputs[0];
+                            auto s_uhs = cbdc::locking_shard::locking_shard::
+                                uhs_element{uhs.m_data, uhs.m_value, 0};
+                            ser << uhs.m_id << s_uhs;
                             count++;
                         }
                     }

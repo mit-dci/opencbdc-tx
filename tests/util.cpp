@@ -39,8 +39,9 @@ namespace cbdc::test {
     }
 
     auto simple_tx(const hash_t& id,
-                   const std::vector<hash_t>& ins,
-                   const std::vector<hash_t>& outs) -> compact_transaction {
+                   const std::vector<transaction::uhs_element>& ins,
+                   const std::vector<transaction::uhs_element>& outs)
+        -> compact_transaction {
         compact_transaction tx{};
         tx.m_id = id;
         tx.m_inputs = ins;

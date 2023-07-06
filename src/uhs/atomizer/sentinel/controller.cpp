@@ -192,7 +192,7 @@ namespace cbdc::sentinel {
                 if(inputs_sent.find(j) != inputs_sent.end()) {
                     continue;
                 }
-                if(!config::hash_in_shard_range(range, ctx.m_inputs[i])) {
+                if(!config::hash_in_shard_range(range, ctx.m_inputs[i].m_id)) {
                     continue;
                 }
                 inputs_sent.insert(j);

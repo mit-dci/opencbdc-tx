@@ -41,16 +41,10 @@ namespace cbdc::transaction {
         return !(*this == rhs);
     }
 
-    auto input::hash() const -> hash_t {
-        auto buf = cbdc::make_buffer(*this);
-
-        CSHA256 sha;
-        hash_t result;
-
-        sha.Write(buf.c_ptr(), buf.size());
-        sha.Finalize(result.data());
-
-        return result;
+    auto input::to_uhs_element() const -> uhs_element {
+        return uhs_id_from_output(m_prevout.m_tx_id,
+                                  m_prevout.m_index,
+                                  m_prevout_data);
     }
 
     auto full_tx::operator==(const full_tx& rhs) const -> bool {
@@ -98,21 +92,36 @@ namespace cbdc::transaction {
         return input_from_output(tx, i, id);
     }
 
+    auto calculate_uhs_id(hash_t nested_hash, uint64_t value) -> hash_t {
+        auto sha = CSHA256();
+        std::array<unsigned char, sizeof(value)> value_arr{};
+        std::memcpy(value_arr.data(), &value, sizeof(value));
+
+        sha.Write(nested_hash.data(), nested_hash.size());
+        sha.Write(value_arr.data(), value_arr.size());
+
+        auto ret = hash_t();
+        sha.Finalize(ret.data());
+
+        return ret;
+    }
+
     auto uhs_id_from_output(const hash_t& entropy,
                             uint64_t i,
-                            const output& output) -> hash_t {
+                            const output& output) -> uhs_element {
         CSHA256 sha;
-        hash_t ret;
         sha.Write(entropy.data(), entropy.size());
         std::array<unsigned char, sizeof(i)> index_arr{};
         std::memcpy(index_arr.data(), &i, sizeof(i));
         sha.Write(index_arr.data(), sizeof(i));
+        sha.Write(output.m_witness_program_commitment.data(),
+                  output.m_witness_program_commitment.size());
+        auto nested_hash = hash_t();
+        sha.Finalize(nested_hash.data());
 
-        auto buf = cbdc::make_buffer(output);
+        auto ret = calculate_uhs_id(nested_hash, output.m_value);
 
-        sha.Write(buf.c_ptr(), buf.size());
-        sha.Finalize(ret.data());
-        return ret;
+        return {ret, nested_hash, output.m_value};
     }
 
     auto compact_tx::operator==(const compact_tx& tx) const noexcept -> bool {
@@ -122,7 +131,7 @@ namespace cbdc::transaction {
     compact_tx::compact_tx(const full_tx& tx) {
         m_id = tx_id(tx);
         for(const auto& inp : tx.m_inputs) {
-            m_inputs.push_back(inp.hash());
+            m_inputs.push_back(inp.to_uhs_element());
         }
         for(uint64_t i = 0; i < tx.m_outputs.size(); i++) {
             m_uhs_outputs.push_back(
@@ -180,5 +189,10 @@ namespace cbdc::transaction {
         }
 
         return true;
+    }
+
+    auto uhs_element::operator==(const uhs_element& rhs) const -> bool {
+        return std::tie(m_id, m_data, m_value)
+            == std::tie(rhs.m_id, rhs.m_data, rhs.m_value);
     }
 }

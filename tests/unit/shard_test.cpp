@@ -37,9 +37,9 @@ class shard_test : public ::testing::Test {
         cbdc::atomizer::block b1;
         b1.m_height = 1;
         b1.m_transactions.push_back(
-            cbdc::test::simple_tx({'a'}, {}, {{3}, {4}}));
+            cbdc::test::simple_tx({'a'}, {}, {{{3}}, {{4}}}));
         b1.m_transactions.push_back(
-            cbdc::test::simple_tx({'b'}, {}, {{5}, {6}}));
+            cbdc::test::simple_tx({'b'}, {}, {{{5}}, {{6}}}));
         m_shard.digest_block(b1);
     }
 
@@ -59,8 +59,8 @@ TEST_F(shard_test, digest_block_non_contiguous) {
 TEST_F(shard_test, digest_tx_valid) {
     cbdc::transaction::compact_tx ctx{};
     ctx.m_id = {'a'};
-    ctx.m_inputs = {{0}, {3}, {6}, {100}};
-    ctx.m_uhs_outputs = {{'x'}, {'y'}};
+    ctx.m_inputs = {{{0}}, {{3}}, {{6}}, {{100}}};
+    ctx.m_uhs_outputs = {{{'x'}}, {{'y'}}};
 
     auto res = m_shard.digest_transaction(ctx);
     ASSERT_TRUE(
@@ -79,7 +79,7 @@ TEST_F(shard_test, digest_tx_empty_inputs) {
     cbdc::transaction::compact_tx ctx{};
     ctx.m_id = {'a'};
     ctx.m_inputs = {};
-    ctx.m_uhs_outputs = {{'x'}, {'y'}};
+    ctx.m_uhs_outputs = {{{'x'}}, {{'y'}}};
 
     auto res = m_shard.digest_transaction(ctx);
     ASSERT_TRUE(std::holds_alternative<cbdc::watchtower::tx_error>(res));
@@ -94,8 +94,8 @@ TEST_F(shard_test, digest_tx_empty_inputs) {
 TEST_F(shard_test, digest_tx_inputs_dne) {
     cbdc::transaction::compact_tx ctx{};
     ctx.m_id = {'a'};
-    ctx.m_inputs = {{0}, {7}, {8}, {100}};
-    ctx.m_uhs_outputs = {{'x'}, {'y'}};
+    ctx.m_inputs = {{{0}}, {{7}}, {{8}}, {{100}}};
+    ctx.m_uhs_outputs = {{{'x'}}, {{'y'}}};
 
     auto res = m_shard.digest_transaction(ctx);
     ASSERT_TRUE(std::holds_alternative<cbdc::watchtower::tx_error>(res));
@@ -112,15 +112,15 @@ TEST_F(shard_test, digest_block_valid) {
     cbdc::atomizer::block b2;
     b2.m_height = 2;
     b2.m_transactions.push_back(
-        cbdc::test::simple_tx({'c'}, {{1}, {3}, {4}, {11}}, {{7}}));
+        cbdc::test::simple_tx({'c'}, {{{1}}, {{3}}, {{4}}, {{11}}}, {{{7}}}));
     b2.m_transactions.push_back(
-        cbdc::test::simple_tx({'d'}, {{2}, {5}, {6}, {22}}, {{8}}));
+        cbdc::test::simple_tx({'d'}, {{{2}}, {{5}}, {{6}}, {{22}}}, {{{8}}}));
     m_shard.digest_block(b2);
 
     cbdc::transaction::compact_tx valid_ctx{};
     valid_ctx.m_id = {'a'};
-    valid_ctx.m_inputs = {{0}, {7}, {100}, {8}};
-    valid_ctx.m_uhs_outputs = {{'x'}, {'y'}};
+    valid_ctx.m_inputs = {{{0}}, {{7}}, {{100}}, {{8}}};
+    valid_ctx.m_uhs_outputs = {{{'x'}}, {{'y'}}};
 
     auto valid_res = m_shard.digest_transaction(valid_ctx);
     ASSERT_TRUE(
@@ -136,8 +136,8 @@ TEST_F(shard_test, digest_block_valid) {
 
     cbdc::transaction::compact_tx invalid_ctx{};
     invalid_ctx.m_id = {'a'};
-    invalid_ctx.m_inputs = {{0}, {3}, {4}, {5}, {6}, {100}};
-    invalid_ctx.m_uhs_outputs = {{'x'}, {'y'}};
+    invalid_ctx.m_inputs = {{{0}}, {{3}}, {{4}}, {{5}}, {{6}}, {{100}}};
+    invalid_ctx.m_uhs_outputs = {{{'x'}}, {{'y'}}};
     auto invalid_res = m_shard.digest_transaction(invalid_ctx);
     ASSERT_TRUE(
         std::holds_alternative<cbdc::watchtower::tx_error>(invalid_res));

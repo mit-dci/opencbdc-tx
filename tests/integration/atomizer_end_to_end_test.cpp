@@ -77,6 +77,19 @@ class atomizer_end_to_end_test : public ::testing::Test {
         m_sender = nullptr;
         m_receiver = nullptr;
 
+        // Wait for an audit to complete
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        auto audit_file = std::ifstream("shard0_audit.txt");
+        ASSERT_TRUE(audit_file.good());
+        auto audit_entries = std::vector<std::pair<uint64_t, uint64_t>>();
+        uint64_t epoch{};
+        uint64_t value{};
+        while(audit_file >> epoch >> value) {
+            audit_entries.emplace_back(epoch, value);
+        }
+        ASSERT_FALSE(audit_entries.empty());
+        ASSERT_EQ(audit_entries.back().second, 100UL);
+
         std::filesystem::remove_all("archiver0_db");
         std::filesystem::remove_all("atomizer_raft_log_0");
         std::filesystem::remove_all("atomizer_raft_config_0.dat");
@@ -88,6 +101,7 @@ class atomizer_end_to_end_test : public ::testing::Test {
         std::filesystem::remove(m_receiver_wallet_store_file);
         std::filesystem::remove(m_receiver_client_store_file);
         std::filesystem::remove("tp_samples.txt");
+        std::filesystem::remove("shard0_audit.txt");
     }
 
     void reload_sender() {
@@ -208,15 +222,16 @@ TEST_F(atomizer_end_to_end_test, double_spend) {
 
     std::this_thread::sleep_for(m_block_wait_interval);
 
-    const auto ctx = cbdc::transaction::compact_tx(tx.value());
-    const auto wc_res = wc.request_status_update(
-        cbdc::watchtower::status_update_request{{{ctx.m_id,
-                                                  {
-                                                      ctx.m_inputs[0],
-                                                      ctx.m_inputs[1],
-                                                      ctx.m_uhs_outputs[0],
-                                                      ctx.m_uhs_outputs[1],
-                                                  }}}});
+    auto ctx = cbdc::transaction::compact_tx(tx.value());
+    auto wc_res
+        = wc.request_status_update(cbdc::watchtower::status_update_request{
+            {{ctx.m_id,
+              {
+                  ctx.m_inputs[0].m_id,
+                  ctx.m_inputs[1].m_id,
+                  ctx.m_uhs_outputs[0].m_id,
+                  ctx.m_uhs_outputs[1].m_id,
+              }}}});
 
     // Final check - ensure attempted double spends are marked as spent:
     const auto res_uhs_states = wc_res->states().at(ctx.m_id);
@@ -258,15 +273,16 @@ TEST_F(atomizer_end_to_end_test, invalid_transaction) {
 
     std::this_thread::sleep_for(m_block_wait_interval);
 
-    const auto ctx = cbdc::transaction::compact_tx(tx.value());
-    const auto wc_res = wc.request_status_update(
-        cbdc::watchtower::status_update_request{{{ctx.m_id,
-                                                  {
-                                                      ctx.m_inputs[0],
-                                                      ctx.m_inputs[1],
-                                                      ctx.m_uhs_outputs[0],
-                                                      ctx.m_uhs_outputs[1],
-                                                  }}}});
+    auto ctx = cbdc::transaction::compact_tx(tx.value());
+    auto wc_res
+        = wc.request_status_update(cbdc::watchtower::status_update_request{
+            {{ctx.m_id,
+              {
+                  ctx.m_inputs[0].m_id,
+                  ctx.m_inputs[1].m_id,
+                  ctx.m_uhs_outputs[0].m_id,
+                  ctx.m_uhs_outputs[1].m_id,
+              }}}});
 
     const auto res_uhs_states = wc_res->states().at(ctx.m_id);
     ASSERT_EQ(res_uhs_states.size(), 4UL);

@@ -37,6 +37,10 @@ namespace cbdc::shard {
                 t.join();
             }
         }
+
+        if(m_audit_thread.joinable()) {
+            m_audit_thread.join();
+        }
     }
 
     auto controller::init() -> bool {
@@ -46,6 +50,13 @@ namespace cbdc::shard {
                             m_shard_id,
                             ". Got error:",
                             *err_msg);
+            return false;
+        }
+
+        m_audit_log.open(m_opts.m_shard_audit_logs[m_shard_id],
+                         std::ios::app | std::ios::out);
+        if(!m_audit_log.good()) {
+            m_logger->error("Failed to open audit log");
             return false;
         }
 
@@ -133,12 +144,17 @@ namespace cbdc::shard {
                 break;
             }
 
+            if(blk.m_height <= m_shard.best_block_height()) {
+                break;
+            }
+
             // Attempt to catch up to the latest block
             for(uint64_t i = m_shard.best_block_height() + 1; i < blk.m_height;
                 i++) {
                 const auto past_blk = m_archiver_client.get_block(i);
                 if(past_blk) {
                     m_shard.digest_block(past_blk.value());
+                    audit();
                 } else {
                     m_logger->info("Waiting for archiver sync");
                     const auto wait_time = std::chrono::milliseconds(10);
@@ -148,6 +164,7 @@ namespace cbdc::shard {
                 }
             }
         }
+        audit();
 
         m_logger->info("Digested block", blk.m_height);
         return std::nullopt;
@@ -205,5 +222,42 @@ namespace cbdc::shard {
                 }};
             std::visit(res_handler, res);
         }
+    }
+
+    void controller::audit() {
+        auto height = m_shard.best_block_height();
+        if(m_opts.m_shard_audit_interval > 0
+           && height % m_opts.m_shard_audit_interval != 0) {
+            return;
+        }
+
+        auto status = m_audit_fut.wait_for(std::chrono::seconds(0));
+        if(status != std::future_status::ready && m_audit_thread.joinable()) {
+            m_logger->warn(
+                "Previous audit not finished, skipping audit for h:",
+                height);
+            return;
+        }
+
+        auto snp = m_shard.get_snapshot();
+        if(m_audit_thread.joinable()) {
+            m_audit_thread.join(); // blocking here
+        }
+
+        m_audit_finished = decltype(m_audit_finished)();
+        m_audit_fut = m_audit_finished.get_future();
+
+        m_audit_thread = std::thread([this, s = std::move(snp), height]() {
+            auto maybe_total = m_shard.audit(s);
+            if(!maybe_total.has_value()) {
+                m_logger->fatal("Error running audit at height", height);
+            }
+            m_audit_log << height << " " << maybe_total.value() << std::endl;
+            m_logger->info("Audit completed for",
+                           height,
+                           maybe_total.value(),
+                           "coins total");
+            m_audit_finished.set_value();
+        });
     }
 }
