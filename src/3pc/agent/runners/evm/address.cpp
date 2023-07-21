@@ -34,6 +34,8 @@ namespace cbdc::threepc::agent::runner {
                            const evmc::bytes32& salt,
                            const cbdc::hash_t& bytecode_hash)
         -> evmc::address {
+        // Specs: https://eips.ethereum.org/EIPS/eip-1014
+
         auto new_addr = evmc::address();
         auto buf = cbdc::buffer();
         static constexpr uint8_t contract_address2_preimage_prefix = 0xFF;

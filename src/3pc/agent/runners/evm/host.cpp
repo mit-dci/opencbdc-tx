@@ -257,6 +257,13 @@ namespace cbdc::threepc::agent::runner {
         auto res = execute(call_msg, msg.input_data, msg.input_size);
 
         if(res.status_code == EVMC_SUCCESS) {
+            // The VM does not populate res.create_address, and it must
+            // set to the address of the new contract.
+            // If left as 0x0, deployment of contracts by another contract
+            // (i.e. depth>0) is likely to fail (e.g.
+            // UniswapV3Factory.createPool())
+            res.create_address = new_addr;
+
             auto maybe_acc = get_account(new_addr, !m_is_readonly_run);
             if(!maybe_acc.has_value()) {
                 maybe_acc = evm_account();
