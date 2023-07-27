@@ -51,10 +51,6 @@ namespace cbdc::locking_shard {
             return false;
         }
 
-        m_audit_thread = std::thread([this]() {
-            audit();
-        });
-
         auto params = nuraft::raft_params();
         params.election_timeout_lower_bound_
             = static_cast<int>(m_opts.m_election_timeout_lower);
@@ -78,6 +74,10 @@ namespace cbdc::locking_shard {
             m_opts);
 
         m_shard = m_state_machine->get_shard_instance();
+
+        m_audit_thread = std::thread([this]() {
+            audit();
+        });
 
         if(m_shard_id > (m_opts.m_locking_shard_raft_endpoints.size() - 1)) {
             m_logger->error("The shard ID is out of range "
