@@ -25,7 +25,7 @@ Therefore transaction throughput is horizontally scalable with additional server
 For example, in contrast to the Ethereum blockchain, this system executes native value transfers and smart contract transactions (e.g. [ERC20 token](https://ethereum.org/en/developers/docs/standards/tokens/erc-20/) transfers) in parallel for independent addresses.
 
 # Architecture Diagram
-![Architecture Diagram](PArSEC_architecture_diagram.svg)
+![Architecture Diagram](parsec_architecture_diagram.svg)
 
 # System Components
 ### Agent (Transaction Coordinator)

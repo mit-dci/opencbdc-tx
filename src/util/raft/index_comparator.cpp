@@ -5,6 +5,7 @@
 
 #include "index_comparator.hpp"
 
+#include <cstdint>
 #include <cstring>
 #include <leveldb/slice.h>
 

@@ -22,7 +22,7 @@ namespace cbdc::parsec::agent::rpc {
         /// \param srv pointer to an asynchronous RPC server.
         /// \param broker broker instance.
         /// \param log log instance.
-        /// \param cfg system configuration options.
+        ///  \param cfg system configuration options.
         server(std::unique_ptr<server_type> srv,
                std::shared_ptr<broker::interface> broker,
                std::shared_ptr<logging::log> log,
