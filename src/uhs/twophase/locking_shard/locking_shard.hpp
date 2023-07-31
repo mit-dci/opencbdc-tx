@@ -88,7 +88,7 @@ namespace cbdc::locking_shard {
         ///                     from the previous lock operation the shard
         ///                     should apply (`true`), and which it should
         ///                     cancel (`false`). Must have the same size and
-        ///                     order as txs from lock.
+        ///                      order as txs from lock.
         /// \param dtx_id distributed transaction ID of the previous lock
         ///               operation.
         /// \return true if the apply operation succeeded.
