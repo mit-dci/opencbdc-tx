@@ -6,6 +6,7 @@
 #include "index_comparator.hpp"
 
 #include <cstring>
+#include <cstdint>
 #include <leveldb/slice.h>
 
 namespace cbdc::raft {
