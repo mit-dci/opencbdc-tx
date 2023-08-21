@@ -697,3 +697,15 @@ TEST_F(parsec_evm_end_to_end_test, erc20_all) {
                            m_acct1_privkey,
                            evmc::uint256be{});
 }
+
+TEST_F(parsec_evm_end_to_end_test, test_new_account_transaction_count) {
+    // Do not re-use this test address within this module:
+    const evmc::address new_test_addr{0xff0000};
+    const auto new_acct_nonce
+        = m_rpc_client->get_transaction_count(new_test_addr);
+
+    // This value to be updated if/when the system default nonce changes to 0:
+    const auto parsec_default_acct_nonce = evmc::uint256be(1);
+
+    ASSERT_EQ(new_acct_nonce, parsec_default_acct_nonce);
+}

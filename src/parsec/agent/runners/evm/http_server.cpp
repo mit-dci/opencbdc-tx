@@ -384,7 +384,7 @@ namespace cbdc::parsec::agent::rpc {
                 auto& updates = std::get<return_type>(res);
                 auto it = updates.find(runner_params);
 
-                if(it == updates.end()) {
+                if(it == updates.end() || it->second.size() == 0) {
                     // For accounts that don't exist yet, return 1
                     ret["result"] = to_hex_trimmed(evmc::uint256be(1));
                     callback(ret);
