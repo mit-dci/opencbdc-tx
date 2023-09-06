@@ -31,29 +31,42 @@ namespace cbdc::test {
         const std::unordered_set<mock_system_module>& disabled_modules,
         config::options opts)
         : m_opts(std::move(opts)) {
-        m_module_endpoints.insert({mock_system_module::watchtower,
-                                   m_opts.m_watchtower_internal_endpoints});
-
-        m_module_endpoints.insert(
-            {mock_system_module::atomizer, m_opts.m_atomizer_endpoints});
-
-        auto coord_eps = std::vector<network::endpoint_t>();
-        for(const auto& node_eps : m_opts.m_coordinator_endpoints) {
-            coord_eps.insert(coord_eps.end(),
-                             node_eps.begin(),
-                             node_eps.end());
+        if(!m_opts.m_watchtower_internal_endpoints.empty()) {
+            m_module_endpoints.emplace(mock_system_module::watchtower,
+                                       m_opts.m_watchtower_internal_endpoints);
         }
-        m_module_endpoints.insert(
-            {mock_system_module::coordinator, coord_eps});
 
-        m_module_endpoints.insert(
-            {mock_system_module::archiver, m_opts.m_archiver_endpoints});
+        if(!m_opts.m_atomizer_endpoints.empty()) {
+            m_module_endpoints.emplace(mock_system_module::atomizer,
+                                       m_opts.m_atomizer_endpoints);
+        }
 
-        m_module_endpoints.insert(
-            {mock_system_module::shard, m_opts.m_shard_endpoints});
+        if(!m_opts.m_coordinator_endpoints.empty()) {
+            auto coord_eps = std::vector<network::endpoint_t>();
+            for(const auto& node_eps : m_opts.m_coordinator_endpoints) {
+                coord_eps.insert(coord_eps.end(),
+                                 node_eps.begin(),
+                                 node_eps.end());
+            }
 
-        m_module_endpoints.insert(
-            {mock_system_module::sentinel, m_opts.m_sentinel_endpoints});
+            m_module_endpoints.emplace(mock_system_module::coordinator,
+                                       coord_eps);
+        }
+
+        if(!m_opts.m_archiver_endpoints.empty()) {
+            m_module_endpoints.emplace(mock_system_module::archiver,
+                                       m_opts.m_archiver_endpoints);
+        }
+
+        if(!m_opts.m_shard_endpoints.empty()) {
+            m_module_endpoints.emplace(mock_system_module::shard,
+                                       m_opts.m_shard_endpoints);
+        }
+
+        if(!m_opts.m_sentinel_endpoints.empty()) {
+            m_module_endpoints.emplace(mock_system_module::sentinel,
+                                       m_opts.m_sentinel_endpoints);
+        }
 
         for(const auto& m : disabled_modules) {
             m_module_endpoints.erase(m);

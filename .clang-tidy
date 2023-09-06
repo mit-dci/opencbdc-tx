@@ -10,7 +10,12 @@ Checks: '
     -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
     readability-*,
     google-explicit-constructor,
-    -readability-identifier-length'
+    -readability-identifier-length,
+    -cppcoreguidelines-avoid-const-or-ref-data-members,
+    -bugprone-unchecked-optional-access,
+    -cppcoreguidelines-avoid-do-while,
+    -modernize-use-emplace,
+    -readability-convert-member-functions-to-static'
 CheckOptions:
     - {key: cppcoreguidelines-explicit-virtual-functions.AllowOverrideAndFinal, value: true}
     - {key: modernize-use-override.AllowOverrideAndFinal, value: true}
