@@ -388,6 +388,7 @@ namespace cbdc::parsec::agent::rpc {
                     // For accounts that don't exist yet, return 1
                     ret["result"] = to_hex_trimmed(evmc::uint256be(1));
                     callback(ret);
+                    return;
                 }
 
                 auto maybe_acc
