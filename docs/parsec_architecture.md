@@ -15,7 +15,7 @@ The system provides two _Runner_ implementations ([EVM](https://ethereum.org/en/
 
 # Key Features
 ### Flexible Data Model and Transaction Semantics
-In contrast to the [UHS-based architectures (Atomizer & 2PC)](architecture.md), this design does not dictate a particular data model or transactional semantics.
+In contrast to the [UHS-based architectures (Atomizer & 2PC)](uhs-architectures.md), this design does not dictate a particular data model or transactional semantics.
 The generic computation layer allows flexibility to employ a wide range of designs with minimal changes to this underlying C++ system.
 Smart contracts can be deployed and re-defined, thus making it possible to make fundamental changes to the system during runtime.
 
