@@ -3,6 +3,9 @@ set -e
 
 echo "Building..."
 
+# see PREFIX in ./scripts/configure.sh
+PREFIX="$(cd "$(dirname "$0")"/.. && pwd)/prefix"
+
 if [ -z ${BUILD_DIR+x} ]; then
     export BUILD_DIR=build
 fi
@@ -10,14 +13,14 @@ fi
 mkdir -p $BUILD_DIR
 cd $BUILD_DIR
 
-CMAKE_FLAGS=""
+CMAKE_FLAGS=-DCMAKE_PREFIX_PATH="${PREFIX}"
 CPUS=1
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     CPUS=$(grep -c ^processor /proc/cpuinfo)
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     CPUS=$(sysctl -n hw.ncpu)
     XCODE_CMDLINE_DIR=$(xcode-select -p)
-    CMAKE_FLAGS+="-DCMAKE_C_COMPILER=${XCODE_CMDLINE_DIR}/usr/bin/clang -DCMAKE_CXX_COMPILER=${XCODE_CMDLINE_DIR}/usr/bin/clang++ -DCMAKE_CXX_FLAGS=-isystem\ /usr/local/include -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+    CMAKE_FLAGS+=" -DCMAKE_C_COMPILER=${XCODE_CMDLINE_DIR}/usr/bin/clang -DCMAKE_CXX_COMPILER=${XCODE_CMDLINE_DIR}/usr/bin/clang++ -DCMAKE_CXX_FLAGS=-isystem\ /usr/local/include -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 fi
 
 CMAKE_BUILD_TYPE="Debug"

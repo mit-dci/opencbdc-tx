@@ -50,6 +50,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
 include_directories(3rdparty 3rdparty/secp256k1/include /usr/lib /usr/local/lib /usr/local/include /opt/homebrew/include)
 
+if(DEFINED CMAKE_PREFIX_PATH)
+    include_directories(SYSTEM "${CMAKE_PREFIX_PATH}/include")
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_options(-fprofile-arcs -ftest-coverage)
 endif()

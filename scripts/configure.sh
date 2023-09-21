@@ -10,11 +10,13 @@ end="\033[0m"
 
 set -e
 
-SUDO=''
-if (( $EUID != 0 )); then
-    echo -e "non-root user, sudo required"
-    SUDO='sudo'
-fi
+# install in a custom prefix rather than /usr/local. by default, this
+# chooses "prefix" directory alongside "scripts" where configure.sh
+# resides.
+
+PREFIX="$(cd "$(dirname "$0")"/.. && pwd)/prefix"
+echo "Will install local dependencies in the following prefix: $PREFIX"
+mkdir -p $PREFIX $PREFIX/lib $PREFIX/include
 
 CMAKE_BUILD_TYPE="Debug"
 if [[ "$BUILD_RELEASE" == "1" ]]; then
@@ -36,9 +38,9 @@ tar xzvf ${LEVELDB_VERSION}.tar.gz
 rm -rf ${LEVELDB_VERSION}.tar.gz
 mv leveldb-${LEVELDB_VERSION} "leveldb-${LEVELDB_VERSION}-${CMAKE_BUILD_TYPE}"
 cd "leveldb-${LEVELDB_VERSION}-${CMAKE_BUILD_TYPE}"
-cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLEVELDB_BUILD_TESTS=0 -DLEVELDB_BUILD_BENCHMARKS=0 -DBUILD_SHARED_LIBS=0 -DHAVE_SNAPPY=0 .
+cmake -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLEVELDB_BUILD_TESTS=0 -DLEVELDB_BUILD_BENCHMARKS=0 -DBUILD_SHARED_LIBS=0 -DHAVE_SNAPPY=0 .
 make -j$CPUS
-$SUDO make install
+make install
 cd ..
 
 NURAFT_VERSION="1.3.0"
@@ -60,12 +62,12 @@ if [[ "$BUILD_RELEASE" == "1" ]]; then
 fi
 mkdir -p build
 cd build
-cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DDISABLE_SSL=1 ..
+cmake -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DDISABLE_SSL=1 ..
 make -j$CPUS static_lib
 
-echo -e "${green}Copying nuraft to /usr/local"
-$SUDO cp libnuraft.a /usr/local/lib
-$SUDO cp -r ../include/libnuraft /usr/local/include
+echo -e "${green}Copying nuraft to $PREFIX/lib and $PREFIX/include"
+cp libnuraft.a $PREFIX/lib
+cp -r ../include/libnuraft $PREFIX/include
 
 cd ../..
 
@@ -75,7 +77,7 @@ tar zxf lua-5.4.3.tar.gz
 rm -rf lua-5.4.3.tar.gz
 cd lua-5.4.3
 make -j$CPUS
-$SUDO make install
+make INSTALL_TOP=$PREFIX install
 cd ..
 
 if [[ "$OSTYPE" != "darwin"* ]]; then
@@ -87,9 +89,9 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
   rm -rf curl-${CURL_VERSION}.tar.gz
   mkdir -p curl-${CURL_VERSION}/build
   cd curl-${CURL_VERSION}/build
-  ../configure --disable-shared --without-ssl --without-libpsl --without-libidn2 --without-brotli --without-zstd --without-zlib
+  ../configure --prefix="${PREFIX}" --disable-shared --without-ssl --without-libpsl --without-libidn2 --without-brotli --without-zstd --without-zlib
   make -j$CPUS
-  $SUDO make install
+  make install
   cd ../..
 fi
 
@@ -100,9 +102,9 @@ tar xzvf ${JSONCPP_VERSION}.tar.gz
 rm -rf ${JSONCPP_VERSION}.tar.gz
 mkdir -p jsoncpp-${JSONCPP_VERSION}/build
 cd jsoncpp-${JSONCPP_VERSION}/build
-cmake .. -DBUILD_SHARED_LIBS=NO -DBUILD_STATIC_LIBS=YES -DJSONCPP_WITH_TESTS=OFF -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
+cmake .. -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DBUILD_SHARED_LIBS=NO -DBUILD_STATIC_LIBS=YES -DJSONCPP_WITH_TESTS=OFF -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
 make -j$CPUS
-$SUDO make install
+make install
 cd ../..
 
 wget https://github.com/ethereum/evmc/archive/eda05c6866ac06bd93d62b605cbec5839d85c221.zip
@@ -112,9 +114,9 @@ rm eda05c6866ac06bd93d62b605cbec5839d85c221.zip
 cd evmc-eda05c6866ac06bd93d62b605cbec5839d85c221
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_INSTALL_PREFIX="${PREFIX}" ..
 make -j$CPUS
-$SUDO make install
+make install
 cd ../..
 
 wget https://github.com/ethereum/evmone/archive/be870917e8cefd2b125bd27375dd9d2409ff1f68.zip
@@ -127,13 +129,13 @@ mv ../evmc-eda05c6866ac06bd93d62b605cbec5839d85c221 ./evmc
 mkdir ./evmc/.git
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Mac Silicon: clang 'ar' does not allow empty member list, fails w/ -DBUILD_SHARED_LIBS=OFF
-  cmake -S . -B build
+  cmake -S . -B build -DCMAKE_INSTALL_PREFIX="${PREFIX}"
 else
-  cmake -S . -B build -DBUILD_SHARED_LIBS=OFF
+  cmake -S . -B build -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="${PREFIX}"
 fi
 cmake --build build --parallel
 cd build
-$SUDO make install
+make install
 cd ../..
 rm -rf evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
 
@@ -146,8 +148,8 @@ mkdir build
 cd build
 cmake -DETHASH_BUILD_ETHASH=OFF -DETHASH_BUILD_TESTS=OFF ..
 cmake --build . --parallel
-$SUDO cp ./lib/keccak/libkeccak.a /usr/local/lib
-$SUDO cp -r ../include/ethash /usr/local/include
+cp ./lib/keccak/libkeccak.a $PREFIX/lib
+cp -r ../include/ethash $PREFIX/include
 cd ../..
 
 wget https://gnu.askapache.com/libmicrohttpd/libmicrohttpd-0.9.75.tar.gz
@@ -157,8 +159,8 @@ rm libmicrohttpd-0.9.75.tar.gz
 cd libmicrohttpd-0.9.75
 mkdir build
 cd build
-../configure --disable-curl --disable-examples --disable-doc --disable-shared --disable-https
+../configure --prefix="${PREFIX}" --disable-curl --disable-examples --disable-doc --disable-shared --disable-https
 make -j $CPUS
-$SUDO make install
+make install
 cd ../../
 rm -rf libmicrohttpd-0.9.75
