@@ -17,6 +17,9 @@ doxygen_generated
 # Default build folder
 build/
 
+# Default dependency installation folder
+prefix/
+
 # 3rd party generated files
 3rdparty/secp256k1_genctx
 3rdparty/src/ecmult_static_context.h
