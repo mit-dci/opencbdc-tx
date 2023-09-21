@@ -16,6 +16,5 @@ add_library(evm_runner address.cpp
 
 target_link_libraries(evm_runner parsec
                                  ${KECCAK_LIBRARY}
-                                 ${EVMC_HEX_LIBRARY}
                                  ${EVMONE_LIBRARY}
                                  ${EVMC_INSTRUCTIONS_LIBRARY})

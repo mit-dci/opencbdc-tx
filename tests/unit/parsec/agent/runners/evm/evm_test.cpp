@@ -210,23 +210,20 @@ TEST_F(evm_test, host_storage) {
     EXPECT_EQ(chost.get_storage(addr2, val1), evmc::bytes32{});
     EXPECT_EQ(host.set_storage(addr2, val1, val2), EVMC_STORAGE_ADDED);
     EXPECT_EQ(chost.get_storage(addr2, val1), val2);
-    EXPECT_EQ(host.set_storage(addr2, val1, val2), EVMC_STORAGE_UNCHANGED);
+    EXPECT_EQ(host.set_storage(addr2, val1, val2), EVMC_STORAGE_ASSIGNED);
     EXPECT_EQ(chost.get_storage(addr2, val1), val2);
-    EXPECT_EQ(host.set_storage(addr2, val1, val3),
-              EVMC_STORAGE_MODIFIED_AGAIN);
+    EXPECT_EQ(host.set_storage(addr2, val1, val3), EVMC_STORAGE_ASSIGNED);
     EXPECT_EQ(chost.get_storage(addr2, val1), val3);
-    EXPECT_EQ(host.set_storage(addr2, val1, val1),
-              EVMC_STORAGE_MODIFIED_AGAIN);
+    EXPECT_EQ(host.set_storage(addr2, val1, val1), EVMC_STORAGE_ASSIGNED);
     EXPECT_EQ(chost.get_storage(addr2, val1), val1);
 
     EXPECT_EQ(chost.get_storage(addr2, val3), evmc::bytes32{});
     EXPECT_EQ(host.set_storage(addr2, val3, evmc::bytes32{}),
-              EVMC_STORAGE_UNCHANGED);
+              EVMC_STORAGE_ASSIGNED);
     EXPECT_EQ(chost.get_storage(addr2, val3), evmc::bytes32{});
     EXPECT_EQ(host.set_storage(addr2, val3, val3), EVMC_STORAGE_MODIFIED);
     EXPECT_EQ(chost.get_storage(addr2, val3), val3);
-    EXPECT_EQ(host.set_storage(addr2, val3, val1),
-              EVMC_STORAGE_MODIFIED_AGAIN);
+    EXPECT_EQ(host.set_storage(addr2, val3, val1), EVMC_STORAGE_ASSIGNED);
     EXPECT_EQ(chost.get_storage(addr2, val3), val1);
 
     // Set storage to zero on an existing storage location deletes it
