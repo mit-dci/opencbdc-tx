@@ -69,12 +69,12 @@ namespace cbdc::parsec::agent::runner {
                        size_t buffer_size) const noexcept
             -> size_t override final;
 
-        void
-        selfdestruct(const evmc::address& addr,
-                     const evmc::address& beneficiary) noexcept override final;
+        auto selfdestruct(const evmc::address& addr,
+                          const evmc::address& beneficiary) noexcept
+            -> bool override final;
 
         auto call(const evmc_message& msg) noexcept
-            -> evmc::result override final;
+            -> evmc::Result override final;
 
         [[nodiscard]] auto get_tx_context() const noexcept
             -> evmc_tx_context override final;
@@ -204,11 +204,11 @@ namespace cbdc::parsec::agent::runner {
         [[nodiscard]] auto get_key(const cbdc::buffer& key, bool write) const
             -> std::optional<broker::value_type>;
 
-        auto create(const evmc_message& msg) noexcept -> evmc::result;
+        auto create(const evmc_message& msg) noexcept -> evmc::Result;
 
         auto execute(const evmc_message& msg,
                      const uint8_t* code,
-                     size_t code_size) -> evmc::result;
+                     size_t code_size) -> evmc::Result;
     };
 }
 

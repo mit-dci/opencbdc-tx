@@ -128,12 +128,14 @@ namespace cbdc::parsec::agent::runner {
 
         auto modified = acc.m_modified.find(key) != acc.m_modified.end();
         if(!ret_val.has_value()) {
-            if(prev_value == value) {
-                ret_val = EVMC_STORAGE_UNCHANGED;
+            if(prev_value == value || modified) {
+                // NOTE: both unchanged value and modifying previously
+                // added/modified value cases belong in the same group
+                // related to minimal gas cost of only accessing warm storage.
+                // See evmc.h for more details.
+                ret_val = EVMC_STORAGE_ASSIGNED;
             } else if(evmc::is_zero(value) && !modified) {
                 ret_val = EVMC_STORAGE_DELETED;
-            } else if(modified) {
-                ret_val = EVMC_STORAGE_MODIFIED_AGAIN;
             } else {
                 ret_val = EVMC_STORAGE_MODIFIED;
                 acc.m_modified.insert(key);
@@ -212,14 +214,16 @@ namespace cbdc::parsec::agent::runner {
         return n;
     }
 
-    void evm_host::selfdestruct(const evmc::address& addr,
-                                const evmc::address& beneficiary) noexcept {
+    auto evm_host::selfdestruct(const evmc::address& addr,
+                                const evmc::address& beneficiary) noexcept
+        -> bool {
         m_log->trace("EVM selfdestruct:", to_hex(addr), to_hex(beneficiary));
         // TODO: delete storage keys and code
         transfer(addr, beneficiary, evmc::uint256be{});
+        return true;
     }
 
-    auto evm_host::create(const evmc_message& msg) noexcept -> evmc::result {
+    auto evm_host::create(const evmc_message& msg) noexcept -> evmc::Result {
         auto maybe_sender_acc = get_account(msg.sender, false);
         assert(maybe_sender_acc.has_value());
         auto& sender_acc = maybe_sender_acc.value();
@@ -293,7 +297,7 @@ namespace cbdc::parsec::agent::runner {
         return res;
     }
 
-    auto evm_host::call(const evmc_message& msg) noexcept -> evmc::result {
+    auto evm_host::call(const evmc_message& msg) noexcept -> evmc::Result {
         if(msg.kind == EVMC_CREATE2 || msg.kind == EVMC_CREATE) {
             return create(msg);
         }
@@ -315,8 +319,10 @@ namespace cbdc::parsec::agent::runner {
         const auto code_size = get_code_size(code_addr);
         if(code_size == 0) {
             // TODO: deduct simple send fixed gas amount
+            const auto gas_refund = 0;
             auto res = evmc::make_result(evmc_status_code::EVMC_SUCCESS,
                                          msg.gas,
+                                         gas_refund,
                                          nullptr,
                                          0);
 
@@ -326,7 +332,7 @@ namespace cbdc::parsec::agent::runner {
                 m_receipt.m_success = true;
             }
 
-            return evmc::result(res);
+            return evmc::Result(res);
         }
 
         auto code_buf = std::vector<uint8_t>(code_size);
@@ -729,17 +735,19 @@ namespace cbdc::parsec::agent::runner {
 
     auto evm_host::execute(const evmc_message& msg,
                            const uint8_t* code,
-                           size_t code_size) -> evmc::result {
+                           size_t code_size) -> evmc::Result {
         // Make VM instance if we didn't already
         if(!m_vm) {
             m_vm = std::make_unique<evmc::VM>(evmc_create_evmone());
             if(!(*m_vm) || !m_vm->is_abi_compatible()) {
                 m_log->error("Unable to load EVM implementation");
+                const auto gas_refund = 0;
                 auto res = evmc::make_result(evmc_status_code::EVMC_FAILURE,
                                              msg.gas,
+                                             gas_refund,
                                              nullptr,
                                              0);
-                return evmc::result(res);
+                return evmc::Result(res);
             }
         }
 
