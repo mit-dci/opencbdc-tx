@@ -193,5 +193,5 @@ cd ../../
 rm -rf libmicrohttpd-0.9.75
 
 cd src/util/oracle
-./configure.sh
+$SUDO ./configure.sh
 cd ../../../
