@@ -192,6 +192,7 @@ $SUDO make install
 cd ../../
 rm -rf libmicrohttpd-0.9.75
 
+pwd
 cd src/util/oracle
-$SUDO ./configure.sh
+$SUDO bash configure.sh
 cd ../../../
