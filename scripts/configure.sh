@@ -191,3 +191,7 @@ make -j $CPUS
 $SUDO make install
 cd ../../
 rm -rf libmicrohttpd-0.9.75
+
+cd src/util/oracle
+./configure.sh
+cd ../../../
