@@ -1,6 +1,8 @@
 project(coordinator)
 
-include_directories(../../util/oracle)
+# include_directories(../../util/oracle)
+include_directories(${CMAKE_SOURCE_DIR}/src/util/oracle)
+include_directories(${CMAKE_SOURCE_DIR}/src/util/oracle/instantclient/sdk/include)
 
 add_library(coordinator format.cpp
                         state_machine.cpp
@@ -23,4 +25,4 @@ target_link_libraries(coordinatord coordinator
                                    ${LEVELDB_LIBRARY}
                                    secp256k1
                                    ${CMAKE_THREAD_LIBS_INIT}
-                                   oracle)
+                                   oracleDB)
