@@ -1,0 +1,8 @@
+###############################################################
+# File to store passwords for Autonomous Database Connection. #
+# Place your wallet passcode and DB user passcode below.      #
+###############################################################
+
+username = <insert username>
+password = <insert passcode>
+wallet_password = <insert wallet passcode>

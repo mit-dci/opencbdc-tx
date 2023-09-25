@@ -134,14 +134,11 @@ make -j$CPUS
 $SUDO make install
 cd ../..
 
-# NOTE: evmc v10.0.0 requires evmone v0.9.0
-#       evmc v10.1.1 requires evmone v0.10.0 (which requires c++20)
-EVMC_VER=10.0.0
-wget https://github.com/ethereum/evmc/archive/refs/tags/v${EVMC_VER}.zip
-rm -rf evmc-${EVMC_VER}
-unzip v${EVMC_VER}.zip
-rm v${EVMC_VER}.zip
-cd evmc-${EVMC_VER}
+wget https://github.com/ethereum/evmc/archive/eda05c6866ac06bd93d62b605cbec5839d85c221.zip
+rm -rf evmc-eda05c6866ac06bd93d62b605cbec5839d85c221
+unzip eda05c6866ac06bd93d62b605cbec5839d85c221.zip
+rm eda05c6866ac06bd93d62b605cbec5839d85c221.zip
+cd evmc-eda05c6866ac06bd93d62b605cbec5839d85c221
 mkdir build
 cd build
 cmake ..
@@ -149,15 +146,13 @@ make -j$CPUS
 $SUDO make install
 cd ../..
 
-# NOTE: updating evmone to v0.10.0 requires c++20
-EVMONE_VER=0.9.1
-wget https://github.com/ethereum/evmone/archive/refs/tags/v${EVMONE_VER}.zip
-rm -rf evmone-${EVMONE_VER}
-unzip v${EVMONE_VER}.zip
-rm v${EVMONE_VER}.zip
-cd evmone-${EVMONE_VER}
+wget https://github.com/ethereum/evmone/archive/be870917e8cefd2b125bd27375dd9d2409ff1f68.zip
+rm -rf evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
+unzip be870917e8cefd2b125bd27375dd9d2409ff1f68.zip
+rm be870917e8cefd2b125bd27375dd9d2409ff1f68.zip
+cd evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
 rm -rf evmc
-mv ../evmc-${EVMC_VER} ./evmc
+mv ../evmc-eda05c6866ac06bd93d62b605cbec5839d85c221 ./evmc
 mkdir ./evmc/.git
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # Mac Silicon: clang 'ar' does not allow empty member list, fails w/ -DBUILD_SHARED_LIBS=OFF
@@ -169,7 +164,7 @@ cmake --build build --parallel
 cd build
 $SUDO make install
 cd ../..
-rm -rf evmone-${EVMONE_VER}
+rm -rf evmone-be870917e8cefd2b125bd27375dd9d2409ff1f68
 
 wget https://github.com/chfast/ethash/archive/e3e002ecc25ca699349aa62fa38e7b7cc5f653af.zip
 rm -rf ethash-e3e002ecc25ca699349aa62fa38e7b7cc5f653af
