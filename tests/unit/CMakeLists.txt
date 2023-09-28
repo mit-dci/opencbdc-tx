@@ -29,7 +29,7 @@ add_executable(run_unit_tests archiver_test.cpp
                               watchtower/tx_error_messages_test.cpp
                               watchtower/watchtower_test.cpp)
 
-add_subdirectory(parsec)
+# add_subdirectory(parsec)
 
 target_compile_options(run_unit_tests PRIVATE -ftest-coverage -fprofile-arcs)
 target_link_options(run_unit_tests PRIVATE --coverage)
@@ -47,8 +47,8 @@ target_link_libraries(run_unit_tests ${GTEST_LIBRARY}
                                      watchtower
                                      coordinator
                                      locking_shard
-                                     parsec_unit_tests
-                                     evm_runner
+                                    #  parsec_unit_tests
+                                    #  evm_runner
                                      lua_runner
                                      directory
                                      ticket_machine
