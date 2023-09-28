@@ -14,6 +14,8 @@
 
 #include <utility>
 
+#include "oracleDB.h"
+
 namespace cbdc::coordinator {
     controller::controller(size_t node_id,
                            size_t coordinator_id,
