@@ -26,3 +26,6 @@ target_link_libraries(coordinatord coordinator
                                    secp256k1
                                    ${CMAKE_THREAD_LIBS_INIT}
                                    oracleDB)
+
+add_executable(testOracleDB testOracleDB.cpp)
+target_link_libraries(testOracleDB oracleDB)
