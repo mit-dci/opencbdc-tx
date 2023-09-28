@@ -4,6 +4,9 @@
 #include <string.h>
 #include <strings.h>
 
+#include <unistd.h>
+#include <limits.h>
+
 // string_buffer functions
 void string_buffer_init(string_buffer *sb);
 void string_buffer_append(string_buffer *sb, const char *str);
@@ -48,6 +51,10 @@ int OracleDB_Init(OracleDB *db) {
     if (db->status != OCI_SUCCESS) {
         printf("OCIEnvCreate failed.\n");
         return 1;
+    }
+    // delete this
+    else {
+        printf("OCIEnvCreate success.]n");
     }
 
     // Read keys from key file
@@ -354,6 +361,17 @@ void print_oci_error(OCIError *errhp) {
 
 // Reads Key File into username, password, and wallet_pw
 int read_key_file(char *username, char *password, char *wallet_pw) {
+    // print working directory
+    char cwd[PATH_MAX];
+   if (getcwd(cwd, sizeof(cwd)) != NULL) {
+       printf("Current working dir: %s\n", cwd);
+   } else {
+       perror("getcwd() error");
+       return 1;
+   }
+
+
+
     FILE *key_file = fopen("key.txt", "r");
     if(!key_file) {
         printf("Error opening key file.\n");
