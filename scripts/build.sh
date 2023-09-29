@@ -35,6 +35,10 @@ make -j$CPUS
 # copy instantclient zip to build directory
 cp ../src/util/oracle/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip ./src/util/oracle/instantclient-basic.zip
 cp ../src/util/oracle/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip ./src/util/oracle/instantclient-sdk.zip
+# make a folder "zipped" in ./src/util/oracle that holds instantclient zip files
+mkdir ./src/util/oracle/zipped
+cp ./src/util/oracle/instantclient-basic.zip ./src/util/oracle/zipped
+cp ./src/util/oracle/instantclient-sdk.zip ./src/util/oracle/zipped
 
 cp ../src/util/oracle/key.txt ./src/util/oracle
 
