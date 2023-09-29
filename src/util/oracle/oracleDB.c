@@ -169,7 +169,7 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
         // Define output variables
         OCIDefine *defines[column_count];
         ub2 data_types[column_count];
-        ub2 data_sizes[column_count];
+        size_t data_sizes[column_count];
         // ub2 data_lengths[column_count];
         char column_names[column_count][30];
         column_values = malloc(column_count * sizeof(char*));
