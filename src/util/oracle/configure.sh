@@ -138,8 +138,8 @@ export LD_LIBRARY_PATH=$PWD/instantclient:$LD_LIBRARY_PATH
 export PATH=$PWD/instantclient:$PATH
 
 # delete zip files (no longer needed)
-rm instantclient-basic-linux.x64-21.11.0.0.0dbru.zip
-rm instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
+# rm instantclient-basic-linux.x64-21.11.0.0.0dbru.zip
+# rm instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
 
 # unzip wallet file, change sqlnet.ora file to have ../wallet
 # make changes to sqlnet.ora file

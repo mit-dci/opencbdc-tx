@@ -32,6 +32,14 @@ echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
 eval "cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${CMAKE_FLAGS} .."
 make -j$CPUS
 
-mkdir -p ./build/src/util/oracle/instantclient
-cp -r ../src/util/oracle/instantclient ./build/src/util/oracle/instantclient
+# copy instantclient-basic-linux.x64-21.11.0.0.0dbru.zip and sdk from src/util/oracle to build/src/util/oracle
+cp ../src/util/oracle/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip ./build/src/util/oracle/instantclient-basic.zip
+cp ../src/util/oracle/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip ./build/src/util/oracle/instantclient-sdk.zip
+# unzip both
+unzip ./build/src/util/oracle/instantclient-basic.zip -d ./build/src/util/oracle
+unzip ./build/src/util/oracle/instantclient-sdk.zip -d ./build/src/util/oracle
+mv instantclient_21_11 instantclient
+
+# mkdir -p ./build/src/util/oracle/instantclient
+# cp -r ../src/util/oracle/instantclient ./build/src/util/oracle/instantclient
 cp ../src/util/oracle/key.txt ./build/src/util/oracle/key.txt
