@@ -43,8 +43,8 @@ WORKDIR /opt/tx-processor
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
 
 # Copy the instantclient folder and key.txt
-COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient ./src/util/oracle/instantclient
-COPY --from=builder /opt/tx-processor/build/src/util/oracle/key.txt ./src/util/oracle/key.txt
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient .build/src/util/oracle/instantclient
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/key.txt .build/src/util/oracle/key.txt
 
 # Set LD_LIBRARY_PATH to include oracledb and instantclient
 ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:/opt/tx-processor/src/util/oracle/instantclient:${LD_LIBRARY_PATH}
