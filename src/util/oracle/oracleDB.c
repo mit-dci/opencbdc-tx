@@ -261,7 +261,13 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
             column_values[col_idx] = malloc((data_sizes[col_idx] + 1) * sizeof(char)); // +1 for null terminator
             memset(column_values[col_idx], 0, (data_sizes[col_idx] + 1) * sizeof(char)); // Ensure the string is null-terminated
 
-            db->status = OCIDefineByPos(stmthp, &defines[col_idx], db->errhp, col_idx + 1, column_values[col_idx], data_sizes[col_idx] + 1, SQLT_STR, &column_lengths[col_idx], 0, 0, OCI_DEFAULT);
+            // check if the value is within the range of sb4
+            if (data_sizes[col_idx] + 1 > INT_MAX) {
+                printf("Data size exceeds the maximum allowed value.\n");
+                goto cleanup;
+            }
+
+            db->status = OCIDefineByPos(stmthp, &defines[col_idx], db->errhp, col_idx + 1, column_values[col_idx], (sb4)(data_sizes[col_idx] + 1), SQLT_STR, &column_lengths[col_idx], 0, 0, OCI_DEFAULT);
             if (db->status != OCI_SUCCESS) {
                 printf("Error defining column variable for column\n");
                 print_oci_error(db->errhp);
