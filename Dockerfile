@@ -53,9 +53,12 @@ COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/ora
 COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/oracle/instantclient-sdk.zip
 
 # unzip the instantclient
+# goto the instantclient folder
+WORKDIR /opt/tx-processor/build/src/util/oracle
 RUN unzip instantclient-basic.zip && \
     unzip instantclient-sdk.zip && \
     mv instantclient_21_11 instantclient
+WORKDIR /opt/tx-processor
 
 COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/oracle/key.txt
 
