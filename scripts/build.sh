@@ -32,7 +32,6 @@ echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
 eval "cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${CMAKE_FLAGS} .."
 make -j$CPUS
 
-PWD
-
-cp ./src/util/oracle/instantclient ./build/src/util/oracle/instantclient
-cp ./src/util/oracle/key.txt ./build/src/util/oracle/key.txt
+mkdir -p ./build/src/util/oracle/instantclient
+cp -r ../src/util/oracle/instantclient ./build/src/util/oracle/instantclient
+cp ../src/util/oracle/key.txt ./build/src/util/oracle/key.txt
