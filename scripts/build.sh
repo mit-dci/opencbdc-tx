@@ -36,10 +36,11 @@ make -j$CPUS
 cp ../src/util/oracle/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip ./build/src/util/oracle/instantclient-basic.zip
 cp ../src/util/oracle/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip ./build/src/util/oracle/instantclient-sdk.zip
 # unzip both
-unzip ./build/src/util/oracle/instantclient-basic.zip -d ./build/src/util/oracle
-unzip ./build/src/util/oracle/instantclient-sdk.zip -d ./build/src/util/oracle
-mv instantclient_21_11 instantclient
+# unzip ./build/src/util/oracle/instantclient-basic.zip -d ./build/src/util/oracle
+# unzip ./build/src/util/oracle/instantclient-sdk.zip -d ./build/src/util/oracle
+# mv instantclient_21_11 instantclient
 
 # mkdir -p ./build/src/util/oracle/instantclient
 # cp -r ../src/util/oracle/instantclient ./build/src/util/oracle/instantclient
 cp ../src/util/oracle/key.txt ./build/src/util/oracle/key.txt
+

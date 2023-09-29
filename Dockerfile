@@ -43,7 +43,14 @@ WORKDIR /opt/tx-processor
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
 
 # Copy the instantclient folder and key.txt
-COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient .build/src/util/oracle/instantclient
+COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/oracle/instantclient-basic.zip
+COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/oracle/instantclient-sdk.zip
+# unzip the instantclient
+# Extract the Instant Client files
+RUN unzip instantclient-basic.zip && \
+    unzip instantclient-sdk.zip && \
+    mv instantclient_21_11 instantclient
+    
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/key.txt .build/src/util/oracle/key.txt
 
 # Set LD_LIBRARY_PATH to include oracledb and instantclient
