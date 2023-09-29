@@ -598,6 +598,24 @@ namespace cbdc::coordinator {
         // Connect to the shard clusters
         connect_shards();
         m_logger->warn("Became leader, recovering dtxs");
+
+
+
+        // try using oracleDB
+        OracleDB db;
+        if (OracleDB_Init(&db) == 0) {
+            m_logger->warn("OracleDB initialized successfully.");
+            // Call other functions as needed
+            // ...
+            OracleDB_disconnect(&db);
+        } else {
+            m_logger->warn("Failed to initialize OracleDB.");
+        }
+
+
+
+
+
         // Attempt recovery of existing dtxs until we stop being the leader or
         // recovery succeeds
         bool recovered{false};

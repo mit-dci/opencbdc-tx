@@ -54,7 +54,7 @@ int OracleDB_Init(OracleDB *db) {
     }
     // delete this
     else {
-        printf("OCIEnvCreate success.]n");
+        printf("OCIEnvCreate success.\n");
     }
 
     // Read keys from key file
@@ -394,6 +394,7 @@ int read_key_file(char *username, char *password, char *wallet_pw) {
 // Sets environment variables
 int set_environment() {
     // Set TNS_ADMIN environment variable
+    // go to src, then include direct path
     if(setenv("TNS_ADMIN", "wallet/", 1) != 0) {
         perror("Error setting TNS_ADMIN environment variable");
         return 1;
