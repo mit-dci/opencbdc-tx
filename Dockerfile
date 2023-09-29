@@ -12,6 +12,12 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV CMAKE_BUILD_TYPE Release
 ENV BUILD_RELEASE 1
 
+# Install necessary dependencies
+RUN apt-get update -y && \
+    apt-get install -y libaio1 gcc make unzip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN mkdir -p /opt/tx-processor/scripts
 
 COPY scripts/configure.sh /opt/tx-processor/scripts/configure.sh
