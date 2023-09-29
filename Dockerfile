@@ -42,8 +42,12 @@ WORKDIR /opt/tx-processor
 # Copy liboracleDB.so shared library
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
 
-# Set LD_LIBRARY_PATH to include /usr/local/lib
-ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:${LD_LIBRARY_PATH}
+# Copy the instantclient folder and key.txt
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient ./src/util/oracle/instantclient
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/key.txt ./src/util/oracle/key.txt
+
+# Set LD_LIBRARY_PATH to include oracledb and instantclient
+ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:/opt/tx-processor/src/util/oracle/instantclient:${LD_LIBRARY_PATH}
 
 # Only copy essential binaries
 COPY --from=builder /opt/tx-processor/build/src/uhs/twophase/sentinel_2pc/sentineld-2pc ./build/src/uhs/twophase/sentinel_2pc/sentineld-2pc
