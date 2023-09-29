@@ -33,8 +33,8 @@ eval "cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${CMAKE_FLAGS} .."
 make -j$CPUS
 
 # copy instantclient zip to build directory
-cp ../src/util/oracle/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip ./build/src/util/oracle/instantclient-basic.zip
-cp ../src/util/oracle/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip ./build/src/util/oracle/instantclient-sdk.zip
+cp ../src/util/oracle/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip ./src/util/oracle/instantclient-basic.zip
+cp ../src/util/oracle/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip ./src/util/oracle/instantclient-sdk.zip
 
-cp ../src/util/oracle/key.txt ./build/src/util/oracle
+cp ../src/util/oracle/key.txt ./src/util/oracle
 
