@@ -54,7 +54,7 @@ RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 # COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient-s.zip ./build/src/util/oracle/instantclient-sdk.zip
 
 # copy folder in ./build/src/util/oracle called "zipped"
-COPY --from=builder /opt/tx-processor/build/src/util/oracle/zipped ./build/src/util/oracle/zipped
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/zipped/ ./build/src/util/oracle/zipped/
 
 # print working directory and wait for 5 seconds
 RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 10
