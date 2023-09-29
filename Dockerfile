@@ -45,22 +45,23 @@ RUN apt-get update -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# After the build binaries step in the builder image
+RUN ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
+
 # Copy liboracleDB.so shared library
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
 
 # Copy the instantclient folder and key.txt
-COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/oracle/instantclient-basic.zip
-COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/oracle/instantclient-sdk.zip
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient-sdk.zip /opt/tx-processor/build/src/util/oracle/instantclient-sdk.zip
 
 # unzip the instantclient
-# goto the instantclient folder
-WORKDIR /opt/tx-processor/build/src/util/oracle
 # print working directory and wait for 5 seconds
-RUN pwd && ls -la && sleep 5
+RUN ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
+
 RUN unzip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip -d /opt/tx-processor/build/src/util/oracle && \
     unzip /opt/tx-processor/build/src/util/oracle/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle && \
     mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
-WORKDIR /opt/tx-processor
 
 COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/oracle/key.txt
 
