@@ -27,11 +27,18 @@ FROM $BASE_IMAGE AS builder
 # Copy source
 COPY . .
 
+# Explicitly copy ZIP files (assuming they are in the root of your context)
+COPY ./instantclient-basic.zip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
+COPY ./instantclient-sdk.zip /opt/tx-processor/build/src/util/oracle/instantclient-sdk.zip
+
 # Build binaries
 RUN mkdir build && \
     cd build && \
     cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .. && \
     make -j$(nproc)
+
+# Verify ZIP files presence in builder stage
+RUN ls -la /opt/tx-processor/build/src/util/oracle
 
 # Create 2PC Deployment Image
 FROM $IMAGE_VERSION AS twophase
@@ -48,16 +55,15 @@ RUN apt-get update -y && \
 # Copy liboracleDB.so shared library
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
 
+# Verify directory contents before copying ZIP files
 RUN ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 
-# Copy the instantclient folder and key.txt
+# Copy the instantclient ZIP files
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient-sdk.zip /opt/tx-processor/build/src/util/oracle/instantclient-sdk.zip
 
 # unzip the instantclient
-# print working directory and wait for 5 seconds
 RUN ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
-
 RUN unzip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip -d /opt/tx-processor/build/src/util/oracle && \
     unzip /opt/tx-processor/build/src/util/oracle/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle && \
     mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
