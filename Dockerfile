@@ -45,11 +45,10 @@ RUN apt-get update -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# After the build binaries step in the builder image
-RUN ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
-
 # Copy liboracleDB.so shared library
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
+
+RUN ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 
 # Copy the instantclient folder and key.txt
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
