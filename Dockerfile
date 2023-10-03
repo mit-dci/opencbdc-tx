@@ -54,22 +54,20 @@ RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 # COPY --from=builder ./build/src/util/oracle/instantclient-sdk.zip /opt/tx-processor/build/src/util/oracle/
 
 
-RUN wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip
-# wget instantclient-sdk-linux.x64-21.11
-RUN wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
+RUN wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip && \
+    wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
 # unzip instantclient-basic-linux.x64-21.11
-RUN unzip instantclient-basic-linux.x64-21.11.0.0.0dbru.zip
-# unzip instantclient-sdk-linux.x64-21.11
-RUN unzip instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
+RUN unzip instantclient-basic-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle && \
+    unzip instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle
 
-# copy folder in ./build/src/util/oracle called "zipped"
-# COPY --from=builder /opt/tx-processor/build/src/util/oracle/zipped/ ./build/src/util/oracle
+RUN mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
+
 
 # print working directory and wait for 5 seconds
-RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
+RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 10
 # RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle/zipped && sleep 5
 RUN cd /opt/tx-processor && file * && sleep 5
-RUN unzip instantclient-basic.zip
+# RUN unzip instantclient-basic.zip
 # RUN unzip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
 # && \
     # unzip /opt/tx-processor/build/src/util/oracle/zipped/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle && \
