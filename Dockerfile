@@ -50,17 +50,20 @@ COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./bui
 
 RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 # Copy the instantclient folder and key.txt
-# COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient-b.zip ./build/src/util/oracle/instantclient-basic.zip
-# COPY --from=builder /opt/tx-processor/build/src/util/oracle/instantclient-s.zip ./build/src/util/oracle/instantclient-sdk.zip
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/ ./build/src/util/oracle/instantclient-basic.zip
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/ ./build/src/util/oracle/instantclient-sdk.zip
 
 # copy folder in ./build/src/util/oracle called "zipped"
-COPY --from=builder /opt/tx-processor/build/src/util/oracle/zipped/ ./build/src/util/oracle/zipped/
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/zipped/ ./build/src/util/oracle
 
 # print working directory and wait for 5 seconds
-RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 10
-RUN unzip /opt/tx-processor/build/src/util/oracle/zipped/instantclient-basic.zip -d /opt/tx-processor/build/src/util/oracle && \
-    unzip /opt/tx-processor/build/src/util/oracle/zipped/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle && \
-    mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
+RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
+RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle/zipped && sleep 5
+RUN cd /opt/tx-processor/build/src/util/oracle && file * && sleep 5
+RUN unzip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
+# && \
+    # unzip /opt/tx-processor/build/src/util/oracle/zipped/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle && \
+    # mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
 
 COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/oracle/key.txt
 
