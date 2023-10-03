@@ -48,32 +48,18 @@ RUN apt-get update -y && \
 # Copy liboracleDB.so shared library
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
 
-RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
-# Copy the instantclient files and key.txt
-# COPY --from=builder ./build/src/util/oracle/instantclient-basic.zip /opt/tx-processor/
-# COPY --from=builder ./build/src/util/oracle/instantclient-sdk.zip /opt/tx-processor/build/src/util/oracle/
-
-
 RUN wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip && \
     wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
 # unzip instantclient-basic-linux.x64-21.11
 RUN unzip instantclient-basic-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle && \
     unzip instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle
-
 RUN mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
 
+COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/oracle/key.txt
 
 # print working directory and wait for 5 seconds
-RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 10
-# RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle/zipped && sleep 5
-RUN cd /opt/tx-processor && file * && sleep 5
-# RUN unzip instantclient-basic.zip
-# RUN unzip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
-# && \
-    # unzip /opt/tx-processor/build/src/util/oracle/zipped/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle && \
-    # mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
-
-COPY --from=builder /opt/tx-processor/build/src/util/oracle ./build/src/util/oracle/key.txt
+RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
+RUN cat /opt/tx-processor/build/src/util/oracle/key.txt && sleep 5
 
 # Set LD_LIBRARY_PATH to include oracledb and instantclient
 ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:/opt/tx-processor/src/util/oracle/instantclient:${LD_LIBRARY_PATH}
