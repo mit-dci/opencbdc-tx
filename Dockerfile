@@ -50,7 +50,7 @@ COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./bui
 
 RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 # Copy the instantclient files and key.txt
-COPY --from=builder /opt/tx-processor ./build/src/util/oracle/instantclient-basic.zip
+COPY ./build/src/util/oracle/instantclient-basic.zip . 
 # COPY --from=builder ./build/src/util/oracle/instantclient-sdk.zip /opt/tx-processor/build/src/util/oracle/
 
 # copy folder in ./build/src/util/oracle called "zipped"
@@ -59,7 +59,7 @@ COPY --from=builder /opt/tx-processor ./build/src/util/oracle/instantclient-basi
 # print working directory and wait for 5 seconds
 RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 # RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle/zipped && sleep 5
-RUN cd /opt/tx-processor/build/src/util/oracle && file * && sleep 5
+RUN cd /opt/tx-processor && file * && sleep 5
 RUN unzip instantclient-basic.zip
 # RUN unzip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
 # && \
