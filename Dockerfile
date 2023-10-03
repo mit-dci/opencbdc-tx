@@ -46,6 +46,10 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy liboracleDB.so shared library
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/ ./build/src/util/oracle/
+RUN file /opt/tx-processor/build/src/util/oracle/ && sleep 10
+
+
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
 
 RUN wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip && \
