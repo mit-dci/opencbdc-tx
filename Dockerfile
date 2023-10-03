@@ -41,7 +41,7 @@ WORKDIR /opt/tx-processor
 
 # Install necessary dependencies
 RUN apt-get update -y && \
-    apt-get install -y libaio1 gcc make unzip && \
+    apt-get install -y libaio1 gcc make unzip file && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -50,8 +50,8 @@ COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./bui
 
 RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 # Copy the instantclient files and key.txt
-COPY --from=builder ./build/src/util/oracle/instantclient-basic.zip /opt/tx-processor/build/src/util/oracle/
-COPY --from=builder ./build/src/util/oracle/instantclient-sdk.zip /opt/tx-processor/build/src/util/oracle/
+COPY --from=builder /opt/tx-processor ./build/src/util/oracle/instantclient-basic.zip
+# COPY --from=builder ./build/src/util/oracle/instantclient-sdk.zip /opt/tx-processor/build/src/util/oracle/
 
 # copy folder in ./build/src/util/oracle called "zipped"
 # COPY --from=builder /opt/tx-processor/build/src/util/oracle/zipped/ ./build/src/util/oracle
@@ -60,7 +60,8 @@ COPY --from=builder ./build/src/util/oracle/instantclient-sdk.zip /opt/tx-proces
 RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 # RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle/zipped && sleep 5
 RUN cd /opt/tx-processor/build/src/util/oracle && file * && sleep 5
-RUN unzip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
+RUN unzip instantclient-basic.zip
+# RUN unzip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
 # && \
     # unzip /opt/tx-processor/build/src/util/oracle/zipped/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle && \
     # mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
