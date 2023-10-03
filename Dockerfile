@@ -59,7 +59,7 @@ RUN unzip instantclient-basic-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor
     unzip instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle
 RUN mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
 
-COPY build/src/util/oracle/key.txt /opt/tx-processor/build/src/util/oracle/key.txt
+# COPY build/src/util/oracle/key.txt /opt/tx-processor/build/src/util/oracle/key.txt
 
 # print working directory and wait for 5 seconds
 RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
