@@ -41,7 +41,7 @@ WORKDIR /opt/tx-processor
 
 # Install necessary dependencies
 RUN apt-get update -y && \
-    apt-get install -y libaio1 gcc make unzip file && \
+    apt-get install -y libaio1 gcc make unzip file wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -50,8 +50,17 @@ COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./bui
 
 RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 # Copy the instantclient files and key.txt
-COPY ./build/src/util/oracle/instantclient-basic.zip /opt/tx-processor/
+# COPY --from=builder ./build/src/util/oracle/instantclient-basic.zip /opt/tx-processor/
 # COPY --from=builder ./build/src/util/oracle/instantclient-sdk.zip /opt/tx-processor/build/src/util/oracle/
+
+
+RUN wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip
+# wget instantclient-sdk-linux.x64-21.11
+RUN wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
+# unzip instantclient-basic-linux.x64-21.11
+RUN unzip instantclient-basic-linux.x64-21.11.0.0.0dbru.zip
+# unzip instantclient-sdk-linux.x64-21.11
+RUN unzip instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
 
 # copy folder in ./build/src/util/oracle called "zipped"
 # COPY --from=builder /opt/tx-processor/build/src/util/oracle/zipped/ ./build/src/util/oracle
