@@ -46,25 +46,26 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy liboracleDB.so shared library
-COPY --from=builder /opt/tx-processor/build/src/util/oracle/ ./build/src/util/oracle/
-RUN file /opt/tx-processor/build/src/util/oracle/ && sleep 10
-
-
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
 
-RUN wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip && \
-    wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
+COPY src/util/oracle/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
+COPY src/util/oracle/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip /opt/tx-processor/build/src/util/oracle/instantclient-sdk.zip
+# RUN wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip && \
+#     wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
 # unzip instantclient-basic-linux.x64-21.11
-RUN unzip instantclient-basic-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle && \
-    unzip instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle
+# RUN unzip instantclient-basic-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle && \
+#     unzip instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle
+RUN unzip instantclient-basic.zip -d /opt/tx-processor/build/src/util/oracle && \
+    unzip instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle
 RUN mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
 
-# COPY build/src/util/oracle/key.txt /opt/tx-processor/build/src/util/oracle/key.txt
+# Copy oracle wallet and key.txt
 COPY src/util/oracle/key.txt /opt/tx-processor/build/src/util/oracle/key.txt
+COPY src/util/oracle/wallet /opt/tx-processor/build/src/util/oracle/wallet
+
 
 # print working directory and wait for 5 seconds
-RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
-RUN cat /opt/tx-processor/build/src/util/oracle/key.txt && sleep 5
+RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && ls -la /opt/tx-processor/build/src/util/oracle/wallet && sleep 5
 
 # Set LD_LIBRARY_PATH to include oracledb and instantclient
 ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:/opt/tx-processor/src/util/oracle/instantclient:${LD_LIBRARY_PATH}
