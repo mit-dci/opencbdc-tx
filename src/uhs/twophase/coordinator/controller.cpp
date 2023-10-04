@@ -608,7 +608,7 @@ namespace cbdc::coordinator {
             m_logger->warn("OracleDB initialized successfully.");
             // Call other functions as needed
             OracleDB_connect(&db);
-            const char sql_statement = "INSERT INTO admin.test_two VALUES (100, 'nate', 'dan', 'bella')";
+            const char* sql_statement = "INSERT INTO admin.test_two VALUES (100, 'nate', 'dan', 'bella')";
             OracleDB_execute_sql_query(&db, sql_statement);
         } else {
             m_logger->warn("Failed to initialize OracleDB.");
