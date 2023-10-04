@@ -49,12 +49,12 @@ int OracleDB_Init(OracleDB *db) {
 
     db->status = OCIEnvCreate(&db->envhp, OCI_DEFAULT, NULL, NULL, NULL, NULL, 0, NULL);
     if (db->status != OCI_SUCCESS) {
-        printf("OCIEnvCreate failed.\n");
+        printf("[Oracle DB] OCIEnvCreate failed.\n");
         return 1;
     }
     // delete this
     else {
-        printf("OCIEnvCreate success.\n");
+        printf("[Oracle DB] OCIEnvCreate success.\n");
     }
 
     // Read keys from key file
@@ -370,9 +370,9 @@ int read_key_file(char *username, char *password, char *wallet_pw) {
     // print working directory
     char cwd[PATH_MAX];
    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-       printf("Current working dir: %s\n", cwd);
+       printf("[Oracle DB] Current working dir: %s\n", cwd);
    } else {
-       perror("getcwd() error");
+       perror("[Oracle DB] getcwd() error");
        return 1;
    }
 
@@ -380,8 +380,12 @@ int read_key_file(char *username, char *password, char *wallet_pw) {
 
     FILE *key_file = fopen("key.txt", "r");
     if(!key_file) {
-        printf("Error opening key file.\n");
-        return 1;
+        // if file not found in the current directory, try the docker oracle directory
+        key_file = fopen("/opt/tx-processor/build/src/util/oracle/key.txt", "r");
+        if(!key_file) {
+            printf("[Oracle DB] Error opening key file in both locations.\n");
+            return 1;
+        }
     }
     char line[256];
     while(fgets(line, sizeof(line), key_file)) {
