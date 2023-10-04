@@ -607,7 +607,7 @@ namespace cbdc::coordinator {
 
 
         // Connect to the autonomous database
-        if (OracleDB_Init(&db) == 0) {
+        if (OracleDB_init(&db) == 0) {
             m_logger->warn("OracleDB initialized successfully.");
             // Call other functions as needed
             OracleDB_connect(&db);

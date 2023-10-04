@@ -38,7 +38,7 @@ void string_buffer_free(string_buffer *sb) {
 }
 
 
-int OracleDB_Init(OracleDB *db) {
+int OracleDB_init(OracleDB *db) {
     // set environment variables
     if(set_environment() != 0) {
         printf("Error setting environment.\n");
@@ -70,7 +70,7 @@ int OracleDB_Init(OracleDB *db) {
 }
 
 // connect to oracle database
-void OracleDB_Connect(OracleDB *db) {
+void OracleDB_connect(OracleDB *db) {
     // Allocate handles
     OCIHandleAlloc(db->envhp, (void **)&db->errhp, OCI_HTYPE_ERROR, 0, NULL);
     OCIHandleAlloc(db->envhp, (void **)&db->srvhp, OCI_HTYPE_SERVER, 0, NULL);
