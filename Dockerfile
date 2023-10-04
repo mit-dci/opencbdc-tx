@@ -48,15 +48,13 @@ RUN apt-get update -y && \
 # Copy liboracleDB.so shared library
 COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
 
+# Copy instantclient
 COPY src/util/oracle/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
 COPY src/util/oracle/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip /opt/tx-processor/build/src/util/oracle/instantclient-sdk.zip
-# RUN wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip && \
-#     wget -c https://download.oracle.com/otn_software/linux/instantclient/2111000/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip
-# unzip instantclient-basic-linux.x64-21.11
-# RUN unzip instantclient-basic-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle && \
-#     unzip instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip -d /opt/tx-processor/build/src/util/oracle
-RUN unzip instantclient-basic.zip -d /opt/tx-processor/build/src/util/oracle && \
-    unzip instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle
+
+# unzip instantclient
+RUN unzip build/src/util/oracle/instantclient-basic.zip -d /opt/tx-processor/build/src/util/oracle && \
+    unzip build/src/util/oracle/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle
 RUN mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
 
 # Copy oracle wallet and key.txt
