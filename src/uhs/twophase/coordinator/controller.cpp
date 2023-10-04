@@ -16,6 +16,8 @@
 
 #include "oracleDB.h"
 
+OracleDB db;
+
 namespace cbdc::coordinator {
     controller::controller(size_t node_id,
                            size_t coordinator_id,
@@ -191,6 +193,9 @@ namespace cbdc::coordinator {
         }
         m_rpc_server.reset();
         m_batch_cv.notify_one();
+
+        // Disconnect from the autonomous database
+        OracleDB_disconnect(&db);
 
         // Stop each of the locking shard clients to cancel any pending RPCs
         // and unblock any of the current dtxs so they can mark themselves as
@@ -601,13 +606,11 @@ namespace cbdc::coordinator {
 
 
 
-        // try using oracleDB
-        OracleDB db;
+        // Connect to the autonomous database
         if (OracleDB_Init(&db) == 0) {
             m_logger->warn("OracleDB initialized successfully.");
             // Call other functions as needed
-            // ...
-            OracleDB_disconnect(&db);
+            OracleDB_connect(&db);
         } else {
             m_logger->warn("Failed to initialize OracleDB.");
         }

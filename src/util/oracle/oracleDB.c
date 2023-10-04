@@ -59,10 +59,10 @@ int OracleDB_Init(OracleDB *db) {
 
     // Read keys from key file
     if (read_key_file(db->username, db->password, db->wallet_pw) == 0) {
-        printf("Read key file successfully.\n");
-        printf("Username: %s\n", db->username);
+        printf("[Oracle DB] Read key file successfully.\n");
+        printf("[Oracle DB] Username: %s\n", db->username);
     } else {
-        printf("Error reading key file.\n");
+        printf("[Oracle DB] Error reading key file.\n");
         return 1;
     }
 
@@ -352,7 +352,7 @@ int OracleDB_disconnect(OracleDB *db) {
     if (db->usrhp && db->svchp && db->errhp) OCISessionEnd(db->svchp, db->errhp, db->usrhp, OCI_DEFAULT);
     if (db->srvhp && db->errhp) OCIServerDetach(db->srvhp, db->errhp, OCI_DEFAULT);
     OracleDB_clean_up(db);
-    printf("Disconnected from Oracle Database.\n");
+    printf("[Oracle DB] Disconnected from Oracle Database.\n");
     return 0;
 }
 
@@ -375,8 +375,6 @@ int read_key_file(char *username, char *password, char *wallet_pw) {
        perror("[Oracle DB] getcwd() error");
        return 1;
    }
-
-
 
     FILE *key_file = fopen("key.txt", "r");
     if(!key_file) {
@@ -404,16 +402,21 @@ int read_key_file(char *username, char *password, char *wallet_pw) {
 // Sets environment variables
 int set_environment() {
     // Set TNS_ADMIN environment variable
-    // go to src, then include direct path
     if(setenv("TNS_ADMIN", "wallet/", 1) != 0) {
-        perror("Error setting TNS_ADMIN environment variable");
-        return 1;
+        // if setting the local path fails, try docker path
+        if(setenv("TNS_ADMIN", "/opt/tx-processor/build/src/util/oracle/wallet/", 1) != 0) {
+            perror("Error setting TNS_ADMIN environment variable");
+            return 1;
+        }
     }
 
     // Set LD_LIBRARY_PATH environment variable
     if(setenv("LD_LIBRARY_PATH", "instantclient/", 1) != 0) {
-        perror("Error setting LD_LIBRARY_PATH environment variable");
-        return 1;
+        // if setting the local path fails, try docker path
+        if(setenv("LD_LIBRARY_PATH", "/opt/tx-processor/build/src/util/oracle/instantclient/", 1) != 0) {
+            perror("Error setting LD_LIBRARY_PATH environment variable");
+            return 1;
+        }
     }
     return 0;
 }
