@@ -604,8 +604,6 @@ namespace cbdc::coordinator {
         connect_shards();
         m_logger->warn("Became leader, recovering dtxs");
 
-
-
         // Connect to the autonomous database
         if (OracleDB_init(&db) == 0) {
             m_logger->warn("OracleDB initialized successfully.");
@@ -614,9 +612,6 @@ namespace cbdc::coordinator {
         } else {
             m_logger->warn("Failed to initialize OracleDB.");
         }
-
-
-
 
 
         // Attempt recovery of existing dtxs until we stop being the leader or

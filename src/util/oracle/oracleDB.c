@@ -80,6 +80,7 @@ void OracleDB_connect(OracleDB *db) {
     // Attach to server
     db->status = OCIServerAttach(db->srvhp, db->errhp, (text *)"cbdcauto_low", strlen("cbdcauto_low"), OCI_DEFAULT);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error attaching to server.\n");
         print_oci_error(db->errhp);
         return;
     }
@@ -87,6 +88,7 @@ void OracleDB_connect(OracleDB *db) {
     // Set attribute server context
     db->status = OCIAttrSet(db->svchp, OCI_HTYPE_SVCCTX, db->srvhp, 0, OCI_ATTR_SERVER, db->errhp);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error setting server attribute.\n");
         print_oci_error(db->errhp);
         return;
     }
@@ -94,11 +96,13 @@ void OracleDB_connect(OracleDB *db) {
     // Set attribute session context
     db->status = OCIAttrSet(db->usrhp, OCI_HTYPE_SESSION, (void *)db->username, (ub4)strlen(db->username), OCI_ATTR_USERNAME, db->errhp);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error setting username attribute.\n");
         print_oci_error(db->errhp);
         return;
     }
     db->status = OCIAttrSet(db->usrhp, OCI_HTYPE_SESSION, (void *)db->password, (ub4)strlen(db->password), OCI_ATTR_PASSWORD, db->errhp);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error setting password attribute.\n");
         print_oci_error(db->errhp);
         return;
     }
@@ -106,11 +110,13 @@ void OracleDB_connect(OracleDB *db) {
     // Log in
     db->status = OCISessionBegin(db->svchp, db->errhp, db->usrhp, OCI_CRED_RDBMS, OCI_DEFAULT);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error logging in.\n");
         print_oci_error(db->errhp);
         return;
     }
     db->status = OCIAttrSet(db->svchp, OCI_HTYPE_SVCCTX, db->usrhp, 0, OCI_ATTR_SESSION, db->errhp);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error setting session attribute.\n");
         print_oci_error(db->errhp);
         return;
     }

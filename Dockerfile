@@ -61,8 +61,9 @@ RUN unzip build/src/util/oracle/instantclient-basic.zip -d /opt/tx-processor/bui
 COPY src/util/oracle/key.txt /opt/tx-processor/build/src/util/oracle/key.txt
 COPY src/util/oracle/wallet /opt/tx-processor/build/src/util/oracle/wallet
 
-# print working directory and wait for 5 seconds
-# RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
+# print and wait for 5 seconds
+RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
+RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle/wallet && sleep 5
 
 # Set LD_LIBRARY_PATH to include oracledb and instantclient
 ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:/opt/tx-processor/build/src/util/oracle/instantclient:${LD_LIBRARY_PATH}
