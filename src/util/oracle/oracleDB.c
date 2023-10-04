@@ -410,9 +410,12 @@ int set_environment() {
     // Set TNS_ADMIN environment variable
     if(setenv("TNS_ADMIN", "wallet/", 1) != 0) {
         // if setting the local path fails, try docker path
+        printf("wallet not found in local directory.\n");
         if(setenv("TNS_ADMIN", "/opt/tx-processor/build/src/util/oracle/wallet/", 1) != 0) {
             perror("Error setting TNS_ADMIN environment variable");
             return 1;
+        } else {
+            printf("wallet found in /opt/tx-processor/build/src/util/oracle/wallet/.\n");
         }
     }
 
