@@ -408,6 +408,7 @@ int read_key_file(char *username, char *password, char *wallet_pw) {
 // Sets environment variables
 int set_environment() {
     // Set TNS_ADMIN environment variable
+    printf("Setting TNS_ADMIN environment variable.\n");
     if(setenv("TNS_ADMIN", "wallet/", 1) != 0) {
         // if setting the local path fails, try docker path
         printf("wallet not found in local directory.\n");
@@ -420,6 +421,7 @@ int set_environment() {
     }
 
     // Set LD_LIBRARY_PATH environment variable
+    printf("Setting LD_LIBRARY_PATH environment variable.\n");
     if(setenv("LD_LIBRARY_PATH", "instantclient/", 1) != 0) {
         // if setting the local path fails, try docker path
         if(setenv("LD_LIBRARY_PATH", "/opt/tx-processor/build/src/util/oracle/instantclient/", 1) != 0) {
