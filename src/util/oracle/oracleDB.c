@@ -52,10 +52,6 @@ int OracleDB_init(OracleDB *db) {
         printf("[Oracle DB] OCIEnvCreate failed.\n");
         return 1;
     }
-    // delete this
-    else {
-        printf("[Oracle DB] OCIEnvCreate success.\n");
-    }
 
     // Read keys from key file
     if (read_key_file(db->username, db->password, db->wallet_pw) == 0) {
@@ -374,14 +370,6 @@ void print_oci_error(OCIError *errhp) {
 // Reads Key File into username, password, and wallet_pw
 int read_key_file(char *username, char *password, char *wallet_pw) {
     // print working directory
-    char cwd[PATH_MAX];
-   if (getcwd(cwd, sizeof(cwd)) != NULL) {
-       printf("[Oracle DB] Current working dir: %s\n", cwd);
-   } else {
-       perror("[Oracle DB] getcwd() error");
-       return 1;
-   }
-
     FILE *key_file = fopen("key.txt", "r");
     if(!key_file) {
         // if file not found in the current directory, try the docker oracle directory
@@ -409,26 +397,14 @@ int read_key_file(char *username, char *password, char *wallet_pw) {
 int set_environment() {
     // Set TNS_ADMIN environment variable
     printf("Setting TNS_ADMIN environment variable.\n");
-    // if(setenv("TNS_ADMIN", "wallet/", 1) != 0) {
     if(setenv("TNS_ADMIN", "/opt/tx-processor/build/src/util/oracle/wallet/", 1) != 0) {
-        // if setting the local path fails, try docker path
-        // printf("wallet not found in local directory.\n");
-
         perror("Error setting TNS_ADMIN environment variable");
         return 1;
     }
-        // if(setenv("TNS_ADMIN", "/opt/tx-processor/build/src/util/oracle/wallet/", 1) != 0) {
-        //     perror("Error setting TNS_ADMIN environment variable");
-        //     return 1;
-        // } else {
-        //     printf("wallet found in /opt/tx-processor/build/src/util/oracle/wallet/.\n");
-        // }
-    // }
 
     // Set LD_LIBRARY_PATH environment variable
     printf("Setting LD_LIBRARY_PATH environment variable.\n");
     if(setenv("LD_LIBRARY_PATH", "/opt/tx-processor/build/src/util/oracle/instantclient/", 1) != 0) {
-        // if setting the local path fails, try docker path
         perror("Error setting LD_LIBRARY_PATH environment variable");
         return 1;
     }

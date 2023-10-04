@@ -194,9 +194,6 @@ namespace cbdc::coordinator {
         m_rpc_server.reset();
         m_batch_cv.notify_one();
 
-        // Disconnect from the autonomous database
-        OracleDB_disconnect(&db);
-
         // Stop each of the locking shard clients to cancel any pending RPCs
         // and unblock any of the current dtxs so they can mark themselves as
         // failed and stop executing.
@@ -571,6 +568,8 @@ namespace cbdc::coordinator {
             if(stopping) {
                 m_logger->warn("Stopping coordinator");
                 stop();
+                // disconnect oracle autonomous database
+                OracleDB_disconnect(&db);             
                 m_logger->warn("Stopped coordinator");
                 if(quitting) {
                     m_logger->warn("Quitting");
@@ -609,6 +608,8 @@ namespace cbdc::coordinator {
             m_logger->warn("OracleDB initialized successfully.");
             // Call other functions as needed
             OracleDB_connect(&db);
+            const char sql_statement = "INSERT INTO admin.test_two VALUES (100, 'nate', 'dan', 'bella')";
+            OracleDB_execute_sql_query(&db, sql_statement);
         } else {
             m_logger->warn("Failed to initialize OracleDB.");
         }
