@@ -62,10 +62,10 @@ COPY src/util/oracle/key.txt /opt/tx-processor/build/src/util/oracle/key.txt
 COPY src/util/oracle/wallet /opt/tx-processor/build/src/util/oracle/wallet
 
 # print and wait for 5 seconds
-RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
-RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle/wallet && sleep 5
-RUN file /opt/tx-processor/build/src/util/oracle/wallet/CBDCAuto.zip && sleep 5
-RUN cat /opt/tx-processor/build/src/util/oracle/wallet/tnsnames.ora && sleep 5
+# RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
+# RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle/wallet && sleep 5
+# RUN file /opt/tx-processor/build/src/util/oracle/wallet/CBDCAuto.zip && sleep 5
+# RUN cat /opt/tx-processor/build/src/util/oracle/wallet/tnsnames.ora && sleep 5
 
 # Set LD_LIBRARY_PATH to include oracledb and instantclient
 ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:/opt/tx-processor/build/src/util/oracle/instantclient:${LD_LIBRARY_PATH}
