@@ -63,10 +63,10 @@ COPY src/util/oracle/wallet /opt/tx-processor/build/src/util/oracle/wallet
 
 
 # print working directory and wait for 5 seconds
-RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && ls -la /opt/tx-processor/build/src/util/oracle/wallet && sleep 5
+RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 
 # Set LD_LIBRARY_PATH to include oracledb and instantclient
-ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:/opt/tx-processor/src/util/oracle/instantclient:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:/opt/tx-processor/build/src/util/oracle/instantclient:${LD_LIBRARY_PATH}
 
 # Only copy essential binaries
 COPY --from=builder /opt/tx-processor/build/src/uhs/twophase/sentinel_2pc/sentineld-2pc ./build/src/uhs/twophase/sentinel_2pc/sentineld-2pc
