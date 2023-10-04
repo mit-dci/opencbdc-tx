@@ -41,7 +41,7 @@ WORKDIR /opt/tx-processor
 
 # Install necessary dependencies
 RUN apt-get update -y && \
-    apt-get install -y libaio1 gcc make unzip file wget && \
+    apt-get install -y libaio1 gcc make unzip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -54,16 +54,15 @@ COPY src/util/oracle/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip /opt/tx-pro
 
 # unzip instantclient
 RUN unzip build/src/util/oracle/instantclient-basic.zip -d /opt/tx-processor/build/src/util/oracle && \
-    unzip build/src/util/oracle/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle
-RUN mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
+    unzip build/src/util/oracle/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle && \
+    mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
 
 # Copy oracle wallet and key.txt
 COPY src/util/oracle/key.txt /opt/tx-processor/build/src/util/oracle/key.txt
 COPY src/util/oracle/wallet /opt/tx-processor/build/src/util/oracle/wallet
 
-
 # print working directory and wait for 5 seconds
-RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
+# RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
 
 # Set LD_LIBRARY_PATH to include oracledb and instantclient
 ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:/opt/tx-processor/build/src/util/oracle/instantclient:${LD_LIBRARY_PATH}
