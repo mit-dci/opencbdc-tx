@@ -11,7 +11,7 @@
 
 namespace cbdc::test {
     auto compact_transaction::operator==(
-        const transaction::compact_tx& tx) const noexcept -> bool {
+        const compact_transaction& tx) const noexcept -> bool {
         return m_id == tx.m_id && (m_inputs == tx.m_inputs)
             && (m_uhs_outputs == tx.m_uhs_outputs);
     }

@@ -24,7 +24,7 @@ namespace cbdc::test {
     struct compact_transaction : cbdc::transaction::compact_tx {
         compact_transaction() = default;
         explicit compact_transaction(const compact_tx& transaction);
-        auto operator==(const compact_tx& tx) const noexcept -> bool;
+        auto operator==(const compact_transaction& tx) const noexcept -> bool;
     };
 
     /// Allows hashing \ref compact_transaction s (e.g., for storing them

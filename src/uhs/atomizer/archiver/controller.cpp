@@ -13,6 +13,14 @@
 #include <utility>
 
 namespace cbdc::archiver {
+
+    leveldbWriteOptions::leveldbWriteOptions(bool do_sync) {
+        // Set base class member:
+        sync = do_sync;
+    }
+
+    const leveldbWriteOptions controller::m_write_options{true};
+
     controller::controller(uint32_t archiver_id,
                            cbdc::config::options opts,
                            std::shared_ptr<logging::log> log,

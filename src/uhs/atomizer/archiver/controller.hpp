@@ -14,6 +14,15 @@
 #include <leveldb/db.h>
 
 namespace cbdc::archiver {
+
+    /// @brief  Wrapper for leveldb::WriteOptions to provide a constructor to
+    /// set base class member "sync". The base class default constructor is
+    /// built with "= default;", and as a result - in c++20 - the single
+    /// parameter constructor is not available.
+    struct leveldbWriteOptions : public leveldb::WriteOptions {
+        explicit leveldbWriteOptions(bool do_sync);
+    };
+
     /// \brief Wrapper for the archiver executable implementation.
     ///
     /// Connects to the atomizer cluster to receive new blocks and listens for
@@ -138,7 +147,7 @@ namespace cbdc::archiver {
 
         const std::string m_bestblock_key = "bestblock";
         static constexpr const leveldb::ReadOptions m_read_options{};
-        static constexpr const leveldb::WriteOptions m_write_options{true};
+        static const leveldbWriteOptions m_write_options;
 
         void request_block(uint64_t height);
         void request_prune(uint64_t height);

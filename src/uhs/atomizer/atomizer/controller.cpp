@@ -157,10 +157,11 @@ namespace cbdc::atomizer {
 
     void controller::tx_notify_handler() {
         while(m_running) {
-            if(!m_raft_node.send_complete_txs([&](auto&& res, auto&& err) {
-                   err_return_handler(std::forward<decltype(res)>(res),
-                                      std::forward<decltype(err)>(err));
-               })) {
+            if(!m_raft_node.send_complete_txs(
+                   [&, this](auto&& res, auto&& err) {
+                       err_return_handler(std::forward<decltype(res)>(res),
+                                          std::forward<decltype(err)>(err));
+                   })) {
                 static constexpr auto batch_send_delay
                     = std::chrono::milliseconds(20);
                 std::this_thread::sleep_for(batch_send_delay);

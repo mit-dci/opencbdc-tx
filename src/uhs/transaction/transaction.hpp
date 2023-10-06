@@ -56,6 +56,8 @@ namespace cbdc::transaction {
         auto operator==(const output& rhs) const -> bool;
         auto operator!=(const output& rhs) const -> bool;
 
+        output(hash_t witness_program_commitment, uint64_t value);
+
         output() = default;
     };
 
