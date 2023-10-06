@@ -16,6 +16,7 @@ target_link_libraries(run_benchmarks ${GTEST_LIBRARY}
                                      benchmark::benchmark
                                      util
                                      shard
+                                     watchtower
                                      locking_shard
                                      transaction
                                      common

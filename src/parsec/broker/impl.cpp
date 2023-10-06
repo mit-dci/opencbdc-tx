@@ -157,9 +157,8 @@ namespace cbdc::parsec::broker {
 
             if(!m_directory->key_location(
                    key,
-                   [=](std::optional<
-                       parsec::directory::interface::key_location_return_type>
-                           res) {
+                   [=, this](std::optional<parsec::directory::interface::
+                                               key_location_return_type> res) {
                        handle_find_key(ticket_number,
                                        key,
                                        locktype,
@@ -296,8 +295,8 @@ namespace cbdc::parsec::broker {
             auto sidx = shard.first;
             if(!m_shards[sidx]->commit(
                    ticket_number,
-                   [=](const parsec::runtime_locking_shard::interface::
-                           commit_return_type& comm_res) {
+                   [=, this](const parsec::runtime_locking_shard::interface::
+                                 commit_return_type& comm_res) {
                        handle_commit(commit_cb, ticket_number, sidx, comm_res);
                    })) {
                 m_log->error("Failed to make commit shard request");
@@ -545,8 +544,8 @@ namespace cbdc::parsec::broker {
                 shard.second.m_state = shard_state_type::finishing;
                 if(!m_shards[sidx]->finish(
                        ticket_number,
-                       [=](const parsec::runtime_locking_shard::interface::
-                               finish_return_type& res) {
+                       [=, this](const parsec::runtime_locking_shard::
+                                     interface::finish_return_type& res) {
                            handle_finish(result_callback,
                                          ticket_number,
                                          sidx,
@@ -618,8 +617,8 @@ namespace cbdc::parsec::broker {
                 shard.second.m_state = shard_state_type::rolling_back;
                 if(!m_shards[sidx]->rollback(
                        ticket_number,
-                       [=](const parsec::runtime_locking_shard::interface::
-                               rollback_return_type& res) {
+                       [=, this](const parsec::runtime_locking_shard::
+                                     interface::rollback_return_type& res) {
                            handle_rollback(result_callback,
                                            ticket_number,
                                            sidx,
@@ -783,8 +782,8 @@ namespace cbdc::parsec::broker {
                    key,
                    locktype,
                    first_lock,
-                   [=](const parsec::runtime_locking_shard::interface::
-                           try_lock_return_type& lock_res) {
+                   [=, this](const parsec::runtime_locking_shard::interface::
+                                 try_lock_return_type& lock_res) {
                        handle_lock(ticket_number,
                                    key,
                                    shard_idx,

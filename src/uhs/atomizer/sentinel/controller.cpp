@@ -157,7 +157,7 @@ namespace cbdc::sentinel {
                 success
                     = m_sentinel_clients[sentinel_id]->validate_transaction(
                         tx,
-                        [=](async_interface::validate_result v_res) {
+                        [=, this](async_interface::validate_result v_res) {
                             auto r = requested;
                             r.insert(sentinel_id);
                             validate_result_handler(v_res, tx, ctx, r);

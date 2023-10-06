@@ -188,7 +188,7 @@ namespace cbdc::sentinel_2pc {
                 success
                     = m_sentinel_clients[sentinel_id]->validate_transaction(
                         tx,
-                        [=](validate_result v_res) {
+                        [=, this](validate_result v_res) {
                             auto r = requested;
                             r.insert(sentinel_id);
                             validate_result_handler(v_res,

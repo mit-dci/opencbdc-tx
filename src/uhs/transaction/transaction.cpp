@@ -32,6 +32,10 @@ namespace cbdc::transaction {
         return !(*this == rhs);
     }
 
+    output::output(hash_t witness_program_commitment, uint64_t value)
+        : m_witness_program_commitment(witness_program_commitment),
+          m_value(value) {}
+
     auto input::operator==(const input& rhs) const -> bool {
         return m_prevout == rhs.m_prevout
             && m_prevout_data == rhs.m_prevout_data;
