@@ -4,6 +4,9 @@
 #include <string.h>
 #include <strings.h>
 
+#include <unistd.h>
+#include <limits.h>
+
 // string_buffer functions
 void string_buffer_init(string_buffer *sb);
 void string_buffer_append(string_buffer *sb, const char *str);
@@ -35,7 +38,7 @@ void string_buffer_free(string_buffer *sb) {
 }
 
 
-int OracleDB_Init(OracleDB *db) {
+int OracleDB_init(OracleDB *db) {
     // set environment variables
     if(set_environment() != 0) {
         printf("Error setting environment.\n");
@@ -46,16 +49,16 @@ int OracleDB_Init(OracleDB *db) {
 
     db->status = OCIEnvCreate(&db->envhp, OCI_DEFAULT, NULL, NULL, NULL, NULL, 0, NULL);
     if (db->status != OCI_SUCCESS) {
-        printf("OCIEnvCreate failed.\n");
+        printf("[Oracle DB] OCIEnvCreate failed.\n");
         return 1;
     }
 
     // Read keys from key file
     if (read_key_file(db->username, db->password, db->wallet_pw) == 0) {
-        printf("Read key file successfully.\n");
-        printf("Username: %s\n", db->username);
+        printf("[Oracle DB] Read key file successfully.\n");
+        printf("[Oracle DB] Username: %s\n", db->username);
     } else {
-        printf("Error reading key file.\n");
+        printf("[Oracle DB] Error reading key file.\n");
         return 1;
     }
 
@@ -63,7 +66,7 @@ int OracleDB_Init(OracleDB *db) {
 }
 
 // connect to oracle database
-void OracleDB_Connect(OracleDB *db) {
+void OracleDB_connect(OracleDB *db) {
     // Allocate handles
     OCIHandleAlloc(db->envhp, (void **)&db->errhp, OCI_HTYPE_ERROR, 0, NULL);
     OCIHandleAlloc(db->envhp, (void **)&db->srvhp, OCI_HTYPE_SERVER, 0, NULL);
@@ -73,6 +76,7 @@ void OracleDB_Connect(OracleDB *db) {
     // Attach to server
     db->status = OCIServerAttach(db->srvhp, db->errhp, (text *)"cbdcauto_low", strlen("cbdcauto_low"), OCI_DEFAULT);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error attaching to server.\n");
         print_oci_error(db->errhp);
         return;
     }
@@ -80,6 +84,7 @@ void OracleDB_Connect(OracleDB *db) {
     // Set attribute server context
     db->status = OCIAttrSet(db->svchp, OCI_HTYPE_SVCCTX, db->srvhp, 0, OCI_ATTR_SERVER, db->errhp);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error setting server attribute.\n");
         print_oci_error(db->errhp);
         return;
     }
@@ -87,11 +92,13 @@ void OracleDB_Connect(OracleDB *db) {
     // Set attribute session context
     db->status = OCIAttrSet(db->usrhp, OCI_HTYPE_SESSION, (void *)db->username, (ub4)strlen(db->username), OCI_ATTR_USERNAME, db->errhp);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error setting username attribute.\n");
         print_oci_error(db->errhp);
         return;
     }
     db->status = OCIAttrSet(db->usrhp, OCI_HTYPE_SESSION, (void *)db->password, (ub4)strlen(db->password), OCI_ATTR_PASSWORD, db->errhp);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error setting password attribute.\n");
         print_oci_error(db->errhp);
         return;
     }
@@ -99,11 +106,13 @@ void OracleDB_Connect(OracleDB *db) {
     // Log in
     db->status = OCISessionBegin(db->svchp, db->errhp, db->usrhp, OCI_CRED_RDBMS, OCI_DEFAULT);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error logging in.\n");
         print_oci_error(db->errhp);
         return;
     }
     db->status = OCIAttrSet(db->svchp, OCI_HTYPE_SVCCTX, db->usrhp, 0, OCI_ATTR_SESSION, db->errhp);
     if(db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error setting session attribute.\n");
         print_oci_error(db->errhp);
         return;
     }
@@ -162,7 +171,7 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
         // Define output variables
         OCIDefine *defines[column_count];
         ub2 data_types[column_count];
-        ub2 data_sizes[column_count];
+        size_t data_sizes[column_count];
         // ub2 data_lengths[column_count];
         char column_names[column_count][30];
         column_values = malloc(column_count * sizeof(char*));
@@ -254,7 +263,13 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
             column_values[col_idx] = malloc((data_sizes[col_idx] + 1) * sizeof(char)); // +1 for null terminator
             memset(column_values[col_idx], 0, (data_sizes[col_idx] + 1) * sizeof(char)); // Ensure the string is null-terminated
 
-            db->status = OCIDefineByPos(stmthp, &defines[col_idx], db->errhp, col_idx + 1, column_values[col_idx], data_sizes[col_idx] + 1, SQLT_STR, &column_lengths[col_idx], 0, 0, OCI_DEFAULT);
+            // check if the value is within the range of sb4
+            if (data_sizes[col_idx] + 1 > INT_MAX) {
+                printf("Data size exceeds the maximum allowed value.\n");
+                goto cleanup;
+            }
+
+            db->status = OCIDefineByPos(stmthp, &defines[col_idx], db->errhp, col_idx + 1, column_values[col_idx], (sb4)(data_sizes[col_idx] + 1), SQLT_STR, &column_lengths[col_idx], 0, 0, OCI_DEFAULT);
             if (db->status != OCI_SUCCESS) {
                 printf("Error defining column variable for column\n");
                 print_oci_error(db->errhp);
@@ -339,7 +354,7 @@ int OracleDB_disconnect(OracleDB *db) {
     if (db->usrhp && db->svchp && db->errhp) OCISessionEnd(db->svchp, db->errhp, db->usrhp, OCI_DEFAULT);
     if (db->srvhp && db->errhp) OCIServerDetach(db->srvhp, db->errhp, OCI_DEFAULT);
     OracleDB_clean_up(db);
-    printf("Disconnected from Oracle Database.\n");
+    printf("[Oracle DB] Disconnected from Oracle Database.\n");
     return 0;
 }
 
@@ -354,10 +369,15 @@ void print_oci_error(OCIError *errhp) {
 
 // Reads Key File into username, password, and wallet_pw
 int read_key_file(char *username, char *password, char *wallet_pw) {
+    // print working directory
     FILE *key_file = fopen("key.txt", "r");
     if(!key_file) {
-        printf("Error opening key file.\n");
-        return 1;
+        // if file not found in the current directory, try the docker oracle directory
+        key_file = fopen("/opt/tx-processor/build/src/util/oracle/key.txt", "r");
+        if(!key_file) {
+            printf("[Oracle DB] Error opening key file in both locations.\n");
+            return 1;
+        }
     }
     char line[256];
     while(fgets(line, sizeof(line), key_file)) {
@@ -376,13 +396,15 @@ int read_key_file(char *username, char *password, char *wallet_pw) {
 // Sets environment variables
 int set_environment() {
     // Set TNS_ADMIN environment variable
-    if(setenv("TNS_ADMIN", "wallet/", 1) != 0) {
+    printf("Setting TNS_ADMIN environment variable.\n");
+    if(setenv("TNS_ADMIN", "/opt/tx-processor/build/src/util/oracle/wallet/", 1) != 0) {
         perror("Error setting TNS_ADMIN environment variable");
         return 1;
     }
 
     // Set LD_LIBRARY_PATH environment variable
-    if(setenv("LD_LIBRARY_PATH", "instantclient/", 1) != 0) {
+    printf("Setting LD_LIBRARY_PATH environment variable.\n");
+    if(setenv("LD_LIBRARY_PATH", "/opt/tx-processor/build/src/util/oracle/instantclient/", 1) != 0) {
         perror("Error setting LD_LIBRARY_PATH environment variable");
         return 1;
     }

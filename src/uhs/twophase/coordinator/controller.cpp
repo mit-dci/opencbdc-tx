@@ -16,6 +16,8 @@
 
 #include "oracleDB.h"
 
+OracleDB db;
+
 namespace cbdc::coordinator {
     controller::controller(size_t node_id,
                            size_t coordinator_id,
@@ -566,6 +568,8 @@ namespace cbdc::coordinator {
             if(stopping) {
                 m_logger->warn("Stopping coordinator");
                 stop();
+                // disconnect oracle autonomous database
+                OracleDB_disconnect(&db);             
                 m_logger->warn("Stopped coordinator");
                 if(quitting) {
                     m_logger->warn("Quitting");
@@ -598,6 +602,19 @@ namespace cbdc::coordinator {
         // Connect to the shard clusters
         connect_shards();
         m_logger->warn("Became leader, recovering dtxs");
+
+        // Connect to the autonomous database
+        if (OracleDB_init(&db) == 0) {
+            m_logger->warn("OracleDB initialized successfully.");
+            // Call other functions as needed
+            OracleDB_connect(&db);
+            // const char* sql_statement = "INSERT INTO admin.test_two VALUES (100, 'nate', 'dan', 'bella')";   // this works
+            // OracleDB_execute_sql_query(&db, sql_statement);
+        } else {
+            m_logger->warn("Failed to initialize OracleDB.");
+        }
+
+
         // Attempt recovery of existing dtxs until we stop being the leader or
         // recovery succeeds
         bool recovered{false};

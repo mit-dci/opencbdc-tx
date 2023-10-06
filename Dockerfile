@@ -39,6 +39,37 @@ FROM $IMAGE_VERSION AS twophase
 # Set working directory
 WORKDIR /opt/tx-processor
 
+# Install necessary dependencies
+RUN apt-get update -y && \
+    apt-get install -y libaio1 gcc make unzip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy liboracleDB.so shared library
+COPY --from=builder /opt/tx-processor/build/src/util/oracle/liboracleDB.so ./build/src/util/oracle/liboracleDB.so
+
+# Copy instantclient
+COPY src/util/oracle/instantclient-basic-linux.x64-21.11.0.0.0dbru.zip /opt/tx-processor/build/src/util/oracle/instantclient-basic.zip
+COPY src/util/oracle/instantclient-sdk-linux.x64-21.11.0.0.0dbru.zip /opt/tx-processor/build/src/util/oracle/instantclient-sdk.zip
+
+# unzip instantclient
+RUN unzip build/src/util/oracle/instantclient-basic.zip -d /opt/tx-processor/build/src/util/oracle && \
+    unzip build/src/util/oracle/instantclient-sdk.zip -d /opt/tx-processor/build/src/util/oracle && \
+    mv /opt/tx-processor/build/src/util/oracle/instantclient_21_11 /opt/tx-processor/build/src/util/oracle/instantclient
+
+# Copy oracle wallet and key.txt
+COPY src/util/oracle/key.txt /opt/tx-processor/build/src/util/oracle/key.txt
+COPY src/util/oracle/wallet /opt/tx-processor/build/src/util/oracle/wallet
+
+# print and wait for 5 seconds
+# RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle && sleep 5
+# RUN pwd && ls -la /opt/tx-processor/build/src/util/oracle/wallet && sleep 5
+# RUN file /opt/tx-processor/build/src/util/oracle/wallet/CBDCAuto.zip && sleep 5
+# RUN cat /opt/tx-processor/build/src/util/oracle/wallet/tnsnames.ora && sleep 5
+
+# Set LD_LIBRARY_PATH to include oracledb and instantclient
+ENV LD_LIBRARY_PATH /opt/tx-processor/build/src/util/oracle:/opt/tx-processor/build/src/util/oracle/instantclient:${LD_LIBRARY_PATH}
+
 # Only copy essential binaries
 COPY --from=builder /opt/tx-processor/build/src/uhs/twophase/sentinel_2pc/sentineld-2pc ./build/src/uhs/twophase/sentinel_2pc/sentineld-2pc
 COPY --from=builder /opt/tx-processor/build/src/uhs/twophase/coordinator/coordinatord ./build/src/uhs/twophase/coordinator/coordinatord

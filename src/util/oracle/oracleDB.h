@@ -31,8 +31,8 @@ typedef struct {
 } string_buffer;
 
 // Declare the functions
-int OracleDB_Init(OracleDB *db);
-void OracleDB_Connect(OracleDB *db);
+int OracleDB_init(OracleDB *db);
+void OracleDB_connect(OracleDB *db);
 char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query);
 int OracleDB_clean_up(OracleDB *db);
 int OracleDB_disconnect(OracleDB *db);
