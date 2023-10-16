@@ -40,8 +40,8 @@ namespace cbdc::parsec::agent {
         switch(m_state) {
             // In these states we can start again from the beginning
             case state::init:
-            case state::begin_sent:
-            case state::begin_failed:
+            case state::ticket_number_request_sent:
+            case state::ticket_number_request_failed:
                 break;
 
             // We already have a ticket number but need to start again
@@ -92,15 +92,16 @@ namespace cbdc::parsec::agent {
         }
 
         m_result = std::nullopt;
-        m_state = state::begin_sent;
-        auto success = m_broker->begin(
+        m_state = state::ticket_number_request_sent;
+        auto success = m_broker->get_new_ticket_number(
             [&](broker::interface::ticketnum_or_errcode_type res) {
-                handle_begin(res);
+                handle_new_ticket_number(res);
             });
 
         if(!success) {
-            m_state = state::begin_failed;
-            m_log->error("Failed to contact broker to begin");
+            m_state = state::ticket_number_request_failed;
+            m_log->error(
+                "Failed to contact broker to get a new ticket number");
             m_result = error_code::broker_unreachable;
             do_result();
         }
@@ -108,10 +109,12 @@ namespace cbdc::parsec::agent {
         return true;
     }
 
-    void impl::handle_begin(broker::interface::ticketnum_or_errcode_type res) {
+    void impl::handle_new_ticket_number(
+        broker::interface::ticketnum_or_errcode_type res) {
         std::unique_lock l(m_mut);
-        if(m_state != state::begin_sent) {
-            m_log->warn("handle_begin while not in begin_sent state");
+        if(m_state != state::ticket_number_request_sent) {
+            m_log->warn("handle_new_ticket_number while not in "
+                        "ticket_number_request_sent state");
             return;
         }
         std::visit(
@@ -120,7 +123,7 @@ namespace cbdc::parsec::agent {
                            do_start();
                        },
                        [&](const broker::interface::error_code& /* e */) {
-                           m_state = state::begin_failed;
+                           m_state = state::ticket_number_request_failed;
                            m_log->error(
                                "Broker failed to assign a ticket number");
                            m_result = error_code::ticket_number_assignment;
@@ -132,7 +135,7 @@ namespace cbdc::parsec::agent {
     void impl::do_start() {
         std::unique_lock l(m_mut);
         assert(m_ticket_number.has_value());
-        assert(m_state == state::begin_sent
+        assert(m_state == state::ticket_number_request_sent
                || m_state == state::rollback_complete);
         m_state = state::function_get_sent;
 
@@ -480,8 +483,9 @@ namespace cbdc::parsec::agent {
             case state::init:
                 m_log->fatal("Result reported in initial state");
                 // System terminated by fatal()
-            case state::begin_sent:
-                m_log->fatal("Result reported in begin_sent state");
+            case state::ticket_number_request_sent:
+                m_log->fatal(
+                    "Result reported in ticket_number_request_sent state");
                 // System terminated by fatal()
             case state::function_get_sent:
                 m_log->fatal("Result reported in function_get_sent state");
@@ -508,7 +512,7 @@ namespace cbdc::parsec::agent {
                 break;
 
             // Failure due to transient problems, should retry
-            case state::begin_failed:
+            case state::ticket_number_request_failed:
                 // Couldn't get a ticket number, no need to rollback
                 break;
 

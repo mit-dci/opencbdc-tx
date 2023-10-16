@@ -83,14 +83,12 @@ namespace cbdc::parsec::broker {
         /// an error code.
         using ticketnum_or_errcode_type
             = std::variant<ticket_number_type, error_code>;
-        /// Callback function type for a begin operation.
-        using begin_callback_type
-            = std::function<void(ticketnum_or_errcode_type)>;
 
         /// Acquires a new ticket number to begin a transaction.
         /// \param result_callback function to call with begin result.
         /// \return true if the operation was initiated successfully.
-        [[nodiscard]] virtual auto begin(begin_callback_type result_callback)
+        [[nodiscard]] virtual auto get_new_ticket_number(
+            std::function<void(ticketnum_or_errcode_type)> result_callback)
             -> bool
             = 0;
 
