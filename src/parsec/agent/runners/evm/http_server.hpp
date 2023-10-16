@@ -169,12 +169,21 @@ namespace cbdc::parsec::agent::rpc {
                          const server_type::result_callback_type& callback)
             -> bool;
 
+        /** Handles error by invoking parameterized callback function with a
+         * newly created Json::Value instance populated with error code and
+         * message */
         static auto
-        handle_error(const Json::Value& params,
+        handle_error(const server_type::result_callback_type& callback,
+                     int code,
+                     const std::string& message) -> bool;
+        /** Handles error by invoking parameterized callback function with the
+         * parameterized Json::Value instance populated with error code and
+         * message */
+        static auto
+        handle_error(Json::Value& params,
                      const server_type::result_callback_type& callback,
                      int code,
                      const std::string& message) -> bool;
-
         static auto
         handle_number(const Json::Value& params,
                       const server_type::result_callback_type& callback,

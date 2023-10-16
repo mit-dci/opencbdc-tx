@@ -177,7 +177,6 @@ namespace cbdc::parsec::agent::rpc {
         const server_type::result_callback_type& callback) -> bool {
         if(method == "eth_signTransaction" || method == "eth_sign") {
             return handle_error(
-                params,
                 callback,
                 error_code::wallet_not_supported,
                 "Wallet support not enabled - sign transactions "
@@ -189,39 +188,34 @@ namespace cbdc::parsec::agent::rpc {
            || method == "eth_newFilter" || method == "eth_newBlockFilter"
            || method == "eth_getFilterLogs"
            || method == "eth_getFilterChanges") {
-            return handle_error(params,
-                                callback,
+            return handle_error(callback,
                                 error_code::wallet_not_supported,
                                 "OpenCBDC does not support filters");
         }
 
         if(method == "eth_getWork" || method == "eth_submitWork"
            || method == "eth_submitHashrate") {
-            return handle_error(params,
-                                callback,
+            return handle_error(callback,
                                 error_code::mining_not_supported,
                                 "OpenCBDC does not use mining");
         }
 
         if(method == "evm_increaseTime") {
-            return handle_error(params,
-                                callback,
+            return handle_error(callback,
                                 error_code::time_travel_not_supported,
                                 "OpenCBDC does not support time travel");
         }
 
         if(method == "eth_getCompilers" || method == "eth_compileSolidity"
            || method == "eth_compileLLL" || method == "eth_compileSerpent") {
-            return handle_error(params,
-                                callback,
+            return handle_error(callback,
                                 error_code::compiler_not_supported,
                                 "OpenCBDC does not provide compiler support - "
                                 "compile contracts locally before submitting");
         }
 
         if(method == "eth_coinbase") {
-            return handle_error(params,
-                                callback,
+            return handle_error(callback,
                                 error_code::coinbase_not_supported,
                                 "Coinbase payouts are not used in OpenCBDC");
         }
@@ -229,8 +223,7 @@ namespace cbdc::parsec::agent::rpc {
         if(method == "eth_getUncleByBlockHashAndIndex"
            || method == "eth_getUncleByBlockNumberAndIndex") {
             // There are no uncle blocks in OpenCBDC ever
-            return handle_error(params,
-                                callback,
+            return handle_error(callback,
                                 error_code::uncles_not_supported,
                                 "Uncle block not found");
         }
@@ -259,8 +252,7 @@ namespace cbdc::parsec::agent::rpc {
         }
 
         m_log->warn("Unknown method", method);
-        return handle_error(params,
-                            callback,
+        return handle_error(callback,
                             error_code::unknown_method,
                             "Unknown method: " + method);
     }
@@ -325,10 +317,10 @@ namespace cbdc::parsec::agent::rpc {
         } else {
             auto maybe_block = uint256be_from_json(params[1]);
             if(!maybe_block) {
-                ret["error"] = Json::Value();
-                ret["error"]["code"] = error_code::invalid_block_identifier;
-                ret["error"]["message"] = "Invalid block identifier";
-                callback(ret);
+                handle_error(ret,
+                             callback,
+                             error_code::invalid_block_identifier,
+                             "Invalid block identifier");
                 return true;
             }
             end_block = to_uint64(maybe_block.value());
@@ -394,10 +386,10 @@ namespace cbdc::parsec::agent::rpc {
                 auto maybe_acc
                     = cbdc::from_buffer<runner::evm_account>(it->second);
                 if(!maybe_acc.has_value()) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::internal_error;
-                    ret["error"]["message"] = "Internal error";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::internal_error,
+                                 "Internal error");
                     return;
                 }
 
@@ -444,10 +436,10 @@ namespace cbdc::parsec::agent::rpc {
                 auto maybe_acc
                     = cbdc::from_buffer<runner::evm_account>(it->second);
                 if(!maybe_acc.has_value()) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::internal_error;
-                    ret["error"]["message"] = "Internal error";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::internal_error,
+                                 "Internal error");
                     return;
                 }
 
@@ -526,20 +518,20 @@ namespace cbdc::parsec::agent::rpc {
                 auto& updates = std::get<return_type>(res);
                 auto it = updates.find(runner_params);
                 if(it == updates.end() || it->second.size() == 0) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::not_found;
-                    ret["error"]["message"] = "Transaction not found";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::not_found,
+                                 "Transaction not found");
                     return;
                 }
 
                 auto maybe_tx
                     = cbdc::from_buffer<runner::evm_tx_receipt>(it->second);
                 if(!maybe_tx.has_value()) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::internal_error;
-                    ret["error"]["message"] = "Internal error";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::internal_error,
+                                 "Internal error");
                     return;
                 }
 
@@ -581,12 +573,10 @@ namespace cbdc::parsec::agent::rpc {
         }
 
         if(qry.m_addresses.empty() || parseError) {
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_address;
-            ret["error"]["message"]
-                = "Address(es) in your query are either absent or invalid";
-            callback(ret);
+            handle_error(
+                callback,
+                error_code::invalid_address,
+                "Address(es) in your query are either absent or invalid");
             return false;
         }
 
@@ -610,12 +600,10 @@ namespace cbdc::parsec::agent::rpc {
         }
 
         if(qry.m_topics.empty() || parseError) {
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_topic;
-            ret["error"]["message"]
-                = "Topic(s) in your query are either absent or invalid";
-            callback(ret);
+            handle_error(
+                callback,
+                error_code::invalid_topic,
+                "Topic(s) in your query are either absent or invalid");
             return false;
         }
 
@@ -633,12 +621,10 @@ namespace cbdc::parsec::agent::rpc {
                 = uint256be_from_hex(params[0]["blockhash"].asString());
             if(!maybe_block_num) {
                 m_log->warn("Invalid blockNumber / hash parameter");
-                // return error to user through callback
-                ret["error"] = Json::Value();
-                ret["error"]["code"] = error_code::invalid_block_parameter;
-                ret["error"]["message"]
-                    = "Invalid blockNumber / hash parameter";
-                callback(ret);
+                handle_error(ret,
+                             callback,
+                             error_code::invalid_block_parameter,
+                             "Invalid blockNumber / hash parameter");
                 return false;
             }
             qry.m_from_block = to_uint64(maybe_block_num.value());
@@ -653,10 +639,10 @@ namespace cbdc::parsec::agent::rpc {
                     = uint256be_from_hex(params[0]["fromBlock"].asString());
                 if(!maybe_block_num) {
                     m_log->warn("Invalid fromBlock parameter");
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::invalid_block_parameter;
-                    ret["error"]["message"] = "Invalid fromBlock parameter";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::invalid_block_parameter,
+                                 "Invalid fromBlock parameter");
                     return false;
                 }
                 qry.m_from_block = to_uint64(maybe_block_num.value());
@@ -669,20 +655,19 @@ namespace cbdc::parsec::agent::rpc {
                     = uint256be_from_hex(params[0]["toBlock"].asString());
                 if(!maybe_block_num) {
                     m_log->warn("Invalid toBlock parameter");
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::invalid_block_parameter;
-                    ret["error"]["message"] = "Invalid toBlock parameter";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::invalid_block_parameter,
+                                 "Invalid toBlock parameter");
                     return false;
                 }
                 qry.m_to_block = to_uint64(maybe_block_num.value());
             }
         } else {
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_block_parameter;
-            ret["error"]["message"]
-                = "from/toBlock or blockHash parameter missing";
-            callback(ret);
+            handle_error(ret,
+                         callback,
+                         error_code::invalid_block_parameter,
+                         "from/toBlock or blockHash parameter missing");
             return false;
         }
 
@@ -690,10 +675,10 @@ namespace cbdc::parsec::agent::rpc {
                          - static_cast<int64_t>(qry.m_from_block);
 
         if(block_count < 0) {
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::from_block_after_to;
-            ret["error"]["message"] = "From block cannot be after to block";
-            callback(ret);
+            handle_error(ret,
+                         callback,
+                         error_code::from_block_after_to,
+                         "From block cannot be after to block");
             return false;
         }
 
@@ -701,11 +686,11 @@ namespace cbdc::parsec::agent::rpc {
 
         constexpr auto max_block_count = 100;
         if(uint_block_count * qry.m_addresses.size() > max_block_count) {
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::block_range_too_large;
-            ret["error"]["message"] = "The product of address count and block "
-                                      "range in your query cannot exceed 100";
-            callback(ret);
+            handle_error(ret,
+                         callback,
+                         error_code::block_range_too_large,
+                         "The product of address count and block "
+                         "range in your query cannot exceed 100");
             return false;
         }
 
@@ -745,20 +730,20 @@ namespace cbdc::parsec::agent::rpc {
         auto& updates = std::get<return_type>(res);
         auto it = updates.find(runner_params);
         if(it == updates.end() || it->second.size() == 0) {
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::not_found;
-            ret["error"]["message"] = "Logs not found";
-            callback(ret);
+            handle_error(ret,
+                         callback,
+                         error_code::not_found,
+                         "Logs not found");
             return;
         }
 
         auto maybe_logs
             = cbdc::from_buffer<std::vector<evm_log_index>>(it->second);
         if(!maybe_logs.has_value()) {
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::internal_error;
-            ret["error"]["message"] = "Internal error";
-            callback(ret);
+            handle_error(ret,
+                         callback,
+                         error_code::internal_error,
+                         "Internal error");
             return;
         }
 
@@ -794,12 +779,10 @@ namespace cbdc::parsec::agent::rpc {
         const server_type::result_callback_type& callback) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isObject()) {
             m_log->warn("Invalid parameters to getLogs");
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            // TODO: Is this the correct error code?
-            ret["error"]["code"] = error_code::invalid_block_parameter;
-            ret["error"]["message"] = "Invalid parameters to getLogs";
-            callback(ret);
+            handle_error(callback,
+                         // TODO: Is this the correct error code?
+                         error_code::invalid_block_parameter,
+                         "Invalid parameters to getLogs");
             return false;
         }
 
@@ -829,12 +812,9 @@ namespace cbdc::parsec::agent::rpc {
         const server_type::result_callback_type& callback) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isString()) {
             m_log->warn("Invalid parameters to getTransactionReceipt");
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_block_parameter;
-            ret["error"]["message"]
-                = "Invalid parameters to getTransactionReceipt";
-            callback(ret);
+            handle_error(callback,
+                         error_code::invalid_block_parameter,
+                         "Invalid parameters to getTransactionReceipt");
             return false;
         }
         auto params_str = params[0].asString();
@@ -855,20 +835,20 @@ namespace cbdc::parsec::agent::rpc {
                 auto& updates = std::get<return_type>(res);
                 auto it = updates.find(runner_params);
                 if(it == updates.end() || it->second.size() == 0) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::not_found;
-                    ret["error"]["message"] = "Transaction not found";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::not_found,
+                                 "Transaction not found");
                     return;
                 }
 
                 auto maybe_rcpt
                     = cbdc::from_buffer<runner::evm_tx_receipt>(it->second);
                 if(!maybe_rcpt.has_value()) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::internal_error;
-                    ret["error"]["message"] = "Internal error";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::internal_error,
+                                 "Internal error");
                     return;
                 }
 
@@ -884,11 +864,9 @@ namespace cbdc::parsec::agent::rpc {
         const server_type::result_callback_type& callback) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isString()) {
             m_log->warn("Invalid parameters to getCode");
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_block_parameter;
-            ret["error"]["message"] = "Invalid parameters to getCode";
-            callback(ret);
+            handle_error(callback,
+                         error_code::invalid_block_parameter,
+                         "Invalid parameters to getCode");
             return false;
         }
 
@@ -897,12 +875,9 @@ namespace cbdc::parsec::agent::rpc {
             = cbdc::buffer::from_hex(params_str.substr(2));
         if(!maybe_runner_params.has_value()) {
             m_log->warn("Unable to decode params", params_str);
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::execution_error;
-            ret["error"]["message"]
-                = "Unable to decode getCode parameters: " + params_str;
-            callback(ret);
+            handle_error(callback,
+                         error_code::execution_error,
+                         "Unable to decode getCode parameters: " + params_str);
             return false;
         }
         auto runner_params = std::move(maybe_runner_params.value());
@@ -953,12 +928,10 @@ namespace cbdc::parsec::agent::rpc {
         if(!params.isArray() || params.empty() || !params[0].isString()
            || (params.size() > 1 && !params[1].isBool())) {
             m_log->warn("Invalid parameters to getBlock", params.size());
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_block_parameter;
-            ret["error"]["message"] = "Invalid parameters to getBlock (size: "
-                                    + std::to_string(params.size()) + ")";
-            callback(ret);
+            handle_error(callback,
+                         error_code::invalid_block_parameter,
+                         "Invalid parameters to getBlock (size: "
+                             + std::to_string(params.size()) + ")");
             return false;
         }
 
@@ -970,12 +943,9 @@ namespace cbdc::parsec::agent::rpc {
             auto maybe_block_num = uint256be_from_hex(params[0].asString());
             if(!maybe_block_num) {
                 m_log->warn("Invalid blockNumber / hash parameter");
-                auto ret = Json::Value();
-                ret["error"] = Json::Value();
-                ret["error"]["code"] = error_code::invalid_block_parameter;
-                ret["error"]["message"]
-                    = "Invalid blockNumber / hash parameter";
-                callback(ret);
+                handle_error(callback,
+                             error_code::invalid_block_parameter,
+                             "Invalid blockNumber / hash parameter");
                 return false;
             }
             runner_params = cbdc::make_buffer(maybe_block_num.value());
@@ -1005,20 +975,20 @@ namespace cbdc::parsec::agent::rpc {
                 auto it = updates.find(runner_params);
                 auto ret = Json::Value();
                 if(it == updates.end() || it->second.size() == 0) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::not_found;
-                    ret["error"]["message"] = "Data was not found";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::not_found,
+                                 "Data was not found");
                     return;
                 }
 
                 auto maybe_pretend_block
                     = cbdc::from_buffer<evm_pretend_block>(it->second);
                 if(!maybe_pretend_block) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::internal_error;
-                    ret["error"]["message"] = "Internal error";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::internal_error,
+                                 "Internal error");
                     return;
                 }
                 ret["result"] = Json::Value();
@@ -1083,20 +1053,20 @@ namespace cbdc::parsec::agent::rpc {
                 auto it = updates.find(runner_params);
                 auto ret = Json::Value();
                 if(it == updates.end() || it->second.size() == 0) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::not_found;
-                    ret["error"]["message"] = "Data was not found";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::not_found,
+                                 "Data was not found");
                     return;
                 }
 
                 auto maybe_pretend_block
                     = cbdc::from_buffer<evm_pretend_block>(it->second);
                 if(!maybe_pretend_block) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::internal_error;
-                    ret["error"]["message"] = "Internal error";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::internal_error,
+                                 "Internal error");
                     return;
                 }
                 auto blk = maybe_pretend_block.value();
@@ -1131,16 +1101,23 @@ namespace cbdc::parsec::agent::rpc {
     }
 
     auto http_server::handle_error(
-        const Json::Value& /*params*/,
+        Json::Value& params,
         const server_type::result_callback_type& callback,
         int code,
         const std::string& message) -> bool {
-        auto ret = Json::Value();
-        ret["error"] = Json::Value();
-        ret["error"]["code"] = code;
-        ret["error"]["message"] = message;
-        callback(ret);
+        params["error"] = Json::Value();
+        params["error"]["code"] = code;
+        params["error"]["message"] = message;
+        callback(params);
         return true;
+    }
+
+    auto http_server::handle_error(
+        const server_type::result_callback_type& callback,
+        int code,
+        const std::string& message) -> bool {
+        auto params = Json::Value();
+        return handle_error(params, callback, code, message);
     }
 
     auto http_server::handle_number(
@@ -1170,13 +1147,10 @@ namespace cbdc::parsec::agent::rpc {
            || !params[1].isString()) {
             m_log->warn("Invalid parameters to "
                         "getTransacionByBlock{Hash/Number}AndIndex");
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_block_parameter;
-            ret["error"]["message"]
-                = "Invalid parameters to "
-                  "getTransacionByBlock{Hash/Number}AndIndex";
-            callback(ret);
+            handle_error(callback,
+                         error_code::invalid_block_parameter,
+                         "Invalid parameters to "
+                         "getTransacionByBlock{Hash/Number}AndIndex");
             return false;
         }
 
@@ -1192,40 +1166,39 @@ namespace cbdc::parsec::agent::rpc {
                 auto it = updates.find(runner_params);
                 auto ret = Json::Value();
                 if(it == updates.end() || it->second.size() == 0) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::not_found;
-                    ret["error"]["message"] = "Data was not found";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::not_found,
+                                 "Data was not found");
                     return;
                 }
 
                 auto maybe_pretend_block
                     = cbdc::from_buffer<evm_pretend_block>(it->second);
                 if(!maybe_pretend_block) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::internal_error;
-                    ret["error"]["message"] = "Internal error";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::internal_error,
+                                 "Internal error");
                     return;
                 }
 
                 auto maybe_idx256 = uint256be_from_hex(params[1].asString());
                 if(!maybe_idx256) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"]
-                        = error_code::invalid_transaction_index;
-                    ret["error"]["message"]
-                        = "Transaction index was invalid - expect hex format";
-                    callback(ret);
+                    handle_error(
+                        ret,
+                        callback,
+                        error_code::invalid_transaction_index,
+                        "Transaction index was invalid - expect hex format");
                     return;
                 }
                 auto idx = to_uint64(maybe_idx256.value());
                 auto blk = maybe_pretend_block.value();
                 if(blk.m_transactions.size() < idx) {
-                    ret["error"] = Json::Value();
-                    ret["error"]["code"] = error_code::not_found;
-                    ret["error"]["message"] = "Data was not found";
-                    callback(ret);
+                    handle_error(ret,
+                                 callback,
+                                 error_code::not_found,
+                                 "Data was not found");
                     return;
                 }
 
@@ -1284,23 +1257,18 @@ namespace cbdc::parsec::agent::rpc {
         -> bool {
         if(!params.isArray() || params.empty() || !params[0].isObject()) {
             m_log->warn("Parameter to call is invalid");
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_block_parameter;
-            ret["error"]["message"] = "Parameter to call is invalid";
-            callback(ret);
+            handle_error(callback,
+                         error_code::invalid_block_parameter,
+                         "Parameter to call is invalid");
             return false;
         }
 
         auto maybe_tx = dryrun_tx_from_json(params[0]);
         if(!maybe_tx) {
             m_log->warn("Parameter is not a valid transaction");
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_transaction_index;
-            ret["error"]["message"]
-                = "Parameter to call is not a valid transaction";
-            callback(ret);
+            handle_error(callback,
+                         error_code::invalid_transaction_index,
+                         "Parameter to call is not a valid transaction");
             return false;
         }
 
@@ -1318,21 +1286,20 @@ namespace cbdc::parsec::agent::rpc {
                            auto& updates = std::get<return_type>(res);
                            auto it = updates.find(txid);
                            if(it == updates.end()) {
-                               ret["error"] = Json::Value();
-                               ret["error"]["code"] = error_code::not_found;
-                               ret["error"]["message"] = "Data was not found";
-                               callback(ret);
+                               handle_error(ret,
+                                            callback,
+                                            error_code::not_found,
+                                            "Data was not found");
                                return;
                            }
 
                            auto maybe_receipt
                                = cbdc::from_buffer<evm_tx_receipt>(it->second);
                            if(!maybe_receipt) {
-                               ret["error"] = Json::Value();
-                               ret["error"]["code"]
-                                   = error_code::internal_error;
-                               ret["error"]["message"] = "Internal error";
-                               callback(ret);
+                               handle_error(ret,
+                                            callback,
+                                            error_code::internal_error,
+                                            "Internal error");
                                return;
                            }
 
@@ -1351,23 +1318,19 @@ namespace cbdc::parsec::agent::rpc {
         const server_type::result_callback_type& callback) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isObject()) {
             m_log->warn("Invalid parameters to sendTransaction");
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_block_parameter;
-            ret["error"]["message"] = "Invalid parameters to sendTransaction";
-            callback(ret);
+            handle_error(callback,
+                         error_code::invalid_block_parameter,
+                         "Invalid parameters to sendTransaction");
             return false;
         }
 
         auto maybe_tx = tx_from_json(params[0]);
         if(!maybe_tx) {
             m_log->warn("Parameter is not a valid transaction");
-            auto ret = Json::Value();
-            ret["error"] = Json::Value();
-            ret["error"]["code"] = error_code::invalid_transaction_index;
-            ret["error"]["message"]
-                = "Parameter to sendTransaction is not a valid transaction";
-            callback(ret);
+            handle_error(
+                callback,
+                error_code::invalid_transaction_index,
+                "Parameter to sendTransaction is not a valid transaction");
             return false;
         }
 
@@ -1410,12 +1373,10 @@ namespace cbdc::parsec::agent::rpc {
                     if(ec == interface::error_code::retry) {
                         m_retry_queue.push(id);
                     } else {
-                        auto ret = Json::Value();
-                        ret["error"] = Json::Value();
-                        ret["error"]["code"] = error_code::execution_error
-                                             - static_cast<int>(ec);
-                        ret["error"]["message"] = "Execution error";
-                        json_ret_callback(ret);
+                        handle_error(json_ret_callback,
+                                     error_code::execution_error
+                                         - static_cast<int>(ec),
+                                     "Execution error");
                     }
                 }
             };
