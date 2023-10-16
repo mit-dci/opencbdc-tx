@@ -240,88 +240,85 @@ namespace cbdc::parsec::agent {
             });
     }
 
-    void
-    impl::handle_function(const broker::interface::try_lock_return_type& res) {
+    void impl::handle_function(
+        const broker::interface::try_lock_return_type& res_variant) {
         std::unique_lock l(m_mut);
         if(m_state != state::function_get_sent) {
             m_log->warn(
                 "handle_function while not in function_get_sent state");
             return;
         }
-        std::visit(
-            overloaded{
-                [&](const broker::value_type& v) {
-                    m_state = state::function_started;
-                    auto reacq_locks
-                        = std::make_shared<broker::held_locks_set_type>();
-                    (*reacq_locks).swap(m_requested_locks);
 
-                    if(reacq_locks->empty()) {
-                        do_runner(v);
-                        return;
-                    }
+        if(std::holds_alternative<broker::value_type>(res_variant)) {
+            const auto& v = std::get<broker::value_type>(res_variant);
+            m_state = state::function_started;
+            auto reacq_locks = std::make_shared<broker::held_locks_set_type>();
+            (*reacq_locks).swap(m_requested_locks);
 
-                    // Re-acquire previously held locks upon retries
-                    // immediately
-                    m_log->trace("Re-acquiring locks for",
-                                 m_ticket_number.value());
-                    auto reacquired = std::make_shared<std::atomic<size_t>>();
-                    for(auto& it : *reacq_locks) {
-                        m_log->trace("Re-acquiring lock on",
-                                     it.first.to_hex(),
-                                     "type",
-                                     static_cast<int>(it.second),
-                                     "for",
+            if(reacq_locks->empty()) {
+                do_runner(v);
+                return;
+            }
+
+            // Re-acquire previously held locks upon retries
+            // immediately
+            m_log->trace("Re-acquiring locks for", m_ticket_number.value());
+            auto reacquired = std::make_shared<std::atomic<size_t>>();
+            for(auto& it : *reacq_locks) {
+                m_log->trace("Re-acquiring lock on",
+                             it.first.to_hex(),
+                             "type",
+                             static_cast<int>(it.second),
+                             "for",
+                             m_ticket_number.value());
+                auto success = do_try_lock_request(
+                    it.first,
+                    it.second,
+                    [this, reacquired, v, reacq_locks](
+                        const broker::interface::try_lock_return_type&) {
+                        std::unique_lock ll(m_mut);
+                        auto reacq = (*reacquired)++;
+                        m_log->trace("Re-acquired",
+                                     reacq + 1,
+                                     "of",
+                                     reacq_locks->size(),
+                                     "locks for",
                                      m_ticket_number.value());
-                        auto success = do_try_lock_request(
-                            it.first,
-                            it.second,
-                            [this, reacquired, v, reacq_locks](
-                                const broker::interface::
-                                    try_lock_return_type&) {
-                                std::unique_lock ll(m_mut);
-                                auto reacq = (*reacquired)++;
-                                m_log->trace("Re-acquired",
-                                             reacq + 1,
-                                             "of",
-                                             reacq_locks->size(),
-                                             "locks for",
-                                             m_ticket_number.value());
 
-                                if(reacq + 1 == reacq_locks->size()) {
-                                    do_runner(v);
-                                }
-                            });
-                        if(!success) {
-                            m_log->error("Try lock request failed for",
-                                         m_ticket_number.value());
-                            m_state = state::function_get_failed;
-                            m_result = error_code::function_retrieval;
-                            do_result();
-                            return;
+                        if(reacq + 1 == reacq_locks->size()) {
+                            do_runner(v);
                         }
-                    }
-                },
-                [&](broker::interface::error_code /* e */) {
+                    });
+                if(!success) {
+                    m_log->error("Try lock request failed for",
+                                 m_ticket_number.value());
                     m_state = state::function_get_failed;
-                    m_log->error("Failed to retrieve function");
                     m_result = error_code::function_retrieval;
                     do_result();
-                },
-                [&](const runtime_locking_shard::shard_error& e) {
-                    if(e.m_error_code
-                       == runtime_locking_shard::error_code::wounded) {
-                        m_state = state::function_get_failed;
-                        m_log->trace("Shard wounded ticket while "
-                                     "retrieving function");
-                    } else {
-                        m_state = state::function_get_error;
-                        m_log->error("Shard error retrieving function");
-                    }
-                    m_result = error_code::function_retrieval;
-                    do_result();
-                }},
-            res);
+                    return;
+                }
+            }
+        } else if(std::holds_alternative<broker::interface::error_code>(
+                      res_variant)) {
+            m_state = state::function_get_failed;
+            m_log->error("Failed to retrieve function");
+            m_result = error_code::function_retrieval;
+            do_result();
+        } else if(std::holds_alternative<runtime_locking_shard::shard_error>(
+                      res_variant)) {
+            const auto& e
+                = std::get<runtime_locking_shard::shard_error>(res_variant);
+            if(e.m_error_code == runtime_locking_shard::error_code::wounded) {
+                m_state = state::function_get_failed;
+                m_log->trace("Shard wounded ticket while "
+                             "retrieving function");
+            } else {
+                m_state = state::function_get_error;
+                m_log->error("Shard error retrieving function");
+            }
+            m_result = error_code::function_retrieval;
+            do_result();
+        }
     }
 
     void impl::do_runner(broker::value_type v) {
