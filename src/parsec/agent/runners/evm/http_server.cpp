@@ -1348,6 +1348,36 @@ namespace cbdc::parsec::agent::rpc {
                        });
     }
 
+    auto http_server::make_agent(
+        runner::evm_runner_function f_type,
+        cbdc::buffer& runner_params,
+        bool is_readonly_run,
+        size_t id,
+        const std::function<void(interface::exec_return_type)>&
+            res_cb_for_agent) -> std::shared_ptr<impl> {
+        auto function = cbdc::buffer();
+        function.append(&f_type, sizeof(f_type));
+
+        auto agent = std::make_shared<impl>(
+            m_log,
+            m_cfg,
+            &runner::factory<runner::evm_runner>::create,
+            m_broker,
+            function,
+            runner_params,
+            res_cb_for_agent,
+            runner::evm_runner::initial_lock_type,
+            is_readonly_run,
+            m_secp,
+            m_threads);
+
+        {
+            std::unique_lock l(m_agents_mut);
+            m_agents.emplace(id, agent);
+        }
+        return agent;
+    }
+
     auto http_server::exec_tx(
         const server_type::result_callback_type& json_ret_callback,
         runner::evm_runner_function f_type,
@@ -1355,10 +1385,9 @@ namespace cbdc::parsec::agent::rpc {
         bool is_readonly_run,
         const std::function<void(interface::exec_return_type)>& res_success_cb)
         -> bool {
-        auto function = cbdc::buffer();
-        function.append(&f_type, sizeof(f_type));
         auto id = m_next_id++;
 
+        // Wrap success callback function to handle error:
         const auto res_cb_for_agent =
             [this, id, res_success_cb, json_ret_callback](
                 interface::exec_return_type res) {
@@ -1381,25 +1410,11 @@ namespace cbdc::parsec::agent::rpc {
                 }
             };
 
-        auto a = [&]() {
-            auto agent = std::make_shared<impl>(
-                m_log,
-                m_cfg,
-                &runner::factory<runner::evm_runner>::create,
-                m_broker,
-                function,
-                runner_params,
-                res_cb_for_agent,
-                runner::evm_runner::initial_lock_type,
-                is_readonly_run,
-                m_secp,
-                m_threads);
-            {
-                std::unique_lock l(m_agents_mut);
-                m_agents.emplace(id, agent);
-            }
-            return agent;
-        }();
-        return a->exec();
+        auto agent = make_agent(f_type,
+                                runner_params,
+                                is_readonly_run,
+                                id,
+                                res_cb_for_agent);
+        return agent->exec();
     }
 }

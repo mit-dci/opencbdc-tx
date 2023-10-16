@@ -234,6 +234,13 @@ namespace cbdc::parsec::agent::rpc {
                            const server_type::result_callback_type& callback)
             -> std::optional<bool>;
 
+        auto make_agent(runner::evm_runner_function f_type,
+                        cbdc::buffer& runner_params,
+                        bool is_readonly_run,
+                        size_t id,
+                        const std::function<void(interface::exec_return_type)>&
+                            res_cb_for_agent) -> std::shared_ptr<impl>;
+
         static auto extract_evm_log_query_addresses(
             Json::Value params,
             const server_type::result_callback_type& callback,
