@@ -130,11 +130,11 @@ namespace cbdc::parsec::agent {
         void
         handle_function(const broker::interface::try_lock_return_type& res);
 
-        void handle_run(const runner::interface::run_return_type& res);
+        void handle_run_result(const runner::interface::run_return_type& res);
 
         void handle_commit(broker::interface::commit_return_type res);
 
-        void do_start();
+        void do_start_function();
 
         void do_result();
 

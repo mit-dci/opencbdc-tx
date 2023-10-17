@@ -428,7 +428,7 @@ namespace cbdc::parsec::agent::runner {
             return true;
         }
         auto from = maybe_from.value();
-        return run_execute_transaction(from, false);
+        return start_execute_transaction(from, false);
     }
 
     auto evm_runner::run_execute_dryrun_transaction() -> bool {
@@ -441,7 +441,7 @@ namespace cbdc::parsec::agent::runner {
         auto& dryrun_tx = maybe_tx.value();
         m_tx = std::move(dryrun_tx.m_tx);
 
-        return run_execute_transaction(dryrun_tx.m_from, true);
+        return start_execute_transaction(dryrun_tx.m_from, true);
     }
 
     auto evm_runner::check_base_gas(const evm_tx& evmtx, bool is_readonly_run)
@@ -519,8 +519,8 @@ namespace cbdc::parsec::agent::runner {
         return tx_ctx;
     }
 
-    auto evm_runner::run_execute_transaction(const evmc::address& from,
-                                             bool is_readonly_run) -> bool {
+    auto evm_runner::start_execute_transaction(const evmc::address& from,
+                                               bool is_readonly_run) -> bool {
         auto tx_ctx = make_tx_context(from, m_tx, is_readonly_run);
 
         m_host = std::make_unique<evm_host>(m_log,
@@ -549,7 +549,7 @@ namespace cbdc::parsec::agent::runner {
                 broker::lock_type::write,
                 [this](const broker::interface::try_lock_return_type& res) {
                     m_log->trace(m_ticket_number, "read from account");
-                    handle_lock_from_account(res);
+                    handle_lockfromaccount_and_continue_exec(res);
                 });
             if(!r) {
                 m_log->error(
@@ -620,7 +620,7 @@ namespace cbdc::parsec::agent::runner {
         }
     }
 
-    void evm_runner::handle_lock_from_account(
+    void evm_runner::handle_lockfromaccount_and_continue_exec(
         const broker::interface::try_lock_return_type& res) {
         if(!std::holds_alternative<broker::value_type>(res)) {
             m_log->debug("Failed to read account from shards");
@@ -684,7 +684,7 @@ namespace cbdc::parsec::agent::runner {
                     return;
                 }
                 m_log->trace(m_ticket_number, "locked TXID key");
-                lock_ticket_number_key();
+                lock_ticket_number_key_and_continue_exec();
             });
         if(!maybe_sent) {
             m_log->error("Failed to send try_lock request for TX receipt");
@@ -693,7 +693,7 @@ namespace cbdc::parsec::agent::runner {
         }
     }
 
-    void evm_runner::lock_ticket_number_key() {
+    void evm_runner::lock_ticket_number_key_and_continue_exec() {
         auto maybe_sent = m_try_lock_callback(
             m_host->ticket_number_key(),
             broker::lock_type::write,

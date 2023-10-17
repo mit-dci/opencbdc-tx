@@ -49,7 +49,7 @@ namespace cbdc::parsec::agent {
                 m_result = std::nullopt;
                 m_wounded = false;
                 m_restarted = true;
-                do_start();
+                do_start_function();
                 return true;
 
             // Re-run commit
@@ -120,7 +120,7 @@ namespace cbdc::parsec::agent {
         std::visit(
             overloaded{[&](const ticket_machine::ticket_number_type& n) {
                            m_ticket_number = n;
-                           do_start();
+                           do_start_function();
                        },
                        [&](const broker::interface::error_code& /* e */) {
                            m_state = state::ticket_number_request_failed;
@@ -132,7 +132,7 @@ namespace cbdc::parsec::agent {
             res);
     }
 
-    void impl::do_start() {
+    void impl::do_start_function() {
         std::unique_lock l(m_mut);
         assert(m_ticket_number.has_value());
         assert(m_state == state::ticket_number_request_sent
@@ -152,7 +152,7 @@ namespace cbdc::parsec::agent {
             // transaction as m_param and let the runner figure it out.
             handle_function(broker::value_type(get_function()));
         } else {
-            m_log->trace("do_start ", get_function().to_hex());
+            m_log->trace("do_start_function ", get_function().to_hex());
 
             auto tl_success = m_broker->try_lock(
                 m_ticket_number.value(),
@@ -329,7 +329,7 @@ namespace cbdc::parsec::agent {
             get_param(),
             m_is_readonly_run,
             [this](const runner::interface::run_return_type& run_res) {
-                handle_run(run_res);
+                handle_run_result(run_res);
             },
             [this](broker::key_type key,
                    broker::lock_type locktype,
@@ -382,10 +382,12 @@ namespace cbdc::parsec::agent {
         }
     }
 
-    void impl::handle_run(const runner::interface::run_return_type& res) {
+    void
+    impl::handle_run_result(const runner::interface::run_return_type& res) {
         std::unique_lock l(m_mut);
         if(m_state != state::function_started) {
-            m_log->warn("handle_run while not in function_started state");
+            m_log->warn(
+                "handle_run_result while not in function_started state");
             return;
         }
         std::visit(
@@ -418,7 +420,7 @@ namespace cbdc::parsec::agent {
                        }},
             res);
         m_log->trace(this,
-                     "Agent handle_run complete for",
+                     "Agent handle_run_result complete for",
                      m_ticket_number.value());
     }
 
