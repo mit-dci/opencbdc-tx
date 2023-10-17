@@ -9,6 +9,7 @@ extern "C" {
 
 #include <oci.h>
 
+
 // Define the OracleDB struct
 typedef struct {
     OCIEnv *envhp;

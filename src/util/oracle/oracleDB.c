@@ -128,8 +128,8 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
     string_buffer result;
     string_buffer_init(&result);
 
-    // Check if the query is a SELECT statement
-    int is_select = (strncasecmp(sql_query, "SELECT", 6) == 0);
+    // // Check if the query is a SELECT statement
+    // int is_select = (strncasecmp(sql_query, "SELECT", 6) == 0);
 
     // PREPARE STATEMENT SECTION
     // Allocate a statement handle
@@ -147,159 +147,10 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
         return NULL;
     }
 
-    ub4 column_count = 0;
-    char** column_values = NULL;
-    ub2* column_lengths = NULL;
+    // ub4 column_count = 0;
+    // char** column_values = NULL;
+    // ub2* column_lengths = NULL;
 
-    if(is_select) {
-        // EXECUTE SELECT STATEMENT SECTION
-        db->status = OCIStmtExecute(db->svchp, stmthp, db->errhp, 0, 0, NULL, NULL, OCI_DEFAULT);
-        if (db->status != OCI_SUCCESS) {
-            printf("Error executing SQL statement\n");
-            print_oci_error(db->errhp);
-            return NULL;
-        }
-
-        // COLUMN NAMES SECTION
-        db->status = OCIAttrGet(stmthp, OCI_HTYPE_STMT, &column_count, 0, OCI_ATTR_PARAM_COUNT, db->errhp);
-        if (db->status != OCI_SUCCESS) {
-            printf("Error getting column count\n");
-            print_oci_error(db->errhp);
-            return NULL;
-        }
-
-        // Define output variables
-        OCIDefine *defines[column_count];
-        ub2 data_types[column_count];
-        size_t data_sizes[column_count];
-        // ub2 data_lengths[column_count];
-        char column_names[column_count][30];
-        column_values = malloc(column_count * sizeof(char*));
-        column_lengths = malloc(column_count * sizeof(ub2));
-
-        printf("Query executed successfully.\n");
-
-        for (ub4 i = 0; i < column_count; ++i) {
-            db->status = OCIParamGet(stmthp, OCI_HTYPE_STMT, db->errhp, (dvoid **)&defines[i], i + 1);
-            if (db->status != OCI_SUCCESS) {
-                printf("Error getting column parameter\n");
-                print_oci_error(db->errhp);
-                return NULL;
-            }
-
-            db->status = OCIAttrGet(defines[i], OCI_DTYPE_PARAM, &data_types[i], 0, OCI_ATTR_DATA_TYPE, db->errhp);
-            if (db->status != OCI_SUCCESS) {
-                printf("Error getting column data type\n");
-                print_oci_error(db->errhp);
-                return NULL;
-            }
-
-            db->status = OCIAttrGet(defines[i], OCI_DTYPE_PARAM, &data_sizes[i], 0, OCI_ATTR_DATA_SIZE, db->errhp);
-            if (db->status != OCI_SUCCESS) {
-                printf("Error getting column data size\n");
-                print_oci_error(db->errhp);
-                return NULL;
-            }
-
-            ub4 name_length;
-            db->status = OCIAttrGet(defines[i], OCI_DTYPE_PARAM, &name_length, 0, OCI_ATTR_NAME, db->errhp);
-            if (db->status != OCI_SUCCESS) {
-                printf("Error getting column name length\n");
-                print_oci_error(db->errhp);
-                return NULL;
-            }
-
-            db->status = OCIAttrGet(defines[i], OCI_DTYPE_PARAM, column_names[i], &name_length, OCI_ATTR_NAME, db->errhp);
-            if (db->status != OCI_SUCCESS) {
-                printf("Error getting column name\n");
-                print_oci_error(db->errhp);
-                return NULL;
-            }
-        }
-
-        // Print column names
-        OCIParam *paramhp;
-        ub4 num_cols;
-        db->status = OCIAttrGet(stmthp, OCI_HTYPE_STMT, &num_cols, 0, OCI_ATTR_PARAM_COUNT, db->errhp);
-        if (db->status != OCI_SUCCESS) {
-            printf("Error getting column count\n");
-            print_oci_error(db->errhp);
-            return NULL;
-        }
-
-        // Print column names
-        int column_width = 15;
-        printf("%-*s", column_width, "Returned Data:\n");
-        for (ub4 i = 1; i <= num_cols; ++i) {
-            db->status = OCIParamGet(stmthp, OCI_HTYPE_STMT, db->errhp, (void **)&paramhp, i);
-            if (db->status != OCI_SUCCESS) {
-                printf("Error getting column parameter\n");
-                print_oci_error(db->errhp);
-                return NULL;
-            }
-
-            text *column_name;
-            ub4 column_name_length;
-            db->status = OCIAttrGet(paramhp, OCI_DTYPE_PARAM, &column_name, &column_name_length, OCI_ATTR_NAME, db->errhp);
-            if (db->status != OCI_SUCCESS) {
-                printf("Error getting column name\n");
-                print_oci_error(db->errhp);
-                return NULL;
-            }
-
-            printf("%-*s", column_width, column_name);
-
-            // fill string buffer
-            char column_buf[column_width + 1];
-            snprintf(column_buf, sizeof(column_buf), "%-*s", column_width, column_name);
-            string_buffer_append(&result, column_buf);
-        }
-        string_buffer_append(&result, "\n");
-
-        // COLUMN VALUES SECTION
-        printf("\n");
-        // Define output variables and allocate memory for each column value
-        for (ub4 col_idx = 0; col_idx < column_count; ++col_idx) {
-            column_values[col_idx] = malloc((data_sizes[col_idx] + 1) * sizeof(char)); // +1 for null terminator
-            memset(column_values[col_idx], 0, (data_sizes[col_idx] + 1) * sizeof(char)); // Ensure the string is null-terminated
-
-            // check if the value is within the range of sb4
-            if (data_sizes[col_idx] + 1 > INT_MAX) {
-                printf("Data size exceeds the maximum allowed value.\n");
-                goto cleanup;
-            }
-
-            db->status = OCIDefineByPos(stmthp, &defines[col_idx], db->errhp, col_idx + 1, column_values[col_idx], (sb4)(data_sizes[col_idx] + 1), SQLT_STR, &column_lengths[col_idx], 0, 0, OCI_DEFAULT);
-            if (db->status != OCI_SUCCESS) {
-                printf("Error defining column variable for column\n");
-                print_oci_error(db->errhp);
-                goto cleanup;
-            }
-
-            // Fetch and print rows
-            while (1) {
-                db->status = OCIStmtFetch2(stmthp, db->errhp, 1, OCI_FETCH_NEXT, 0, OCI_DEFAULT);
-                if (db->status == OCI_NO_DATA) {
-                    break;
-                } else if (db->status != OCI_SUCCESS) {
-                    printf("Error fetching data\n");
-                    print_oci_error(db->errhp);
-                    goto cleanup;
-                }
-
-                for (ub4 j = 0; j < column_count; ++j) {
-                    printf("%-*s", column_width, column_values[j]);
-                    // fill string buffer
-                    char value_buf[column_width + 1];
-                    snprintf(value_buf, sizeof(value_buf), "%-*s", column_width, column_values[j]);
-                    string_buffer_append(&result, value_buf);
-                }
-                printf("\n");
-                string_buffer_append(&result, "\n");
-            }
-        }
-
-    } else {
         // EXECUTE NON SELECT STATEMENT SECTION
         db->status = OCIStmtExecute(db->svchp, stmthp, db->errhp, 1, 0, NULL, NULL, OCI_DEFAULT);
         if (db->status != OCI_SUCCESS) {
@@ -307,7 +158,7 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
             print_oci_error(db->errhp);
             return NULL;
         }
-        printf("SQL statement executed successfully\n");
+        printf("SQL statement executed successfully.\n");
 
         // Commit the transaction
         db->status = OCITransCommit(db->svchp, db->errhp, OCI_DEFAULT);
@@ -316,8 +167,175 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
             print_oci_error(db->errhp);
             return NULL;
         }
-        printf("Transaction committed successfully\n");
-    }
+        printf("Transaction committed successfully.\n");
+
+    // if(is_select) {
+    //     // EXECUTE SELECT STATEMENT SECTION
+    //     db->status = OCIStmtExecute(db->svchp, stmthp, db->errhp, 0, 0, NULL, NULL, OCI_DEFAULT);
+    //     if (db->status != OCI_SUCCESS) {
+    //         printf("Error executing SQL statement\n");
+    //         print_oci_error(db->errhp);
+    //         return NULL;
+    //     }
+
+    //     // COLUMN NAMES SECTION
+    //     db->status = OCIAttrGet(stmthp, OCI_HTYPE_STMT, &column_count, 0, OCI_ATTR_PARAM_COUNT, db->errhp);
+    //     if (db->status != OCI_SUCCESS) {
+    //         printf("Error getting column count\n");
+    //         print_oci_error(db->errhp);
+    //         return NULL;
+    //     }
+
+    //     // Define output variables
+    //     OCIDefine *defines[column_count];
+    //     ub2 data_types[column_count];
+    //     size_t data_sizes[column_count];
+    //     // ub2 data_lengths[column_count];
+    //     char column_names[column_count][30];
+    //     column_values = malloc(column_count * sizeof(char*));
+    //     column_lengths = malloc(column_count * sizeof(ub2));
+
+    //     printf("Query executed successfully.\n");
+
+    //     for (ub4 i = 0; i < column_count; ++i) {
+    //         db->status = OCIParamGet(stmthp, OCI_HTYPE_STMT, db->errhp, (dvoid **)&defines[i], i + 1);
+    //         if (db->status != OCI_SUCCESS) {
+    //             printf("Error getting column parameter\n");
+    //             print_oci_error(db->errhp);
+    //             return NULL;
+    //         }
+
+    //         db->status = OCIAttrGet(defines[i], OCI_DTYPE_PARAM, &data_types[i], 0, OCI_ATTR_DATA_TYPE, db->errhp);
+    //         if (db->status != OCI_SUCCESS) {
+    //             printf("Error getting column data type\n");
+    //             print_oci_error(db->errhp);
+    //             return NULL;
+    //         }
+
+    //         db->status = OCIAttrGet(defines[i], OCI_DTYPE_PARAM, &data_sizes[i], 0, OCI_ATTR_DATA_SIZE, db->errhp);
+    //         if (db->status != OCI_SUCCESS) {
+    //             printf("Error getting column data size\n");
+    //             print_oci_error(db->errhp);
+    //             return NULL;
+    //         }
+
+    //         ub4 name_length;
+    //         db->status = OCIAttrGet(defines[i], OCI_DTYPE_PARAM, &name_length, 0, OCI_ATTR_NAME, db->errhp);
+    //         if (db->status != OCI_SUCCESS) {
+    //             printf("Error getting column name length\n");
+    //             print_oci_error(db->errhp);
+    //             return NULL;
+    //         }
+
+    //         db->status = OCIAttrGet(defines[i], OCI_DTYPE_PARAM, column_names[i], &name_length, OCI_ATTR_NAME, db->errhp);
+    //         if (db->status != OCI_SUCCESS) {
+    //             printf("Error getting column name\n");
+    //             print_oci_error(db->errhp);
+    //             return NULL;
+    //         }
+    //     }
+
+    //     // Print column names
+    //     OCIParam *paramhp;
+    //     ub4 num_cols;
+    //     db->status = OCIAttrGet(stmthp, OCI_HTYPE_STMT, &num_cols, 0, OCI_ATTR_PARAM_COUNT, db->errhp);
+    //     if (db->status != OCI_SUCCESS) {
+    //         printf("Error getting column count\n");
+    //         print_oci_error(db->errhp);
+    //         return NULL;
+    //     }
+
+    //     // Print column names
+    //     int column_width = 15;
+    //     printf("%-*s", column_width, "Returned Data:\n");
+    //     for (ub4 i = 1; i <= num_cols; ++i) {
+    //         db->status = OCIParamGet(stmthp, OCI_HTYPE_STMT, db->errhp, (void **)&paramhp, i);
+    //         if (db->status != OCI_SUCCESS) {
+    //             printf("Error getting column parameter\n");
+    //             print_oci_error(db->errhp);
+    //             return NULL;
+    //         }
+
+    //         text *column_name;
+    //         ub4 column_name_length;
+    //         db->status = OCIAttrGet(paramhp, OCI_DTYPE_PARAM, &column_name, &column_name_length, OCI_ATTR_NAME, db->errhp);
+    //         if (db->status != OCI_SUCCESS) {
+    //             printf("Error getting column name\n");
+    //             print_oci_error(db->errhp);
+    //             return NULL;
+    //         }
+
+    //         printf("%-*s", column_width, column_name);
+
+    //         // fill string buffer
+    //         char column_buf[column_width + 1];
+    //         snprintf(column_buf, sizeof(column_buf), "%-*s", column_width, column_name);
+    //         string_buffer_append(&result, column_buf);
+    //     }
+    //     string_buffer_append(&result, "\n");
+
+    //     // COLUMN VALUES SECTION
+    //     printf("\n");
+    //     // Define output variables and allocate memory for each column value
+    //     for (ub4 col_idx = 0; col_idx < column_count; ++col_idx) {
+    //         column_values[col_idx] = malloc((data_sizes[col_idx] + 1) * sizeof(char)); // +1 for null terminator
+    //         memset(column_values[col_idx], 0, (data_sizes[col_idx] + 1) * sizeof(char)); // Ensure the string is null-terminated
+
+    //         // check if the value is within the range of sb4
+    //         if (data_sizes[col_idx] + 1 > INT_MAX) {
+    //             printf("Data size exceeds the maximum allowed value.\n");
+    //             goto cleanup;
+    //         }
+
+    //         db->status = OCIDefineByPos(stmthp, &defines[col_idx], db->errhp, col_idx + 1, column_values[col_idx], (sb4)(data_sizes[col_idx] + 1), SQLT_STR, &column_lengths[col_idx], 0, 0, OCI_DEFAULT);
+    //         if (db->status != OCI_SUCCESS) {
+    //             printf("Error defining column variable for column\n");
+    //             print_oci_error(db->errhp);
+    //             goto cleanup;
+    //         }
+
+    //         // Fetch and print rows
+    //         while (1) {
+    //             db->status = OCIStmtFetch2(stmthp, db->errhp, 1, OCI_FETCH_NEXT, 0, OCI_DEFAULT);
+    //             if (db->status == OCI_NO_DATA) {
+    //                 break;
+    //             } else if (db->status != OCI_SUCCESS) {
+    //                 printf("Error fetching data\n");
+    //                 print_oci_error(db->errhp);
+    //                 goto cleanup;
+    //             }
+
+    //             for (ub4 j = 0; j < column_count; ++j) {
+    //                 printf("%-*s", column_width, column_values[j]);
+    //                 // fill string buffer
+    //                 char value_buf[column_width + 1];
+    //                 snprintf(value_buf, sizeof(value_buf), "%-*s", column_width, column_values[j]);
+    //                 string_buffer_append(&result, value_buf);
+    //             }
+    //             printf("\n");
+    //             string_buffer_append(&result, "\n");
+    //         }
+    //     }
+
+    // } else {
+        // // EXECUTE NON SELECT STATEMENT SECTION
+        // db->status = OCIStmtExecute(db->svchp, stmthp, db->errhp, 1, 0, NULL, NULL, OCI_DEFAULT);
+        // if (db->status != OCI_SUCCESS) {
+        //     printf("Error executing SQL statement\n");
+        //     print_oci_error(db->errhp);
+        //     return NULL;
+        // }
+        // printf("SQL statement executed successfully\n");
+
+        // // Commit the transaction
+        // db->status = OCITransCommit(db->svchp, db->errhp, OCI_DEFAULT);
+        // if (db->status != OCI_SUCCESS) {
+        //     printf("Error committing transaction\n");
+        //     print_oci_error(db->errhp);
+        //     return NULL;
+        // }
+        // printf("Transaction committed successfully\n");
+    // }
 
     char *result_copy = (char *)malloc((result.length + 1) * sizeof(char));
     memcpy(result_copy, result.buffer, result.length);
@@ -325,13 +343,13 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
     free(result.buffer);
     return result_copy;
 
-cleanup:
-    // Free dynamically allocated memory
-    for (ub4 i = 0; i < column_count; ++i) {
-        free(column_values[i]);
-    }
-    free(column_values);
-    free(column_lengths);
+// cleanup:
+    // // Free dynamically allocated memory
+    // for (ub4 i = 0; i < column_count; ++i) {
+    //     free(column_values[i]);
+    // }
+    // free(column_values);
+    // free(column_lengths);
 
     if (stmthp != NULL) {
         OCIHandleFree(stmthp, OCI_HTYPE_STMT);

@@ -3,6 +3,6 @@
 # Place your wallet passcode and DB user passcode below.      #
 ###############################################################
 
-username = testusername
-password = testpasscode
-wallet_password = testwalletcode
+username = SERVER
+password = CBDCCapstone12345
+wallet_password = Server12345

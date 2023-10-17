@@ -41,7 +41,7 @@ WORKDIR /opt/tx-processor
 
 # Install necessary dependencies
 RUN apt-get update -y && \
-    apt-get install -y libaio1 gcc make unzip && \
+    apt-get install -y libaio1 gcc make unzip file && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
