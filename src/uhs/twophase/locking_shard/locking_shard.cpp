@@ -13,6 +13,8 @@
 
 #include "oracleDB.h"
 
+OracleDB db;
+
 namespace cbdc::locking_shard {
     auto locking_shard::discard_dtx(const hash_t& dtx_id) -> bool {
         std::unique_lock<std::shared_mutex> l(m_mut);
