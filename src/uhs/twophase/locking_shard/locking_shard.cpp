@@ -60,9 +60,7 @@ namespace cbdc::locking_shard {
         if (OracleDB_init(&db) == 0) {
             if (OracleDB_connect(&db) == 0) {
                 m_logger->info("Connected to Oracle Autonomous Database");
-                const char* sql_statement = "INSERT INTO admin.test_two VALUES (100, 'nate', 'dan', 'bella')";
-                // print all tables in admin schema
-                // const char* sql_statement = "SELECT table_name FROM all_tables WHERE owner = 'ADMIN'";
+                const char* sql_statement = "INSERT INTO admin.test_shard VALUES ('SUCCESS')";
                 if(OracleDB_execute(&db, sql_statement) == 0) {
                     m_logger->info("Inserted into admin.test_shard");
                 } else {
