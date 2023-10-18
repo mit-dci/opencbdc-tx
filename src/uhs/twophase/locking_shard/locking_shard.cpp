@@ -60,10 +60,10 @@ namespace cbdc::locking_shard {
         if (OracleDB_init(&db) == 0) {
             if (OracleDB_connect(&db) == 0) {
                 m_logger->info("Connected to Oracle Autonomous Database");
-                if(OracleDB_execute(&db, "INSERT INTO admin.test_shards (shards) VALUES ('SUCCESS')") == 0) {
-                    m_logger->info("Inserted into admin.test_shards");
+                if(OracleDB_execute(&db, "INSERT INTO admin.test_shard (shards) VALUES ('SUCCESS')") == 0) {
+                    m_logger->info("Inserted into admin.test_shard");
                 } else {
-                    m_logger->error("Failed to insert into admin.test_shards");
+                    m_logger->error("Failed to insert into admin.test_shard");
                 }
             } else {
                 m_logger->error("Failed to connect to Oracle Autonomous Database");
@@ -200,6 +200,11 @@ namespace cbdc::locking_shard {
     }
 
     void locking_shard::stop() {
+        if(OracleDB_disconnect(&db) == 0) {
+            m_logger->info("Disconnected from Oracle Autonomous Database");
+        } else {
+            m_logger->error("Failed to disconnect from Oracle Autonomous Database");
+        }
         m_running = false;
     }
 
