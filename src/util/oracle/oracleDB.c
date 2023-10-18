@@ -3,14 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-// string_buffer functions
-// void string_buffer_init(string_buffer *sb);
-// void string_buffer_append(string_buffer *sb, const char *str);
-// void string_buffer_free(string_buffer *sb);
-
-static int read_key_file(char *username, char *password, char *wallet_pw);
-static int set_environment();
-
+// Initialize OracleDB struct
+// @params db: OracleDB struct
+// @return 0 if success, 1 if error
 int OracleDB_init(OracleDB *db) {
     // set environment variables
     if(set_environment() != 0) {
@@ -37,7 +32,9 @@ int OracleDB_init(OracleDB *db) {
     return 0;
 }
 
-// connect to oracle database
+// Connect to oracle database
+// @params db: OracleDB struct
+// @return 0 if success, 1 if error
 int OracleDB_connect(OracleDB *db) {
     // Allocate handles
     OCIHandleAlloc(db->envhp, (void **)&db->errhp, OCI_HTYPE_ERROR, 0, NULL);
@@ -94,6 +91,8 @@ int OracleDB_connect(OracleDB *db) {
 }
 
 // Execute SQL
+// @params db: OracleDB struct, sql_query: SQL query
+// @return 0 if success, 1 if error
 int OracleDB_execute(OracleDB *db, const char *sql_query) {
     OCIStmt *stmthp;
 
@@ -106,6 +105,7 @@ int OracleDB_execute(OracleDB *db, const char *sql_query) {
         return 1;
     }
 
+    // Prepare the SQL statement
     db->status = OCIStmtPrepare(stmthp, db->errhp, (text *)sql_query, (ub4)strlen(sql_query), OCI_NTV_SYNTAX, OCI_DEFAULT);
     if (db->status != OCI_SUCCESS) {
         printf("[Oracle DB] Error preparing SQL statement\n");
@@ -113,7 +113,7 @@ int OracleDB_execute(OracleDB *db, const char *sql_query) {
         return 1;
     }
 
-    // EXECUTE NON SELECT STATEMENT SECTION
+    // execute
     db->status = OCIStmtExecute(db->svchp, stmthp, db->errhp, 1, 0, NULL, NULL, OCI_DEFAULT);
     if (db->status != OCI_SUCCESS) {
         printf("[Oracle DB] Error executing SQL statement\n");
@@ -138,7 +138,8 @@ int OracleDB_execute(OracleDB *db, const char *sql_query) {
 }
 
 // Execute SQL with bind variables
-// Execute SQL with bind variables
+// @params db: OracleDB struct, sql_query: SQL query, bind_vars: array of bind variables, num_bind_vars: number of bind variables
+// @return 0 if success, 1 if error
 int OracleDB_execute_bind(OracleDB *db, const char *sql_query, const char **bind_vars, int num_bind_vars) {
     OCIStmt *stmthp;
 
@@ -169,7 +170,7 @@ int OracleDB_execute_bind(OracleDB *db, const char *sql_query, const char **bind
         }
     }
 
-    // Execute the SQL statement
+    // execute
     db->status = OCIStmtExecute(db->svchp, stmthp, db->errhp, 1, 0, NULL, NULL, OCI_DEFAULT);
     if (db->status != OCI_SUCCESS) {
         printf("[Oracle DB] Error executing bind SQL statement\n");
@@ -198,7 +199,7 @@ int OracleDB_execute_bind(OracleDB *db, const char *sql_query, const char **bind
 }
 
     // How to use bind variables
-    // Bind variables is faster for adding lists to data to a table.
+    // Bind variables is faster for adding lists of data to a table.
     //
     // const char *sql_query = "INSERT INTO table (id, name) VALUES (:1, :2)";
     // const char *id_values[] = {"101", "102", "103", "104", "105"};
@@ -212,7 +213,9 @@ int OracleDB_execute_bind(OracleDB *db, const char *sql_query, const char **bind
     // }
 
 
-// Cleans up OCI handles
+// Clean up OCI handles
+// @params db: OracleDB struct
+// @return 0 if success, 1 if error
 int OracleDB_clean_up(OracleDB *db) {
     if (db->usrhp) OCIHandleFree(db->usrhp, OCI_HTYPE_SESSION);
     if (db->svchp) OCIHandleFree(db->svchp, OCI_HTYPE_SVCCTX);
@@ -222,7 +225,9 @@ int OracleDB_clean_up(OracleDB *db) {
     return 0;
 }
 
-// Disconnects from Oracle Database
+// Disconnect from Oracle Database
+// @params db: OracleDB struct
+// @return 0 if success, 1 if error
 int OracleDB_disconnect(OracleDB *db) {
     if (db->usrhp && db->svchp && db->errhp) OCISessionEnd(db->svchp, db->errhp, db->usrhp, OCI_DEFAULT);
     if (db->srvhp && db->errhp) OCIServerDetach(db->srvhp, db->errhp, OCI_DEFAULT);
@@ -232,7 +237,7 @@ int OracleDB_disconnect(OracleDB *db) {
 }
 
 
-// Prints OCI error
+// Print OCI error
 void print_oci_error(OCIError *errhp) {
     sb4 errcode = 0;
     text errbuf[512];
@@ -240,7 +245,9 @@ void print_oci_error(OCIError *errhp) {
     printf("[Oracle DB] Error %d: %s\n", errcode, errbuf);
 }
 
-// Reads Key File into username, password, and wallet_pw
+// Read Key File into username, password, and wallet_pw
+// @params username: username, password: password, wallet_pw: wallet password
+// @return 0 if success, 1 if error
 int read_key_file(char *username, char *password, char *wallet_pw) {
     // print working directory
     FILE *key_file = fopen("key.txt", "r");
@@ -266,7 +273,8 @@ int read_key_file(char *username, char *password, char *wallet_pw) {
     return 0;
 }
 
-// Sets environment variables
+// Set environment variables
+// @return 0 if success, 1 if error
 int set_environment() {
     // Set TNS_ADMIN environment variable
     printf("[Oracle DB] Setting TNS_ADMIN environment variable.\n");
