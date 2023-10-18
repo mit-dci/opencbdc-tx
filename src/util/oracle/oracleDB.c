@@ -2,51 +2,46 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
-
-#include <unistd.h>
-#include <limits.h>
 
 // string_buffer functions
-void string_buffer_init(string_buffer *sb);
-void string_buffer_append(string_buffer *sb, const char *str);
-void string_buffer_free(string_buffer *sb);
+// void string_buffer_init(string_buffer *sb);
+// void string_buffer_append(string_buffer *sb, const char *str);
+// void string_buffer_free(string_buffer *sb);
 
-static int read_key_file(char *username, char *password, char *wallet_pw);
-static int set_environment();
+// static int read_key_file(char *username, char *password, char *wallet_pw);
+// static int set_environment();
 
-void string_buffer_init(string_buffer *sb) {
-    sb->length = 0;
-    sb->capacity = 128;
-    sb->buffer = malloc(sb->capacity);
-    sb->buffer[0] = '\0';
-}
+// void string_buffer_init(string_buffer *sb) {
+//     sb->length = 0;
+//     sb->capacity = 128;
+//     sb->buffer = malloc(sb->capacity);
+//     sb->buffer[0] = '\0';
+// }
 
-void string_buffer_append(string_buffer *sb, const char *str) {
-    size_t len = strlen(str);
-    while (sb->length + len + 1 > sb->capacity) {
-        sb->capacity *= 2;
-        sb->buffer = realloc(sb->buffer, sb->capacity);
-    }
-    memcpy(sb->buffer + sb->length, str, len);
-    sb->length += len;
-    sb->buffer[sb->length] = '\0';
-}
+// void string_buffer_append(string_buffer *sb, const char *str) {
+//     size_t len = strlen(str);
+//     while (sb->length + len + 1 > sb->capacity) {
+//         sb->capacity *= 2;
+//         sb->buffer = realloc(sb->buffer, sb->capacity);
+//     }
+//     memcpy(sb->buffer + sb->length, str, len);
+//     sb->length += len;
+//     sb->buffer[sb->length] = '\0';
+// }
 
-void string_buffer_free(string_buffer *sb) {
-    free(sb->buffer);
-}
+// void string_buffer_free(string_buffer *sb) {
+//     free(sb->buffer);
+// }
 
 
 int OracleDB_init(OracleDB *db) {
     // set environment variables
     if(set_environment() != 0) {
-        printf("Error setting environment.\n");
+        printf("[Oracle DB] Error setting environment.\n");
         return 1;
     }
-    // probably dont need this
-    // OCIInitialize(OCI_DEFAULT, NULL, NULL, NULL, NULL);
 
+    // Create environment
     db->status = OCIEnvCreate(&db->envhp, OCI_DEFAULT, NULL, NULL, NULL, NULL, 0, NULL);
     if (db->status != OCI_SUCCESS) {
         printf("[Oracle DB] OCIEnvCreate failed.\n");
@@ -66,7 +61,7 @@ int OracleDB_init(OracleDB *db) {
 }
 
 // connect to oracle database
-void OracleDB_connect(OracleDB *db) {
+int OracleDB_connect(OracleDB *db) {
     // Allocate handles
     OCIHandleAlloc(db->envhp, (void **)&db->errhp, OCI_HTYPE_ERROR, 0, NULL);
     OCIHandleAlloc(db->envhp, (void **)&db->srvhp, OCI_HTYPE_SERVER, 0, NULL);
@@ -78,7 +73,7 @@ void OracleDB_connect(OracleDB *db) {
     if(db->status != OCI_SUCCESS) {
         printf("[Oracle DB] Error attaching to server.\n");
         print_oci_error(db->errhp);
-        return;
+        return 1;
     }
 
     // Set attribute server context
@@ -86,7 +81,7 @@ void OracleDB_connect(OracleDB *db) {
     if(db->status != OCI_SUCCESS) {
         printf("[Oracle DB] Error setting server attribute.\n");
         print_oci_error(db->errhp);
-        return;
+        return 1;
     }
 
     // Set attribute session context
@@ -94,13 +89,13 @@ void OracleDB_connect(OracleDB *db) {
     if(db->status != OCI_SUCCESS) {
         printf("[Oracle DB] Error setting username attribute.\n");
         print_oci_error(db->errhp);
-        return;
+        return 1;
     }
     db->status = OCIAttrSet(db->usrhp, OCI_HTYPE_SESSION, (void *)db->password, (ub4)strlen(db->password), OCI_ATTR_PASSWORD, db->errhp);
     if(db->status != OCI_SUCCESS) {
         printf("[Oracle DB] Error setting password attribute.\n");
         print_oci_error(db->errhp);
-        return;
+        return 1;
     }
 
     // Log in
@@ -108,25 +103,26 @@ void OracleDB_connect(OracleDB *db) {
     if(db->status != OCI_SUCCESS) {
         printf("[Oracle DB] Error logging in.\n");
         print_oci_error(db->errhp);
-        return;
+        return 1;
     }
     db->status = OCIAttrSet(db->svchp, OCI_HTYPE_SVCCTX, db->usrhp, 0, OCI_ATTR_SESSION, db->errhp);
     if(db->status != OCI_SUCCESS) {
         printf("[Oracle DB] Error setting session attribute.\n");
         print_oci_error(db->errhp);
-        return;
+        return 1;
     }
 
-    printf("Connected to Oracle Database.\n");
+    printf("[Oracle DB] Connected to Oracle Database.\n");
+    return 0;
 }
 
-char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
+int OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
     OCIStmt *stmthp;
     // OCIDefine *defnp;
 
     // String buffer
-    string_buffer result;
-    string_buffer_init(&result);
+    // string_buffer result;
+    // string_buffer_init(&result);
 
     // // Check if the query is a SELECT statement
     // int is_select = (strncasecmp(sql_query, "SELECT", 6) == 0);
@@ -135,39 +131,39 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
     // Allocate a statement handle
     db->status = OCIHandleAlloc(db->envhp, (void **)&stmthp, OCI_HTYPE_STMT, 0, NULL);
     if (db->status != OCI_SUCCESS) {
-        printf("Error allocating statement handle\n");
+        printf("[Oracle DB] Error allocating statement handle\n");
         print_oci_error(db->errhp);
-        return NULL;
+        return 1;
     }
 
     db->status = OCIStmtPrepare(stmthp, db->errhp, (text *)sql_query, (ub4)strlen(sql_query), OCI_NTV_SYNTAX, OCI_DEFAULT);
     if (db->status != OCI_SUCCESS) {
-        printf("Error preparing SQL statement\n");
+        printf("[Oracle DB] Error preparing SQL statement\n");
         print_oci_error(db->errhp);
-        return NULL;
+        return 1;
     }
 
     // ub4 column_count = 0;
     // char** column_values = NULL;
     // ub2* column_lengths = NULL;
 
-        // EXECUTE NON SELECT STATEMENT SECTION
-        db->status = OCIStmtExecute(db->svchp, stmthp, db->errhp, 1, 0, NULL, NULL, OCI_DEFAULT);
-        if (db->status != OCI_SUCCESS) {
-            printf("Error executing SQL statement\n");
-            print_oci_error(db->errhp);
-            return NULL;
-        }
-        printf("SQL statement executed successfully.\n");
+    // EXECUTE NON SELECT STATEMENT SECTION
+    db->status = OCIStmtExecute(db->svchp, stmthp, db->errhp, 1, 0, NULL, NULL, OCI_DEFAULT);
+    if (db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error executing SQL statement\n");
+        print_oci_error(db->errhp);
+        return 1;
+    }
+    printf("[Oracle DB] SQL statement executed successfully.\n");
 
-        // Commit the transaction
-        db->status = OCITransCommit(db->svchp, db->errhp, OCI_DEFAULT);
-        if (db->status != OCI_SUCCESS) {
-            printf("Error committing transaction\n");
-            print_oci_error(db->errhp);
-            return NULL;
-        }
-        printf("Transaction committed successfully.\n");
+    // Commit the transaction
+    db->status = OCITransCommit(db->svchp, db->errhp, OCI_DEFAULT);
+    if (db->status != OCI_SUCCESS) {
+        printf("[Oracle DB] Error committing transaction\n");
+        print_oci_error(db->errhp);
+        return 1;
+    }
+    printf("[Oracle DB] Transaction committed successfully.\n");
 
     // if(is_select) {
     //     // EXECUTE SELECT STATEMENT SECTION
@@ -318,7 +314,7 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
     //     }
 
     // } else {
-        // // EXECUTE NON SELECT STATEMENT SECTION
+        // EXECUTE NON SELECT STATEMENT SECTION
         // db->status = OCIStmtExecute(db->svchp, stmthp, db->errhp, 1, 0, NULL, NULL, OCI_DEFAULT);
         // if (db->status != OCI_SUCCESS) {
         //     printf("Error executing SQL statement\n");
@@ -337,11 +333,11 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
         // printf("Transaction committed successfully\n");
     // }
 
-    char *result_copy = (char *)malloc((result.length + 1) * sizeof(char));
-    memcpy(result_copy, result.buffer, result.length);
-    result_copy[result.length] = '\0';
-    free(result.buffer);
-    return result_copy;
+    // char *result_copy = (char *)malloc((result.length + 1) * sizeof(char));
+    // memcpy(result_copy, result.buffer, result.length);
+    // result_copy[result.length] = '\0';
+    // free(result.buffer);
+    // return result_copy;
 
 // cleanup:
     // // Free dynamically allocated memory
@@ -354,7 +350,7 @@ char* OracleDB_execute_sql_query(OracleDB *db, const char *sql_query) {
     if (stmthp != NULL) {
         OCIHandleFree(stmthp, OCI_HTYPE_STMT);
     }
-    return NULL;
+    return 0;
 }
 
 // Cleans up OCI handles
@@ -382,7 +378,7 @@ void print_oci_error(OCIError *errhp) {
     sb4 errcode = 0;
     text errbuf[512];
     OCIErrorGet((dvoid *)errhp, 1, (text *)NULL, &errcode, errbuf, sizeof(errbuf), OCI_HTYPE_ERROR);
-    printf("Error %d: %s\n", errcode, errbuf);
+    printf("[Oracle DB] Error %d: %s\n", errcode, errbuf);
 }
 
 // Reads Key File into username, password, and wallet_pw
@@ -414,14 +410,14 @@ int read_key_file(char *username, char *password, char *wallet_pw) {
 // Sets environment variables
 int set_environment() {
     // Set TNS_ADMIN environment variable
-    printf("Setting TNS_ADMIN environment variable.\n");
+    printf("[Oracle DB] Setting TNS_ADMIN environment variable.\n");
     if(setenv("TNS_ADMIN", "/opt/tx-processor/build/src/util/oracle/wallet/", 1) != 0) {
         perror("Error setting TNS_ADMIN environment variable");
         return 1;
     }
 
     // Set LD_LIBRARY_PATH environment variable
-    printf("Setting LD_LIBRARY_PATH environment variable.\n");
+    printf("[Oracle DB] Setting LD_LIBRARY_PATH environment variable.\n");
     if(setenv("LD_LIBRARY_PATH", "/opt/tx-processor/build/src/util/oracle/instantclient/", 1) != 0) {
         perror("Error setting LD_LIBRARY_PATH environment variable");
         return 1;

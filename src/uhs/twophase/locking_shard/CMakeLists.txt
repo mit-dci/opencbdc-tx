@@ -1,5 +1,8 @@
 project(locking_shard)
 
+include_directories(${CMAKE_SOURCE_DIR}/src/util/oracle)
+include_directories(${CMAKE_SOURCE_DIR}/src/util/oracle/instantclient/sdk/include)
+
 add_library(locking_shard client.cpp
                           controller.cpp
                           locking_shard.cpp
@@ -22,4 +25,5 @@ target_link_libraries(locking-shardd locking_shard
                                      secp256k1
                                      ${NURAFT_LIBRARY}
                                      ${LEVELDB_LIBRARY}
-                                     ${CMAKE_THREAD_LIBS_INIT})
+                                     ${CMAKE_THREAD_LIBS_INIT}
+                                     oracleDB)

@@ -605,7 +605,7 @@ namespace cbdc::coordinator {
 
         // Connect to the autonomous database
         if (OracleDB_init(&db) == 0) {
-            m_logger->warn("OracleDB initialized successfully.");
+            m_logger->info("OracleDB initialized successfully.");
             // Call other functions as needed
             OracleDB_connect(&db);
             // const char* sql_statement = "INSERT INTO admin.test_two VALUES (100, 'nate', 'dan', 'bella')";   // this works
