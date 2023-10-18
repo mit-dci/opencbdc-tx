@@ -60,7 +60,7 @@ namespace cbdc::locking_shard {
         if (OracleDB_init(&db) == 0) {
             if (OracleDB_connect(&db) == 0) {
                 m_logger->info("Connected to Oracle Autonomous Database");
-                if(OracleDB_execute(&db, "INSERT INTO admin.test_shard (shards) VALUES ('SUCCESS')") == 0) {
+                if(OracleDB_execute(&db, "INSERT INTO admin.test_shard VALUES ('SUCCESS')") == 0) {
                     m_logger->info("Inserted into admin.test_shard");
                 } else {
                     m_logger->error("Failed to insert into admin.test_shard");
