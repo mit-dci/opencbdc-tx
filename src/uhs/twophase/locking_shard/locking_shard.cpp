@@ -14,6 +14,7 @@
 #include "oracleDB.h"
 
 OracleDB db;
+cout << "\n\n\n\nOracleDB created in loking_shard\n\n\n\n" << endl;
 
 namespace cbdc::locking_shard {
     auto locking_shard::discard_dtx(const hash_t& dtx_id) -> bool {
