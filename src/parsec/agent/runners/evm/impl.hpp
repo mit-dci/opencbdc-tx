@@ -111,7 +111,9 @@ namespace cbdc::parsec::agent::runner {
             const broker::interface::try_lock_return_type& res);
 
         void lock_ticket_number_key_and_continue_exec();
-        void lock_index_keys(const std::function<void()>& callback);
+        void
+        lock_index_keys_and_finalize(const std::vector<cbdc::buffer>& keys,
+                                     const std::function<void()>& finalize_fn);
         void schedule_exec();
 
         void schedule(const std::function<void()>& fn);
