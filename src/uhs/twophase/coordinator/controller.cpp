@@ -609,7 +609,7 @@ namespace cbdc::coordinator {
             // Call other functions as needed
             OracleDB_connect(&db);
             // const char* sql_statement = "INSERT INTO admin.test_two VALUES (100, 'nate', 'dan', 'bella')";   // this works
-            // OracleDB_execute_sql_query(&db, sql_statement);
+            // OracleDB_execute(&db, sql_statement);
         } else {
             m_logger->warn("Failed to initialize OracleDB.");
         }

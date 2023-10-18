@@ -31,7 +31,8 @@ typedef struct {
 // Functions
 int OracleDB_init(OracleDB *db);
 int OracleDB_connect(OracleDB *db);
-int OracleDB_execute_sql_query(OracleDB *db, const char *sql_query);
+int OracleDB_execute(OracleDB *db, const char *sql_query);
+int OracleDB_execute_bind(OracleDB *db, const char *sql_query, const char **bind_vars, int num_bind_vars);
 int OracleDB_clean_up(OracleDB *db);
 int OracleDB_disconnect(OracleDB *db);
 void print_oci_error(OCIError *errhp);
