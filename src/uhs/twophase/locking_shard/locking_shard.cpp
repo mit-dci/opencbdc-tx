@@ -11,6 +11,8 @@
 #include "util/serialization/format.hpp"
 #include "util/serialization/istream_serializer.hpp"
 
+#include "oracleDB.h"
+
 namespace cbdc::locking_shard {
     auto locking_shard::discard_dtx(const hash_t& dtx_id) -> bool {
         std::unique_lock<std::shared_mutex> l(m_mut);
