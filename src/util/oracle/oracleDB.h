@@ -36,8 +36,8 @@ int OracleDB_execute_bind(OracleDB *db, const char *sql_query, const char **bind
 int OracleDB_clean_up(OracleDB *db);
 int OracleDB_disconnect(OracleDB *db);
 void print_oci_error(OCIError *errhp);
-static int read_key_file(char *username, char *password, char *wallet_pw);
-static int set_environment();
+int read_key_file(char *username, char *password, char *wallet_pw);
+int set_environment();
 
 #ifdef __cplusplus
 }
