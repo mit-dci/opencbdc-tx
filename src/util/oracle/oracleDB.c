@@ -8,8 +8,8 @@
 // void string_buffer_append(string_buffer *sb, const char *str);
 // void string_buffer_free(string_buffer *sb);
 
-// static int read_key_file(char *username, char *password, char *wallet_pw);
-// static int set_environment();
+static int read_key_file(char *username, char *password, char *wallet_pw);
+static int set_environment();
 
 // void string_buffer_init(string_buffer *sb) {
 //     sb->length = 0;
