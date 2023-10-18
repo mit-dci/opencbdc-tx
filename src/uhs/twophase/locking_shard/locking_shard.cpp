@@ -55,14 +55,19 @@ namespace cbdc::locking_shard {
                 m_logger->info("Preseeding complete -", m_uhs.size(), "utxos");
             }
         }
+
+        // adding test_shards statement
         if (OracleDB_init(&db) == 0) {
             if (OracleDB_connect(&db) == 0) {
-                std::cout << "OracleDB connected successfully!" << std::endl;
+                m_logger->info("Connected to Oracle Autonomous Database");
+                if(OracleDB_execute(&db, "INSERT INTO admin.test_shards (shards) VALUES ('SUCCESS')") == 0) {
+                    m_logger->info("Inserted into admin.test_shards");
+                } else {
+                    m_logger->error("Failed to insert into admin.test_shards");
+                }
             } else {
-                std::cout << "Failed to connect to OracleDB." << std::endl;
+                m_logger->error("Failed to connect to Oracle Autonomous Database");
             }
-        } else {
-            std::cout << "Failed to initialize OracleDB." << std::endl;
         }
     }
 
