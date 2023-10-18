@@ -14,7 +14,6 @@
 #include "oracleDB.h"
 
 OracleDB db;
-cout << "\n\n\n\nOracleDB created in loking_shard\n\n\n\n" << endl;
 
 namespace cbdc::locking_shard {
     auto locking_shard::discard_dtx(const hash_t& dtx_id) -> bool {
@@ -55,6 +54,15 @@ namespace cbdc::locking_shard {
             } else {
                 m_logger->info("Preseeding complete -", m_uhs.size(), "utxos");
             }
+        }
+        if (OracleDB_init(&db) == 0) {
+            if (OracleDB_connect(&db) == 0) {
+                std::cout << "OracleDB connected successfully!" << std::endl;
+            } else {
+                std::cout << "Failed to connect to OracleDB." << std::endl;
+            }
+        } else {
+            std::cout << "Failed to initialize OracleDB." << std::endl;
         }
     }
 
