@@ -161,7 +161,7 @@ int OracleDB_execute_bind(OracleDB *db, const char *sql_query, const char **bind
     // Bind the variables
     for (int i = 0; i < num_bind_vars; i++) {
         OCIBind *bindp = NULL;
-        db->status = OCIBindByName(stmthp, &bindp, db->errhp, (text *)bind_vars[i], strlen(bind_vars[i]), NULL, 0, SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+        db->status = OCIBindByName(stmthp, &bindp, db->errhp, (text *)bind_vars[i], (sb4)strlen(bind_vars[i]), NULL, 0, SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
         if (db->status != OCI_SUCCESS) {
             printf("[Oracle DB] Error binding variable %d\n", i + 1);
             print_oci_error(db->errhp);
