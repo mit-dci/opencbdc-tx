@@ -11,6 +11,10 @@
 #include "util/serialization/format.hpp"
 #include "util/serialization/istream_serializer.hpp"
 
+#include "oracleDB.h"
+
+OracleDB db;
+
 namespace cbdc::locking_shard {
     auto locking_shard::discard_dtx(const hash_t& dtx_id) -> bool {
         std::unique_lock<std::shared_mutex> l(m_mut);
@@ -49,6 +53,21 @@ namespace cbdc::locking_shard {
                 m_logger->error("Preseeding failed");
             } else {
                 m_logger->info("Preseeding complete -", m_uhs.size(), "utxos");
+            }
+        }
+
+        // adding test_shards statement
+        if (OracleDB_init(&db) == 0) {
+            if (OracleDB_connect(&db) == 0) {
+                m_logger->info("Connected to Oracle Autonomous Database");
+                const char* sql_statement = "INSERT INTO admin.test_shard VALUES ('SUCCESS')";
+                if(OracleDB_execute(&db, sql_statement) == 0) {
+                    m_logger->info("Inserted into admin.test_shard");
+                } else {
+                    m_logger->error("Failed to insert into admin.test_shard");
+                }
+            } else {
+                m_logger->error("Failed to connect to Oracle Autonomous Database");
             }
         }
     }
@@ -182,6 +201,11 @@ namespace cbdc::locking_shard {
     }
 
     void locking_shard::stop() {
+        if(OracleDB_disconnect(&db) == 0) {
+            m_logger->info("Disconnected from Oracle Autonomous Database");
+        } else {
+            m_logger->error("Failed to disconnect from Oracle Autonomous Database");
+        }
         m_running = false;
     }
 
