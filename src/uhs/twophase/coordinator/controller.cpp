@@ -18,6 +18,8 @@
 
 // OracleDB db;
 
+OracleDB db;
+
 namespace cbdc::coordinator {
     controller::controller(size_t node_id,
                            size_t coordinator_id,
@@ -602,7 +604,7 @@ namespace cbdc::coordinator {
         // Connect to the shard clusters
         connect_shards();
         m_logger->warn("Became leader, recovering dtxs");
-
+      
         // // Connect to the autonomous database
         // if (OracleDB_init(&db) == 0) {
         //     m_logger->info("OracleDB initialized successfully.");
@@ -613,7 +615,6 @@ namespace cbdc::coordinator {
         // } else {
         //     m_logger->warn("Failed to initialize OracleDB.");
         // }
-
 
         // Attempt recovery of existing dtxs until we stop being the leader or
         // recovery succeeds

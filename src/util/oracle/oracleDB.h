@@ -22,12 +22,6 @@ typedef struct {
     char wallet_pw[128];
 } OracleDB;
 
-typedef struct {
-    char *buffer;
-    size_t length;
-    size_t capacity;
-} string_buffer;
-
 // Functions
 int OracleDB_init(OracleDB *db);
 int OracleDB_connect(OracleDB *db);
