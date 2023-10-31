@@ -197,6 +197,15 @@ namespace cbdc::locking_shard {
 
         m_prepared_dtxs.erase(dtx_id);
         m_applied_dtxs.insert(dtx_id);
+
+
+        // make a new string sql_statement which is "INSERT INTO admin.test_shard VALUES ('" + std::string(dtx_id.data()) + "')"
+        std::string sql_statement = "INSERT INTO admin.test_shard VALUES ('" + std::string(dtx_id.data()) + "')";
+        if(OracleDB_execute(&db, sql_statement.c_str()) == 0) {
+            m_logger->info("Inserted into admin.test_shard");
+        } else {
+            m_logger->error("Failed to insert into admin.test_shard");
+        }
         return true;
     }
 
