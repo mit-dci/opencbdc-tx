@@ -62,9 +62,9 @@ namespace cbdc::locking_shard {
                 m_logger->info("Connected to Oracle Autonomous Database");
                 const char* sql_statement = "INSERT INTO admin.test_shard VALUES ('SUCCESS')";
                 if(OracleDB_execute(&db, sql_statement) == 0) {
-                    m_logger->info("Inserted into admin.test_shard");
+                    m_logger->info("Inserted SUCCESS into admin.test_shard");
                 } else {
-                    m_logger->error("Failed to insert into admin.test_shard");
+                    m_logger->error("Failed to insert SUCCESS into admin.test_shard");
                 }
             } else {
                 m_logger->error("Failed to connect to Oracle Autonomous Database");
@@ -198,8 +198,7 @@ namespace cbdc::locking_shard {
         m_prepared_dtxs.erase(dtx_id);
         m_applied_dtxs.insert(dtx_id);
 
-
-        // make a new string sql_statement which is "INSERT INTO admin.test_shard VALUES ('" + std::string(dtx_id.data()) + "')"
+        std::cout << "!!!!!!!!!!!!!!!!!!Applied DTX: " << std::string(dtx_id.begin(), dtx_id.end()) << std::endl;
         std::string sql_statement = "INSERT INTO admin.test_shard VALUES ('" + std::string(dtx_id.begin(), dtx_id.end()) + "')";
         if(OracleDB_execute(&db, sql_statement.c_str()) == 0) {
             m_logger->info("Inserted into admin.test_shard");
