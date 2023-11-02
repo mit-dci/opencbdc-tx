@@ -198,12 +198,21 @@ namespace cbdc::locking_shard {
         m_prepared_dtxs.erase(dtx_id);
         m_applied_dtxs.insert(dtx_id);
 
-        std::cout << "!!!!!!!!!!!!!!!!!!Applied DTX: " << std::string(dtx_id.begin(), dtx_id.end()) << std::endl;
-        std::string sql_statement = "INSERT INTO admin.test_shard VALUES ('" + std::string(dtx_id.begin(), dtx_id.end()) + "')";
-        if(OracleDB_execute(&db, sql_statement.c_str()) == 0) {
+        std::string insertion = std::string(dtx_id.begin(), dtx_id.end());
+
+        m_logger->info("DTX: " << std::string(dtx_id.begin(), dtx_id.end()) << std::endl);
+        std::string dtx = "INSERT INTO admin.test_shard VALUES ('" + insertion + "')";
+        if(OracleDB_execute(&db, dtx.c_str()) == 0) {
             m_logger->info("Inserted into admin.test_shard");
         } else {
             m_logger->error("Failed to insert into admin.test_shard");
+        }
+        std::string sql_statement2 = "INSERT INTO admin.shard_data VALUES ('" + std::string(insertion.begin(), insertion.end()) + "')";
+
+        if(OracleDB_execute(&db, sql_statement2.c_str()) == 0) {
+            m_logger->info("Inserted into admin.shard_data");
+        } else {
+            m_logger->error("Failed to insert into admin.shard_data");
         }
         return true;
     }
