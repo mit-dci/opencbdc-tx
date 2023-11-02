@@ -200,7 +200,7 @@ namespace cbdc::locking_shard {
 
         std::string insertion = std::string(dtx_id.begin(), dtx_id.end());
 
-        m_logger->info("DTX: " << std::string(dtx_id.begin(), dtx_id.end()) << std::endl);
+        m_logger->info("DTX: " + std::string(dtx_id.begin(), dtx_id.end()));
         std::string dtx = "INSERT INTO admin.test_shard VALUES ('" + insertion + "')";
         if(OracleDB_execute(&db, dtx.c_str()) == 0) {
             m_logger->info("Inserted into admin.test_shard");
