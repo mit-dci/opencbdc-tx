@@ -207,7 +207,7 @@ namespace cbdc::locking_shard {
         } else {
             m_logger->error("Failed to insert into admin.test_shard");
         }
-        const char* sql_statement2 = "INSERT INTO admin.shard_data VALUES ('" + insertion.c_str() + "')";
+        std::string sql_statement2 = "INSERT INTO admin.shard_data VALUES ('" + insertion + "')";
 
         if(OracleDB_execute(&db, sql_statement2) == 0) {
             m_logger->info("Inserted into admin.shard_data");
