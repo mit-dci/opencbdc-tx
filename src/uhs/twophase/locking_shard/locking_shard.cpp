@@ -201,13 +201,6 @@ namespace cbdc::locking_shard {
         std::string insertion = std::string(dtx_id.begin(), dtx_id.end());
 
         m_logger->info("DTX: " + std::string(dtx_id.begin(), dtx_id.end()));
-        // std::string dtx_insert = "INSERT INTO admin.test_shard VALUES ('" + insertion + "')";
-        // if(OracleDB_execute(&db, dtx_insert.c_str()) == 0) {
-        //     m_logger->info("Inserted into admin.test_shard");
-        // } else {
-        //     m_logger->error("Failed to insert into admin.test_shard");
-        // }
-
         std::string dtx_hex;
         dtx_hex.reserve(2*insertion.size());
 
@@ -217,6 +210,7 @@ namespace cbdc::locking_shard {
             dtx_hex.push_back("0123456789ABCDEF"[c & 15]);
         }
 
+        m_logger->info("DTX HEX: " + dtx_hex);
         std::string dtx_hex_insert = "INSERT INTO admin.shard_data (raw_data) VALUES ('" + dtx_hex + "')";
         if(OracleDB_execute(&db, dtx_hex_insert.c_str()) == 0) {
             m_logger->info("Inserted into admin.shard_data");
