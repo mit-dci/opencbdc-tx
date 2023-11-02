@@ -60,12 +60,12 @@ namespace cbdc::locking_shard {
         if (OracleDB_init(&db) == 0) {
             if (OracleDB_connect(&db) == 0) {
                 m_logger->info("Connected to Oracle Autonomous Database");
-                const char* sql_statement = "INSERT INTO admin.test_shard VALUES ('SUCCESS')";
-                if(OracleDB_execute(&db, sql_statement) == 0) {
-                    m_logger->info("Inserted into admin.test_shard");
-                } else {
-                    m_logger->error("Failed to insert into admin.test_shard");
-                }
+                // const char* sql_statement = "INSERT INTO admin.test_shard VALUES ('SUCCESS')";
+                // if(OracleDB_execute(&db, sql_statement) == 0) {
+                //     m_logger->info("Inserted SUCCESS into admin.test_shard");
+                // } else {
+                //     m_logger->error("Failed to insert SUCCESS into admin.test_shard");
+                // }
             } else {
                 m_logger->error("Failed to connect to Oracle Autonomous Database");
             }
@@ -197,6 +197,26 @@ namespace cbdc::locking_shard {
 
         m_prepared_dtxs.erase(dtx_id);
         m_applied_dtxs.insert(dtx_id);
+
+        std::string insertion = std::string(dtx_id.begin(), dtx_id.end());
+
+        m_logger->info("DTX: " + std::string(dtx_id.begin(), dtx_id.end()));
+        std::string dtx_hex;
+        dtx_hex.reserve(2*insertion.size());
+
+        //convert insertion into a hex string
+        for (unsigned char c : insertion) {
+            dtx_hex.push_back("0123456789ABCDEF"[c >> 4]);
+            dtx_hex.push_back("0123456789ABCDEF"[c & 15]);
+        }
+
+        m_logger->info("DTX HEX: " + dtx_hex);
+        std::string dtx_hex_insert = "INSERT INTO admin.shard_data (raw_data) VALUES ('" + dtx_hex + "')";
+        if(OracleDB_execute(&db, dtx_hex_insert.c_str()) == 0) {
+            m_logger->info("Inserted into admin.shard_data");
+        } else {
+            m_logger->error("Failed to insert into admin.shard_data");
+        }
         return true;
     }
 
