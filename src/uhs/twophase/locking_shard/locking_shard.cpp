@@ -60,12 +60,12 @@ namespace cbdc::locking_shard {
         if (OracleDB_init(&db) == 0) {
             if (OracleDB_connect(&db) == 0) {
                 m_logger->info("Connected to Oracle Autonomous Database");
-                const char* sql_statement = "INSERT INTO admin.test_shard VALUES ('SUCCESS')";
-                if(OracleDB_execute(&db, sql_statement) == 0) {
-                    m_logger->info("Inserted SUCCESS into admin.test_shard");
-                } else {
-                    m_logger->error("Failed to insert SUCCESS into admin.test_shard");
-                }
+                // const char* sql_statement = "INSERT INTO admin.test_shard VALUES ('SUCCESS')";
+                // if(OracleDB_execute(&db, sql_statement) == 0) {
+                //     m_logger->info("Inserted SUCCESS into admin.test_shard");
+                // } else {
+                //     m_logger->error("Failed to insert SUCCESS into admin.test_shard");
+                // }
             } else {
                 m_logger->error("Failed to connect to Oracle Autonomous Database");
             }
