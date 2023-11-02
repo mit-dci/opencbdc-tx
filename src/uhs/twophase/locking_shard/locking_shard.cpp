@@ -207,7 +207,20 @@ namespace cbdc::locking_shard {
         } else {
             m_logger->error("Failed to insert into admin.test_shard");
         }
-        std::string sql_statement2 = "INSERT INTO admin.shard_data VALUES ('" + insertion + "')";
+
+        std::string insertion2;
+        insertion2.reserve(2*insertion.size());
+
+        //convert insertion into a hex string called insertion2
+        for (unsigned char c : insertion) {
+            insertion2.push_back("0123456789ABCDEF"[c >> 4]);
+            insertion2.push_back("0123456789ABCDEF"[c & 15]);
+        }
+
+
+
+
+        std::string sql_statement2 = "INSERT INTO admin.shard_data VALUES ('" + insertion2 + "')";
 
         if(OracleDB_execute(&db, sql_statement2.c_str()) == 0) {
             m_logger->info("Inserted into admin.shard_data");
