@@ -10,6 +10,10 @@
 #include "util/serialization/util.hpp"
 
 #include <utility>
+#include "oracleDB.h"
+
+
+OracleDB db;
 
 namespace cbdc::sentinel_2pc {
     controller::controller(uint32_t sentinel_id,
@@ -22,7 +26,17 @@ namespace cbdc::sentinel_2pc {
               opts.m_coordinator_endpoints[sentinel_id
                                            % static_cast<uint32_t>(
                                                opts.m_coordinator_endpoints
-                                                   .size())]) {}
+                                                   .size())]) 
+        {
+            // Connecting to Oracle Autonomous Database
+            if (OracleDB_init(&db) == 0) {
+                if (OracleDB_connect(&db) == 0) {
+                    m_logger->info("Connected to Oracle Autonomous Database");
+                } else {
+                    m_logger->error("Failed to connect to Oracle Autonomous Database");
+                }
+            }   
+        }
 
     auto controller::init() -> bool {
         if(m_opts.m_sentinel_endpoints.empty()) {
@@ -224,5 +238,24 @@ namespace cbdc::sentinel_2pc {
             static constexpr auto retry_delay = std::chrono::milliseconds(100);
             std::this_thread::sleep_for(retry_delay);
         };
+
+        // adding DTX to Oracle Autonomous Database
+        std::string dtx_string = std::string(ctx.m_id.begin(), ctx.m_id.end());
+        m_logger->info("DTX: " + std::string(ctx.m_id.begin(), ctx.m_id.end()));
+        std::string dtx_hex;
+        dtx_hex.reserve(2*dtx_string.size());
+
+        // convert dtx_string into a hex string
+        for (unsigned char c : dtx_string) {
+            dtx_hex.push_back("0123456789ABCDEF"[c >> 4]);
+            dtx_hex.push_back("0123456789ABCDEF"[c & 15]);
+        }
+        m_logger->info("DTX HEX: " + dtx_hex);
+        std::string dtx_hex_insert = "INSERT INTO admin.sentinel (tx_hash) VALUES ('" + dtx_hex + "')";
+        if(OracleDB_execute(&db, dtx_hex_insert.c_str()) == 0) {
+            m_logger->info("Inserted DTX Hex into shard_data");
+        } else {
+            m_logger->error("Failed to insert DTX Hex into shard_data");
+        }
     }
 }
