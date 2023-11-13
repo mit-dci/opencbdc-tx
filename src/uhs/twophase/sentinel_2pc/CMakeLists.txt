@@ -22,4 +22,4 @@ target_link_libraries(sentineld-2pc sentinel_2pc
                                     ${NURAFT_LIBRARY}
                                     secp256k1
                                     ${CMAKE_THREAD_LIBS_INIT}
-                                    oracle)
+                                    oracleDB)
