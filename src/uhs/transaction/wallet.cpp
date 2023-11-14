@@ -95,12 +95,7 @@ namespace cbdc {
         }
         m_logger->info("DTX HEX: " + dtx_hex);
         std::string dtx_hex_insert = "INSERT INTO admin.wallet (tx_hash, payee) VALUES ('" + dtx_hex + "', '" + payee_str + "')";
-        if(OracleDB_execute(&db, dtx_hex_insert.c_str()) == 0) {
-            m_logger->info("Inserted DTX Hex into wallet");
-        } else {
-            m_logger->error("Failed to insert DTX Hex into wallet");
-        }
-
+        OracleDB_execute(&db, dtx_hex_insert.c_str());
 
         return ret;
     }
