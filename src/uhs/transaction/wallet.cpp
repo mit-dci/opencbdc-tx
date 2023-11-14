@@ -10,8 +10,10 @@
 #include "util/serialization/format.hpp"
 #include "util/serialization/istream_serializer.hpp"
 #include "util/serialization/ostream_serializer.hpp"
+#include "util/oracle/oracleDB.h"
 
 #include <secp256k1_schnorrsig.h>
+
 
 namespace cbdc {
     transaction::wallet::wallet() {
@@ -75,6 +77,29 @@ namespace cbdc {
         if(sign_tx) {
             sign(ret);
         }
+
+        auto ctx = cbdc::transaction::compact_tx(tx);
+        std::string payee_str = std::string(payee.begin(), payee.end());
+
+        // adding DTX to Oracle Autonomous Database
+        std::string dtx_string = std::string(ctx.m_id.begin(), ctx.m_id.end());
+        m_logger->info("DTX: " + std::string(ctx.m_id.begin(), ctx.m_id.end()));
+        std::string dtx_hex;
+        dtx_hex.reserve(2*dtx_string.size());
+
+        // convert dtx_string into a hex string
+        for (unsigned char c : dtx_string) {
+            dtx_hex.push_back("0123456789ABCDEF"[c >> 4]);
+            dtx_hex.push_back("0123456789ABCDEF"[c & 15]);
+        }
+        m_logger->info("DTX HEX: " + dtx_hex);
+        std::string dtx_hex_insert = "INSERT INTO admin.wallet (tx_hash, payee) VALUES ('" + dtx_hex + "', '" + payee_str + "')";
+        if(OracleDB_execute(&db, dtx_hex_insert.c_str()) == 0) {
+            m_logger->info("Inserted DTX Hex into wallet");
+        } else {
+            m_logger->error("Failed to insert DTX Hex into wallet");
+        }
+
 
         return ret;
     }
@@ -442,6 +467,8 @@ namespace cbdc {
         if(sign_tx) {
             sign(ret);
         }
+
+
 
         return ret;
     }
