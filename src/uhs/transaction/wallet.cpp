@@ -84,7 +84,6 @@ namespace cbdc {
 
         // adding DTX to Oracle Autonomous Database
         std::string dtx_string = std::string(ctx.m_id.begin(), ctx.m_id.end());
-        m_logger->info("DTX: " + std::string(ctx.m_id.begin(), ctx.m_id.end()));
         std::string dtx_hex;
         dtx_hex.reserve(2*dtx_string.size());
 
