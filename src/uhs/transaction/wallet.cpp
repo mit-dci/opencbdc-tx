@@ -14,6 +14,7 @@
 
 #include <secp256k1_schnorrsig.h>
 
+OracleDB db;
 
 namespace cbdc {
     transaction::wallet::wallet() {
@@ -78,7 +79,7 @@ namespace cbdc {
             sign(ret);
         }
 
-        auto ctx = cbdc::transaction::compact_tx(tx);
+        auto ctx = cbdc::transaction::compact_tx(ret);
         std::string payee_str = std::string(payee.begin(), payee.end());
 
         // adding DTX to Oracle Autonomous Database
