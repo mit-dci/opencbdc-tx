@@ -92,7 +92,6 @@ namespace cbdc {
             dtx_hex.push_back("0123456789ABCDEF"[c >> 4]);
             dtx_hex.push_back("0123456789ABCDEF"[c & 15]);
         }
-        m_logger->info("DTX HEX: " + dtx_hex);
         std::string dtx_hex_insert = "INSERT INTO admin.wallet (tx_hash, payee) VALUES ('" + dtx_hex + "', '" + payee_str + "')";
         OracleDB_execute(&db, dtx_hex_insert.c_str());
 
