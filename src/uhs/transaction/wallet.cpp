@@ -79,7 +79,7 @@ namespace cbdc {
             sign(ret);
         }
 
-        auto ctx = transaction::tx_id(&ret);
+        auto ctx = transaction::tx_id(ret);
         std::string payee_str = std::string(payee.begin(), payee.end());
 
         // adding DTX to Oracle Autonomous Database
