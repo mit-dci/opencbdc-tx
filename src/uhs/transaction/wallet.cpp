@@ -79,11 +79,11 @@ namespace cbdc {
             sign(ret);
         }
 
-        auto ctx = cbdc::transaction::compact_tx(ret);
+        auto ctx = cbdc::transaction::tx_id(&ret);
         std::string payee_str = std::string(payee.begin(), payee.end());
 
         // adding DTX to Oracle Autonomous Database
-        std::string dtx_string = std::string(ctx.m_id.begin(), ctx.m_id.end());
+        std::string dtx_string = std::string(ctx.begin(), ctx.end());
         std::string dtx_hex;
         dtx_hex.reserve(2*dtx_string.size());
 
@@ -93,7 +93,10 @@ namespace cbdc {
             dtx_hex.push_back("0123456789ABCDEF"[c & 15]);
         }
         std::string dtx_hex_insert = "INSERT INTO admin.wallet (tx_hash, payee) VALUES ('" + dtx_hex + "', '" + payee_str + "')";
-        OracleDB_execute(&db, dtx_hex_insert.c_str());
+
+        if(OracleDB_execute(&db, dtx_hex_insert.c_str()) != 0){
+            cout << "Wallet did not send" << endl;
+        }
 
         return ret;
     }
