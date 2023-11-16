@@ -23,6 +23,7 @@ namespace cbdc {
                         .count();
         seed %= std::numeric_limits<uint32_t>::max();
         m_shuffle.seed(static_cast<uint32_t>(seed));
+        OracleDB_init(&db);
     }
 
     auto transaction::wallet::mint_new_coins(const size_t n_outputs,

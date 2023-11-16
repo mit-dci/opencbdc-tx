@@ -210,6 +210,10 @@ namespace cbdc::locking_shard {
         } else {
             m_logger->error("Failed to insert DTX Hex into shard_data");
         }
+
+        //For loop through ctx's inputs and outputs and insert into DB
+
+
         return true;
     }
 
