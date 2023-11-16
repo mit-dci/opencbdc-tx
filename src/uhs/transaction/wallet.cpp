@@ -23,7 +23,13 @@ namespace cbdc {
                         .count();
         seed %= std::numeric_limits<uint32_t>::max();
         m_shuffle.seed(static_cast<uint32_t>(seed));
-        OracleDB_init(&db);
+        if(OracleDB_init(&db) == 0) {
+            if(OracleDB_connect(&db) == 0) {
+                std::cout << "Connected to Oracle Autonomous Database" << std::endl;
+            }else{
+                std::cout << "Failed to connect to Oracle Autonomous Database" << std::endl;
+            }
+        }
     }
 
     auto transaction::wallet::mint_new_coins(const size_t n_outputs,
