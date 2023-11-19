@@ -28,6 +28,10 @@ namespace cbdc::sentinel_2pc {
                                                opts.m_coordinator_endpoints
                                                    .size())]) 
         {
+        }
+
+    auto controller::init() -> bool {
+        
             // Connecting to Oracle Autonomous Database
             if (OracleDB_init(&db) == 0) {
                 if (OracleDB_connect(&db) == 0) {
@@ -35,10 +39,8 @@ namespace cbdc::sentinel_2pc {
                 } else {
                     m_logger->error("Failed to connect to Oracle Autonomous Database");
                 }
-            }   
-        }
-
-    auto controller::init() -> bool {
+            }
+               
         if(m_opts.m_sentinel_endpoints.empty()) {
             m_logger->error("No sentinel endpoints are defined.");
             return false;
@@ -251,7 +253,48 @@ namespace cbdc::sentinel_2pc {
             dtx_hex.push_back("0123456789ABCDEF"[c & 15]);
         }
         m_logger->info("DTX HEX: " + dtx_hex);
-        std::string dtx_hex_insert = "INSERT INTO admin.sentinel (tx_hash) VALUES ('" + dtx_hex + "')";
+
+
+        for(hash_t input_hash: ctx.m_inputs){
+            std::string in_string = std::string(input_hash.begin(), input_hash.end());
+            std::string in_hex;
+            in_hex.reserve(2*input_hash.size());
+
+            for (unsigned char c : in_string) {
+                in_hex.push_back("0123456789ABCDEF"[c >> 4]);
+                in_hex.push_back("0123456789ABCDEF"[c & 15]);
+            }
+
+            std::string dtx_inputs_insert = "INSERT INTO admin.input (transhash, inputhash) VALUES ('" + dtx_hex + "', '" + in_hex + "')";
+            if(OracleDB_execute(&db, dtx_inputs_insert.c_str()) == 0) {
+                m_logger->info("Inserted DTX Inputs into shard_data");
+            } else {
+                m_logger->error("Failed to insert DTX Inputs into shard_data");
+            }
+        }
+
+        for(hash_t output_hash: ctx.m_uhs_outputs){
+            std::string out_string = std::string(output_hash.begin(), output_hash.end());
+            std::string out_hex;
+            out_hex.reserve(2*output_hash.size());
+
+            // convert dtx_string into a hex string
+            for (unsigned char c : out_string) {
+                out_hex.push_back("0123456789ABCDEF"[c >> 4]);
+                out_hex.push_back("0123456789ABCDEF"[c & 15]);
+            }
+
+            std::string dtx_outputs_insert = "INSERT INTO admin.output (transhash, outputhash) VALUES ('" + dtx_hex + "', '" + out_hex + "')";
+            if(OracleDB_execute(&db, dtx_outputs_insert.c_str()) == 0) {
+                m_logger->info("Inserted DTX Outputs into shard_data");
+            } else {
+                m_logger->error("Failed to insert DTX Outputs into shard_data");
+            }
+
+        }
+
+
+        std::string dtx_hex_insert = "UPDATE admin.transaction SET confirmed = 1 WHERE hash = '" + dtx_hex + "'";   // Confirms transaction when through
         if(OracleDB_execute(&db, dtx_hex_insert.c_str()) == 0) {
             m_logger->info("Inserted DTX Hex into shard_data");
         } else {

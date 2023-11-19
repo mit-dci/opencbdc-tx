@@ -204,7 +204,13 @@ namespace cbdc::locking_shard {
             dtx_hex.push_back("0123456789ABCDEF"[c & 15]);
         }
         m_logger->info("DTX HEX: " + dtx_hex);
-        std::string dtx_hex_insert = "INSERT INTO admin.shard_data (raw_data) VALUES ('" + dtx_hex + "')";
+
+
+
+        std::string dtx_inputs_insert = "INSERT INTO admin.input (transhash, inputhash) VALUES ('" + dtx_hex + "')";
+
+
+        std::string dtx_hex_insert = "UPDATE admin.transaction SET confirmed = 1 WHERE hash = '" + dtx_hex + "'"; 
         if(OracleDB_execute(&db, dtx_hex_insert.c_str()) == 0) {
             m_logger->info("Inserted DTX Hex into shard_data");
         } else {
