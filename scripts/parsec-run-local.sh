@@ -68,5 +68,5 @@ sleep 5
     --shard0_count=1 --shard00_endpoint=$IP:5556 --node_id=0 --component_id=0 \
     --agent_count=1 --agent0_endpoint=$IP:$PORT --ticket_machine_count=1 \
     --ticket_machine0_endpoint=$IP:7777 --loglevel=$LOGLEVEL \
-    --runner_type=$RUNNER_TYPE logs/agentd.log &
+    --runner_type=$RUNNER_TYPE > logs/agentd.log &
 echo spawned
