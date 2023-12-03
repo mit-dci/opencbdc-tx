@@ -87,6 +87,9 @@ namespace cbdc::parsec::broker {
         /// \return highest ticket number that was used
         auto highest_ticket() -> ticket_number_type override;
 
+        /// Print the state of all tickets somewhere
+        void log_tickets();
+
       private:
         enum class ticket_state : uint8_t {
             begun,
