@@ -14,6 +14,7 @@
 #include "runners/evm/messages.hpp"
 #include "runners/evm/util.hpp"
 #include "runners/lua/server.hpp"
+#include "runners/py/py_server.hpp"
 #include "runtime_locking_shard/client.hpp"
 #include "ticket_machine/client.hpp"
 #include "util.hpp"
@@ -142,6 +143,16 @@ auto main(int argc, char** argv) -> int {
             broker,
             log,
             cfg.value());
+    } else if(cfg->m_runner_type == cbdc::parsec::runner_type::py) {
+        auto rpc_server = std::make_unique<
+            cbdc::rpc::async_tcp_server<cbdc::parsec::agent::rpc::request,
+                                        cbdc::parsec::agent::rpc::response>>(
+            cfg->m_agent_endpoints[cfg->m_component_id]);
+        server = std::make_unique<cbdc::parsec::agent::rpc::py_server>(
+            std::move(rpc_server),
+            broker,
+            log,
+            cfg.value());
     } else {
         log->error("Unknown runner type");
         return 1;
@@ -160,11 +171,19 @@ auto main(int argc, char** argv) -> int {
 
     log->info("Agent running");
 
+    std::thread ticket_state_logger([&broker] {
+        while(running) {
+            broker->log_tickets();
+            std::this_thread::sleep_for(std::chrono::seconds(10));
+        }
+    });
+
     while(running) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     log->info("Shutting down...");
+    ticket_state_logger.join();
 
     return 0;
 }

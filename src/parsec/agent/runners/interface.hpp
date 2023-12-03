@@ -81,7 +81,7 @@ namespace cbdc::parsec::agent::runner {
         /// Constructor.
         /// \param logger log instance.
         /// \param cfg config reference.
-        /// \param function key of function bytecode to execute.
+        /// \param function function code to execute.
         /// \param param parameter to pass to function.
         /// \param is_readonly_run true if runner execution should not result in state
         ///                changes.
@@ -118,6 +118,7 @@ namespace cbdc::parsec::agent::runner {
 
         friend class lua_runner;
         friend class evm_runner;
+        friend class py_runner;
 
       private:
         std::shared_ptr<logging::log> m_log;

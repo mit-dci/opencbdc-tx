@@ -16,6 +16,7 @@ target_link_libraries(agentd broker
                              parsec
                              evm_runner
                              lua_runner
+                             py_runner
                              agent
                              json_rpc_http
                              runners

@@ -47,6 +47,7 @@ namespace cbdc::parsec::agent::rpc {
       private:
         friend class server;
         friend class http_server;
+        friend class py_server;
 
         std::shared_ptr<broker::interface> m_broker;
         std::shared_ptr<logging::log> m_log;

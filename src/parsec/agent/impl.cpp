@@ -36,6 +36,7 @@ namespace cbdc::parsec::agent {
           m_threads(std::move(t_pool)) {}
 
     auto impl::exec() -> bool {
+        m_log->trace("agent->exec called");
         std::unique_lock l(m_mut);
         switch(m_state) {
             // In these states we can start again from the beginning
@@ -130,6 +131,7 @@ namespace cbdc::parsec::agent {
     }
 
     void impl::do_start() {
+        m_log->trace("do start called");
         std::unique_lock l(m_mut);
         assert(m_ticket_number.has_value());
         assert(m_state == state::begin_sent
@@ -343,7 +345,6 @@ namespace cbdc::parsec::agent {
             m_ticket_number.value());
         auto run_res = m_runner->run();
         if(!run_res) {
-            // telemetry_log("agent_handle_function", 2, start);
             m_state = state::function_failed;
             m_log->error("Failed to start contract execution");
             m_result = error_code::function_execution;
