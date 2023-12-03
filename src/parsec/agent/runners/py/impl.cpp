@@ -114,10 +114,9 @@ namespace cbdc::parsec::agent::runner {
     }
 
     void py_runner::parse_header() {
-        /* Assumes that header is <n returns> <n inputs> | return types | return args | input types | input args |
-           function code */
+        /* Assumes that header is <n returns> <n inputs> | return types |
+           return args | input types | input args | function code */
         auto functionString = std::string((char*)m_function.data());
-
 
         m_input_args.clear();
         m_return_args.clear();
