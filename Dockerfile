@@ -27,6 +27,8 @@ FROM $BASE_IMAGE AS builder
 # Copy source
 COPY . .
 
+ENV PY_VER=python3.8
+
 # Build binaries
 RUN mkdir build && \
     cd build && \
@@ -90,6 +92,11 @@ COPY --from=builder /opt/tx-processor/build/src/parsec/ticket_machine/ticket_mac
 # Copy load generators
 COPY --from=builder /opt/tx-processor/build/tools/bench/parsec/evm/evm_bench ./build/tools/bench/parsec/evm/evm_bench
 COPY --from=builder /opt/tx-processor/build/tools/bench/parsec/lua/lua_bench ./build/tools/bench/parsec/lua/lua_bench
+COPY --from=builder /opt/tx-processor/build/tools/bench/parsec/py/py_bench ./build/tools/bench/parsec/py/py_bench
 
 # Copy wait script
 COPY --from=builder /opt/tx-processor/scripts/wait-for-it.sh ./scripts/wait-for-it.sh
+
+# Copy python scripts
+COPY --from=builder /opt/tx-processor/scripts/pythonContractConverter.py ./scripts/pythonContractConverter.py
+COPY --from=builder /opt/tx-processor/scripts/paycontract.py ./scripts/paycontract.py

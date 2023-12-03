@@ -41,7 +41,7 @@ fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   apt update
-  apt install -y build-essential wget cmake libgtest-dev libbenchmark-dev lcov git software-properties-common rsync unzip
+  apt install -y build-essential wget cmake libgtest-dev libbenchmark-dev lcov git software-properties-common rsync unzip python3-dev
 
   wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | $SUDO apt-key add -
   $SUDO add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
