@@ -43,8 +43,17 @@ find_library(EVMONE_LIBRARY evmone REQUIRED)
 find_library(JSON_LIBRARY libjsoncpp.a jsoncpp REQUIRED)
 find_library(CURL_LIBRARY libcurl.a curl REQUIRED)
 find_library(MHD_LIBRARY libmicrohttpd.a REQUIRED)
+find_package(Python REQUIRED)
 
 set(LUA_LIBRARY "${LUA_LIBRARY}" "-ldl")
+
+execute_process(
+    COMMAND python3 --version
+    OUTPUT_VARIABLE version_string
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+string(REGEX MATCH "Python ([0-9]+\\.[0-9]+)\\.[0-9]+" version_number ${version_string})
+set(PYTHON_VERSION "python${CMAKE_MATCH_1}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 

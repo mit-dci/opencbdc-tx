@@ -12,7 +12,8 @@ add_executable(run_integration_tests mock_system.cpp
                                      replicated_atomizer_integration_tests.cpp
                                      parsec_evm_end_to_end_test.cpp
                                      two_phase_end_to_end_test.cpp
-                                     watchtower_integration_test.cpp)
+                                     watchtower_integration_test.cpp
+                                     parsec_py_end_to_end_test.cpp)
 
 target_compile_options(run_integration_tests PRIVATE -ftest-coverage -fprofile-arcs)
 target_link_options(run_integration_tests PRIVATE --coverage)
@@ -31,6 +32,7 @@ target_link_libraries(run_integration_tests ${GTEST_LIBRARY}
                                             coordinator
                                             locking_shard
                                             evm_runner
+                                            py_runner
                                             ticket_machine
                                             runtime_locking_shard
                                             runners
@@ -52,3 +54,5 @@ target_link_libraries(run_integration_tests ${GTEST_LIBRARY}
                                             ${CURL_LIBRARY}
                                             ${MHD_LIBRARY}
                                             ${CMAKE_THREAD_LIBS_INIT})
+
+include_directories(/usr/include/${PYTHON_VERSION})

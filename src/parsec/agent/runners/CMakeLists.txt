@@ -4,3 +4,4 @@ add_library(runners interface.cpp)
 
 add_subdirectory(lua)
 add_subdirectory(evm)
+add_subdirectory(py)
