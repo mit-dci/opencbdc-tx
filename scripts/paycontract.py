@@ -30,3 +30,4 @@ def pay2(pay1, pay2, balance0, balance1, balance2):
     balance1 = balance1 + pay1
     balance2 = balance2 + pay2
     return [balance0, balance1, balance2]
+
