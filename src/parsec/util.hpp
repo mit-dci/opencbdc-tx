@@ -25,6 +25,8 @@ namespace cbdc::parsec {
         lua,
         /// Ethereum-style transactions using EVM.
         evm,
+        /// Python Script using CPython
+        py,
     };
 
     /// Configuration parameters for a phase two system.
@@ -71,6 +73,20 @@ namespace cbdc::parsec {
                  broker::key_type key,
                  broker::value_type value,
                  const std::function<void(bool)>& result_callback) -> bool;
+
+    /// Asynchronously get the value stored at key from the cluster.
+    /// Intended for testing purposes.
+    /// \param broker broker to use for reading the row.
+    /// \param key key at which to read.
+    /// \param result_callback function to call on fetch success or
+    ///                        failure.
+    /// \return value stored at key
+    auto get_row(const std::shared_ptr<broker::interface>& broker,
+                 broker::key_type key,
+                 const std::function<void(
+                     cbdc::parsec::broker::interface::try_lock_return_type)>&
+                     result_callback)
+        -> cbdc::parsec::broker::interface::try_lock_return_type;
 }
 
 #endif
