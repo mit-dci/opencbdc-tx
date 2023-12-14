@@ -81,9 +81,9 @@ auto main(int argc, char** argv) -> int {
         if(!agent->init()) {
             log->error("Error connecting to agent");
             return 1;
-        } else {
-            log->trace("Connected to agent");
         }
+        log->trace("Connected to agent");
+
         agents.emplace_back(agent);
     }
     // SETUP END
@@ -91,9 +91,10 @@ auto main(int argc, char** argv) -> int {
     // TICKET LOGGER STARTING
     std::atomic_bool running = true;
     std::thread ticket_state_logger([&broker, &running] {
+        static constexpr auto log_timestep = 10;
         while(running) {
             broker->log_tickets();
-            std::this_thread::sleep_for(std::chrono::seconds(10));
+            std::this_thread::sleep_for(std::chrono::seconds(log_timestep));
         }
     });
     ticket_state_logger.detach();
@@ -132,8 +133,9 @@ auto main(int argc, char** argv) -> int {
     if(!contract_emplaced) {
         init_error = true;
     }
-    auto fut_contract_placed
-        = prom_contract_placed.get_future().wait_for(std::chrono::seconds(10));
+    static constexpr auto future_timeout = 10;
+    auto fut_contract_placed = prom_contract_placed.get_future().wait_for(
+        std::chrono::seconds(future_timeout));
     if(init_error || fut_contract_placed != std::future_status::ready) {
         log->error("Error placing contract");
         return 2;
@@ -151,19 +153,19 @@ auto main(int argc, char** argv) -> int {
     std::vector<cbdc::parsec::pybench_wallet> wallets;
 
     /// \todo Read this in from config
-    size_t n_wallets = 26;
+    static constexpr auto n_wallets = 26;
 
     for(size_t i = 0; i < n_wallets; i++) {
         auto walletName
             = names[i % names.size()] + std::to_string(i / names.size());
-        wallets.push_back(
+        wallets.emplace_back(
             cbdc::parsec::pybench_wallet(log,
                                          broker,
                                          agents[i % agents.size()],
                                          pay_contract_key,
                                          walletName));
     }
-    auto init_balance = 1000;
+    static constexpr auto init_balance = 1000;
     for(cbdc::parsec::pybench_wallet& wal : wallets) {
         auto res = wal.init(init_balance, [&](bool ret) {
             if(!ret) {
@@ -213,6 +215,8 @@ auto main(int argc, char** argv) -> int {
                              ? n_wallets
                              : std::thread::hardware_concurrency());
     log->trace("Thread count:", thread_count);
+    static constexpr auto ns_per_ms = 1000000;
+    static constexpr auto pay_amount = 10;
     auto threads = std::vector<std::thread>();
     for(size_t i = 0; i < thread_count; i++) {
         auto t = std::thread([&]() {
@@ -234,8 +238,8 @@ auto main(int argc, char** argv) -> int {
                 in_flight++;
                 auto res = wallets[from].pay(
                     to_key,
-                    10,
-                    [&, tx_start, from, to](bool ret) { // 3
+                    pay_amount,
+                    [&, tx_start, from, to](bool ret) {
                         if(!ret) {
                             log->fatal("Pay request error");
                         }
@@ -247,7 +251,7 @@ auto main(int argc, char** argv) -> int {
                                    "to",
                                    wallets[to].get_account_key().c_str(),
                                    " Delay: ",
-                                   tx_delay.count() / 1000000,
+                                   tx_delay.count() / ns_per_ms,
                                    "ms.");
                         total_tx++;
                         if(running_test) {
@@ -294,7 +298,7 @@ auto main(int argc, char** argv) -> int {
 
     log->trace("Checking balances");
 
-    auto tot = std::atomic<uint64_t>{};
+    auto tot = std::atomic<uint32_t>{};
     init_count = 0;
     init_error = false;
     log->trace("AGGREGATING VALUES:");

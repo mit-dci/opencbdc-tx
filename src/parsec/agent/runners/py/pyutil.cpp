@@ -1,7 +1,7 @@
 #include "pyutil.hpp"
 
 #include <Python.h>
-#include <stdio.h>
+#include <cstdio>
 
 namespace cbdc::parsec::pyutils {
     auto formContract(const std::string& filename,
@@ -17,8 +17,14 @@ namespace cbdc::parsec::pyutils {
 
         // This module is required by pythonContractConverter.py. This is how
         // Python modules can be imported into the Python VM
-        PyImport_ImportModuleEx("re", globalDictionary, localDictionary, NULL);
+        PyImport_ImportModuleEx("re",
+                                globalDictionary,
+                                localDictionary,
+                                nullptr);
 
+        // This is the default mechanism for building values provided by Python
+        // so we mark it as no lint
+        // NOLINTNEXTLINE (cppcoreguidelines-pro-type-vararg)
         PyObject* obj = Py_BuildValue("s", contract_formatter.c_str());
         FILE* file = _Py_fopen_obj(obj, "r");
 
@@ -33,31 +39,28 @@ namespace cbdc::parsec::pyutils {
         // argument.
         PyDict_SetItemString(localDictionary, "contract", value);
 
-        if(file != NULL) {
-            [[maybe_unused]] auto r = PyRun_File(file,
-                                                 contract_formatter.c_str(),
-                                                 Py_file_input,
-                                                 globalDictionary,
-                                                 localDictionary);
-            auto word = PyDict_GetItemString(localDictionary, "contract");
-            char* res;
+        if(file != nullptr) {
+            [[maybe_unused]] auto* r = PyRun_File(file,
+                                                  contract_formatter.c_str(),
+                                                  Py_file_input,
+                                                  globalDictionary,
+                                                  localDictionary);
+            auto* word = PyDict_GetItemString(localDictionary, "contract");
+
+            char* res = nullptr;
             if(PyUnicode_Check(word)) {
-                res = PyBytes_AS_STRING(
+                res = PyBytes_AsString(
                     PyUnicode_AsEncodedString(word, "UTF-8", "strict"));
             } else {
                 res = PyBytes_AsString(word);
             }
-            if(res) {
-                Py_Finalize();
-                return std::string(res);
-            } else {
-                Py_Finalize();
-                return "";
-            }
-        } else {
-            /// \todo We should interpret this as an error
+
+            auto retval = (res != nullptr ? std::string(res) : "");
             Py_Finalize();
-            return "";
+            return retval;
         }
+        /// \todo We should interpret this as an error
+        Py_Finalize();
+        return "";
     }
 }

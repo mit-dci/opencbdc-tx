@@ -15,14 +15,14 @@ namespace cbdc::parsec::pybuffer {
       public:
         /// Append a string to the buffer (with null-terminator)
         /// \param data String to append to buffer
-        void appendString(const std::string data);
+        void appendString(const std::string& data);
         /// Append a C-style string to the buffer of given length
         /// \param data Data to append to buffer
         /// \param len Length of string
         void appendCStr(const char* data, size_t len);
         /// Append a byte vector to the buffer
         /// \param data Data to append to buffer
-        void appendByteVector(const std::vector<std::byte> data);
+        void appendByteVector(const std::vector<std::byte>& data);
 
         /// End a "section" in the buffer. This is used to format the data
         /// such that the Python runner can read it.
