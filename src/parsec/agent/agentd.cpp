@@ -172,9 +172,10 @@ auto main(int argc, char** argv) -> int {
     log->info("Agent running");
 
     std::thread ticket_state_logger([&broker] {
+        static constexpr auto log_timestep = 10;
         while(running) {
             broker->log_tickets();
-            std::this_thread::sleep_for(std::chrono::seconds(10));
+            std::this_thread::sleep_for(std::chrono::seconds(log_timestep));
         }
     });
 

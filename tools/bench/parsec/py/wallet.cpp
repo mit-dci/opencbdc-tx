@@ -19,11 +19,11 @@ namespace cbdc::parsec {
                                    std::shared_ptr<broker::interface> broker,
                                    std::shared_ptr<agent::rpc::client> agent,
                                    cbdc::buffer pay_contract_key,
-                                   std::string pubkey)
+                                   const std::string& pubkey)
         : m_log(std::move(log)),
           m_agent(std::move(agent)),
           m_broker(std::move(broker)),
-          m_pay_contract_key(pay_contract_key) {
+          m_pay_contract_key(std::move(pay_contract_key)) {
         m_account_key = runtime_locking_shard::key_type();
         m_account_key.append(pubkey.c_str(), pubkey.size() + 1);
     }
@@ -110,7 +110,7 @@ namespace cbdc::parsec {
         if(amount > m_balance) {
             return false;
         }
-        auto params = make_pay_params(to, amount);
+        auto params = make_pay_params(std::move(to), amount);
         return execute_params(params, false, result_callback);
     }
 }

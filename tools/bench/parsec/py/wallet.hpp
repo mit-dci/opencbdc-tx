@@ -27,7 +27,7 @@ namespace cbdc::parsec {
                        std::shared_ptr<broker::interface> broker,
                        std::shared_ptr<agent::rpc::client> agent,
                        cbdc::buffer pay_contract_key,
-                       std::string pubkey);
+                       const std::string& pubkey);
 
         /// Initializes the account by generating a new public/private key pair
         /// and inserting a new account with the given initial balance.

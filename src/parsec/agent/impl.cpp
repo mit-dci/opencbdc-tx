@@ -352,7 +352,7 @@ namespace cbdc::parsec::agent {
         }
     }
 
-    void impl::do_commit() {
+    void impl::do_commit() { // should force this to wait on locks
         std::unique_lock l(m_mut);
         assert(m_state == state::function_started
                || m_state == state::commit_failed

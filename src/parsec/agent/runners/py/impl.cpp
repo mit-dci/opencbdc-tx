@@ -44,7 +44,8 @@ namespace cbdc::parsec::agent::runner {
         PyObject* localDictionary = PyDict_New();
 
         if(m_function.size() == 0) {
-            m_log->error("Contract has length 0, key may be invalid");
+            m_log->warn(
+                "Contract has length 0, key may be invalid. Bailing out.");
             m_result_callback(runtime_locking_shard::state_update_type());
             return true;
         }
@@ -54,7 +55,7 @@ namespace cbdc::parsec::agent::runner {
         // Parse the parameters buffer into its component strings.
         auto params = parse_params();
 
-        for(runtime_locking_shard::key_type key : m_shard_inputs) {
+        for(runtime_locking_shard::key_type& key : m_shard_inputs) {
             auto dest = cbdc::buffer();
             auto valid_resp = std::promise<bool>();
 
@@ -70,6 +71,7 @@ namespace cbdc::parsec::agent::runner {
                 auto data = handle_try_lock_input_arg(std::move(res), dest);
                 valid_resp.set_value(data);
             });
+
             if(!success) {
                 m_log->error("Failed to issue try lock command");
                 m_result_callback(error_code::internal_error);
@@ -82,7 +84,7 @@ namespace cbdc::parsec::agent::runner {
                             "to be \"0\"");
                 dest.append("0", 2);
             }
-            params.push_back(dest.c_str());
+            params.emplace_back(dest.c_str());
         }
 
         if(m_input_args.size() != params.size()) {
@@ -97,11 +99,11 @@ namespace cbdc::parsec::agent::runner {
                                  value);
         }
 
-        auto r = PyRun_String(m_function.c_str(),
-                              Py_file_input,
-                              globalDictionary,
-                              localDictionary);
-        if(!r) {
+        auto* r = PyRun_String(m_function.c_str(),
+                               Py_file_input,
+                               globalDictionary,
+                               localDictionary);
+        if(r == nullptr) {
             m_log->error("Python VM generated error:", r);
         }
         update_state(localDictionary);
@@ -116,7 +118,8 @@ namespace cbdc::parsec::agent::runner {
     void py_runner::parse_header() {
         /* Assumes that header is <n returns> <n inputs> | return types |
            return args | input types | input args | function code */
-        auto functionString = std::string((char*)m_function.data());
+        auto functionString
+            = std::string(static_cast<char*>(m_function.data()));
 
         m_input_args.clear();
         m_return_args.clear();
@@ -130,8 +133,7 @@ namespace cbdc::parsec::agent::runner {
 
         arg_delim = functionString.find('|');
         arg_string = functionString.substr(0, arg_delim);
-        pos = 0;
-        while((pos = arg_string.find(",", 0)) != std::string::npos) {
+        while((pos = arg_string.find(',', 0)) != std::string::npos) {
             m_return_args.push_back(arg_string.substr(0, pos));
             arg_string.erase(0, pos + 1);
         }
@@ -139,8 +141,7 @@ namespace cbdc::parsec::agent::runner {
 
         arg_delim = functionString.find('|');
         arg_string = functionString.substr(0, arg_delim);
-        pos = 0;
-        while((pos = arg_string.find(",", 0)) != std::string::npos) {
+        while((pos = arg_string.find(',', 0)) != std::string::npos) {
             m_input_args.push_back(arg_string.substr(0, pos));
             arg_string.erase(0, pos + 1);
         }
@@ -159,57 +160,76 @@ namespace cbdc::parsec::agent::runner {
             m_log->error("m_param contains no data");
             return params;
         }
+        m_param.append("\0", 1);
         size_t pipeCount = 0;
         size_t stringCount = 0;
+        auto paramString
+            = std::string(static_cast<char*>(m_param.data()), m_param.size());
         for(size_t i = 0; i < m_param.size(); i++) {
-            if(((char*)m_param.data())[i] == '|') {
+            if(paramString[i] == '|') {
                 pipeCount++;
-            } else if(i > 0 && (int)((char*)m_param.data())[i] == 0
-                      && (int)((char*)m_param.data())[i - 1] != 0) {
+            } else if(i > 0 && paramString[i] == '\0'
+                      && paramString[i - 1] != '\0') {
                 stringCount++;
             }
         }
+        auto bail = false;
         if(pipeCount != 3) {
             m_log->error("m_param sections are improperly formatted");
-            return params;
+            bail = true;
         } else if(stringCount
                   != m_input_args.size() + m_return_args.size() + pipeCount) {
             m_log->error("m_param contains too few arguments or arguments are "
                          "improperly formatted");
+            bail = true;
+        }
+        if(bail) {
             return params;
         }
-        m_param.append("\0", 1);
         // ---
 
-        char* paramString = (char*)m_param.data();
-
         // get parameters that are user inputs
-        while(*paramString != '|') {
-            params.emplace_back(paramString);
-            paramString += params.back().length() + 1;
-        }
-        paramString += 2;
-
-        // get parameters which are to be pulled from shards
-        while(*paramString != '|') {
-            auto tmp = cbdc::buffer();
-            /// \todo Prefer a solution which does not use strlen
-            tmp.append(paramString, std::strlen(paramString) + 1);
-
-            m_shard_inputs.emplace_back(tmp);
-            /// \todo Prefer a solution which does not use strlen
-            paramString += std::strlen(paramString) + 1;
-        }
-        paramString += 2;
-
-        // get the state update keys
-        while(*paramString != '|') { // was previously '\0'
-            auto tmp = cbdc::buffer();
-            tmp.append(paramString, std::strlen(paramString) + 1);
-
-            m_update_keys.emplace_back(tmp);
-            /// \todo Prefer a solution which does not use strlen
-            paramString += std::strlen(paramString) + 1;
+        size_t bufferOffset = 0;
+        auto it = 0;
+        // Known that there are 3 parts of the header
+        while(it < 3) {
+            auto parsedParam = std::string(
+                static_cast<char*>(m_param.data_at(bufferOffset)));
+            if(parsedParam[0] == '|') {
+                it++;
+                bufferOffset += 2;
+                continue;
+            }
+            switch(it) {
+                    /*
+                    In first section, take data and place in params
+                    In second section, take data and place in m_shard_inputs
+                    In third section, take data and place in m_update_keys
+                    */
+                case 0:
+                    params.emplace_back(std::string(parsedParam));
+                    bufferOffset += params.back().length() + 1;
+                    break;
+                case 1: {
+                    auto tmp = cbdc::buffer();
+                    tmp.append(parsedParam.c_str(), parsedParam.length() + 1);
+                    m_shard_inputs.emplace_back(tmp);
+                    bufferOffset += tmp.size();
+                    break;
+                }
+                case 2: {
+                    auto tmp = cbdc::buffer();
+                    tmp.append(parsedParam.c_str(), parsedParam.length() + 1);
+                    m_update_keys.emplace_back(tmp);
+                    bufferOffset += tmp.size();
+                    break;
+                }
+                default:
+                    m_log->fatal(
+                        "Reading past the number of input group "
+                        "sections. Something has gone seriously wrong.");
+                    continue;
+            }
         }
 
         return params;
@@ -251,8 +271,6 @@ namespace cbdc::parsec::agent::runner {
 
         // Communicate updates to agent scope. Will write back to shards.
         m_result_callback(std::move(updates));
-
-        return;
     }
 
     void py_runner::handle_try_lock(
@@ -285,9 +303,7 @@ namespace cbdc::parsec::agent::runner {
             res);
         if(maybe_error.has_value()) {
             m_result_callback(maybe_error.value());
-            return;
         }
-        return;
     }
 
     auto py_runner::handle_try_lock_input_arg(
@@ -331,8 +347,8 @@ namespace cbdc::parsec::agent::runner {
         for(size_t i = 0; i < m_return_types.size(); i++) {
             auto ch = m_return_types[i];
             m_log->trace("Parsing:", m_return_args[i].c_str());
-            auto word = PyDict_GetItemString(localDictionary,
-                                             m_return_args[i].c_str());
+            auto* word = PyDict_GetItemString(localDictionary,
+                                              m_return_args[i].c_str());
             auto buf = cbdc::buffer();
             switch(ch) {
                 case 'l': {
@@ -349,16 +365,16 @@ namespace cbdc::parsec::agent::runner {
                 }
                 case 's': {
                     m_log->trace("Parsing string");
-                    char* res;
+                    char* res = nullptr;
                     if(PyUnicode_Check(word)) {
-                        res = PyBytes_AS_STRING(
+                        res = PyBytes_AsString(
                             PyUnicode_AsEncodedString(word,
                                                       "UTF-8",
                                                       "strict"));
                     } else {
                         res = PyBytes_AsString(word);
                     }
-                    if(res) {
+                    if(res != nullptr) {
                         // PyBytes_AsString returns a null terminated string
                         buf.append(res, strlen(res) + 1);
                     }
@@ -373,16 +389,16 @@ namespace cbdc::parsec::agent::runner {
                 }
                 case 'c': {
                     m_log->trace("Parsing char");
-                    char* res;
+                    char* res = nullptr;
                     if(PyUnicode_Check(word)) {
-                        res = PyBytes_AS_STRING(
+                        res = PyBytes_AsString(
                             PyUnicode_AsEncodedString(word,
                                                       "UTF-8",
                                                       "strict"));
                     } else {
                         res = PyBytes_AsString(word);
                     }
-                    if(res) {
+                    if(res != nullptr) {
                         buf.append(res, strnlen(res, 1));
                     }
                     break;
@@ -393,6 +409,5 @@ namespace cbdc::parsec::agent::runner {
             }
             m_return_values.push_back(buf);
         }
-        return;
     }
 }

@@ -15,9 +15,9 @@
 #include "parsec/runtime_locking_shard/impl.hpp"
 #include "parsec/ticket_machine/impl.hpp"
 
+#include <cstring>
 #include <future>
 #include <gtest/gtest.h>
-#include <string.h>
 
 namespace pythoncontracts {
     std::string pay_key = "pay_contract";
@@ -106,8 +106,8 @@ void parsec_py_end_to_end_test::init_server_and_client(
 
 void parsec_py_end_to_end_test::init_accounts(std::string bal0,
                                               std::string bal1) {
-    m_account0_bal = bal0;
-    m_account1_bal = bal1;
+    m_account0_bal = std::move(bal0);
+    m_account1_bal = std::move(bal1);
 
     m_account0_pubkey = "Alice";
     m_account1_pubkey = "Bob";
@@ -122,31 +122,31 @@ void parsec_py_end_to_end_test::init_accounts(std::string bal0,
     auto keys = std::vector<std::string>(0);
     auto values = std::vector<std::string>(0);
 
-    keys.push_back("Alice");
-    keys.push_back("Bob");
-    keys.push_back(pythoncontracts::pay_key);
-    keys.push_back(pythoncontracts::interest_key);
-    keys.push_back("Interest Rate");
-    keys.push_back("pay2");
+    keys.emplace_back("Alice");
+    keys.emplace_back("Bob");
+    keys.emplace_back(pythoncontracts::pay_key);
+    keys.emplace_back(pythoncontracts::interest_key);
+    keys.emplace_back("Interest Rate");
+    keys.emplace_back("pay2");
 
-    values.push_back("100");
-    values.push_back("400");
+    values.emplace_back("100");
+    values.emplace_back("400");
     auto pay_contract = cbdc::parsec::pyutils::formContract(
         "../scripts/paycontract.py",
         "../scripts/pythonContractConverter.py",
         "pay");
-    values.push_back(pay_contract.c_str());
+    values.emplace_back(pay_contract.c_str());
     auto interest_contract = cbdc::parsec::pyutils::formContract(
         "../scripts/paycontract.py",
         "../scripts/pythonContractConverter.py",
         "accrueInterest");
-    values.push_back(interest_contract.c_str());
-    values.push_back("0.05");
+    values.emplace_back(interest_contract.c_str());
+    values.emplace_back("0.05");
     auto pay2Contract = cbdc::parsec::pyutils::formContract(
         "../scripts/paycontract.py",
         "../scripts/pythonContractConverter.py",
         "pay2");
-    values.push_back(pay2Contract.c_str());
+    values.emplace_back(pay2Contract.c_str());
 
     for(size_t i = 0; i < keys.size(); i++) {
         auto key = cbdc::buffer();
@@ -236,7 +236,7 @@ TEST_F(parsec_py_end_to_end_test, run_contract) {
         pay_contract_key,
         params,
         false,
-        [&](cbdc::parsec::agent::interface::exec_return_type res) {
+        [&](const cbdc::parsec::agent::interface::exec_return_type& res) {
             auto success
                 = std::holds_alternative<cbdc::parsec::agent::return_type>(
                     res);
@@ -321,7 +321,7 @@ TEST_F(parsec_py_end_to_end_test, payTwoEntities) {
         pay_contract_key,
         params,
         false,
-        [&](cbdc::parsec::agent::interface::exec_return_type res) {
+        [&](const cbdc::parsec::agent::interface::exec_return_type& res) {
             auto success
                 = std::holds_alternative<cbdc::parsec::agent::return_type>(
                     res);
@@ -426,7 +426,7 @@ TEST_F(parsec_py_end_to_end_test, instantiate_user) {
         pay_contract_key,
         params,
         false,
-        [&](cbdc::parsec::agent::interface::exec_return_type res) {
+        [&](const cbdc::parsec::agent::interface::exec_return_type& res) {
             auto success
                 = std::holds_alternative<cbdc::parsec::agent::return_type>(
                     res);
@@ -505,7 +505,7 @@ TEST_F(parsec_py_end_to_end_test, accrue_interest) {
         pay_contract_key,
         params,
         false,
-        [&](cbdc::parsec::agent::interface::exec_return_type res) {
+        [&](const cbdc::parsec::agent::interface::exec_return_type& res) {
             auto success
                 = std::holds_alternative<cbdc::parsec::agent::return_type>(
                     res);
@@ -569,7 +569,7 @@ TEST_F(parsec_py_end_to_end_test, invalid_contract) {
         });
     auto fut_res = complete.get_future().wait_for(std::chrono::seconds(10));
     ASSERT_EQ(fut_res, std::future_status::ready);
-    auto aliceInitial = strdup(return_value.c_str());
+    auto* aliceInitial = strdup(return_value.c_str());
 
     key = cbdc::buffer();
     key.append("Bob", 4);
@@ -591,7 +591,7 @@ TEST_F(parsec_py_end_to_end_test, invalid_contract) {
         });
     fut_res = complete.get_future().wait_for(std::chrono::seconds(10));
     ASSERT_EQ(fut_res, std::future_status::ready);
-    auto bobInitial = strdup(return_value.c_str());
+    auto* bobInitial = strdup(return_value.c_str());
 
     auto params = cbdc::parsec::pybuffer::pyBuffer();
     params.appendNumeric<int>(10);
@@ -613,7 +613,7 @@ TEST_F(parsec_py_end_to_end_test, invalid_contract) {
         pay_contract_key,
         params,
         false,
-        [&](cbdc::parsec::agent::interface::exec_return_type res) {
+        [&](const cbdc::parsec::agent::interface::exec_return_type& res) {
             auto success
                 = std::holds_alternative<cbdc::parsec::agent::return_type>(
                     res);
@@ -701,7 +701,7 @@ TEST_F(parsec_py_end_to_end_test, invalid_payment) {
         });
     auto fut_res = complete.get_future().wait_for(std::chrono::seconds(10));
     ASSERT_EQ(fut_res, std::future_status::ready);
-    auto aliceInitial = strdup(return_value.c_str());
+    auto* aliceInitial = strdup(return_value.c_str());
 
     key = cbdc::buffer();
     key.append("Bob", 4);
@@ -723,7 +723,7 @@ TEST_F(parsec_py_end_to_end_test, invalid_payment) {
         });
     fut_res = complete.get_future().wait_for(std::chrono::seconds(10));
     ASSERT_EQ(fut_res, std::future_status::ready);
-    auto bobInitial = strdup(return_value.c_str());
+    auto* bobInitial = strdup(return_value.c_str());
 
     auto params = cbdc::parsec::pybuffer::pyBuffer();
     params.appendNumeric<int>(10);
@@ -745,7 +745,7 @@ TEST_F(parsec_py_end_to_end_test, invalid_payment) {
         pay_contract_key,
         params,
         false,
-        [&](cbdc::parsec::agent::interface::exec_return_type res) {
+        [&](const cbdc::parsec::agent::interface::exec_return_type& res) {
             auto success
                 = std::holds_alternative<cbdc::parsec::agent::return_type>(
                     res);

@@ -73,7 +73,7 @@ namespace cbdc::parsec::broker {
 
     void impl::log_tickets() {
         m_log->trace("Logging tickets");
-        for(auto i : m_tickets) {
+        for(const auto& i : m_tickets) {
             auto i_state = i.second->m_state;
             switch(i_state) {
                 case ticket_state::begun:
@@ -807,24 +807,8 @@ namespace cbdc::parsec::broker {
         }();
 
         if(maybe_error.has_value()) {
-            // if(locktype == lock_type::read) {
-            //     // set ticket state to aborted
-            //     auto ticket = m_tickets.find(ticket_number);
-            //     if(ticket != m_tickets.end()) {
-            //         ticket->second->m_state = ticket_state::aborted;
-            //     }
-            // }
             result_callback(maybe_error.value());
         }
-        // // if read, set ticket state to committed
-        // if(locktype == lock_type::read) {
-        //     // set ticket state to aborted
-        //     auto ticket = m_tickets.find(ticket_number);
-        //     if(ticket != m_tickets.end()) { // this check is probably not
-        //     required
-        //         ticket->second->m_state = ticket_state::committed;
-        //     }
-        // }
     }
 
     void impl::handle_finish(
