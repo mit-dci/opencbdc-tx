@@ -42,7 +42,6 @@ Go to a new separate directory and run the following:
 
 ```console
 $ mkdir parsec-playground && cd parsec-playground
-$ npm -y init   # `-y` keeps all defaults
 $ npm install @nomicfoundation/hardhat-ethers ethers
 $ npm install hardhat
 ```
@@ -50,7 +49,7 @@ $ npm install hardhat
 Finish with initializing Hardhat using:
 
 ```console
-$ npx hardhat
+$ npx hardhat init
 ```
 
 Select to create a JavaScript project.
@@ -61,7 +60,7 @@ These can all be overwritten for the purpose of this guide.
 However, to use the Hardhat compiler, all Solidity files should be stored in the
 `contracts` subdirectory.
 
-Copy the example [hardhat.config.js](../scripts/hardhat.config.js) into this directory.
+Copy the example [scripts/hardhat.config.js](../scripts/hardhat.config.js) into this directory.
 
 Edit the `url:` value in the `hardhat.config.js` file to correspond with the url of the agent RPC server.
 Using Docker this will be `http://localhost:8080/`.
