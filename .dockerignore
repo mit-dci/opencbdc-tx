@@ -16,6 +16,8 @@ scripts/
 !scripts/configure.sh
 !scripts/test-transaction.sh
 !scripts/wait-for-it.sh
+!scripts/pythonContractConverter.py
+!scripts/paycontract.py
 
 # Improves caching significantly
 .git

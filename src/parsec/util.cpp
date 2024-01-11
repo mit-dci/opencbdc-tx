@@ -5,6 +5,8 @@
 
 #include "util.hpp"
 
+#include <cassert>
+#include <future>
 #include <unordered_map>
 
 namespace cbdc::parsec {
@@ -183,6 +185,8 @@ namespace cbdc::parsec {
                 cfg.m_runner_type = runner_type::evm;
             } else if(val == "lua") {
                 cfg.m_runner_type = runner_type::lua;
+            } else if(val == "py") {
+                cfg.m_runner_type = runner_type::py;
             } else {
                 return std::nullopt;
             }
@@ -202,6 +206,7 @@ namespace cbdc::parsec {
                 result_callback(false);
                 return;
             }
+
             auto ticket_number
                 = std::get<cbdc::parsec::ticket_machine::ticket_number_type>(
                     begin_ret);
@@ -243,5 +248,100 @@ namespace cbdc::parsec {
             }
         });
         return begin_res;
+    }
+
+    auto get_row(const std::shared_ptr<broker::interface>& broker,
+                 broker::key_type key,
+                 const std::function<void(
+                     cbdc::parsec::broker::interface::try_lock_return_type)>&
+                     result_callback)
+        -> cbdc::parsec::broker::interface::try_lock_return_type {
+        std::promise<cbdc::parsec::broker::interface::try_lock_return_type>
+            res_promise;
+        auto res_future = res_promise.get_future();
+
+        auto finish_cb = [=](auto finish_ret) {
+            if(finish_ret.has_value()) {
+                result_callback(finish_ret.value());
+            }
+        };
+
+        auto begin_cb = [&](auto begin_ret) {
+            if(!std::holds_alternative<
+                   cbdc::parsec::ticket_machine::ticket_number_type>(
+                   begin_ret)) {
+                res_promise.set_value(
+                    cbdc::parsec::broker::interface::error_code::
+                        ticket_number_assignment);
+                result_callback(cbdc::parsec::broker::interface::error_code::
+                                    ticket_number_assignment);
+                return;
+            }
+
+            auto ticket_number
+                = std::get<cbdc::parsec::ticket_machine::ticket_number_type>(
+                    begin_ret);
+            auto lock_res = broker->try_lock(
+                ticket_number,
+                key,
+                cbdc::parsec::runtime_locking_shard::lock_type::read,
+                [&](auto try_lock_res) {
+                    if(!std::holds_alternative<cbdc::buffer>(try_lock_res)) {
+                        res_promise.set_value(
+                            cbdc::parsec::broker::interface::error_code::
+                                shard_unreachable);
+                        result_callback(cbdc::parsec::broker::interface::
+                                            error_code::shard_unreachable);
+                        return;
+                    }
+                    res_promise.set_value(try_lock_res);
+                    result_callback(try_lock_res);
+
+                    auto commit_cb = [=](auto commit_ret) {
+                        if(commit_ret.has_value()) {
+                            if(std::holds_alternative<
+                                   cbdc::parsec::broker::interface::
+                                       error_code>(commit_ret.value())) {
+                                result_callback(
+                                    std::get<cbdc::parsec::broker::interface::
+                                                 error_code>(
+                                        commit_ret.value()));
+                                return;
+                            }
+                            result_callback(
+                                std::get<cbdc::parsec::runtime_locking_shard::
+                                             shard_error>(commit_ret.value()));
+                            return;
+                        }
+                        auto finish_res
+                            = broker->finish(ticket_number, finish_cb);
+                        if(!finish_res) {
+                            result_callback(cbdc::parsec::broker::interface::
+                                                error_code::finish_error);
+                            return;
+                        }
+                    };
+
+                    auto commit_res = broker->commit(
+                        ticket_number,
+                        runtime_locking_shard::state_update_type(),
+                        commit_cb);
+
+                    if(!commit_res) {
+                        result_callback(cbdc::parsec::broker::interface::
+                                            error_code::commit_error);
+                        return;
+                    }
+                });
+            if(!lock_res) {
+                result_callback(cbdc::parsec::broker::interface::error_code::
+                                    shard_unreachable);
+                return;
+            }
+        };
+        // This never returns false. We don't need the return
+        // value in this context.
+        [[maybe_unused]] auto begin_success = broker->begin(begin_cb);
+        return res_future.get();
     }
 }
