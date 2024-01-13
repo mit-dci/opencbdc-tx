@@ -435,8 +435,13 @@ namespace cbdc::parsec::agent {
         if(res.has_value()) {
             std::visit(
                 overloaded{
-                    [&](broker::interface::error_code /* e */) {
-                        m_state = state::commit_failed;
+                    [&](broker::interface::error_code e) {
+                        if(e == broker::interface::error_code::commit_hazard) {
+                            // Do not retry
+                            m_state = state::commit_error;
+                        } else {
+                            m_state = state::commit_failed;
+                        }
                         m_log->error("Broker error for commit for",
                                      m_ticket_number.value());
                         m_result = error_code::commit_error;
