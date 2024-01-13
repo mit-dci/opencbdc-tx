@@ -397,12 +397,29 @@ namespace cbdc::parsec::broker {
                     return error_code::aborted;
             }
 
+            auto keys_with_tickets = std::unordered_map<
+                cbdc::buffer,
+                bool,
+                cbdc::hashing::const_sip_hash<cbdc::buffer>>();
             for(auto& shard : t_state->m_shard_states) {
                 for(auto& key : shard.second.m_key_states) {
                     if(key.second.m_key_state == key_state::locking) {
                         m_log->error("Cannot commit, still waiting for locks");
                         return error_code::waiting_for_locks;
                     }
+                    keys_with_tickets[key.first] = true;
+                }
+            }
+            for(auto& update_key : state_updates) {
+                if(keys_with_tickets.find(update_key.first)
+                   == keys_with_tickets.end()) {
+                    /// We should fail here, because if this transaction has
+                    /// made it to the commit step without attempting to lock
+                    /// the keys, something signficant has gone wrong, likely
+                    /// associated with the contract itself.
+                    m_log->error("Update map contains keys not associated "
+                                 "with tickets. Aborting.");
+                    return error_code::commit_hazard;
                 }
             }
 

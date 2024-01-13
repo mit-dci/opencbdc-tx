@@ -76,7 +76,10 @@ namespace cbdc::parsec::broker {
             /// Shard error during finish.
             finish_error,
             /// Shard error during get tickets.
-            get_tickets_error
+            get_tickets_error,
+            /// A commit is attempted without associating update keys with
+            /// ticket
+            commit_hazard
         };
 
         /// Return type from a begin operation. Either a new ticket number or
