@@ -1,6 +1,7 @@
 project(integration)
 
-add_executable(run_integration_tests mock_system.cpp
+add_executable(run_integration_tests smart_contract_atomic_commit_test.cpp
+                                     mock_system.cpp
                                      atomizer_raft_integration_test.cpp
                                      atomizer_end_to_end_test.cpp
                                      gtest_evm_jsonrpc_client.cpp
@@ -31,6 +32,7 @@ target_link_libraries(run_integration_tests ${GTEST_LIBRARY}
                                             coordinator
                                             locking_shard
                                             evm_runner
+                                            lua_runner
                                             ticket_machine
                                             runtime_locking_shard
                                             runners
@@ -49,6 +51,7 @@ target_link_libraries(run_integration_tests ${GTEST_LIBRARY}
                                             ${LEVELDB_LIBRARY}
                                             ${NURAFT_LIBRARY}
                                             ${JSON_LIBRARY}
+                                            ${LUA_LIBRARY}
                                             ${CURL_LIBRARY}
                                             ${MHD_LIBRARY}
                                             ${CMAKE_THREAD_LIBS_INIT})

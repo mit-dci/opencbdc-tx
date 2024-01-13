@@ -6,7 +6,7 @@
 #ifndef OPENCBDC_TX_SRC_PARSEC_AGENT_RUNNERS_LUA_SERVER_H_
 #define OPENCBDC_TX_SRC_PARSEC_AGENT_RUNNERS_LUA_SERVER_H_
 
-#include "agent/server_interface.hpp"
+#include "parsec/agent/server_interface.hpp"
 #include "util/rpc/tcp_server.hpp"
 
 namespace cbdc::parsec::agent::rpc {
