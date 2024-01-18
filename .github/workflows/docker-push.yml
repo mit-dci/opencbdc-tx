@@ -39,3 +39,6 @@ jobs:
 
       - name: Build atomizer docker image (push/pull_request with base changes)
         run: docker build --target atomizer --build-arg BASE_IMAGE=opencbdc-tx-base-local -t opencbdc-tx-atomizer-local .
+
+      - name: Build parsec docker image (push/pull_request with base changes)
+        run: docker build --target parsec --build-arg BASE_IMAGE=opencbdc-tx-base-local -t opencbdc-tx-parsec-local .

@@ -52,6 +52,10 @@ jobs:
         if: ${{ steps.changed-files-specific.outputs.any_changed == 'true' }}
         run: docker build --target atomizer --build-arg BASE_IMAGE=opencbdc-tx-base-local .
 
+      - name: Build parsec docker image (pull_request with base changes)
+        if: ${{ steps.changed-files-specific.outputs.any_changed == 'true' }}
+        run: docker build --target parsec --build-arg BASE_IMAGE=opencbdc-tx-base-local .
+
       - name: Build twophase docker image (pull_request with no base changes)
         if: ${{ steps.changed-files-specific.outputs.any_changed == 'false' }}
         run: DOCKER_BUILDKIT=1 docker build --target twophase .
@@ -59,3 +63,7 @@ jobs:
       - name: Build atomizer docker image (pull_request with no base changes)
         if: ${{ steps.changed-files-specific.outputs.any_changed == 'false' }}
         run: DOCKER_BUILDKIT=1 docker build --target atomizer .
+
+      - name: Build parsec docker image (pull_request with no base changes)
+        if: ${{ steps.changed-files-specific.outputs.any_changed == 'false' }}
+        run: DOCKER_BUILDKIT=1 docker build --target parsec .
