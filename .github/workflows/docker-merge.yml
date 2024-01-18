@@ -95,6 +95,21 @@ jobs:
             type=ref,event=pr
             type=sha
 
+      - name: Docker meta parsec (merge)
+        id: meta-parsec
+        uses: docker/metadata-action@v3
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ghcr.io/${{ github.repository }}-parsec
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+
+
       - name: Build and push twophase (merge)
         uses: docker/build-push-action@v2
         with:
@@ -114,5 +129,16 @@ jobs:
           push: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
           tags: ${{ steps.meta-atomizer.outputs.tags }}
           labels: ${{ steps.meta-atomizer.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push parsec (merge)
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          target: parsec
+          push: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          tags: ${{ steps.meta-parsec.outputs.tags }}
+          labels: ${{ steps.meta-parsec.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
