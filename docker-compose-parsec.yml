@@ -7,6 +7,7 @@ services:
       context: .
       target: parsec
     image: opencbdc-tx-parsec
+    platform: linux/amd64
     tty: true
     restart: always
     command: ./scripts/wait-for-it.sh -s ticket0:7777 -t 60 -- ./scripts/wait-for-it.sh -s shard0:5556 -t 60 -- ./build/src/parsec/agent/agentd --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:8080 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN --runner_type="evm"
@@ -25,6 +26,7 @@ services:
       context: .
       target: parsec
     image: opencbdc-tx-parsec
+    platform: linux/amd64
     tty: true
     command: ./scripts/wait-for-it.sh -s shard0:5556 -t 60 -- ./build/src/parsec/ticket_machine/ticket_machined --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:6666 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN
     networks:
@@ -41,6 +43,7 @@ services:
       context: .
       target: parsec
     image: opencbdc-tx-parsec
+    platform: linux/amd64
     tty: true
     command: ./build/src/parsec/runtime_locking_shard/runtime_locking_shardd --shard_count=1 --shard0_count=1 --shard00_endpoint=shard0:5556 --node_id=0 --component_id=0 --agent_count=1 --agent0_endpoint=agent0:6666 --ticket_machine_count=1 --ticket_machine0_endpoint=ticket0:7777 --loglevel=WARN
     networks:

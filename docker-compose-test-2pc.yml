@@ -7,6 +7,7 @@ services:
       context: .
       target: twophase
     image: opencbdc-tx-twophase
+    platform: linux/amd64
     tty: true
     command: sh ./scripts/test-transaction.sh ./2pc-compose.cfg
     networks:

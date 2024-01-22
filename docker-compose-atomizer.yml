@@ -7,6 +7,7 @@ services:
       context: .
       target: atomizer
     image: opencbdc-tx-atomizer
+    platform: linux/amd64
     tty: true
     command: ./build/src/uhs/atomizer/watchtower/watchtowerd atomizer-compose.cfg 0
     ports:
@@ -27,6 +28,7 @@ services:
       context: .
       target: atomizer
     image: opencbdc-tx-atomizer
+    platform: linux/amd64
     tty: true
     command: ./build/src/uhs/atomizer/atomizer/atomizer-raftd atomizer-compose.cfg 0
     expose:
@@ -47,6 +49,7 @@ services:
       context: .
       target: atomizer
     image: opencbdc-tx-atomizer
+    platform: linux/amd64
     tty: true
     command: ./build/src/uhs/atomizer/archiver/archiverd atomizer-compose.cfg 0
     expose:
@@ -68,6 +71,7 @@ services:
       context: .
       target: atomizer
     image: opencbdc-tx-atomizer
+    platform: linux/amd64
     tty: true
     command: ./build/src/uhs/atomizer/shard/shardd atomizer-compose.cfg 0
     expose:
@@ -90,6 +94,7 @@ services:
       context: .
       target: atomizer
     image: opencbdc-tx-atomizer
+    platform: linux/amd64
     tty: true
     command: ./build/src/uhs/atomizer/sentinel/sentineld atomizer-compose.cfg 0
     ports:
