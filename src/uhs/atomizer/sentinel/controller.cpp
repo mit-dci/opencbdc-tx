@@ -95,22 +95,64 @@ namespace cbdc::sentinel {
 
         if(!res.has_value()) {
             m_logger->debug("Accepted tx:", cbdc::to_string(tx_id));
-        } else {
-            m_logger->debug("Rejected tx:", cbdc::to_string(tx_id));
-        }
-
-        // Only forward transactions that are valid
-        if(!res.has_value()) {
+            // Only forward transactions that are valid
             send_transaction(tx);
+        } else {
+            m_logger->debug(
+                "Rejected tx:",
+                cbdc::to_string(tx_id),
+                "(",
+                cbdc::transaction::validation::to_string(res.value()),
+                ")");
+
+            m_logger->debug("TX Inputs:", std::to_string(tx.m_inputs.size()));
+            for(size_t i = 0; i < tx.m_inputs.size(); i++) {
+                m_logger->debug(
+                    "Input [",
+                    std::to_string(i),
+                    "]: prevout [",
+                    cbdc::to_string(tx.m_inputs[i].m_prevout.m_tx_id),
+                    "/",
+                    std::to_string(tx.m_inputs[i].m_prevout.m_index),
+                    "]");
+                if(tx.m_inputs[i].m_spend_data.has_value()) {
+                    m_logger->debug(
+                        "Input [",
+                        std::to_string(i),
+                        "]: m_spend_data [",
+                        cbdc::to_string(tx.m_inputs[i].m_spend_data->m_blind),
+                        "/",
+                        std::to_string(tx.m_inputs[i].m_spend_data->m_value),
+                        "]");
+                } else {
+                    m_logger->debug("Input [",
+                                    std::to_string(i),
+                                    "]: no m_spend_data");
+                }
+            }
+
+            m_logger->debug("TX Outputs:",
+                            std::to_string(tx.m_outputs.size()));
+            m_logger->debug("TX Witnesses:",
+                            std::to_string(tx.m_witness.size()));
+            for(size_t i = 0; i < tx.m_witness.size(); i++) {
+                auto buf = cbdc::make_buffer(tx.m_witness[i]);
+                m_logger->debug("TX Witness [", i, "]: ", buf.to_hex());
+            }
         }
 
         return execute_response{status, res};
     }
 
+    // todo: need to take a full_tx instead of a compact_tx for
+    // gather_attestations
     void controller::send_transaction(const transaction::full_tx& tx) {
         auto compact_tx = cbdc::transaction::compact_tx(tx);
         auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
         compact_tx.m_attestations.insert(attestation);
+        auto ctx_pkt = std::make_shared<cbdc::buffer>();
+        auto ctx_ser = cbdc::buffer_serializer(*ctx_pkt);
+        ctx_ser << compact_tx;
 
         gather_attestations(tx, compact_tx, {});
     }

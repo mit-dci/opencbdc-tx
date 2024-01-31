@@ -55,6 +55,25 @@ namespace cbdc::transaction::validation {
         uint64_t m_idx{};
     };
 
+    /// A proof verification error
+    enum class proof_error_code : uint8_t {
+        invalid_auxiliary, ///< deserializing the auxiliary commitment failed
+        invalid_uhs_id,    ///< deserializing the UHS ID failed
+        invalid_signature_key, ///< constructing consistency key failed
+        inconsistent_value,    ///< consistency proof did not verify
+        out_of_range,          ///< range proof did not verify
+        wrong_sum,             ///< auxiliaries did not sum as-required
+        missing_rangeproof,    ///< rangeproof missing in output
+    };
+
+    /// An error that may occur when verifying transaction proof
+    struct proof_error {
+        auto operator==(const proof_error& rhs) const -> bool;
+
+        /// The type of proof error
+        proof_error_code m_code{};
+    };
+
     /// Types of errors that may occur when sentinels validate witness
     /// commitments
     enum class witness_error_code : uint8_t {
@@ -110,8 +129,11 @@ namespace cbdc::transaction::validation {
     /// A transaction can fail validation because of an error in the inputs,
     /// outputs, witnesses, or because the transaction-local invariants
     /// do not hold.
-    using tx_error = std::
-        variant<input_error, output_error, witness_error, tx_error_code>;
+    using tx_error = std::variant<input_error,
+                                  output_error,
+                                  witness_error,
+                                  tx_error_code,
+                                  proof_error>;
 
     /// \brief Runs static validation checks on the given transaction
     ///
@@ -121,10 +143,6 @@ namespace cbdc::transaction::validation {
     /// \return null if transaction is valid, otherwise error information
     auto check_tx(const transaction::full_tx& tx) -> std::optional<tx_error>;
     auto check_tx_structure(const transaction::full_tx& tx)
-        -> std::optional<tx_error>;
-    auto check_input_structure(const transaction::input& inp) -> std::optional<
-        std::pair<input_error_code, std::optional<output_error_code>>>;
-    auto check_in_out_set(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
     // TODO: check input assumptions with flags for whether preconditions have
     //       already been checked.
@@ -144,12 +162,19 @@ namespace cbdc::transaction::validation {
         -> std::optional<tx_error>;
     auto check_output_count(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
+    auto check_output_rangeproofs_exist(const transaction::full_tx& tx)
+        -> std::optional<proof_error>;
     auto check_witness_count(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
     auto check_input_set(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
-    auto check_output_value(const transaction::output& out)
-        -> std::optional<output_error_code>;
+    auto check_proof(const compact_tx& tx,
+                     const std::vector<commitment_t>& inps)
+        -> std::optional<proof_error>;
+    auto check_commitment_sum(
+        const std::vector<secp256k1_pedersen_commitment>& inputs,
+        const std::vector<secp256k1_pedersen_commitment>& outputs,
+        uint64_t minted) -> bool;
     auto get_p2pk_witness_commitment(const pubkey_t& payee) -> hash_t;
     auto to_string(const tx_error& err) -> std::string;
 

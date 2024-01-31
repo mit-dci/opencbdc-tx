@@ -14,7 +14,6 @@
 #include "uhs/atomizer/atomizer/block.hpp"
 #include "uhs/atomizer/atomizer/format.hpp"
 #include "uhs/atomizer/watchtower/tx_error_messages.hpp"
-#include "uhs/transaction/transaction.hpp"
 #include "util/common/config.hpp"
 #include "util/common/logging.hpp"
 #include "util/network/connection_manager.hpp"
@@ -65,11 +64,27 @@ namespace cbdc::shard {
         /// \return the best block height.
         [[nodiscard]] auto best_block_height() const -> uint64_t;
 
+        /// Returns a LevelDB snapshot of the current state of the shard's
+        /// database.
+        /// \return LevelDB snapshot.
+        auto get_snapshot() -> std::shared_ptr<const leveldb::Snapshot>;
+
+        /// Audit the supply of coins in this shard's UHS and check UHS IDs
+        /// match the nested data and value stored in the UHS.
+        /// \param snp LevelDB snapshot upon which to calculate the audit.
+        /// \return per-range summary commitments to value
+        auto audit(const std::shared_ptr<const leveldb::Snapshot>& snp)
+            -> std::unordered_map<unsigned char, commitment_t>;
+
       private:
         [[nodiscard]] auto is_output_on_shard(const hash_t& uhs_hash) const
             -> bool;
 
-        void update_snapshot();
+        [[nodiscard]] auto
+        is_output_on_shard(const transaction::compact_output& put) const
+            -> bool;
+
+        void update_snapshot(std::shared_ptr<const leveldb::Snapshot> snp);
 
         std::unique_ptr<leveldb::DB> m_db;
         leveldb::ReadOptions m_read_options;
@@ -81,7 +96,14 @@ namespace cbdc::shard {
         uint64_t m_snp_height{};
         std::shared_mutex m_snp_mut;
 
-        const std::string m_best_block_height_key = "bestBlockHeight";
+        const std::string m_best_block_height_key;
+
+        static const inline auto m_secp
+            = std::unique_ptr<secp256k1_context,
+                              decltype(&secp256k1_context_destroy)>(
+                secp256k1_context_create(SECP256K1_CONTEXT_SIGN
+                                         | SECP256K1_CONTEXT_VERIFY),
+                &secp256k1_context_destroy);
 
         std::pair<uint8_t, uint8_t> m_prefix_range;
     };

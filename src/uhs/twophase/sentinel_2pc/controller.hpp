@@ -12,12 +12,15 @@
 #include "uhs/sentinel/client.hpp"
 #include "uhs/sentinel/format.hpp"
 #include "uhs/transaction/messages.hpp"
+#include "uhs/transaction/transaction.hpp"
 #include "uhs/twophase/coordinator/client.hpp"
 #include "util/common/config.hpp"
 #include "util/common/hashmap.hpp"
 #include "util/network/connection_manager.hpp"
 
 #include <random>
+#include <secp256k1.h>
+#include <secp256k1_bulletproofs.h>
 
 namespace cbdc::sentinel_2pc {
     /// Manages a sentinel server for the two-phase commit architecture.

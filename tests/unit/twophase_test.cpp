@@ -32,9 +32,9 @@ TEST_F(TwoPhaseTest, test_one_shard) {
     auto txs = std::vector<cbdc::locking_shard::tx>();
     for(size_t i{0}; i < 1000; i++) {
         auto tx = cbdc::locking_shard::tx();
-        auto uhs_id = cbdc::hash_t();
-        std::memcpy(uhs_id.data(), &i, sizeof(i));
-        tx.m_tx.m_uhs_outputs.push_back(uhs_id);
+        auto provenance = cbdc::hash_t();
+        std::memcpy(provenance.data(), &i, sizeof(i));
+        tx.m_tx.m_outputs.push_back({{}, {}, provenance});
         txs.push_back(tx);
     }
 
@@ -70,9 +70,9 @@ TEST_F(TwoPhaseTest, test_two_shards) {
     for(size_t i{0}; i < 1000; i++) {
         auto tx = cbdc::transaction::compact_tx();
         std::memcpy(tx.m_id.data(), &i, sizeof(i));
-        auto uhs_id = cbdc::hash_t();
-        std::memcpy(uhs_id.data(), &i, sizeof(i));
-        tx.m_uhs_outputs.push_back(uhs_id);
+        auto provenance = cbdc::hash_t();
+        std::memcpy(provenance.data(), &i, sizeof(i));
+        tx.m_outputs.push_back({{}, {}, provenance});
         txs.push_back(tx);
     }
 
@@ -115,10 +115,12 @@ TEST_F(TwoPhaseTest, test_one_shard_random) {
             const auto val = rnd(e);
             std::memcpy(&output1[j * 8], &val, sizeof(val));
         }
-        tx.m_tx.m_uhs_outputs.push_back(output0);
-        tx.m_tx.m_uhs_outputs.push_back(output1);
-        outputs.push(output0);
-        outputs.push(output1);
+        auto uhs0 = cbdc::transaction::calculate_uhs_id({{}, {}, output0});
+        auto uhs1 = cbdc::transaction::calculate_uhs_id({{}, {}, output1});
+        tx.m_tx.m_outputs.push_back({{}, {}, output0});
+        tx.m_tx.m_outputs.push_back({{}, {}, output1});
+        outputs.push(uhs0);
+        outputs.push(uhs1);
         txs.push_back(tx);
     }
 
@@ -144,8 +146,8 @@ TEST_F(TwoPhaseTest, test_one_shard_random) {
             const auto val = rnd(e);
             std::memcpy(&output1[j * 8], &val, sizeof(val));
         }
-        tx.m_tx.m_uhs_outputs.push_back(output0);
-        tx.m_tx.m_uhs_outputs.push_back(output1);
+        tx.m_tx.m_outputs.push_back({{}, {}, output0});
+        tx.m_tx.m_outputs.push_back({{}, {}, output1});
         tx.m_tx.m_inputs.push_back(outputs.front());
         outputs.pop();
         tx.m_tx.m_inputs.push_back(outputs.front());
@@ -203,10 +205,12 @@ TEST_F(TwoPhaseTest, test_two_shards_random) {
             const auto val = rnd(e);
             std::memcpy(&output1[j * 8], &val, sizeof(val));
         }
-        tx.m_uhs_outputs.push_back(output0);
-        tx.m_uhs_outputs.push_back(output1);
-        outputs.push(output0);
-        outputs.push(output1);
+        auto uhs0 = cbdc::transaction::calculate_uhs_id({{}, {}, output0});
+        auto uhs1 = cbdc::transaction::calculate_uhs_id({{}, {}, output1});
+        tx.m_outputs.push_back({{}, {}, output0});
+        tx.m_outputs.push_back({{}, {}, output1});
+        outputs.push(uhs0);
+        outputs.push(uhs1);
         txs.push_back(tx);
     }
 
@@ -238,8 +242,8 @@ TEST_F(TwoPhaseTest, test_two_shards_random) {
             const auto val = rnd(e);
             std::memcpy(&output1[j * 8], &val, sizeof(val));
         }
-        tx.m_uhs_outputs.push_back(output0);
-        tx.m_uhs_outputs.push_back(output1);
+        tx.m_outputs.push_back({{}, {}, output0});
+        tx.m_outputs.push_back({{}, {}, output1});
         tx.m_inputs.push_back(outputs.front());
         outputs.pop();
         tx.m_inputs.push_back(outputs.front());
@@ -299,10 +303,12 @@ TEST_F(TwoPhaseTest, test_two_shards_conflicting) {
             const auto val = rnd(e);
             std::memcpy(&output1[j * 8], &val, sizeof(val));
         }
-        tx.m_uhs_outputs.push_back(output0);
-        tx.m_uhs_outputs.push_back(output1);
-        outputs.push(output0);
-        outputs.push(output1);
+        auto uhs0 = cbdc::transaction::calculate_uhs_id({{}, {}, output0});
+        auto uhs1 = cbdc::transaction::calculate_uhs_id({{}, {}, output1});
+        tx.m_outputs.push_back({{}, {}, output0});
+        tx.m_outputs.push_back({{}, {}, output1});
+        outputs.push(uhs0);
+        outputs.push(uhs1);
         txs.push_back(tx);
     }
 
@@ -339,8 +345,8 @@ TEST_F(TwoPhaseTest, test_two_shards_conflicting) {
             const auto val = rnd(e);
             std::memcpy(&output1[j * 8], &val, sizeof(val));
         }
-        tx.m_uhs_outputs.push_back(output0);
-        tx.m_uhs_outputs.push_back(output1);
+        tx.m_outputs.push_back({{}, {}, output0});
+        tx.m_outputs.push_back({{}, {}, output1});
         tx.m_inputs.push_back(outputs.front());
         outputs.pop();
         tx.m_inputs.push_back(outputs.front());
@@ -361,9 +367,10 @@ TEST_F(TwoPhaseTest, test_two_shards_conflicting) {
     for(size_t i{0}; i < txs.size(); i++) {
         ASSERT_TRUE((*res)[i]);
         auto& tx = txs[i];
-        for(const auto& out : tx.m_uhs_outputs) {
-            auto res0 = *shard0->check_unspent(out);
-            auto res1 = *shard1->check_unspent(out);
+        for(const auto& out : tx.m_outputs) {
+            auto id = cbdc::transaction::calculate_uhs_id(out);
+            auto res0 = *shard0->check_unspent(id);
+            auto res1 = *shard1->check_unspent(id);
             ASSERT_TRUE((res0 || res1) && (res0 ^ res1));
         }
         for(const auto& inp : tx.m_inputs) {

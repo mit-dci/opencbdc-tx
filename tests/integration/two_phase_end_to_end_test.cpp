@@ -125,7 +125,7 @@ TEST_F(two_phase_end_to_end_test, complete_transaction) {
     ASSERT_TRUE(res.has_value());
     ASSERT_FALSE(res->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::confirmed);
-    ASSERT_EQ(tx->m_outputs[0].m_value, 33UL);
+    ASSERT_EQ(tx->m_out_spend_data.value()[0].m_value, 33UL);
     ASSERT_EQ(m_sender->balance(), 67UL);
     auto in = m_sender->export_send_inputs(tx.value(), addr);
     ASSERT_EQ(in.size(), 1UL);
@@ -157,7 +157,7 @@ TEST_F(two_phase_end_to_end_test, duplicate_transaction) {
     ASSERT_FALSE(res2->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::confirmed);
     ASSERT_EQ(res2->m_tx_status, cbdc::sentinel::tx_status::state_invalid);
-    ASSERT_EQ(tx->m_outputs[0].m_value, 33UL);
+    ASSERT_EQ(tx->m_out_spend_data.value()[0].m_value, 33UL);
     ASSERT_EQ(m_sender->balance(), 67UL);
     auto in = m_sender->export_send_inputs(tx.value(), addr);
     ASSERT_EQ(in.size(), 1UL);
@@ -189,7 +189,7 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
     ASSERT_TRUE(res.has_value());
     ASSERT_FALSE(res->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::confirmed);
-    ASSERT_EQ(tx->m_outputs[0].m_value, 33UL);
+    ASSERT_EQ(tx->m_out_spend_data.value()[0].m_value, 33UL);
     ASSERT_EQ(m_sender->balance(), 67UL);
     auto in = m_sender->export_send_inputs(tx.value(), addr);
     ASSERT_EQ(in.size(), 1UL);
@@ -205,13 +205,9 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
     // Create a second transaction
     auto tx2 = m_sender->create_transaction(33, addr);
 
-    // Append the first input of the first transaction to this second
-    // transaction, creating the double-spend. Also increase the output value
-    // to balance the inputs and outputs
-    tx2.value().m_inputs.push_back(tx.value().m_inputs[0]);
-    tx2.value().m_outputs[0].m_value
-        = tx2.value().m_outputs[0].m_value
-        + tx.value().m_inputs[0].m_prevout_data.m_value;
+    // Replace first input with the one from the previous transaction
+    // to create a double-spend.
+    tx2.value().m_inputs[0] = tx.value().m_inputs[0];
 
     m_sender->sign_transaction(tx2.value());
 
@@ -226,11 +222,11 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
     ASSERT_TRUE(res3.has_value());
     ASSERT_TRUE(res3.value());
 
-    // Check if the outputs (excluding the appended double spend one) are
+    // Check if the outputs (excluding the replaced double spend one) are
     // still marked as unspent on the shard
-    for(size_t i = 0; i < tx2.value().m_inputs.size() - 1; i++) {
+    for(size_t i = 1; i < tx2.value().m_inputs.size() - 1; i++) {
         auto inp = tx2.value().m_inputs[i];
-        auto res4 = m_sender->check_unspent(inp.hash());
+        auto res4 = m_sender->check_unspent(inp.m_prevout_data.m_id);
         ASSERT_TRUE(res4.has_value());
         ASSERT_TRUE(res4.value());
     }
@@ -240,34 +236,37 @@ TEST_F(two_phase_end_to_end_test, double_spend_transaction) {
         = m_sender->abandon_transaction(cbdc::transaction::tx_id(tx2.value()));
     ASSERT_TRUE(abandoned);
 
-    // Confirm to see if our balance is restored after abandoning
-    ASSERT_EQ(m_sender->balance(), 67UL);
+    // Confirm our balance is restored after abandoning.
+    // Note: this is 57 and not 67 because we /replaced/ an input in the
+    // transaction; the output which got overwritten was thus not
+    // returned to the spendable pool by abandoning the transaction.
+    ASSERT_EQ(m_sender->balance(), 57UL);
 }
 
 TEST_F(two_phase_end_to_end_test, invalid_transaction) {
     auto addr = m_receiver->new_address();
 
     // Create the transaction normally
-    auto tx = m_sender->create_transaction(33, addr);
+    auto maybe_tx = m_sender->create_transaction(33, addr);
+    ASSERT_TRUE(maybe_tx.has_value());
 
-    ASSERT_TRUE(tx.has_value());
+    auto tx = maybe_tx.value();
 
-    // Make transaction unbalanced
-    tx.value().m_outputs[0].m_value = 1;
-    // Sign it again
-    m_sender->sign_transaction(tx.value());
+    tx.m_outputs.erase(tx.m_outputs.end() - 1);
 
-    auto res = m_sender->send_transaction(tx.value());
+    m_sender->sign_transaction(tx);
+
+    auto res = m_sender->send_transaction(tx);
     ASSERT_TRUE(res.has_value());
     ASSERT_TRUE(res->m_tx_error.has_value());
     ASSERT_EQ(res->m_tx_status, cbdc::sentinel::tx_status::static_invalid);
     ASSERT_TRUE(
-        std::holds_alternative<cbdc::transaction::validation::tx_error_code>(
+        std::holds_alternative<cbdc::transaction::validation::proof_error>(
             res->m_tx_error.value()));
 
-    auto tx_err = std::get<cbdc::transaction::validation::tx_error_code>(
+    auto tx_err = std::get<cbdc::transaction::validation::proof_error>(
         res->m_tx_error.value());
 
-    ASSERT_EQ(tx_err,
-              cbdc::transaction::validation::tx_error_code::asymmetric_values);
+    ASSERT_EQ(tx_err.m_code,
+              cbdc::transaction::validation::proof_error_code::wrong_sum);
 }

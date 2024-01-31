@@ -10,6 +10,7 @@
 #include <cassert>
 #include <memory>
 #include <secp256k1.h>
+#include <secp256k1_generator.h>
 #include <secp256k1_schnorrsig.h>
 #include <set>
 
@@ -17,8 +18,30 @@ namespace cbdc::transaction::validation {
     static const auto secp_context
         = std::unique_ptr<secp256k1_context,
                           decltype(&secp256k1_context_destroy)>(
-            secp256k1_context_create(SECP256K1_CONTEXT_VERIFY),
+            secp256k1_context_create(SECP256K1_CONTEXT_SIGN
+                                     | SECP256K1_CONTEXT_VERIFY),
             &secp256k1_context_destroy);
+
+    struct GensDeleter {
+        explicit GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
+
+        void operator()(secp256k1_bulletproofs_generators* gens) const {
+            secp256k1_bulletproofs_generators_destroy(m_ctx, gens);
+        }
+
+        secp256k1_context* m_ctx;
+    };
+
+    /// should be twice the bitcount of the range-proof's upper bound
+    ///
+    /// e.g., if proving things in the range [0, 2^64-1], it should be 128.
+    static const auto inline generator_count = 128;
+
+    static const std::unique_ptr<secp256k1_bulletproofs_generators,
+                                 GensDeleter>
+        generators{secp256k1_bulletproofs_generators_create(secp_context.get(),
+                                                            generator_count),
+                   GensDeleter(secp_context.get())};
 
     auto input_error::operator==(const input_error& rhs) const -> bool {
         return std::tie(m_code, m_data_err, m_idx)
@@ -33,6 +56,10 @@ namespace cbdc::transaction::validation {
         return std::tie(m_code, m_idx) == std::tie(rhs.m_code, rhs.m_idx);
     }
 
+    auto proof_error::operator==(const proof_error& rhs) const -> bool {
+        return m_code == rhs.m_code;
+    }
+
     auto check_tx(const cbdc::transaction::full_tx& tx)
         -> std::optional<tx_error> {
         const auto structure_err = check_tx_structure(tx);
@@ -40,33 +67,28 @@ namespace cbdc::transaction::validation {
             return structure_err;
         }
 
-        for(size_t idx = 0; idx < tx.m_inputs.size(); idx++) {
-            const auto& inp = tx.m_inputs[idx];
-            const auto input_err = check_input_structure(inp);
-            if(input_err) {
-                auto&& [code, data] = input_err.value();
-                return tx_error{input_error{code, data, idx}};
-            }
-        }
-
-        for(size_t idx = 0; idx < tx.m_outputs.size(); idx++) {
-            const auto& out = tx.m_outputs[idx];
-            const auto output_err = check_output_value(out);
-            if(output_err) {
-                return tx_error{output_error{output_err.value(), idx}};
-            }
-        }
-
-        const auto in_out_set_error = check_in_out_set(tx);
-        if(in_out_set_error) {
-            return in_out_set_error;
-        }
-
         for(size_t idx = 0; idx < tx.m_witness.size(); idx++) {
             const auto witness_err = check_witness(tx, idx);
             if(witness_err) {
                 return tx_error{witness_error{witness_err.value(), idx}};
             }
+        }
+
+        std::vector<commitment_t> inputs{};
+        inputs.reserve(tx.m_inputs.size());
+        for(const auto& inp : tx.m_inputs) {
+            inputs.push_back(inp.m_prevout_data.m_auxiliary);
+        }
+
+        const auto outproof_exists_err = check_output_rangeproofs_exist(tx);
+        if(outproof_exists_err) {
+            return tx_error{outproof_exists_err.value()};
+        }
+
+        const cbdc::transaction::compact_tx ctx(tx);
+        const auto proof_error = check_proof(ctx, inputs);
+        if(proof_error) {
+            return proof_error;
         }
 
         return std::nullopt;
@@ -92,42 +114,6 @@ namespace cbdc::transaction::validation {
         const auto input_set_err = check_input_set(tx);
         if(input_set_err) {
             return input_set_err;
-        }
-
-        return std::nullopt;
-    }
-
-    auto check_input_structure(const cbdc::transaction::input& inp)
-        -> std::optional<
-            std::pair<input_error_code, std::optional<output_error_code>>> {
-        const auto data_err = check_output_value(inp.m_prevout_data);
-        if(data_err) {
-            return {{input_error_code::data_error, data_err}};
-        }
-
-        return std::nullopt;
-    }
-
-    auto check_in_out_set(const cbdc::transaction::full_tx& tx)
-        -> std::optional<tx_error> {
-        uint64_t input_total{0};
-        for(const auto& inp : tx.m_inputs) {
-            if(input_total + inp.m_prevout_data.m_value <= input_total) {
-                return tx_error(tx_error_code::value_overflow);
-            }
-            input_total += inp.m_prevout_data.m_value;
-        }
-
-        uint64_t output_total{0};
-        for(const auto& out : tx.m_outputs) {
-            if(output_total + out.m_value <= output_total) {
-                return tx_error(tx_error_code::value_overflow);
-            }
-            output_total += out.m_value;
-        }
-
-        if(input_total != output_total) {
-            return tx_error(tx_error_code::asymmetric_values);
         }
 
         return std::nullopt;
@@ -258,6 +244,16 @@ namespace cbdc::transaction::validation {
         return std::nullopt;
     }
 
+    auto check_output_rangeproofs_exist(const cbdc::transaction::full_tx& tx)
+        -> std::optional<proof_error> {
+        for(const auto& outp : tx.m_outputs) {
+            if(!outp.m_range.has_value()) {
+                return proof_error{proof_error_code::missing_rangeproof};
+            }
+        }
+        return std::nullopt;
+    }
+
     auto check_witness_count(const cbdc::transaction::full_tx& tx)
         -> std::optional<tx_error> {
         if(tx.m_inputs.size() != tx.m_witness.size()) {
@@ -285,13 +281,90 @@ namespace cbdc::transaction::validation {
         return std::nullopt;
     }
 
-    auto check_output_value(const cbdc::transaction::output& out)
-        -> std::optional<output_error_code> {
-        if(out.m_value < 1) {
-            return output_error_code::zero_value;
+    auto check_proof(const compact_tx& tx,
+                     const std::vector<commitment_t>& inps)
+        -> std::optional<proof_error> {
+        auto* ctx = secp_context.get();
+        static constexpr auto scratch_size = 100UL * 1024UL;
+        secp256k1_scratch_space* scratch
+            = secp256k1_scratch_space_create(ctx, scratch_size);
+        std::vector<secp256k1_pedersen_commitment> in_comms{};
+        for(const auto& comm : inps) {
+            auto maybe_aux = deserialize_commitment(ctx, comm);
+            if(!maybe_aux.has_value()) {
+                return proof_error{proof_error_code::invalid_auxiliary};
+            }
+            auto aux = maybe_aux.value();
+            in_comms.push_back(aux);
+
+            // no need to validate range proofs for inputs
+        }
+        std::vector<secp256k1_pedersen_commitment> out_comms{};
+        for(const auto& proof : tx.m_outputs) {
+            auto maybe_aux = deserialize_commitment(ctx, proof.m_auxiliary);
+            if(!maybe_aux.has_value()) {
+                return proof_error{proof_error_code::invalid_auxiliary};
+            }
+            auto aux = maybe_aux.value();
+            out_comms.push_back(aux);
+
+            // todo: replace lower-bound with 1 instead of 0
+            [[maybe_unused]] auto ret
+                = secp256k1_bulletproofs_rangeproof_uncompressed_verify(
+                    ctx,
+                    scratch,
+                    generators.get(),
+                    secp256k1_generator_h,
+                    proof.m_range.data(),
+                    proof.m_range.size(),
+                    0, // minimum
+                    &aux,
+                    nullptr, // extra commit
+                    0        // extra commit length
+                );
+
+            if(ret != 1) {
+                return proof_error{proof_error_code::out_of_range};
+            }
+        }
+
+        if(!check_commitment_sum(in_comms, out_comms, 0)) {
+            return proof_error{proof_error_code::wrong_sum};
         }
 
         return std::nullopt;
+    }
+
+    auto check_commitment_sum(
+        const std::vector<secp256k1_pedersen_commitment>& inputs,
+        const std::vector<secp256k1_pedersen_commitment>& outputs,
+        uint64_t minted) -> bool {
+        std::vector<const secp256k1_pedersen_commitment*> in_ptrs{};
+        in_ptrs.reserve(inputs.size());
+        for(const auto& c : inputs) {
+            in_ptrs.push_back(&c);
+        }
+
+        std::vector<const secp256k1_pedersen_commitment*> out_ptrs{};
+        out_ptrs.reserve(outputs.size());
+        for(const auto& c : outputs) {
+            out_ptrs.push_back(&c);
+        }
+
+        // if this is a minting transaction, we need to balance the minted
+        // amount
+        secp256k1_pedersen_commitment minting_com{};
+        if(minted != 0) {
+            minting_com = commit(secp_context.get(), minted, hash_t{}).value();
+            out_ptrs.push_back(&minting_com);
+        }
+
+        return secp256k1_pedersen_verify_tally(secp_context.get(),
+                                               in_ptrs.data(),
+                                               in_ptrs.size(),
+                                               out_ptrs.data(),
+                                               out_ptrs.size())
+            == 1;
     }
 
     auto get_p2pk_witness_commitment(const pubkey_t& payee) -> hash_t {
@@ -355,6 +428,34 @@ namespace cbdc::transaction::validation {
             ret += ", Data error: " + to_string(err.m_data_err.value());
         }
         return ret;
+    }
+
+    auto to_string(const cbdc::transaction::validation::proof_error& err)
+        -> std::string {
+        switch(err.m_code) {
+            case cbdc::transaction::validation::proof_error_code ::
+                invalid_auxiliary:
+                return "One or more auxiliary commitments were malformed";
+            case cbdc::transaction::validation::proof_error_code ::
+                invalid_uhs_id:
+                return "One or more UHS ID commitments were malformed";
+            case cbdc::transaction::validation::proof_error_code ::
+                invalid_signature_key:
+                return "Constructing the consistency-proof "
+                       "verification key failed";
+            case cbdc::transaction::validation::proof_error_code ::
+                inconsistent_value:
+                return "The values committed to by a UHS ID commitment and "
+                       "its auxiliary commitment are not equal";
+            case cbdc::transaction::validation::proof_error_code ::
+                out_of_range:
+                return "One or more output values lay outside their proven "
+                       "range";
+            case cbdc::transaction::validation::proof_error_code ::wrong_sum:
+                return "Input values do not equal output values";
+            default:
+                return "Unknown error";
+        }
     }
 
     auto to_string(cbdc::transaction::validation::witness_error_code err)

@@ -65,11 +65,16 @@ namespace cbdc::locking_shard {
             in.seekg(0, std::ios::beg);
             auto deser = istream_serializer(in);
             m_uhs.clear();
+            m_proofs.clear();
             static constexpr auto uhs_size_factor = 2;
             auto bucket_count = static_cast<unsigned long>(sz / cbdc::hash_size
                                                            * uhs_size_factor);
+            m_proofs.rehash(bucket_count);
             m_uhs.rehash(bucket_count);
-            deser >> m_uhs;
+            deser >> m_proofs;
+            for(const auto& [k, v] : m_proofs) {
+                m_uhs.insert(k);
+            }
             return true;
         }
         return false;
@@ -161,9 +166,11 @@ namespace cbdc::locking_shard {
                 m_completed_txs.add(tx.m_tx.m_id);
             }
 
-            for(auto&& uhs_id : tx.m_tx.m_uhs_outputs) {
+            for(auto&& proof : tx.m_tx.m_outputs) {
+                auto uhs_id = transaction::calculate_uhs_id(proof);
                 if(hash_in_shard_range(uhs_id) && complete_txs[i]) {
                     m_uhs.emplace(uhs_id);
+                    m_proofs.emplace(uhs_id, proof);
                 }
             }
             for(auto&& uhs_id : tx.m_tx.m_inputs) {

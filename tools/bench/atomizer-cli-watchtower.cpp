@@ -122,7 +122,7 @@ auto main(int argc, char** argv) -> int {
         log->warn("Failed to connect to watchtower.");
     }
 
-    cbdc::transaction::wallet wal;
+    cbdc::transaction::wallet wal(log);
 
     // Optionally Pre-seed wallet with deterministic UTXOs
     if(cfg.m_seed_from != cfg.m_seed_to) {
@@ -342,9 +342,11 @@ auto main(int argc, char** argv) -> int {
                 std::chrono::milliseconds(cfg.m_target_block_interval)
                 * cfg.m_stxo_cache_depth);
             cbdc::transaction::compact_tx ctx{mint_tx};
+            auto out_id
+                = cbdc::transaction::calculate_uhs_id(ctx.m_outputs[0]);
             watchtower_client->request_status_update(
                 cbdc::watchtower::status_update_request{
-                    {{ctx.m_id, {ctx.m_uhs_outputs[0]}}}});
+                    {{ctx.m_id, {out_id}}}});
             static constexpr auto mint_retry_delay
                 = std::chrono::milliseconds(1000);
             std::this_thread::sleep_for(mint_retry_delay);
@@ -367,11 +369,11 @@ auto main(int argc, char** argv) -> int {
     uint32_t batch_counter = 0;
     uint32_t best_height
         = blocking_watchtower_client->request_best_block_height()->height();
-    std::chrono::nanoseconds total_time;
-    std::chrono::nanoseconds check_time;
-    std::chrono::nanoseconds gen_time;
-    std::chrono::nanoseconds add_time;
-    std::chrono::nanoseconds send_time;
+    std::chrono::nanoseconds total_time{0};
+    std::chrono::nanoseconds check_time{0};
+    std::chrono::nanoseconds gen_time{0};
+    std::chrono::nanoseconds add_time{0};
+    std::chrono::nanoseconds send_time{0};
     uint64_t gen_avg{};
     while(running) {
         static constexpr auto send_amount = 5;
@@ -399,8 +401,16 @@ auto main(int argc, char** argv) -> int {
                 key_uhs_ids.reserve(pending_txs.size());
                 for(const auto& it : pending_txs) {
                     cbdc::transaction::compact_tx ctx{it.second};
-                    key_uhs_ids.emplace(
-                        std::make_pair(ctx.m_id, ctx.m_uhs_outputs));
+                    std::vector<cbdc::hash_t> uhs_ids{};
+                    std::transform(
+                        ctx.m_outputs.begin(),
+                        ctx.m_outputs.end(),
+                        std::back_inserter(uhs_ids),
+                        [](const cbdc::transaction::compact_output& p) {
+                            return cbdc::transaction::calculate_uhs_id(p);
+                        });
+
+                    key_uhs_ids.emplace(std::make_pair(ctx.m_id, uhs_ids));
                 }
             }
             watchtower_client->request_status_update(
@@ -532,8 +542,15 @@ auto main(int argc, char** argv) -> int {
                 key_uhs_ids.reserve(pending_txs.size());
                 for(const auto& it : pending_txs) {
                     cbdc::transaction::compact_tx ctx{it.second};
-                    key_uhs_ids.emplace(
-                        std::make_pair(ctx.m_id, ctx.m_uhs_outputs));
+                    std::vector<cbdc::hash_t> uhs_ids{};
+                    std::transform(
+                        ctx.m_outputs.begin(),
+                        ctx.m_outputs.end(),
+                        std::back_inserter(uhs_ids),
+                        [](const cbdc::transaction::compact_output& p) {
+                            return cbdc::transaction::calculate_uhs_id(p);
+                        });
+                    key_uhs_ids.emplace(std::make_pair(ctx.m_id, uhs_ids));
                 }
             }
 
