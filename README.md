@@ -69,24 +69,33 @@ If you want to dive straight in, take a look at our issue tracker's list of [goo
 1. Clone the repository (including submodules)
     - `git clone --recurse-submodules https://github.com/mit-dci/opencbdc-tx`
 
-# Build
+# Setup the build envirnoment
 
 Use these directions if you want to build the source on your machine.
 If you just want to run the system, see "Run the Code" below.
 
-1. Install the necessary libraries and resources
-  ```terminal
-  # ./scripts/configure.sh
-  ```
+1. Setup the build-environment.
+   Note that this script is just a convenience to install system-wide dependencies we expect.
+   As a result, it uses the system package manager, requires `sudo`, and should only be run **once**.
+   ```console
+   # ./scripts/install-build-tools.sh
+   ```
+1. Setup project dependencies
+   This script builds and installs a local copy of several build-dependencies which are not widely packaged.
+   Because it installs to a local, configurable prefix (defaulting to `./prefix`), it does not need root permissions to run.
+   Furthermore, it should always be safe to delete `prefix` and rerun this script.
+   ```console
+   $ ./scripts/setup-dependencies.sh
+   ```
 1. Run the build
-  ```terminal
-  # ./scripts/build.sh
-  ```
+   ```console
+   $ ./scripts/build.sh
+   ```
 
 ## macOS
 Note that if you have not already installed the xcode cli tools you will need to:
 
-```terminal
+```console
 # xcode-select --install
 ```
 # Run the Code
@@ -100,11 +109,11 @@ See the [PArSEC User Guide](docs/parsec_user_guide.md)
 Running Unit & Integration Tests
 
 1. Build all docker images
-   ```terminal
+   ```console
    $ ./scripts/build-docker.sh
    ```
 1. Run Unit & Integration Tests
-   ```terminal
+   ```console
    $ docker run -ti opencbdc-tx-builder ./scripts/test.sh
    ```
 

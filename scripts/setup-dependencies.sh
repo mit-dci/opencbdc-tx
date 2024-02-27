@@ -1,8 +1,6 @@
 #!/bin/bash
 
-echo "Configuring..."
-
-echo "test local pipeline changes"
+echo "Setting up dependencies..."
 
 green="\033[0;32m"
 cyan="\033[0;36m"
@@ -65,7 +63,7 @@ cd build
 cmake -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DDISABLE_SSL=1 ..
 make -j$CPUS static_lib
 
-echo -e "${green}Copying nuraft to $PREFIX/lib and $PREFIX/include"
+echo -e "${green}Copying nuraft to $PREFIX/lib and $PREFIX/include${end}"
 cp libnuraft.a $PREFIX/lib
 cp -r ../include/libnuraft $PREFIX/include
 
