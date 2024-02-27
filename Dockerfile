@@ -14,12 +14,14 @@ ENV BUILD_RELEASE 1
 
 RUN mkdir -p /opt/tx-processor/scripts
 
-COPY scripts/configure.sh /opt/tx-processor/scripts/configure.sh
+COPY scripts/install-build-tools.sh /opt/tx-processor/scripts/install-build-tools.sh
+COPY scripts/setup-dependencies.sh /opt/tx-processor/scripts/setup-dependencies.sh
 
 # Set working directory
 WORKDIR /opt/tx-processor
 
-RUN scripts/configure.sh
+RUN scripts/install-build-tools.sh
+RUN scripts/setup-dependencies.sh
 
 # Create Build Image
 FROM $BASE_IMAGE AS builder
@@ -30,7 +32,7 @@ COPY . .
 # Build binaries
 RUN mkdir build && \
     cd build && \
-    cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .. && \
+    cmake -DCMAKE_PREFIX_PATH="prefix" -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .. && \
     make -j$(nproc)
 
 # Create 2PC Deployment Image
