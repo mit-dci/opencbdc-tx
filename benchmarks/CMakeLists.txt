@@ -19,6 +19,8 @@ target_link_libraries(run_benchmarks ${GTEST_LIBRARY}
                                      watchtower
                                      locking_shard
                                      transaction
+                                     rpc
+                                     network
                                      common
                                      serialization
                                      crypto

@@ -1,8 +1,9 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive
 
 COPY . .
 
 RUN apt update && apt dist-upgrade -y
-RUN ./configure.sh
+RUN ./install-build-tools.sh
+RUN ./setup-dependencies.sh
