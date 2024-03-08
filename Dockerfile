@@ -1,5 +1,5 @@
 # Define image base arg
-ARG IMAGE_VERSION="ubuntu:20.04"
+ARG IMAGE_VERSION="ubuntu:22.04"
 
 # Define base image repo name
 ARG BASE_IMAGE="ghcr.io/mit-dci/opencbdc-tx-base:latest"
