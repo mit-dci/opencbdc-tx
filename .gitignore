@@ -43,7 +43,7 @@ NuRaft*/
 curl*/
 jsoncpp*/
 ethash*/
-lua*/
+lua-*/
 benchmark-results/
 CMakeFiles/
 plots/

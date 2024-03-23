@@ -32,6 +32,7 @@ auto main(int argc, char** argv) -> int {
         log->error("Error parsing options");
         return 1;
     }
+    log->set_loglevel(cfg->m_loglevel);
 
     auto args = cbdc::config::get_args(argc, argv);
     auto n_wallets = std::stoull(args.back());
