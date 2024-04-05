@@ -8,6 +8,7 @@
 #include <array>
 #include <cstring>
 #include <unistd.h>
+#include <netinet/tcp.h> // for TCP_NODELAY, TCP_QUICKACK
 
 namespace cbdc::network {
     auto tcp_socket::connect(const endpoint_t& ep) -> bool {
@@ -35,6 +36,10 @@ namespace cbdc::network {
                 m_sock_fd = -1;
                 continue;
             }
+
+            static constexpr int one = 1;
+            setsockopt(m_sock_fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one)); // sending side. needed?
+            setsockopt(m_sock_fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one)); // receiving side
 
             break;
         }
@@ -88,6 +93,10 @@ namespace cbdc::network {
     }
 
     auto tcp_socket::receive(buffer& pkt) const -> bool {
+        static constexpr int one = 1;
+        // apparently TCP_QUICKACK needs to be re-set after each read (incurring a syscall...)
+        // cf. https://github.com/netty/netty/issues/13610
+
         uint64_t pkt_sz{};
         std::array<std::byte, sizeof(pkt_sz)> sz_buf{};
         uint64_t total_read{0};
@@ -95,6 +104,7 @@ namespace cbdc::network {
             auto n = read(m_sock_fd,
                           &sz_buf.at(total_read),
                           sizeof(pkt_sz) - total_read);
+            setsockopt(m_sock_fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one)); // receiving side
             if(n <= 0) {
                 return false;
             }
@@ -109,6 +119,7 @@ namespace cbdc::network {
         while(total_read < pkt_sz) {
             const auto buf_sz = pkt_sz - total_read;
             auto n = read(m_sock_fd, buf.data(), buf_sz);
+            setsockopt(m_sock_fd, IPPROTO_TCP, TCP_QUICKACK, &one, sizeof(one)); // receiving side
             if(n <= 0) {
                 return false;
             }
