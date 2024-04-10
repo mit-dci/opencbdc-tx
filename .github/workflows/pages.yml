@@ -30,4 +30,5 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          external_repository: mit-dci/opencbdc-tx-pages
           publish_dir: ./doxygen_generated/html
