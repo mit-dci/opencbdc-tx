@@ -27,8 +27,8 @@ jobs:
           enable-latex: false
           additional-packages: graphviz
       - name: Deploy GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deploy_key: ${{ secrets.TX_PAGES_DEPLOY_KEY }}
           external_repository: mit-dci/opencbdc-tx-pages
           publish_dir: ./doxygen_generated/html
