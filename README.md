@@ -100,6 +100,9 @@ Note that if you have not already installed the xcode cli tools you will need to
 ```
 # Run the Code
 
+The API Reference is now housed in [an external repository](https://github.com/mit-dci/opencbdc-tx-pages/).
+See the [live deployment](https://mit-dci.github.io/opencbdc-tx-pages/) to browse.
+
 ## UHS-based Architectures (2PC & Atomizer)
 See the [2PC & Atomizer User Guide](docs/2pc_atomizer_user_guide.md)
 ## PArSEC Architecture
