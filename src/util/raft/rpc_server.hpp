@@ -26,7 +26,7 @@ namespace cbdc::raft::rpc {
         /// \param impl pointer to the raft node.
         /// \see cbdc::rpc::server
         void register_raft_node(std::shared_ptr<node> impl) {
-            register_raft_node(impl, std::nullopt);
+            register_raft_node(std::move(impl), std::nullopt);
         }
 
         /// Registers the raft node whose state machine handles RPC requests
@@ -42,10 +42,11 @@ namespace cbdc::raft::rpc {
             if(validate.has_value()) {
                 m_validate_func = std::move(validate.value());
             } else {
-                m_validate_func = [&](buffer b, validation_callback cb) {
-                    cb(std::move(b), true);
-                    return true;
-                };
+                m_validate_func
+                    = [&](buffer b, const validation_callback& cb) {
+                          cb(std::move(b), true);
+                          return true;
+                      };
             }
             cbdc::rpc::raw_async_server::register_handler_callback(
                 [&](buffer req, response_callback_type resp_cb) {
@@ -84,7 +85,7 @@ namespace cbdc::raft::rpc {
 
                     auto success = m_impl->replicate(
                         new_log,
-                        [&, resp_cb = std::move(res_cb), req_buf = new_log](
+                        [&, resp_cb = res_cb, req_buf = new_log](
                             result_type& r,
                             nuraft::ptr<std::exception>& err) {
                             if(err) {

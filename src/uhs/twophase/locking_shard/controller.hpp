@@ -26,9 +26,10 @@ namespace cbdc::locking_shard {
         /// \param logger log to use for output.
         controller(size_t shard_id,
                    size_t node_id,
-                   const cbdc::config::options& opts,
+                   cbdc::config::options opts,
                    std::shared_ptr<logging::log> logger);
-        ~controller() = default;
+
+        ~controller();
 
         controller() = delete;
         controller(const controller&) = delete;
@@ -48,7 +49,8 @@ namespace cbdc::locking_shard {
                            nuraft::cb_func::Param* param)
             -> nuraft::cb_func::ReturnCode;
         auto validate_request(cbdc::buffer request,
-                              cbdc::raft::rpc::validation_callback cb) -> bool;
+                              const cbdc::raft::rpc::validation_callback& cb)
+            -> bool;
 
         auto enqueue_validation(cbdc::buffer request,
                                 cbdc::raft::rpc::validation_callback cb)

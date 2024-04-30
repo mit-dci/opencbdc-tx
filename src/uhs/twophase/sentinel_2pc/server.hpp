@@ -18,7 +18,7 @@ namespace cbdc::sentinel::rpc {
         async_interface::result_callback_type m_cb;
     };
 
-    bool operator<(const request_queue_t& a, const request_queue_t& b);
+    auto operator<(const request_queue_t& a, const request_queue_t& b) -> bool;
     /// Asynchronous RPC server for a sentinel.
     class async_server {
       public:
@@ -33,6 +33,10 @@ namespace cbdc::sentinel::rpc {
             std::unique_ptr<cbdc::rpc::async_server<request, response>> srv);
 
         ~async_server();
+        async_server(async_server&&) noexcept = delete;
+        auto operator=(async_server&&) noexcept -> async_server& = delete;
+        async_server(const async_server&) = delete;
+        auto operator=(const async_server&) -> async_server& = delete;
 
       private:
         void process();

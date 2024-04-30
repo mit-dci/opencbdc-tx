@@ -38,7 +38,7 @@ namespace cbdc::sentinel_2pc {
                    const config::options& opts,
                    std::shared_ptr<logging::log> logger);
 
-        ~controller() override = default;
+        ~controller() override;
 
         /// Initializes the controller. Connects to the shard coordinator
         /// network and launches a server thread for external clients.

@@ -111,19 +111,23 @@ namespace cbdc::sentinel_2pc {
         return true;
     }
 
+    controller::~controller() {
+        stop();
+    }
+
     void controller::validation_worker() {
         while(m_running) {
             auto v = queued_validation();
             if(m_validation_queue.pop(v)) {
                 auto [tx, cb] = v;
-                cb(std::move(tx), transaction::validation::check_tx(tx));
+                cb(tx, transaction::validation::check_tx(tx));
             }
         }
     }
 
     auto controller::validate_tx(const transaction::full_tx& tx,
                                  validation_callback cb) -> bool {
-        m_validation_queue.push({std::move(tx), std::move(cb)});
+        m_validation_queue.push({tx, std::move(cb)});
         return true;
     }
 
@@ -133,14 +137,14 @@ namespace cbdc::sentinel_2pc {
             if(m_attestation_queue.pop(v)) {
                 auto [tx, cb] = v;
                 auto compact_tx = cbdc::transaction::compact_tx(tx);
-                cb(std::move(tx), compact_tx.sign(m_secp.get(), m_privkey));
+                cb(tx, compact_tx.sign(m_secp.get(), m_privkey));
             }
         }
     }
 
     auto controller::attest_tx(const transaction::full_tx& tx,
                                attestation_callback cb) -> bool {
-        m_attestation_queue.push({std::move(tx), std::move(cb)});
+        m_attestation_queue.push({tx, std::move(cb)});
         return true;
     }
 
@@ -148,7 +152,7 @@ namespace cbdc::sentinel_2pc {
         transaction::full_tx tx,
         execute_result_callback_type result_callback) -> bool {
         return controller::validate_tx(
-            std::move(tx),
+            tx,
             [&, result_callback](
                 const transaction::full_tx& tx2,
                 std::optional<cbdc::transaction::validation::tx_error> err) {
@@ -166,10 +170,7 @@ namespace cbdc::sentinel_2pc {
                 }
 
                 auto compact_tx = cbdc::transaction::compact_tx(tx2);
-                gather_attestations(std::move(tx2),
-                                    std::move(result_callback),
-                                    compact_tx,
-                                    {});
+                gather_attestations(tx2, result_callback, compact_tx, {});
                 return;
             });
     }
@@ -194,7 +195,7 @@ namespace cbdc::sentinel_2pc {
         transaction::full_tx tx,
         validate_result_callback_type result_callback) -> bool {
         return controller::validate_tx(
-            std::move(tx),
+            tx,
             [&, result_callback](
                 const transaction::full_tx& tx2,
                 std::optional<cbdc::transaction::validation::tx_error> err) {
@@ -203,7 +204,7 @@ namespace cbdc::sentinel_2pc {
                     return;
                 }
                 controller::attest_tx(
-                    std::move(tx2),
+                    tx2,
                     [&, result_callback](
                         const transaction::full_tx& /* tx3 */,
                         std::optional<cbdc::sentinel::validate_response> res) {
@@ -233,17 +234,24 @@ namespace cbdc::sentinel_2pc {
 
     void controller::stop() {
         m_running = false;
+        m_rpc_server.reset();
+
+        m_validation_queue.clear();
+        m_attestation_queue.clear();
+
         for(auto& t : m_validation_threads) {
             if(t.joinable()) {
                 t.join();
             }
         }
+        m_validation_threads.clear();
 
         for(auto& t : m_attestation_threads) {
             if(t.joinable()) {
                 t.join();
             }
         }
+        m_attestation_threads.clear();
     }
 
     void controller::gather_attestations(
@@ -252,10 +260,10 @@ namespace cbdc::sentinel_2pc {
         const transaction::compact_tx& ctx,
         std::unordered_set<size_t> requested) {
         if(ctx.m_attestations.size() < m_opts.m_attestation_threshold) {
-            if(ctx.m_attestations.size() == 0) {
+            if(ctx.m_attestations.empty()) {
                 // Self-attest first
                 controller::attest_tx(
-                    std::move(tx),
+                    tx,
                     [&, ctx, result_callback](const transaction::full_tx& tx2,
                                               validate_result res) {
                         validate_result_handler(res,
@@ -297,7 +305,7 @@ namespace cbdc::sentinel_2pc {
     void
     controller::send_compact_tx(const transaction::compact_tx& ctx,
                                 execute_result_callback_type result_callback) {
-        auto cb = [&, this, ctx, res_cb = std::move(result_callback)](
+        auto cb = [&, ctx, res_cb = std::move(result_callback)](
                       std::optional<bool> res) {
             result_handler(res, res_cb);
         };

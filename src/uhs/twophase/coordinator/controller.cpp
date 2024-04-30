@@ -680,6 +680,7 @@ namespace cbdc::coordinator {
             m_start_thread.join();
         }
 
+        m_attestation_check_queue.clear();
         for(auto& t : m_attestation_check_threads) {
             if(t.joinable()) {
                 t.join();
@@ -710,7 +711,7 @@ namespace cbdc::coordinator {
                     tx,
                     m_opts.m_sentinel_public_keys,
                     m_opts.m_attestation_threshold);
-                cb(std::move(tx), valid);
+                cb(tx, valid);
             }
         }
     }
@@ -718,7 +719,7 @@ namespace cbdc::coordinator {
     auto controller::check_tx_attestation(const transaction::compact_tx& tx,
                                           attestation_check_callback cb)
         -> bool {
-        m_attestation_check_queue.push({std::move(tx), std::move(cb)});
+        m_attestation_check_queue.push({tx, std::move(cb)});
         return true;
     }
 
@@ -731,7 +732,7 @@ namespace cbdc::coordinator {
         }
 
         return check_tx_attestation(
-            std::move(tx),
+            tx,
             [&,
              res_cb = std::move(result_callback)](transaction::compact_tx tx2,
                                                   bool result) {
@@ -760,9 +761,8 @@ namespace cbdc::coordinator {
                     auto idx = m_current_batch->add_tx(tx2);
                     // Map the index of the tx to the transaction ID and
                     // sentinel ID
-                    m_current_txs->emplace(
-                        tx2.m_id,
-                        std::make_pair(std::move(res_cb), idx));
+                    m_current_txs->emplace(tx2.m_id,
+                                           std::make_pair(res_cb, idx));
                     return true;
                 }();
                 if(added) {
