@@ -17,18 +17,20 @@ namespace cbdc::sentinel::rpc {
         m_srv->register_handler_callback(
             [&](const request& req,
                 async_interface::result_callback_type callback) {
-                auto req_item = request_queue_t{req, callback};
+                auto req_item = request_queue_t{req, std::move(callback)};
                 m_request_queue.push(req_item);
                 return true;
             });
     }
-    bool operator<(const request_queue_t& a, const request_queue_t& b) {
+    auto operator<(const request_queue_t& a, const request_queue_t& b)
+        -> bool {
         // Prioritize validate requests over execute requests
         return (std::holds_alternative<validate_request>(a.m_req)
                 && std::holds_alternative<execute_request>(b.m_req));
     }
     async_server::~async_server() {
         m_running = false;
+        m_request_queue.clear();
         if(m_processing_thread.joinable()) {
             m_processing_thread.join();
         }

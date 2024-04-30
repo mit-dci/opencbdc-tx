@@ -17,7 +17,7 @@
 namespace cbdc::locking_shard {
     controller::controller(size_t shard_id,
                            size_t node_id,
-                           const cbdc::config::options& opts,
+                           cbdc::config::options opts,
                            std::shared_ptr<logging::log> logger)
         : m_opts(std::move(opts)),
           m_logger(std::move(logger)),
@@ -112,6 +112,18 @@ namespace cbdc::locking_shard {
         return true;
     }
 
+    controller::~controller() {
+        m_running = false;
+        m_validation_queue.clear();
+        for(auto& t : m_validation_threads) {
+            if(t.joinable()) {
+                t.join();
+            }
+        }
+        m_validation_threads.clear();
+        m_server.reset();
+    }
+
     auto controller::raft_callback(nuraft::cb_func::Type type,
                                    nuraft::cb_func::Param* /* param */)
         -> nuraft::cb_func::ReturnCode {
@@ -158,24 +170,24 @@ namespace cbdc::locking_shard {
             auto v = validation_request();
             if(m_validation_queue.pop(v)) {
                 auto [req, cb] = v;
-                validate_request(std::move(req), std::move(cb));
+                validate_request(std::move(req), cb);
             }
         }
     }
 
     auto
-    controller::enqueue_validation(cbdc::buffer buf,
+    controller::enqueue_validation(cbdc::buffer request,
                                    cbdc::raft::rpc::validation_callback cb)
         -> bool {
-        m_validation_queue.push({std::move(buf), std::move(cb)});
+        m_validation_queue.push({std::move(request), std::move(cb)});
         return true;
     }
 
-    auto controller::validate_request(cbdc::buffer buf,
-                                      cbdc::raft::rpc::validation_callback cb)
-        -> bool {
+    auto controller::validate_request(
+        cbdc::buffer request,
+        const cbdc::raft::rpc::validation_callback& cb) -> bool {
         auto maybe_req
-            = cbdc::from_buffer<cbdc::rpc::request<rpc::request>>(buf);
+            = cbdc::from_buffer<cbdc::rpc::request<rpc::request>>(request);
         auto valid = true;
         if(maybe_req) {
             valid = std::visit(
@@ -208,7 +220,7 @@ namespace cbdc::locking_shard {
             valid = false;
         }
 
-        cb(std::move(buf), valid);
+        cb(std::move(request), valid);
         return true;
     }
 }
