@@ -65,10 +65,12 @@ namespace cbdc::test {
     }
 
     void sign_tx(compact_transaction& tx, const privkey_t& key) {
-        auto secp = std::unique_ptr<secp256k1_context,
-                                    decltype(&secp256k1_context_destroy)>{
-            secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
-            &secp256k1_context_destroy};
+        using secp256k1_context_destroy_type = void (*)(secp256k1_context*);
+
+        std::unique_ptr<secp256k1_context,
+                        secp256k1_context_destroy_type>
+            secp{secp256k1_context_create(SECP256K1_CONTEXT_NONE),
+                   &secp256k1_context_destroy};
         auto att = tx.sign(secp.get(), key);
         tx.m_attestations.insert(att);
     }

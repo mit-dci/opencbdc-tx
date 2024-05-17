@@ -29,10 +29,13 @@ class WalletTxValidationTest : public ::testing::Test {
     cbdc::transaction::full_tx m_valid_tx{};
     cbdc::transaction::full_tx m_valid_tx_multi_inp{};
 
-    std::unique_ptr<secp256k1_context, decltype(&secp256k1_context_destroy)>
-        m_secp{secp256k1_context_create(SECP256K1_CONTEXT_SIGN
-                                        | SECP256K1_CONTEXT_VERIFY),
+    using secp256k1_context_destroy_type = void (*)(secp256k1_context*);
+
+    std::unique_ptr<secp256k1_context,
+                    secp256k1_context_destroy_type>
+        m_secp{secp256k1_context_create(SECP256K1_CONTEXT_NONE),
                &secp256k1_context_destroy};
+
     cbdc::privkey_t m_priv0{cbdc::hash_from_hex(
         "0000000000000001000000000000000000000000000000000000000000000000")};
     cbdc::pubkey_t m_pub0{cbdc::pubkey_from_privkey(m_priv0, m_secp.get())};

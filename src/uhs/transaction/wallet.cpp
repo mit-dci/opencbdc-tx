@@ -197,11 +197,10 @@ namespace cbdc {
 
                 std::array<unsigned char, sig_len> sig_arr{};
                 [[maybe_unused]] const auto sign_ret
-                    = secp256k1_schnorrsig_sign(m_secp.get(),
+                    = secp256k1_schnorrsig_sign32(m_secp.get(),
                                                 sig_arr.data(),
                                                 sighash.data(),
                                                 &keypair,
-                                                nullptr,
                                                 nullptr);
                 std::memcpy(
                     &sig[transaction::validation::p2pk_witness_prog_len],

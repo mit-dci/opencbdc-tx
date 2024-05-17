@@ -170,11 +170,14 @@ TEST_F(sentinel_2pc_test, digest_valid_transaction_network) {
 TEST_F(sentinel_2pc_test, tx_validation_test) {
     ASSERT_TRUE(m_ctl->init());
     auto ctx = cbdc::transaction::compact_tx(m_valid_tx);
+
+    using secp256k1_context_destroy_type = void (*)(secp256k1_context*);
+
     auto secp = std::unique_ptr<secp256k1_context,
-                                decltype(&secp256k1_context_destroy)>{
-        secp256k1_context_create(SECP256K1_CONTEXT_SIGN
-                                 | SECP256K1_CONTEXT_VERIFY),
+                                secp256k1_context_destroy_type>{
+        secp256k1_context_create(SECP256K1_CONTEXT_NONE),
         &secp256k1_context_destroy};
+
     auto res
         = m_ctl->validate_transaction(m_valid_tx, [&](auto validation_res) {
               ASSERT_TRUE(validation_res.has_value());

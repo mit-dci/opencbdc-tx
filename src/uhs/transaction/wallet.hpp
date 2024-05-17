@@ -256,10 +256,12 @@ namespace cbdc::transaction {
         /// \returns the generated input to use in a transaction.
         auto create_seeded_input(size_t seed_idx) -> std::optional<input>;
 
+        using secp256k1_context_destroy_type = void (*)(secp256k1_context*);
+
         static const inline auto m_secp
             = std::unique_ptr<secp256k1_context,
-                              decltype(&secp256k1_context_destroy)>(
-                secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
+                              secp256k1_context_destroy_type>(
+                secp256k1_context_create(SECP256K1_CONTEXT_NONE),
                 &secp256k1_context_destroy);
 
         static const inline auto m_random_source
