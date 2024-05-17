@@ -7,13 +7,17 @@
 #define OPENCBDC_TX_SRC_TRANSACTION_TRANSACTION_H_
 
 #include "crypto/sha256.h"
+#include "util/common/commitment.hpp"
 #include "util/common/hash.hpp"
 #include "util/common/keys.hpp"
+#include "util/common/random_source.hpp"
 #include "util/serialization/format.hpp"
 #include "util/serialization/util.hpp"
 
 #include <cstdint>
 #include <optional>
+#include <secp256k1_schnorrsig.h>
+#include <utility>
 
 namespace cbdc::transaction {
     /// \brief The unique identifier of a specific \ref output from
@@ -59,6 +63,14 @@ namespace cbdc::transaction {
         output(hash_t witness_program_commitment, uint64_t value);
 
         output() = default;
+    };
+
+    /// \brief Additional information a spender needs to spend an input
+    struct spend_data {
+        /// The blinding factor for the auxiliary commitment
+        hash_t m_blind{};
+        /// The value of the associated output
+        uint64_t m_value{0};
     };
 
     /// \brief An input for a new transaction
@@ -109,6 +121,41 @@ namespace cbdc::transaction {
     /// Sentinel attestation type. Public key of the sentinel and signature of
     /// a compact transaction hash.
     using sentinel_attestation = std::pair<pubkey_t, signature_t>;
+
+    /// \brief A compacted output of a transaction
+    ///
+    /// Contains all (and only) the information necessary for the UHS
+    /// to be updated and for the system to perform audits.
+    ///
+    /// \see \ref cbdc::operator<<(serializer&, const transaction::compact_output&)
+    struct compact_output {
+        /// The nonce used to compress the Pedersen Commitment to 32 bytes
+        commitment_t m_value_commitment{};
+        /// The rangeproof guaranteeing that the output is greater than 0
+        rangeproof_t m_range{};
+        /// The nested hash of the outpoint and encumbrance
+        hash_t m_provenance{};
+
+        explicit compact_output(const output& put, const out_point& point);
+
+        compact_output(const commitment_t& aux,
+                       const rangeproof_t& range,
+                       const hash_t& provenance);
+        compact_output() = default;
+
+        auto operator==(const compact_output& rhs) const -> bool;
+        auto operator!=(const compact_output& rhs) const -> bool;
+    };
+
+    /// \brief Calculate the UHS ID from an compact_output
+    ///
+    /// A \ref compact_output includes all the information necessary to
+    /// calculate the UHS ID (by-design), so we can get the UHS ID from it
+    /// alone.
+    ///
+    /// \param put the \ref compact_output to-be-spent
+    /// \returns the hash serving as the UHS ID
+    auto calculate_uhs_id(const compact_output& put) -> hash_t;
 
     /// \brief A condensed, hash-only transaction representation
     ///
@@ -168,6 +215,29 @@ namespace cbdc::transaction {
     struct compact_tx_hasher {
         auto operator()(compact_tx const& tx) const noexcept -> size_t;
     };
+
+    /// \brief Roll auxiliary cryptographic commitments
+    ///
+    /// \warning Mostly, direct use should be avoided (instead leveraging the
+    /// higher-level `add_proof` method).
+    ///
+    /// \param ctx a secp256k1_context initialized for signing and commitment
+    /// \param rng a random_source for generating nonces
+    /// \param blinds the blinding factors, one per-input (in order)
+    /// \param out_spend_data the additional spend data (in output order)
+    /// \return the created commitments (in output order)
+    auto roll_auxiliaries(secp256k1_context* ctx,
+                          random_source& rng,
+                          const std::vector<hash_t>& blinds,
+                          std::vector<spend_data>& out_spend_data)
+        -> std::vector<secp256k1_pedersen_commitment>;
+
+    /// \brief todo: add description
+    auto prove(secp256k1_context* ctx,
+               secp256k1_bppp_generators* gens,
+               random_source& rng,
+               const spend_data& out_spend_data,
+               const secp256k1_pedersen_commitment* comm) -> rangeproof_t;
 
     /// \brief Calculates the unique hash of a full transaction
     ///

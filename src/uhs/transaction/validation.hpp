@@ -55,6 +55,23 @@ namespace cbdc::transaction::validation {
         uint64_t m_idx{};
     };
 
+    /// A proof verification error
+    enum class proof_error_code : uint8_t {
+        invalid_commitment, ///< deserializing the auxiliary commitment failed
+        invalid_uhs_id,     ///< deserializing the UHS ID failed
+        out_of_range,          ///< range proof did not verify
+        wrong_sum,             ///< auxiliaries did not sum as-required
+        missing_rangeproof,    ///< rangeproof missing in output
+    };
+
+    /// An error that may occur when verifying transaction proof
+    struct proof_error {
+        auto operator==(const proof_error& rhs) const -> bool;
+
+        /// The type of proof error
+        proof_error_code m_code{};
+    };
+
     /// Types of errors that may occur when sentinels validate witness
     /// commitments
     enum class witness_error_code : uint8_t {
@@ -150,6 +167,19 @@ namespace cbdc::transaction::validation {
         -> std::optional<tx_error>;
     auto check_output_value(const transaction::output& out)
         -> std::optional<output_error_code>;
+    auto check_range(const commitment_t& comm, const rangeproof_t& rng)
+        -> std::optional<proof_error>;
+    auto range_batch_add(secp256k1_ecmult_multi_batch& batch,
+                         secp256k1_scratch_space* scratch,
+                         const rangeproof_t& rng,
+                         secp256k1_pedersen_commitment& comm)
+        -> std::optional<proof_error>;
+    auto check_range_batch(secp256k1_ecmult_multi_batch& batch)
+        -> std::optional<proof_error>;
+    auto check_commitment_sum(
+        const std::vector<secp256k1_pedersen_commitment>& inputs,
+        const std::vector<secp256k1_pedersen_commitment>& outputs,
+        uint64_t minted) -> bool;
     auto get_p2pk_witness_commitment(const pubkey_t& payee) -> hash_t;
     auto to_string(const tx_error& err) -> std::string;
 

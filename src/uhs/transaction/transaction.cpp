@@ -36,6 +36,23 @@ namespace cbdc::transaction {
         : m_witness_program_commitment(witness_program_commitment),
           m_value(value) {}
 
+    compact_output::compact_output(const commitment_t& aux,
+                                   const rangeproof_t& range,
+                                   const hash_t& provenance)
+        : m_value_commitment(aux),
+          m_range(range),
+          m_provenance(provenance) {}
+
+    auto compact_output::operator==(const compact_output& rhs) const -> bool {
+        return m_value_commitment == rhs.m_value_commitment
+            && m_range == rhs.m_range
+            && m_provenance == rhs.m_provenance;
+    }
+
+    auto compact_output::operator!=(const compact_output& rhs) const -> bool {
+        return !(*this == rhs);
+    }
+
     auto input::operator==(const input& rhs) const -> bool {
         return m_prevout == rhs.m_prevout
             && m_prevout_data == rhs.m_prevout_data;
@@ -117,6 +134,121 @@ namespace cbdc::transaction {
         sha.Write(buf.c_ptr(), buf.size());
         sha.Finalize(ret.data());
         return ret;
+    }
+
+    auto calculate_uhs_id(const compact_output& put) -> hash_t {
+        CSHA256 sha;
+        sha.Write(put.m_provenance.data(), put.m_provenance.size());
+        sha.Write(put.m_value_commitment.data(), put.m_value_commitment.size());
+        // sha.Write(put.m_range.data(), put.m_range.size());
+
+        hash_t id{};
+        sha.Finalize(id.data());
+
+        return id;
+    }
+
+    auto roll_auxiliaries(secp256k1_context* ctx,
+                          random_source& rng,
+                          const std::vector<hash_t>& blinds,
+                          std::vector<spend_data>& out_spend_data)
+        -> std::vector<secp256k1_pedersen_commitment> {
+        const auto make_public = blinds.empty();
+        const hash_t empty{};
+
+        std::vector<secp256k1_pedersen_commitment> auxiliaries{};
+
+        std::vector<hash_t> new_blinds{};
+        for(uint64_t i = 0; i < out_spend_data.size() - 1; ++i) {
+            while(true) {
+                auto rprime = make_public ? empty : rng.random_hash();
+                auto commitment
+                    = commit(ctx, out_spend_data[i].m_value, rprime);
+                if(commitment.has_value()) {
+                    auxiliaries.push_back(commitment.value());
+                    new_blinds.push_back(rprime);
+                    out_spend_data[i].m_blind = rprime;
+                    break;
+                }
+            }
+        }
+
+        if(!make_public) {
+            std::vector<hash_t> allblinds{blinds};
+            std::copy(new_blinds.begin(),
+                      new_blinds.end(),
+                      std::back_inserter(allblinds));
+
+            std::vector<const unsigned char*> blind_ptrs;
+            blind_ptrs.reserve(allblinds.size());
+            for(const auto& b : allblinds) {
+                blind_ptrs.push_back(b.data());
+            }
+
+            hash_t last_blind{};
+            [[maybe_unused]] auto ret
+                = secp256k1_pedersen_blind_sum(ctx,
+                                               last_blind.data(),
+                                               blind_ptrs.data(),
+                                               allblinds.size(),
+                                               blinds.size());
+            assert(ret == 1);
+            auxiliaries.push_back(
+                commit(ctx, out_spend_data.back().m_value, last_blind)
+                    .value());
+            out_spend_data.back().m_blind = last_blind;
+        } else {
+            auxiliaries.push_back(
+                commit(ctx, out_spend_data.back().m_value, empty).value());
+            new_blinds.push_back(empty);
+            out_spend_data.back().m_blind = empty;
+        }
+
+        return auxiliaries;
+    }
+
+    auto prove(secp256k1_context* ctx,
+               secp256k1_bppp_generators* gens,
+               random_source& rng,
+               const spend_data& out_spend_data,
+               const secp256k1_pedersen_commitment* comm) -> rangeproof_t {
+
+        static constexpr auto scratch_size = 100UL * 1024UL;
+        secp256k1_scratch_space* scratch
+            = secp256k1_scratch_space_create(ctx, scratch_size);
+
+        static constexpr auto upper_bound = 64; // 2^64 - 1
+        static constexpr auto base = 16;
+
+        rangeproof_t range{};
+        size_t rangelen
+            = secp256k1_bppp_rangeproof_proof_length(ctx, upper_bound, base);
+        range.assign(rangelen, 0);
+
+        [[maybe_unused]] auto ret
+            = secp256k1_bppp_rangeproof_prove(
+                ctx,
+                scratch,
+                gens,
+                secp256k1_generator_h,
+                range.data(),
+                &rangelen,
+                upper_bound,
+                base,
+                out_spend_data.m_value,
+                1,
+                comm, // the commitment for this output
+                out_spend_data.m_blind.data(),
+                rng.random_hash().data(),
+                nullptr, // extra_commit
+                0        // extra_commit length
+            );
+
+        secp256k1_scratch_space_destroy(ctx, scratch);
+
+        assert(ret == 1);
+
+        return range;
     }
 
     auto compact_tx::operator==(const compact_tx& tx) const noexcept -> bool {

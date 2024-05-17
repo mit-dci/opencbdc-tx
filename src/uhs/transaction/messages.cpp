@@ -30,6 +30,26 @@ namespace cbdc {
         return packet >> out.m_witness_program_commitment >> out.m_value;
     }
 
+    auto operator<<(serializer& packet, const transaction::compact_output& out)
+        -> serializer& {
+        return packet << out.m_value_commitment << out.m_range << out.m_provenance;
+    }
+
+    auto operator>>(serializer& packet, transaction::compact_output& out)
+        -> serializer& {
+        return packet >> out.m_value_commitment >> out.m_range >> out.m_provenance;
+    }
+
+    auto operator<<(serializer& packet, const transaction::spend_data& spnd)
+        -> serializer& {
+        return packet << spnd.m_blind << spnd.m_value;
+    }
+
+    auto operator>>(serializer& packet, transaction::spend_data& spnd)
+        -> serializer& {
+        return packet >> spnd.m_blind >> spnd.m_value;
+    }
+
     auto operator<<(serializer& packet, const transaction::input& inp)
         -> serializer& {
         return packet << inp.m_prevout << inp.m_prevout_data;
@@ -60,6 +80,17 @@ namespace cbdc {
         -> serializer& {
         return packet >> tx.m_id >> tx.m_inputs >> tx.m_uhs_outputs
             >> tx.m_attestations;
+    }
+
+    auto operator>>(serializer& packet,
+                    transaction::validation::proof_error& e) -> serializer& {
+        return packet >> e.m_code;
+    }
+
+    auto operator<<(serializer& packet,
+                    const transaction::validation::proof_error& e)
+        -> serializer& {
+        return packet << e.m_code;
     }
 
     auto operator>>(serializer& packet,

@@ -38,6 +38,32 @@ namespace cbdc {
     auto operator>>(serializer& packet, transaction::output& out)
         -> serializer&;
 
+    /// \brief Serializes a compact_output.
+    ///
+    /// Serializes the UHS ID, then the auxiliary commitment, then the range
+    /// proof, and then the consistency signature.
+    /// \see \ref cbdc::operator<<(serializer&, const std::array<T, len>&)
+    auto operator<<(serializer& packet, const transaction::compact_output& out)
+        -> serializer&;
+
+    /// Deserializes a compact_output.
+    /// \see \ref cbdc::operator<<(serializer&, const transaction::output&)
+    auto operator>>(serializer& packet, transaction::compact_output& out)
+        -> serializer&;
+
+    /// \brief Serializes additional spend-required data for an output
+    ///
+    /// Serializes the blinding factor and then the value.
+    /// \see \ref cbdc::operator<<(serializer&, const std::array<T, len>&)
+    /// \see \ref cbdc::operator<<(serializer&, T)
+    auto operator<<(serializer& packet, const transaction::spend_data& spnd)
+        -> serializer&;
+
+    /// Deserializes additional spend-required data for an output
+    /// \see \ref cbdc::operator<<(serializer&, const transaction::spend_data&)
+    auto operator>>(serializer& packet, transaction::spend_data& spnd)
+        -> serializer&;
+
     /// \brief Serializes an input.
     ///
     /// Serializes the out_point and then the output.
@@ -78,6 +104,20 @@ namespace cbdc {
     /// Deserializes a compact transaction.
     /// \see \ref cbdc::operator<<(serializer&, const transaction::compact_tx&)
     auto operator>>(serializer& packet, transaction::compact_tx& tx)
+        -> serializer&;
+
+    /// Deserializes a proof error.
+    /// \see \ref cbdc::operator<<(serializer&,
+    ///           const transaction::validation::proof_error&)
+    auto operator>>(serializer& packet,
+                    transaction::validation::proof_error& e) -> serializer&;
+
+    /// \brief Serializes a proof error.
+    ///
+    /// Serializes the error code.
+    /// \see \ref cbdc::operator<<(serializer&, T)
+    auto operator<<(serializer& packet,
+                    const transaction::validation::proof_error& e)
         -> serializer&;
 
     /// Deserializes an input error.
