@@ -218,6 +218,61 @@ namespace cbdc::shard {
         m_snp = std::move(snp);
     }
 
+    auto shard::audit(const std::shared_ptr<const leveldb::Snapshot>& snp)
+        -> std::unordered_map<unsigned char, commitment_t> {
+        std::unordered_map<unsigned char, std::vector<commitment_t>> comms{};
+        auto opts = leveldb::ReadOptions();
+        opts.snapshot = snp.get();
+        auto it = std::shared_ptr<leveldb::Iterator>(m_db->NewIterator(opts));
+        it->SeekToFirst();
+        // Skip best block height key
+        it->Next();
+        for(; it->Valid(); it->Next()) {
+            auto key = it->key();
+            auto val = it->value();
+
+            static constexpr auto comm_size
+                = sizeof(transaction::compact_output::m_value_commitment);
+            size_t rng_size{};
+            static constexpr auto sz_size = sizeof(size_t);
+
+            transaction::compact_output outp{};
+            hash_t id{};
+            std::memcpy(id.data(), key.data(), key.size());
+            std::memcpy(outp.m_value_commitment.data(), val.data(), comm_size);
+            val.remove_prefix(comm_size);
+            std::memcpy(&rng_size, val.data(), sz_size);
+            val.remove_prefix(sz_size);
+            outp.m_range.reserve(rng_size);
+            outp.m_range.assign(rng_size, 0);
+            std::memcpy(outp.m_range.data(), val.data(), rng_size);
+            val.remove_prefix(rng_size);
+            std::memcpy(outp.m_provenance.data(),
+                        val.data(),
+                        outp.m_provenance.size());
+
+            if(id != transaction::calculate_uhs_id(outp)) {
+                continue;
+            }
+            auto bucket = id[0];
+            if(comms.find(bucket) == comms.end()) {
+                std::vector<commitment_t> commits{};
+                commits.reserve(1);
+                comms.emplace(bucket, std::move(commits));
+            }
+            comms[bucket].emplace_back(outp.m_value_commitment);
+        }
+
+        std::unordered_map<unsigned char, commitment_t> summaries{};
+        for(auto& [k, v] : comms) {
+            auto summary = sum_commitments(m_secp.get(), v);
+            if(summary.has_value()) {
+                summaries[k] = summary.value();
+            }
+        }
+
+        return summaries;
+    }
 
     auto shard::get_snapshot() -> std::shared_ptr<const leveldb::Snapshot> {
         auto snp = std::shared_ptr<const leveldb::Snapshot>(

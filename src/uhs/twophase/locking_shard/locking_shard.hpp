@@ -127,6 +127,14 @@ namespace cbdc::locking_shard {
         [[nodiscard]] auto check_tx_id(const hash_t& tx_id)
             -> std::optional<bool> final;
 
+        /// Takes a snapshot of the UHS and calculates the supply of coins at
+        /// the given epoch. Checks the UHS IDs match the value and nested data
+        /// included in the UHS element.
+        /// \param epoch the epoch to audit the supply at.
+        /// \return commitment to total value in this shard's UHS. std::nullopt
+        ///         if any of the UTXOs do not match their UHS ID.
+        auto get_summary(uint64_t epoch) -> std::optional<commitment_t>;
+
         /// Prunes any spent UHS elements spent prior to the given epoch.
         /// \param epoch epoch to prune prior to.
         void prune(uint64_t epoch);

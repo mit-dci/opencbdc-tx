@@ -230,6 +230,125 @@ namespace cbdc::locking_shard {
         }
     }
 
+    auto locking_shard::get_summary(uint64_t epoch)
+        -> std::optional<commitment_t> {
+
+        {
+            std::unique_lock l(m_mut);
+            m_uhs.snapshot();
+            m_locked.snapshot();
+            m_spent.snapshot();
+        }
+
+        std::atomic_bool failed = false;
+
+        static constexpr auto scratch_size = 4096UL * 1024UL;
+        [[maybe_unused]] secp256k1_scratch_space* scratch
+            = secp256k1_scratch_space_create(m_secp.get(), scratch_size);
+
+        // SAM START HERE: replace threading with batching
+        static constexpr size_t threshold = 100000;
+        size_t cursor = 0;
+        //std::vector<std::future<std::optional<commitment_t>>> pool{};
+        std::vector<commitment_t> comms{};
+        auto* range_batch = secp256k1_bppp_rangeproof_batch_create(m_secp.get(), 34 * (threshold + 1));
+        auto summarize
+            = [&](const snapshot_map<hash_t, uhs_element>& m) {
+            for(const auto& [id, elem] : m) {
+                if(failed) {
+                    break;
+                }
+                if(elem.m_creation_epoch <= epoch
+                   && (!elem.m_deletion_epoch.has_value()
+                       || (elem.m_deletion_epoch.value() > epoch))) {
+
+                    auto uhs_id
+                        = transaction::calculate_uhs_id(elem.m_out);
+                    if(uhs_id != id) {
+                        failed = true;
+                    }
+                    auto comm = elem.m_out.m_value_commitment;
+                    auto c = deserialize_commitment(m_secp.get(), comm).value();
+                    auto r = transaction::validation::range_batch_add(
+                        *range_batch,
+                        scratch,
+                        elem.m_out.m_range,
+                        c
+                    );
+                    if(!r.has_value()) {
+                        ++cursor;
+                    }
+                    comms.push_back(comm);
+                }
+                if(cursor >= threshold) {
+                    failed = transaction::validation::check_range_batch(*range_batch).has_value();
+                    [[maybe_unused]] auto res = secp256k1_bppp_rangeproof_batch_clear(m_secp.get(), range_batch);
+                    cursor = 0;
+                }
+//                    return comm;
+//                    auto f = std::async(std::launch::async,
+//                        [&]() -> std::optional<commitment_t> {
+//                            auto uhs_id
+//                                = transaction::calculate_uhs_id(elem.m_out);
+//                            if(uhs_id != id) {
+//                                failed = true;
+//                                return std::nullopt;
+//                            }
+//
+//                            auto comm = elem.m_out.m_value_commitment;
+//                            auto res = transaction::validation::check_range(
+//                                comm,
+//                                elem.m_out.m_range);
+//                            if(res.has_value()) {
+//                                failed = true;
+//                                return std::nullopt;
+//                            }
+//
+//                            return comm;
+//                        }
+//                    );
+//
+//                    pool.emplace_back(std::move(f));
+            }
+            if(cursor > 0) {
+                failed = transaction::validation::check_range_batch(*range_batch).has_value();
+                [[maybe_unused]] auto res = secp256k1_bppp_rangeproof_batch_clear(m_secp.get(), range_batch);
+                cursor = 0;
+            }
+        };
+
+        summarize(m_uhs);
+        summarize(m_locked);
+        summarize(m_spent);
+        [[maybe_unused]] auto res = secp256k1_bppp_rangeproof_batch_destroy(m_secp.get(), range_batch);
+        free(range_batch);
+
+//        if(!failed) {
+//            comms.reserve(pool.size());
+//
+//            for(auto& f : pool) {
+//                auto c = f.get();
+//                failed = !c.has_value();
+//                if(failed) {
+//                    break;
+//                }
+//                comms.emplace_back(std::move(c.value()));
+//            }
+//        }
+
+        {
+            std::unique_lock l(m_mut);
+            m_uhs.release_snapshot();
+            m_locked.release_snapshot();
+            m_spent.release_snapshot();
+        }
+
+        if(failed) {
+            return std::nullopt;
+        }
+
+        return sum_commitments(m_secp.get(), comms);
+    }
 
     auto locking_shard::highest_epoch() const -> uint64_t {
         std::shared_lock l(m_mut);
