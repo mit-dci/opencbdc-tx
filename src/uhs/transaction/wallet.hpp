@@ -36,6 +36,14 @@ namespace cbdc::transaction {
         /// Initializes the randomization engine for key shuffling.
         wallet();
 
+        /// \brief Constructor.
+        ///
+        /// \param log (optional) logger to write debugging to.
+        explicit wallet(std::shared_ptr<logging::log> log);
+
+        /// Initializes the randomization engine for key shuffling.
+        void init();
+
         /// \brief Mints new spendable outputs.
         ///
         /// Generates the specified number spendable outputs, each with the
@@ -168,6 +176,17 @@ namespace cbdc::transaction {
         /// \param tx the transaction to confirm.
         void confirm_transaction(const full_tx& tx);
 
+        /// \brief Retrieves the spending-keypairs for a transaction
+        ///
+        /// Returns the keypairs (one per input, in-order) needed to authorize
+        /// spending the transaction's inputs.
+        ///
+        /// \param tx the transaction to fetch spending keys for
+        /// \return the list of keypairs (or std::nullopt if any output is
+        ///         unspendable)
+        auto spending_keys(const full_tx& tx) const
+            -> std::optional<std::vector<std::pair<privkey_t, pubkey_t>>>;
+
         /// Signs each of the transaction's inputs using Schnorr signatures.
         /// \param tx the transaction whose inputs to sign.
         void sign(full_tx& tx) const;
@@ -206,30 +225,31 @@ namespace cbdc::transaction {
         auto create_seeded_transaction(size_t seed_idx)
             -> std::optional<full_tx>;
 
+        // todo: document overload
+        auto create_seeded_transaction(size_t seed_idx,
+                                       const commitment_t& comm,
+                                       const rangeproof_t& range)
+            -> std::optional<transaction::full_tx>;
+
         /// Given a set of credit inputs, add the UTXOs and update the wallet's
         /// balance.
         /// \param credits the inputs to add to the wallet's set of UTXOs.
         void confirm_inputs(const std::vector<input>& credits);
 
       private:
-        struct cmp_input {
-            auto operator()(const input& lhs, const input& rhs) const -> bool {
-                // First sort by tx hash then output index
-                return std::tie(lhs.m_prevout.m_tx_id, lhs.m_prevout.m_index)
-                     < std::tie(rhs.m_prevout.m_tx_id, rhs.m_prevout.m_index);
-            }
-        };
-
         /// Locks access to m_utxos and m_balance (the sum of the UTXOs).
         /// \warning Do not lock simultaneously with m_keys_mut.
         mutable std::shared_mutex m_utxos_mut;
-        uint64_t m_balance{0};
+
         /// Stores the current set of spendable inputs.
-        std::set<input, cmp_input> m_utxos_set;
+        std::map<out_point, input> m_utxos_set;
+        /// Stores the blinds associated with a spendable input
         size_t m_seed_from{0};
         size_t m_seed_to{0};
         uint32_t m_seed_value{0};
         hash_t m_seed_witness_commitment{0};
+        std::optional<rangeproof_t> m_seed_range_proof{};
+        std::optional<commitment_t> m_seed_value_commitment{};
         /// Queue of spendable inputs, oldest first.
         std::list<input> m_spend_queue;
 
@@ -243,6 +263,7 @@ namespace cbdc::transaction {
             m_keys;
         std::vector<pubkey_t> m_pubkeys;
         std::default_random_engine m_shuffle;
+        std::shared_ptr<logging::log> m_log;
 
         // TODO: currently this map grows unbounded, we need to garbage
         //       collect it
@@ -254,7 +275,29 @@ namespace cbdc::transaction {
         /// \param seed_idx the index in the seed set to generate the input
         ///                 for.
         /// \returns the generated input to use in a transaction.
-        auto create_seeded_input(size_t seed_idx) -> std::optional<input>;
+        auto create_seeded_input(size_t seed_idx)
+            -> std::optional<transaction::input>;
+
+        struct GensDeleter {
+            explicit GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
+
+            void operator()(secp256k1_bppp_generators* gens) const {
+                secp256k1_bppp_generators_destroy(m_ctx, gens);
+            }
+
+            secp256k1_context* m_ctx;
+        };
+
+        /// should be set to exactly `max(n_bits/log2(base), base) + 7`
+        ///
+        /// We use n_bits = 64, base = 16, so this should always be 24.
+        static const inline auto generator_count = 16 + 8;
+
+        std::unique_ptr<secp256k1_bppp_generators, GensDeleter>
+            m_generators{
+                secp256k1_bppp_generators_create(m_secp.get(),
+                                                 generator_count),
+                GensDeleter(m_secp.get())};
 
         using secp256k1_context_destroy_type = void (*)(secp256k1_context*);
 

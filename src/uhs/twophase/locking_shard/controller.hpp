@@ -13,6 +13,7 @@
 #include "util/raft/node.hpp"
 #include "util/raft/rpc_server.hpp"
 #include "util/rpc/tcp_server.hpp"
+#include "util/serialization/format.hpp"
 
 namespace cbdc::locking_shard {
     /// Manages a replicated locking shard using Raft.

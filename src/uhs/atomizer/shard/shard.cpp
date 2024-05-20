@@ -5,6 +5,8 @@
 
 #include "shard.hpp"
 
+#include "uhs/transaction/messages.hpp"
+
 #include <utility>
 
 namespace cbdc::shard {
@@ -49,7 +51,8 @@ namespace cbdc::shard {
                         sizeof(this->m_best_block_height));
         }
 
-        update_snapshot();
+        auto snp = get_snapshot();
+        update_snapshot(std::move(snp));
 
         return std::nullopt;
     }
@@ -64,12 +67,39 @@ namespace cbdc::shard {
         // Iterate over all confirmed transactions
         for(const auto& tx : blk.m_transactions) {
             // Add new outputs
-            for(const auto& out : tx.m_uhs_outputs) {
-                if(is_output_on_shard(out)) {
-                    std::array<char, sizeof(out)> out_arr{};
-                    std::memcpy(out_arr.data(), out.data(), out.size());
-                    leveldb::Slice OutPointKey(out_arr.data(), out.size());
-                    batch.Put(OutPointKey, leveldb::Slice());
+            for(const auto& out : tx.m_outputs) {
+                auto id = transaction::calculate_uhs_id(out);
+                if(is_output_on_shard(id)) {
+                    std::array<char, sizeof(id)> out_arr{};
+                    std::memcpy(out_arr.data(), id.data(), id.size());
+                    leveldb::Slice OutPointKey(out_arr.data(), id.size());
+
+                    static constexpr auto aux_size = sizeof(out.m_value_commitment);
+                    static constexpr auto sz_size = sizeof(size_t);
+                    const auto rng_size = out.m_range.size();
+                    static constexpr auto preimg_size = sizeof(out.m_provenance);
+                    auto total_size =
+                        aux_size + sz_size + rng_size + preimg_size;
+
+                    std::vector<char> proofs_arr{};
+                    proofs_arr.reserve(total_size);
+                    proofs_arr.assign(total_size, 0);
+                    std::memcpy(proofs_arr.data(),
+                                out.m_value_commitment.data(),
+                                aux_size);
+                    std::memcpy(proofs_arr.data() + aux_size,
+                                &rng_size,
+                                sz_size);
+                    std::memcpy(proofs_arr.data() + aux_size + sz_size,
+                                out.m_range.data(),
+                                rng_size);
+                    std::memcpy(proofs_arr.data() + aux_size + sz_size + rng_size,
+                                out.m_provenance.data(),
+                                preimg_size);
+
+                    leveldb::Slice ProofVal(proofs_arr.data(),
+                                            proofs_arr.size());
+                    batch.Put(OutPointKey, ProofVal);
                 }
             }
 
@@ -97,7 +127,8 @@ namespace cbdc::shard {
         // Commit the changes atomically
         this->m_db->Write(this->m_write_options, &batch);
 
-        update_snapshot();
+        auto snp = get_snapshot();
+        update_snapshot(std::move(snp));
 
         return true;
     }
@@ -174,13 +205,26 @@ namespace cbdc::shard {
         return config::hash_in_shard_range(m_prefix_range, uhs_hash);
     }
 
-    void shard::update_snapshot() {
+    auto
+    shard::is_output_on_shard(const transaction::compact_output& put) const
+        -> bool {
+        auto id = transaction::calculate_uhs_id(put);
+        return config::hash_in_shard_range(m_prefix_range, id);
+    }
+
+    void shard::update_snapshot(std::shared_ptr<const leveldb::Snapshot> snp) {
         std::unique_lock<std::shared_mutex> l(m_snp_mut);
         m_snp_height = m_best_block_height;
-        m_snp = std::shared_ptr<const leveldb::Snapshot>(
+        m_snp = std::move(snp);
+    }
+
+
+    auto shard::get_snapshot() -> std::shared_ptr<const leveldb::Snapshot> {
+        auto snp = std::shared_ptr<const leveldb::Snapshot>(
             m_db->GetSnapshot(),
             [&](const leveldb::Snapshot* p) {
                 m_db->ReleaseSnapshot(p);
             });
+        return snp;
     }
 }

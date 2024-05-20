@@ -67,33 +67,28 @@ namespace cbdc::transaction::validation {
             return structure_err;
         }
 
-        for(size_t idx = 0; idx < tx.m_inputs.size(); idx++) {
-            const auto& inp = tx.m_inputs[idx];
-            const auto input_err = check_input_structure(inp);
-            if(input_err) {
-                auto&& [code, data] = input_err.value();
-                return tx_error{input_error{code, data, idx}};
-            }
-        }
-
-        for(size_t idx = 0; idx < tx.m_outputs.size(); idx++) {
-            const auto& out = tx.m_outputs[idx];
-            const auto output_err = check_output_value(out);
-            if(output_err) {
-                return tx_error{output_error{output_err.value(), idx}};
-            }
-        }
-
-        const auto in_out_set_error = check_in_out_set(tx);
-        if(in_out_set_error) {
-            return in_out_set_error;
-        }
-
         for(size_t idx = 0; idx < tx.m_witness.size(); idx++) {
             const auto witness_err = check_witness(tx, idx);
             if(witness_err) {
                 return tx_error{witness_error{witness_err.value(), idx}};
             }
+        }
+
+        std::vector<commitment_t> inputs{};
+        inputs.reserve(tx.m_inputs.size());
+        for(const auto& inp : tx.m_inputs) {
+            inputs.push_back(inp.m_prevout_data.m_value_commitment);
+        }
+
+        const auto outproof_exists_err = check_output_rangeproofs_exist(tx);
+        if(outproof_exists_err) {
+            return tx_error{outproof_exists_err.value()};
+        }
+
+        const cbdc::transaction::compact_tx ctx(tx);
+        const auto proof_error = check_proof(ctx, inputs);
+        if(proof_error) {
+            return proof_error;
         }
 
         return std::nullopt;
@@ -119,42 +114,6 @@ namespace cbdc::transaction::validation {
         const auto input_set_err = check_input_set(tx);
         if(input_set_err) {
             return input_set_err;
-        }
-
-        return std::nullopt;
-    }
-
-    auto check_input_structure(const cbdc::transaction::input& inp)
-        -> std::optional<
-            std::pair<input_error_code, std::optional<output_error_code>>> {
-        const auto data_err = check_output_value(inp.m_prevout_data);
-        if(data_err) {
-            return {{input_error_code::data_error, data_err}};
-        }
-
-        return std::nullopt;
-    }
-
-    auto check_in_out_set(const cbdc::transaction::full_tx& tx)
-        -> std::optional<tx_error> {
-        uint64_t input_total{0};
-        for(const auto& inp : tx.m_inputs) {
-            if(input_total + inp.m_prevout_data.m_value <= input_total) {
-                return tx_error(tx_error_code::value_overflow);
-            }
-            input_total += inp.m_prevout_data.m_value;
-        }
-
-        uint64_t output_total{0};
-        for(const auto& out : tx.m_outputs) {
-            if(output_total + out.m_value <= output_total) {
-                return tx_error(tx_error_code::value_overflow);
-            }
-            output_total += out.m_value;
-        }
-
-        if(input_total != output_total) {
-            return tx_error(tx_error_code::asymmetric_values);
         }
 
         return std::nullopt;
@@ -286,6 +245,16 @@ namespace cbdc::transaction::validation {
         return std::nullopt;
     }
 
+    auto check_output_rangeproofs_exist(const cbdc::transaction::full_tx& tx)
+        -> std::optional<proof_error> {
+        for(const auto& outp : tx.m_outputs) {
+            if(!outp.m_range.has_value()) {
+                return proof_error{proof_error_code::missing_rangeproof};
+            }
+        }
+        return std::nullopt;
+    }
+
     auto check_witness_count(const cbdc::transaction::full_tx& tx)
         -> std::optional<tx_error> {
         if(tx.m_inputs.size() != tx.m_witness.size()) {
@@ -308,15 +277,6 @@ namespace cbdc::transaction::validation {
                                             idx}};
             }
             inps.insert(inp.m_prevout);
-        }
-
-        return std::nullopt;
-    }
-
-    auto check_output_value(const cbdc::transaction::output& out)
-        -> std::optional<output_error_code> {
-        if(out.m_value < 1) {
-            return output_error_code::zero_value;
         }
 
         return std::nullopt;
@@ -403,6 +363,41 @@ namespace cbdc::transaction::validation {
 
         if(ret != 1) {
             return proof_error{proof_error_code::out_of_range};
+        }
+
+        return std::nullopt;
+    }
+
+    auto check_proof(const compact_tx& tx,
+                     const std::vector<commitment_t>& inps)
+        -> std::optional<proof_error> {
+        auto* ctx = secp_context.get();
+        std::vector<secp256k1_pedersen_commitment> in_comms{};
+        for(const auto& comm : inps) {
+            auto maybe_aux = deserialize_commitment(ctx, comm);
+            if(!maybe_aux.has_value()) {
+                return proof_error{proof_error_code::invalid_commitment};
+            }
+            auto aux = maybe_aux.value();
+            in_comms.push_back(aux);
+        }
+        std::vector<secp256k1_pedersen_commitment> out_comms{};
+        for(const auto& proof : tx.m_outputs) {
+            auto maybe_aux = deserialize_commitment(ctx, proof.m_value_commitment);
+            if(!maybe_aux.has_value()) {
+                return proof_error{proof_error_code::invalid_commitment};
+            }
+            auto aux = maybe_aux.value();
+            out_comms.push_back(aux);
+
+            //auto rng = check_range(proof.m_value_commitment, proof.m_range.value());
+            //if(rng.has_value()) {
+            //    return rng;
+            //}
+        }
+
+        if(!check_commitment_sum(in_comms, out_comms, 0)) {
+            return proof_error{proof_error_code::wrong_sum};
         }
 
         return std::nullopt;

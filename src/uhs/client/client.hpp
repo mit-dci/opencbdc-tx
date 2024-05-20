@@ -10,6 +10,8 @@
 #include "uhs/transaction/validation.hpp"
 #include "uhs/transaction/wallet.hpp"
 
+#include <secp256k1_bppp.h>
+
 namespace cbdc {
     namespace address {
         static constexpr auto bits_per_byte = 8;
@@ -308,6 +310,34 @@ namespace cbdc {
         void save();
 
         void register_pending_tx(const transaction::full_tx& tx);
+
+        using secp256k1_context_destroy_type = void (*)(secp256k1_context*);
+
+        std::unique_ptr<secp256k1_context,
+                        secp256k1_context_destroy_type>
+            m_secp{secp256k1_context_create(SECP256K1_CONTEXT_NONE),
+                   &secp256k1_context_destroy};
+
+        struct GensDeleter {
+            explicit GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
+
+            void operator()(secp256k1_bppp_generators* gens) const {
+                secp256k1_bppp_generators_destroy(m_ctx, gens);
+            }
+
+            secp256k1_context* m_ctx;
+        };
+
+        /// should be set to exactly `max(n_bits/log2(base), base) + 7`
+        ///
+        /// We use n_bits = 64, base = 16, so this should always be 24.
+        static const inline auto generator_count = 16 + 8;
+
+        std::unique_ptr<secp256k1_bppp_generators, GensDeleter>
+            m_generators{
+                secp256k1_bppp_generators_create(m_secp.get(),
+                                                 generator_count),
+                GensDeleter(m_secp.get())};
     };
 }
 

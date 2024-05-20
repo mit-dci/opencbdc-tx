@@ -127,8 +127,11 @@ namespace cbdc::transaction::validation {
     /// A transaction can fail validation because of an error in the inputs,
     /// outputs, witnesses, or because the transaction-local invariants
     /// do not hold.
-    using tx_error = std::
-        variant<input_error, output_error, witness_error, tx_error_code>;
+    using tx_error = std::variant<input_error,
+                                  output_error,
+                                  witness_error,
+                                  tx_error_code,
+                                  proof_error>;
 
     /// \brief Runs static validation checks on the given transaction
     ///
@@ -138,10 +141,6 @@ namespace cbdc::transaction::validation {
     /// \return null if transaction is valid, otherwise error information
     auto check_tx(const transaction::full_tx& tx) -> std::optional<tx_error>;
     auto check_tx_structure(const transaction::full_tx& tx)
-        -> std::optional<tx_error>;
-    auto check_input_structure(const transaction::input& inp) -> std::optional<
-        std::pair<input_error_code, std::optional<output_error_code>>>;
-    auto check_in_out_set(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
     // TODO: check input assumptions with flags for whether preconditions have
     //       already been checked.
@@ -161,12 +160,12 @@ namespace cbdc::transaction::validation {
         -> std::optional<tx_error>;
     auto check_output_count(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
+    auto check_output_rangeproofs_exist(const transaction::full_tx& tx)
+        -> std::optional<proof_error>;
     auto check_witness_count(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
     auto check_input_set(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
-    auto check_output_value(const transaction::output& out)
-        -> std::optional<output_error_code>;
     auto check_range(const commitment_t& comm, const rangeproof_t& rng)
         -> std::optional<proof_error>;
     auto range_batch_add(secp256k1_ecmult_multi_batch& batch,
@@ -175,6 +174,9 @@ namespace cbdc::transaction::validation {
                          secp256k1_pedersen_commitment& comm)
         -> std::optional<proof_error>;
     auto check_range_batch(secp256k1_ecmult_multi_batch& batch)
+        -> std::optional<proof_error>;
+    auto check_proof(const compact_tx& tx,
+                     const std::vector<commitment_t>& inps)
         -> std::optional<proof_error>;
     auto check_commitment_sum(
         const std::vector<secp256k1_pedersen_commitment>& inputs,

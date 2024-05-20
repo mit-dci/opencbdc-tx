@@ -10,6 +10,7 @@
 #include "status_client.hpp"
 #include "util/rpc/tcp_server.hpp"
 #include "util/serialization/format.hpp"
+#include "util/common/commitment.hpp"
 
 #include <utility>
 
