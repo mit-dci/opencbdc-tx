@@ -13,11 +13,8 @@
 class WalletTxValidationTest : public ::testing::Test {
   protected:
     void SetUp() override {
-        cbdc::transaction::wallet wallet1;
-        cbdc::transaction::wallet wallet2;
-
-        auto mint_tx1 = wallet1.mint_new_coins(3, 100);
-        wallet1.confirm_transaction(mint_tx1);
+        m_mint_tx1 = wallet1.mint_new_coins(3, 100);
+        wallet1.confirm_transaction(m_mint_tx1);
         auto mint_tx2 = wallet2.mint_new_coins(1, 100);
         wallet2.confirm_transaction(mint_tx2);
 
@@ -26,6 +23,10 @@ class WalletTxValidationTest : public ::testing::Test {
             = wallet1.send_to(200, wallet2.generate_key(), true).value();
     }
 
+    cbdc::transaction::wallet wallet1;
+    cbdc::transaction::wallet wallet2;
+
+    cbdc::transaction::full_tx m_mint_tx1{};
     cbdc::transaction::full_tx m_valid_tx{};
     cbdc::transaction::full_tx m_valid_tx_multi_inp{};
 
@@ -45,6 +46,42 @@ class WalletTxValidationTest : public ::testing::Test {
     std::unordered_set<cbdc::pubkey_t, cbdc::hashing::null> m_pubkeys{m_pub0,
                                                                       m_pub1};
 };
+
+TEST_F(WalletTxValidationTest, ins_and_outs) {
+    for(size_t i = 1; i <= 3; ++i) {
+        cbdc::transaction::wallet a{};
+        cbdc::transaction::wallet b{};
+
+        auto mint_tx = a.mint_new_coins(4, 5 * i);
+        a.confirm_transaction(mint_tx);
+
+        auto one_to_one = a.send_to(5 * i, b.generate_key(), true);
+        EXPECT_TRUE(one_to_one.has_value());
+        EXPECT_EQ(one_to_one.value().m_inputs.size(), 1UL);
+        EXPECT_EQ(one_to_one.value().m_outputs.size(), 1UL);
+        auto err = cbdc::transaction::validation::check_tx(one_to_one.value());
+        EXPECT_FALSE(err.has_value());
+
+        auto one_to_two = a.send_to(5 * i - 1, b.generate_key(), true);
+        EXPECT_TRUE(one_to_two.has_value());
+        EXPECT_EQ(one_to_two.value().m_inputs.size(), 1UL);
+        EXPECT_EQ(one_to_two.value().m_outputs.size(), 2UL);
+        err = cbdc::transaction::validation::check_tx(one_to_two.value());
+        EXPECT_FALSE(err.has_value());
+
+        auto two_to_two = a.send_to(5 * i + 1, b.generate_key(), true);
+        EXPECT_TRUE(two_to_two.has_value());
+        EXPECT_EQ(two_to_two.value().m_inputs.size(), 2UL);
+        EXPECT_EQ(two_to_two.value().m_outputs.size(), 2UL);
+        err = cbdc::transaction::validation::check_tx(two_to_two.value());
+        EXPECT_FALSE(err.has_value());
+
+        // todo: should we disallow transactions which send only minted
+        // outputs, and have only one output?
+        //
+        // reasoning: such a tx guarantees an output blinding factor of 0
+    }
+}
 
 TEST_F(WalletTxValidationTest, valid) {
     auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
@@ -99,27 +136,14 @@ TEST_F(WalletTxValidationTest, missing_witness) {
 }
 
 TEST_F(WalletTxValidationTest, zero_output) {
-    m_valid_tx.m_outputs[0].m_value = 0;
-
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
-
-    ASSERT_TRUE(err.has_value());
-    ASSERT_TRUE(
-        std::holds_alternative<cbdc::transaction::validation::output_error>(
-            err.value()));
-
-    auto output_err
-        = std::get<cbdc::transaction::validation::output_error>(err.value());
-
-    ASSERT_EQ(output_err.m_idx, uint64_t{0});
-    ASSERT_EQ(output_err.m_code,
-              cbdc::transaction::validation::output_error_code::zero_value);
+    auto inval = wallet1.send_to(0, wallet2.generate_key(), true);
+    ASSERT_FALSE(inval.has_value());
 }
 
 TEST_F(WalletTxValidationTest, duplicate_input) {
     m_valid_tx.m_inputs.emplace_back(m_valid_tx.m_inputs[0]);
     m_valid_tx.m_witness.emplace_back(m_valid_tx.m_witness[0]);
-    m_valid_tx.m_outputs[0].m_value *= 2;
+    m_valid_tx.m_out_spend_data.value()[0].m_value *= 2;
 
     auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
 
@@ -136,37 +160,12 @@ TEST_F(WalletTxValidationTest, duplicate_input) {
               cbdc::transaction::validation::input_error_code::duplicate);
 }
 
-TEST_F(WalletTxValidationTest, invalid_input_prevout) {
-    m_valid_tx.m_inputs[0].m_prevout_data.m_value = 0;
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
-
-    ASSERT_TRUE(err.has_value());
-    ASSERT_TRUE(
-        std::holds_alternative<cbdc::transaction::validation::input_error>(
-            err.value()));
-
-    auto input_err
-        = std::get<cbdc::transaction::validation::input_error>(err.value());
-
-    ASSERT_EQ(input_err.m_idx, uint64_t{0});
-    ASSERT_EQ(input_err.m_code,
-              cbdc::transaction::validation::input_error_code::data_error);
-}
-
 TEST_F(WalletTxValidationTest, asymmetric_inout_set) {
-    m_valid_tx.m_outputs[0].m_value--;
-    auto err = cbdc::transaction::validation::check_tx(m_valid_tx);
-
+    cbdc::transaction::compact_tx ctx(m_mint_tx1);
+    auto err = cbdc::transaction::validation::check_proof(ctx, {});
     ASSERT_TRUE(err.has_value());
-    ASSERT_TRUE(
-        std::holds_alternative<cbdc::transaction::validation::tx_error_code>(
-            err.value()));
-
-    auto tx_err
-        = std::get<cbdc::transaction::validation::tx_error_code>(err.value());
-
-    ASSERT_EQ(tx_err,
-              cbdc::transaction::validation::tx_error_code::asymmetric_values);
+    ASSERT_EQ(err.value().m_code,
+              cbdc::transaction::validation::proof_error_code::wrong_sum);
 }
 
 TEST_F(WalletTxValidationTest, witness_missing_witness_program_type) {
@@ -294,27 +293,6 @@ TEST_F(WalletTxValidationTest, check_to_string) {
               "Input error (idx: 12): Duplicate outpoint");
     ASSERT_EQ(cbdc::transaction::validation::to_string(tx_err),
               "TX error: No inputs");
-}
-
-TEST_F(WalletTxValidationTest, summation_overflow) {
-    auto inp_tx = m_valid_tx_multi_inp;
-    inp_tx.m_inputs[0].m_prevout_data.m_value
-        = std::numeric_limits<uint64_t>::max();
-    auto res = cbdc::transaction::validation::check_in_out_set(inp_tx);
-    ASSERT_TRUE(res.has_value());
-    ASSERT_EQ(
-        res.value(),
-        cbdc::transaction::validation::tx_error(
-            cbdc::transaction::validation::tx_error_code::value_overflow));
-
-    auto out_tx = m_valid_tx_multi_inp;
-    out_tx.m_outputs[0].m_value = std::numeric_limits<uint64_t>::max();
-    res = cbdc::transaction::validation::check_in_out_set(inp_tx);
-    ASSERT_TRUE(res.has_value());
-    ASSERT_EQ(
-        res.value(),
-        cbdc::transaction::validation::tx_error(
-            cbdc::transaction::validation::tx_error_code::value_overflow));
 }
 
 TEST_F(WalletTxValidationTest, sign_verify_compact) {

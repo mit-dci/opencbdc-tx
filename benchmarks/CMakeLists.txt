@@ -3,7 +3,8 @@ project(benchmarks)
 include_directories(. ../src ../tools/watchtower ../3rdparty ../3rdparty/secp256k1/include)
 set(SECP256K1_LIBRARY $<TARGET_FILE:secp256k1>)
 
-add_executable(run_benchmarks   low_level.cpp
+add_executable(run_benchmarks   audits.cpp
+                                low_level.cpp
                                 transactions.cpp
                                 uhs_leveldb.cpp
                                 uhs_set.cpp
