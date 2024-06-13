@@ -9,8 +9,7 @@ end="\033[0m"
 set -e
 
 # install in a custom prefix rather than /usr/local. by default, this
-# chooses "prefix" directory alongside "scripts" where configure.sh
-# resides.
+# chooses "prefix" directory alongside "scripts" directory.
 
 PREFIX="$(cd "$(dirname "$0")"/.. && pwd)/prefix"
 echo "Will install local dependencies in the following prefix: $PREFIX"

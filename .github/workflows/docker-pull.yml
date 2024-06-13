@@ -26,7 +26,6 @@ jobs:
         with:
           files: |
             Dockerfile
-            **/configure.sh
 
       ########################
       # Build Base           #

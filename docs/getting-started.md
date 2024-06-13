@@ -98,12 +98,15 @@ $ git push --force origin <your-branch-name>
 Absolutely!
 However, we only officially support the included docker compose files (as they mirror our automated test environment).
 
-After cloning the code, ``scripts/configure.sh`` will attempt to configure your environment.
+After cloning the code, ``scripts/install-build-tools.sh`` needs to be ran just once. It will attempt to install the necessary software tools upon which the project relies on.  
 
-**Note:** ``scripts/configure.sh`` only supports Ubuntu-based linux distributions and macOS (which depends on [Homebrew](https://brew.sh/)).
+Then, ``scripts/setup-dependencies.sh`` should be run to install libraries and dependencies
+to will attempt to configure your environment.
+
+**Note:** ``scripts/install-build-tools.sh`` only supports Ubuntu-based linux distributions and macOS (which depends on [Homebrew](https://brew.sh/)).
 However, it can be used as a guide to understand what you must do to get your environment setup.
 
-In short, ``scripts/configure.sh`` does the following:
+In short, ``scripts/install-build-tools.sh`` does the following:
 
 * installs a couple packages needed for building and testing (e.g., clang, LLVM, cmake, make, lcov, googletest, git)
 * installs the external dependencies:
@@ -127,7 +130,8 @@ However, here are several things you can do to make review as easy and quick as 
 
 * Keep your working branch up-to-date with our main branch and free of merge conflicts
 * Run ``./scripts/lint.sh`` and ``./scripts/test.sh`` and ensure both succeed before committing changes
-    * You can use a tool like [`act`](https://github.com/nektos/act) to run the CI locally and see if your changes would pass automated-review
+* Run ``pylint $(git ls-files '*.py')`` for python code and seek scores close to 10.0. 
+    * You can use a tool like [`act`](https://github.com/nektos/act) to run the CI locally and see if your changes would pass automated-review. ``act --list`` to see workflow jobs.
 * Author [good commits](#what-does-a-good-commit-look-like)
 
 </details>

@@ -29,7 +29,8 @@ check_format_files=$(git ls-files | grep -E "tools|tests|src|cmake-tests" \
 clang-format --style=file --Werror --dry-run ${check_format_files[@]}
 
 if ! command -v clang-tidy &>/dev/null; then
-  echo "clang-tidy does not appear to be installed. Please run ./scripts/configure.sh to install dependencies or install manually."
+  echo "clang-tidy does not appear to be installed"
+  echo "Please run ./scripts/setup-dependencies.sh to install dependencies or install manually."
   exit 1
 fi
 
