@@ -33,7 +33,7 @@ fi
 
 echo "Building..."
 
-# see PREFIX in ./scripts/configure.sh
+# see PREFIX in ./scripts/setup-dependencies.sh
 PREFIX="$(cd "$(dirname "$0")"/.. && pwd)/prefix"
 
 if [ -z ${BUILD_DIR+x} ]; then
