@@ -60,6 +60,18 @@ namespace cbdc::parsec {
     ///         while parsing the arguments.
     auto read_config(int argc, char** argv) -> std::optional<config>;
 
+    /// Read configuration parameters releated to connecting to shards
+    /// \param argc number of program arguments
+    /// \param argv program arguments
+    /// \return shard related config params
+    auto read_shard_info(int argc, char** argv) -> std::optional<config>;
+
+    /// Read configuration parameters related to connecting to ticket machine
+    /// \param argc number of program arguments
+    /// \param argv program arguments
+    /// \return ticket machine related config params
+    auto read_ticket_machine_info(int argc, char** argv) -> std::optional<config>;
+
     /// Asynchronously inserts the given row into the cluster.
     /// \param broker broker to use for inserting the row.
     /// \param key key at which to insert value.
