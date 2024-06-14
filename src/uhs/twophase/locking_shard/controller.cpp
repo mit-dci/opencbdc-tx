@@ -192,22 +192,8 @@ namespace cbdc::locking_shard {
         if(maybe_req) {
             valid = std::visit(
                 overloaded{
-                    [&](rpc::lock_params&& params) -> bool {
-                        auto result = true;
-                        for(auto&& t : params) {
-                            if(!transaction::validation::check_attestations(
-                                   t.m_tx,
-                                   m_opts.m_sentinel_public_keys,
-                                   m_opts.m_attestation_threshold)) {
-                                m_logger->warn(
-                                    "Received invalid compact transaction",
-                                    to_string(t.m_tx.m_id));
-                                result = false;
-                                break;
-                            }
-                        }
-
-                        return result;
+                    [&](rpc::lock_params&&) -> bool {
+                        return true;
                     },
                     [&](rpc::apply_params&&) -> bool {
                         return true;
