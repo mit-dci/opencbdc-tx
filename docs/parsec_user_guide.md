@@ -27,7 +27,8 @@ If you are using MacOS or an Ubuntu-like distribution, you can run the system wi
 
 Build and run the system:
 ```console
-$ ./scripts/configure.sh  # only necessary on initial setup
+# ./scripts/install-build-tools.sh  # only necessary on initial setup
+$ ./scripts/setup-dependencies.sh   # only necessary on initial setup
 $ ./scripts/build.sh
 $ ./scripts/parsec-run-local.sh [OPTIONS]  # use --help flag for help
 ```
