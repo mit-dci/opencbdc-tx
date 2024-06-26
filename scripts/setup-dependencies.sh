@@ -17,14 +17,14 @@ mkdir -p $PREFIX $PREFIX/lib $PREFIX/include
 
 CMAKE_BUILD_TYPE="Debug"
 if [[ "$BUILD_RELEASE" == "1" ]]; then
-  CMAKE_BUILD_TYPE="Release"
+    CMAKE_BUILD_TYPE="Release"
 fi
 
 CPUS=1
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  CPUS=$(grep -c ^processor /proc/cpuinfo)
+    CPUS=$(grep -c ^processor /proc/cpuinfo)
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-  CPUS=$(sysctl -n hw.ncpu)
+    CPUS=$(sysctl -n hw.ncpu)
 fi
 
 LEVELDB_VERSION="1.23"
@@ -50,12 +50,12 @@ mv NuRaft-${NURAFT_VERSION} "NuRaft-${NURAFT_VERSION}-${CMAKE_BUILD_TYPE}"
 cd "NuRaft-${NURAFT_VERSION}-${CMAKE_BUILD_TYPE}"
 ./prepare.sh
 if [[ "$BUILD_RELEASE" == "1" ]]; then
-  # If we're doing a release build, remove the examples and tests
-  rm -rf examples tests
-  mkdir examples
-  mkdir tests
-  touch examples/CMakeLists.txt
-  touch tests/CMakeLists.txt
+    # If we're doing a release build, remove the examples and tests
+    rm -rf examples tests
+    mkdir examples
+    mkdir tests
+    touch examples/CMakeLists.txt
+    touch tests/CMakeLists.txt
 fi
 mkdir -p build
 cd build
@@ -78,18 +78,18 @@ make INSTALL_TOP=$PREFIX install
 cd ..
 
 if [[ "$OSTYPE" != "darwin"* ]]; then
-  # <NOTE> For Mac Silicon: this curl install creates problems for building tools/bench/parsec/evm/
-  CURL_VERSION="7.83.1"
-  wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz
-  rm -rf curl-${CURL_VERSION}
-  tar xzvf curl-${CURL_VERSION}.tar.gz
-  rm -rf curl-${CURL_VERSION}.tar.gz
-  mkdir -p curl-${CURL_VERSION}/build
-  cd curl-${CURL_VERSION}/build
-  ../configure --prefix="${PREFIX}" --disable-shared --without-ssl --without-libpsl --without-libidn2 --without-brotli --without-zstd --without-zlib
-  make -j$CPUS
-  make install
-  cd ../..
+    # <NOTE> For Mac Silicon: this curl install creates problems for building tools/bench/parsec/evm/
+    CURL_VERSION="7.83.1"
+    wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz
+    rm -rf curl-${CURL_VERSION}
+    tar xzvf curl-${CURL_VERSION}.tar.gz
+    rm -rf curl-${CURL_VERSION}.tar.gz
+    mkdir -p curl-${CURL_VERSION}/build
+    cd curl-${CURL_VERSION}/build
+    ../configure --prefix="${PREFIX}" --disable-shared --without-ssl --without-libpsl --without-libidn2 --without-brotli --without-zstd --without-zlib
+    make -j$CPUS
+    make install
+    cd ../..
 fi
 
 JSONCPP_VERSION="1.9.5"
@@ -130,10 +130,10 @@ rm -rf evmc
 mv ../evmc-${EVMC_VER} ./evmc
 mkdir ./evmc/.git
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  # Mac Silicon: clang 'ar' does not allow empty member list, fails w/ -DBUILD_SHARED_LIBS=OFF
-  cmake -S . -B build -DCMAKE_INSTALL_PREFIX="${PREFIX}"
+    # Mac Silicon: clang 'ar' does not allow empty member list, fails w/ -DBUILD_SHARED_LIBS=OFF
+    cmake -S . -B build -DCMAKE_INSTALL_PREFIX="${PREFIX}"
 else
-  cmake -S . -B build -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="${PREFIX}"
+    cmake -S . -B build -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="${PREFIX}"
 fi
 cmake --build build --parallel
 cd build

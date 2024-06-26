@@ -21,7 +21,7 @@ if [ -n "$newline_files" ] ; then
 fi
 
 if [ -n "$whitespace_files" ] || [ -n "$newline_files" ] ; then
-  exit 1
+    exit 1
 fi
 
 check_format_files=$(git ls-files | grep -E "tools|tests|src|cmake-tests" \
@@ -29,18 +29,18 @@ check_format_files=$(git ls-files | grep -E "tools|tests|src|cmake-tests" \
 clang-format --style=file --Werror --dry-run ${check_format_files[@]}
 
 if ! command -v clang-tidy &>/dev/null; then
-  echo "clang-tidy does not appear to be installed"
-  echo "Please run ./scripts/setup-dependencies.sh to install dependencies or install manually."
-  exit 1
+    echo "clang-tidy does not appear to be installed"
+    echo "Please run ./scripts/setup-dependencies.sh to install dependencies or install manually."
+    exit 1
 fi
 
 if [ -z ${BUILD_DIR+x} ]; then
-  echo "BUILD_DIR environment variable not found. Assuming default: build"
-  export BUILD_DIR=build
-  if [ ! -d "${BUILD_DIR}" ]; then
-    echo "${BUILD_DIR} directory not found. Please set BUILD_DIR or run \`export BUILD_DIR=${BUILD_DIR}; build.sh\` before linting."
-    exit 1
-  fi
+    echo "BUILD_DIR environment variable not found. Assuming default: build"
+    export BUILD_DIR=build
+    if [ ! -d "${BUILD_DIR}" ]; then
+        echo "${BUILD_DIR} directory not found. Please set BUILD_DIR or run \`export BUILD_DIR=${BUILD_DIR}; build.sh\` before linting."
+        exit 1
+    fi
 fi
 
 python3 /usr/local/bin/run-clang-tidy.py -p ${BUILD_DIR} "tests/.*/.*\.cpp|src/.*/.*\.cpp|tools/.*/.*\.cpp"
