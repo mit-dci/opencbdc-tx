@@ -8,19 +8,19 @@ BUILD_DOCKER=${TESTRUN_BUILD_DOCKER:-1}
 # Make sure we have the necessary tools installed
 required_executables=(minikube docker go helm kubectl)
 for e in ${required_executables[@]}; do
-  if ! command -v $e &> /dev/null; then
-    echo "'$e' command not be found! This is required to run. Please install it."
-    exit 1
-  fi
+    if ! command -v $e &> /dev/null; then
+        echo "'$e' command not be found! This is required to run. Please install it."
+        exit 1
+    fi
 done
 
 # Start minikube cluster with opencbdc profile
 minikube_status=$(minikube -p $MINIKUBE_PROFILE status | grep apiserver | awk '{ print $2 }')
 if [ "$minikube_status" != "Running" ]; then
-  echo "🔄 Starting minkube cluster with profile '$MINIKUBE_PROFILE'..."
-  minikube -p $MINIKUBE_PROFILE start
+    echo "🔄 Starting minkube cluster with profile '$MINIKUBE_PROFILE'..."
+    minikube -p $MINIKUBE_PROFILE start
 else
-  echo "✅ minikube cluster with profile '$MINIKUBE_PROFILE' is currently running."
+    echo "✅ minikube cluster with profile '$MINIKUBE_PROFILE' is currently running."
 fi
 
 # Update Kubernetes context to default to this minikube cluster profile
