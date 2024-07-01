@@ -14,11 +14,17 @@ class WatchtowerTest : public ::testing::Test {
         cbdc::atomizer::block b0;
         b0.m_height = m_best_height;
         b0.m_transactions.push_back(
-            cbdc::test::simple_tx({'A'}, {{'b'}, {'C'}}, {{'d'}}));
+            cbdc::test::simple_tx({'A'},
+                                  {{'b'}, {'C'}},
+                                  {{{'d'}, {'e'}, {'f'}}}));
         b0.m_transactions.push_back(
-            cbdc::test::simple_tx({'E'}, {{'d'}, {'f'}}, {{'G'}}));
+            cbdc::test::simple_tx({'E'},
+                                  {{'d'}, {'f'}},
+                                  {{{'G'}, {'H'}, {'I'}}}));
         b0.m_transactions.push_back(
-            cbdc::test::simple_tx({'h'}, {{'i'}, {'j'}}, {{'k'}}));
+            cbdc::test::simple_tx({'h'},
+                                  {{'i'}, {'j'}},
+                                  {{{'k'}, {'l'}, {'m'}}}));
         m_watchtower.add_block(std::move(b0));
     }
 
@@ -41,8 +47,9 @@ TEST_F(WatchtowerTest, check_spent) {
 }
 
 TEST_F(WatchtowerTest, check_unspent) {
+    auto id = cbdc::transaction::calculate_uhs_id({{'G'}, {'H'}, {'I'}});
     auto res = m_watchtower.handle_status_update_request(
-        cbdc::watchtower::status_update_request{{{{'E'}, {{'G'}}}}});
+        cbdc::watchtower::status_update_request{{{{'E'}, {id}}}});
 
     ASSERT_EQ(*res,
               (cbdc::watchtower::response{
@@ -51,7 +58,7 @@ TEST_F(WatchtowerTest, check_unspent) {
                         {cbdc::watchtower::status_update_state{
                             cbdc::watchtower::search_status::unspent,
                             44,
-                            {'G'}}}}}}}));
+                            id}}}}}}));
 }
 
 TEST_F(WatchtowerTest, internal_error_tx) {

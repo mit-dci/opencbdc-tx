@@ -13,13 +13,13 @@ namespace cbdc::test {
     auto compact_transaction::operator==(
         const compact_transaction& tx) const noexcept -> bool {
         return m_id == tx.m_id && (m_inputs == tx.m_inputs)
-            && (m_uhs_outputs == tx.m_uhs_outputs);
+            && (m_outputs == tx.m_outputs);
     }
 
     compact_transaction::compact_transaction(
         const transaction::compact_tx& tx) {
         m_id = tx.m_id;
-        m_uhs_outputs = tx.m_uhs_outputs;
+        m_outputs = tx.m_outputs;
         m_inputs = tx.m_inputs;
     }
 
@@ -40,11 +40,12 @@ namespace cbdc::test {
 
     auto simple_tx(const hash_t& id,
                    const std::vector<hash_t>& ins,
-                   const std::vector<hash_t>& outs) -> compact_transaction {
+                   const std::vector<transaction::compact_output>& outs)
+        -> compact_transaction {
         compact_transaction tx{};
         tx.m_id = id;
         tx.m_inputs = ins;
-        tx.m_uhs_outputs = outs;
+        tx.m_outputs = outs;
         return tx;
     }
 
@@ -65,10 +66,12 @@ namespace cbdc::test {
     }
 
     void sign_tx(compact_transaction& tx, const privkey_t& key) {
-        auto secp = std::unique_ptr<secp256k1_context,
-                                    decltype(&secp256k1_context_destroy)>{
-            secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
-            &secp256k1_context_destroy};
+        using secp256k1_context_destroy_type = void (*)(secp256k1_context*);
+
+        std::unique_ptr<secp256k1_context,
+                        secp256k1_context_destroy_type>
+            secp{secp256k1_context_create(SECP256K1_CONTEXT_NONE),
+                   &secp256k1_context_destroy};
         auto att = tx.sign(secp.get(), key);
         tx.m_attestations.insert(att);
     }

@@ -149,6 +149,11 @@ namespace cbdc::coordinator {
             const auto& shard = m_shards[i];
             auto stx = locking_shard::tx();
             stx.m_tx = tx;
+            auto duration
+                = std::chrono::system_clock::now().time_since_epoch();
+            auto secs
+                = std::chrono::duration_cast<std::chrono::seconds>(duration);
+            stx.m_epoch = static_cast<uint64_t>(secs.count());
             bool active{false};
             if(shard->hash_in_shard_range(tx.m_id)) {
                 active = true;
@@ -160,8 +165,9 @@ namespace cbdc::coordinator {
                     }
                 }
                 if(!active) {
-                    for(const auto& out : tx.m_uhs_outputs) {
-                        if(shard->hash_in_shard_range(out)) {
+                    for(const auto& out : tx.m_outputs) {
+                        auto id = transaction::calculate_uhs_id(out);
+                        if(shard->hash_in_shard_range(id)) {
                             active = true;
                             break;
                         }

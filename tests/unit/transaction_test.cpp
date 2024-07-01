@@ -12,11 +12,9 @@ TEST(CTransaction, input_from_output_basic) {
     cbdc::transaction::output send_out;
     cbdc::transaction::output receive_out;
 
-    send_out.m_value = 40;
     send_out.m_witness_program_commitment = {'a', 'b', 'c', 'd'};
     tx.m_outputs.push_back(send_out);
 
-    receive_out.m_value = 60;
     receive_out.m_witness_program_commitment = {'e', 'f', 'g', 'h'};
     tx.m_outputs.push_back(receive_out);
 
@@ -24,13 +22,11 @@ TEST(CTransaction, input_from_output_basic) {
     ASSERT_TRUE(send_result);
     ASSERT_EQ(send_result->m_prevout.m_tx_id, cbdc::transaction::tx_id(tx));
     ASSERT_EQ(send_result->m_prevout.m_index, uint32_t{0});
-    ASSERT_EQ(send_result->m_prevout_data.m_value, uint32_t{40});
 
     auto receive_result = cbdc::transaction::input_from_output(tx, 1);
     ASSERT_TRUE(receive_result);
     ASSERT_EQ(receive_result->m_prevout.m_tx_id, cbdc::transaction::tx_id(tx));
     ASSERT_EQ(receive_result->m_prevout.m_index, uint32_t{1});
-    ASSERT_EQ(receive_result->m_prevout_data.m_value, uint32_t{60});
 }
 
 TEST(CTransaction, input_from_output_out_of_bounds) {

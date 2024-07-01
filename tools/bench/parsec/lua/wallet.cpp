@@ -93,12 +93,11 @@ namespace cbdc::parsec {
                                                              m_privkey.data());
 
         cbdc::signature_t sig{};
-        ret = secp256k1_schnorrsig_sign(m_secp.get(),
-                                        sig.data(),
-                                        sighash.data(),
-                                        &keypair,
-                                        nullptr,
-                                        nullptr);
+        ret = secp256k1_schnorrsig_sign32(m_secp.get(),
+                                          sig.data(),
+                                          sighash.data(),
+                                          &keypair,
+                                          nullptr);
         params.append(sig.data(), sig.size());
         return params;
     }

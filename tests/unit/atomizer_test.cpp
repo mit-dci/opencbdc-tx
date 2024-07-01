@@ -46,11 +46,12 @@ TEST_F(atomizer_test, test_with_transactions) {
             inp.m_prevout.m_tx_id = {val++};
             inp.m_prevout.m_index = val++;
             inp.m_prevout_data.m_witness_program_commitment = {val++};
-            inp.m_prevout_data.m_value = val++;
+            inp.m_prevout_data.m_id = {val++};
+            inp.m_spend_data = {{}, val++};
 
             cbdc::transaction::output out;
             out.m_witness_program_commitment = {val++};
-            out.m_value = val++;
+            out.m_range = cbdc::rangeproof_t{'\0'};
 
             tx.m_inputs.push_back(inp);
             tx.m_outputs.push_back(out);
@@ -72,19 +73,20 @@ TEST_F(atomizer_test, err_stxo_cache_depth_exceeded) {
     auto errs = m_atomizer->make_block().second;
     ASSERT_TRUE(errs.empty());
 
-    auto tx0 = cbdc::test::simple_tx({'a'}, {{'b'}}, {{'c'}});
+    auto tx0 = cbdc::test::simple_tx({'a'}, {{'b'}}, {{{'c'}, {'d'}, {'e'}}});
     auto err = m_atomizer->insert(1, tx0, {0});
     ASSERT_FALSE(err.has_value());
     errs = m_atomizer->make_block().second;
     ASSERT_TRUE(errs.empty());
 
-    auto tx1 = cbdc::test::simple_tx({'d'}, {{'e'}}, {{'f'}});
+    auto tx1 = cbdc::test::simple_tx({'d'}, {{'e'}}, {{{'f'}, {'g'}, {'h'}}});
     err = m_atomizer->insert(2, tx1, {0});
     ASSERT_FALSE(err.has_value());
     errs = m_atomizer->make_block().second;
     ASSERT_TRUE(errs.empty());
 
-    auto tx_beyond_stxo_range = cbdc::test::simple_tx({'G'}, {{'h'}}, {{'i'}});
+    auto tx_beyond_stxo_range
+        = cbdc::test::simple_tx({'G'}, {{'h'}}, {{{'i'}, {'j'}, {'k'}}});
     err = m_atomizer->insert(0, tx_beyond_stxo_range, {0});
     auto want
         = cbdc::watchtower::tx_error{{'G'},
@@ -99,20 +101,21 @@ TEST_F(atomizer_test, err_inputs_spent) {
     auto errs = m_atomizer->make_block().second;
     ASSERT_TRUE(errs.empty());
 
-    auto tx0 = cbdc::test::simple_tx({'a'}, {{'B'}}, {{'c'}});
+    auto tx0 = cbdc::test::simple_tx({'a'}, {{'B'}}, {{{'c'}, {'d'}, {'e'}}});
     auto err = m_atomizer->insert(1, tx0, {0});
     ASSERT_FALSE(err.has_value());
     errs = m_atomizer->make_block().second;
     ASSERT_TRUE(errs.empty());
 
-    auto tx1 = cbdc::test::simple_tx({'d'}, {{'E'}}, {{'f'}});
+    auto tx1 = cbdc::test::simple_tx({'d'}, {{'E'}}, {{{'f'}, {'g'}, {'h'}}});
     err = m_atomizer->insert(2, tx1, {0});
     ASSERT_FALSE(err.has_value());
     errs = m_atomizer->make_block().second;
     ASSERT_TRUE(errs.empty());
 
-    auto tx_inputs_spent
-        = cbdc::test::simple_tx({'G'}, {{'E'}, {'h'}}, {{'i'}});
+    auto tx_inputs_spent = cbdc::test::simple_tx({'G'},
+                                                 {{'E'}, {'h'}},
+                                                 {{{'i'}, {'j'}, {'k'}}});
     err = m_atomizer->insert(2, tx_inputs_spent, {0, 1});
 
     auto want = cbdc::watchtower::tx_error{
@@ -128,7 +131,9 @@ TEST_F(atomizer_test, err_incomplete) {
     auto [blk, errs] = m_atomizer->make_block();
     ASSERT_TRUE(errs.empty());
 
-    auto tx_incomplete = cbdc::test::simple_tx({'A'}, {{'b'}, {'c'}}, {{'d'}});
+    auto tx_incomplete = cbdc::test::simple_tx({'A'},
+                                               {{'b'}, {'c'}},
+                                               {{{'d'}, {'e'}, {'f'}}});
     auto err = m_atomizer->insert(1, tx_incomplete, {1});
     ASSERT_FALSE(err.has_value());
 
@@ -137,7 +142,9 @@ TEST_F(atomizer_test, err_incomplete) {
     errs = m_atomizer->make_block().second;
     ASSERT_TRUE(errs.empty());
 
-    auto tx1 = cbdc::test::simple_tx({'e'}, {{'f'}, {'g'}}, {{'h'}});
+    auto tx1 = cbdc::test::simple_tx({'e'},
+                                     {{'f'}, {'g'}},
+                                     {{{'h'}, {'i'}, {'j'}}});
     err = m_atomizer->insert(3, tx1, {0, 1});
     ASSERT_FALSE(err.has_value());
 

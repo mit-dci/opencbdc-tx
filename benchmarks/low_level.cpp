@@ -166,15 +166,7 @@ BENCHMARK_F(low_level, no_inputs)(benchmark::State& state) {
 BENCHMARK_F(low_level, calculate_uhs_id)(benchmark::State& state) {
     m_valid_tx = wallet1.send_to(2, wallet2.generate_key(), true).value();
     auto cp_tx = cbdc::transaction::compact_tx(m_valid_tx);
-    auto engine = std::default_random_engine();
     for(auto _ : state) {
-        state.PauseTiming();
-        uint64_t i = (uint64_t)engine();
-        state.ResumeTiming();
-        cbdc::transaction::uhs_id_from_output(cp_tx.m_id,
-                                              i,
-                                              m_valid_tx.m_outputs[0]);
+        cbdc::transaction::calculate_uhs_id(cp_tx.m_outputs[0]);
     }
 }
-
-BENCHMARK_MAIN();

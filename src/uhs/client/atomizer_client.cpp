@@ -45,13 +45,20 @@ namespace cbdc {
             it->second.insert(it->second.end(),
                               ctx.m_inputs.begin(),
                               ctx.m_inputs.end());
+            std::vector<hash_t> uhs_ids{};
+            std::transform(ctx.m_outputs.begin(),
+                           ctx.m_outputs.end(),
+                           std::back_inserter(uhs_ids),
+                           [](transaction::compact_output p) -> hash_t {
+                               return transaction::calculate_uhs_id(p);
+                           });
             it->second.insert(it->second.end(),
-                              ctx.m_uhs_outputs.begin(),
-                              ctx.m_uhs_outputs.end());
+                              uhs_ids.begin(),
+                              uhs_ids.end());
         }
 
         for(const auto& [tx_id, in] : pending_inputs()) {
-            tus.insert({tx_id, {in.hash()}});
+            tus.insert({tx_id, {in.m_prevout_data.m_id}});
         }
 
         cbdc::watchtower::status_update_request req{tus};

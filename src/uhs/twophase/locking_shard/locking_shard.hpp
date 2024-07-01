@@ -9,10 +9,13 @@
 #include "client.hpp"
 #include "interface.hpp"
 #include "status_interface.hpp"
+#include "uhs/transaction/messages.hpp"
+#include "uhs/transaction/validation.hpp"
 #include "uhs/transaction/transaction.hpp"
 #include "util/common/cache_set.hpp"
 #include "util/common/hash.hpp"
 #include "util/common/hashmap.hpp"
+#include "util/common/snapshot_map.hpp"
 #include "util/common/logging.hpp"
 
 #include <filesystem>
@@ -124,9 +127,36 @@ namespace cbdc::locking_shard {
         [[nodiscard]] auto check_tx_id(const hash_t& tx_id)
             -> std::optional<bool> final;
 
+        /// Takes a snapshot of the UHS and calculates the supply of coins at
+        /// the given epoch. Checks the UHS IDs match the value and nested data
+        /// included in the UHS element.
+        /// \param epoch the epoch to audit the supply at.
+        /// \return commitment to total value in this shard's UHS. std::nullopt
+        ///         if any of the UTXOs do not match their UHS ID.
+        auto get_summary(uint64_t epoch) -> std::optional<commitment_t>;
+
+        /// Prunes any spent UHS elements spent prior to the given epoch.
+        /// \param epoch epoch to prune prior to.
+        void prune(uint64_t epoch);
+
+        /// Returns the highest epoch seen by the shard so far.
+        /// \return highest epoch.
+        auto highest_epoch() const -> uint64_t;
+
+        struct uhs_element {
+            /// UTXO
+            transaction::compact_output m_out{};
+            /// Epoch in which the UTXO was created.
+            uint64_t m_creation_epoch{};
+            /// Epoch in which the UTXO was spent, or std::nullopt if
+            /// it is unspent.
+            std::optional<uint64_t> m_deletion_epoch{};
+        };
+
       private:
         auto read_preseed_file(const std::string& preseed_file) -> bool;
         auto check_and_lock_tx(const tx& t) -> bool;
+        void apply_tx(const tx& t, bool complete);
 
         struct prepared_dtx {
             std::vector<tx> m_txs;
@@ -136,13 +166,47 @@ namespace cbdc::locking_shard {
 
         std::shared_ptr<logging::log> m_logger;
         mutable std::shared_mutex m_mut;
-        std::unordered_set<hash_t, hashing::null> m_uhs;
-        std::unordered_set<hash_t, hashing::null> m_locked;
+        snapshot_map<hash_t, uhs_element> m_uhs;
+        snapshot_map<hash_t, uhs_element> m_locked;
+        snapshot_map<hash_t, uhs_element> m_spent;
+        std::optional<rangeproof_t> m_seed_rangeproof{};
         std::unordered_map<hash_t, prepared_dtx, hashing::null>
             m_prepared_dtxs;
         std::unordered_set<hash_t, hashing::null> m_applied_dtxs;
         cbdc::cache_set<hash_t, hashing::null> m_completed_txs;
         config::options m_opts;
+        uint64_t m_highest_epoch{};
+
+        using secp256k1_context_destroy_type = void (*)(secp256k1_context*);
+
+        std::unique_ptr<secp256k1_context,
+                        secp256k1_context_destroy_type>
+            m_secp{secp256k1_context_create(SECP256K1_CONTEXT_NONE),
+                   &secp256k1_context_destroy};
+
+        static const inline auto m_random_source
+            = std::make_unique<random_source>(config::random_source);
+
+        struct GensDeleter {
+            explicit GensDeleter(secp256k1_context* ctx) : m_ctx(ctx) {}
+
+            void operator()(secp256k1_bppp_generators* gens) const {
+                secp256k1_bppp_generators_destroy(m_ctx, gens);
+            }
+
+            secp256k1_context* m_ctx;
+        };
+
+        /// should be set to exactly `floor(log_base(value)) + 1`
+        ///
+        /// We use n_bits = 64, base = 16, so this should always be 24.
+        static const inline auto generator_count = 16 + 8;
+
+        std::unique_ptr<secp256k1_bppp_generators, GensDeleter>
+            m_generators{
+                secp256k1_bppp_generators_create(m_secp.get(),
+                                                 generator_count),
+                GensDeleter(m_secp.get())};
     };
 }
 

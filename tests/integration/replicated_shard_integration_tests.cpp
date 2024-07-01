@@ -59,7 +59,9 @@ class replicated_shard_integration_tests : public ::testing::Test {
 
 TEST_F(replicated_shard_integration_tests,
        can_send_messages_from_multiple_shards) {
-    auto mint_tx = cbdc::test::simple_tx({'a'}, {}, {{'c'}});
+    cbdc::transaction::compact_output outp{{'c'}, {'d'}, {'e'}};
+    auto o_id = cbdc::transaction::calculate_uhs_id(outp);
+    auto mint_tx = cbdc::test::simple_tx({'a'}, {}, {outp});
     auto init_blk = cbdc::atomizer::block{1, {mint_tx}};
 
     auto br = m_sys->broadcast_from<cbdc::atomizer::block>(
@@ -69,7 +71,8 @@ TEST_F(replicated_shard_integration_tests,
 
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
-    auto spend_tx = cbdc::test::simple_tx({'d'}, {{'c'}}, {{'e'}});
+    auto spend_tx
+        = cbdc::test::simple_tx({'d'}, {o_id}, {{{'e'}, {'f'}, {'g'}}});
     cbdc::test::sign_tx(spend_tx, m_opts.m_sentinel_private_keys[0]);
 
     std::vector<std::future<cbdc::atomizer::request>> res;

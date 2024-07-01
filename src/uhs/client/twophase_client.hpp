@@ -82,9 +82,11 @@ namespace cbdc {
         std::shared_ptr<logging::log> m_logger;
         cbdc::config::options m_opts;
 
+        using secp256k1_context_destroy_type = void (*)(secp256k1_context*);
+
         std::unique_ptr<secp256k1_context,
-                        decltype(&secp256k1_context_destroy)>
-            m_secp{secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
+                        secp256k1_context_destroy_type>
+            m_secp{secp256k1_context_create(SECP256K1_CONTEXT_NONE),
                    &secp256k1_context_destroy};
 
         static constexpr auto m_client_timeout

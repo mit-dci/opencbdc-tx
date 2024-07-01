@@ -109,22 +109,26 @@ class atomizer_raft_integration_test : public ::testing::Test {
 TEST_F(atomizer_raft_integration_test, basic) {
     ASSERT_TRUE(
         m_conn.send(cbdc::atomizer::request{cbdc::atomizer::tx_notify_request{
-            cbdc::test::simple_tx({'a'}, {{{'b'}}, {{'c'}}}, {{{'d'}}}),
+            cbdc::test::simple_tx({'a'},
+                                  {{'b'}, {'c'}},
+                                  {{{'d'}, {'e'}, {'f'}}}),
             {0, 1},
             0}}));
 
     ASSERT_TRUE(
         m_conn.send(cbdc::atomizer::request{cbdc::atomizer::tx_notify_request{
-            cbdc::test::simple_tx({'e'}, {{{'f'}}, {{'g'}}}, {{{'h'}}}),
+            cbdc::test::simple_tx({'e'},
+                                  {{'f'}, {'g'}},
+                                  {{{'h'}, {'i'}, {'j'}}}),
             {0, 1},
             0}}));
 
     cbdc::test::block want_block;
     want_block.m_height = 1;
     want_block.m_transactions.push_back(
-        cbdc::test::simple_tx({'a'}, {{'b'}, {'c'}}, {{'d'}}));
+        cbdc::test::simple_tx({'a'}, {{'b'}, {'c'}}, {{{'d'}, {'e'}, {'f'}}}));
     want_block.m_transactions.push_back(
-        cbdc::test::simple_tx({'e'}, {{'f'}, {'g'}}, {{'h'}}));
+        cbdc::test::simple_tx({'e'}, {{'f'}, {'g'}}, {{{'h'}, {'i'}, {'j'}}}));
     expect_block(want_block);
 }
 
@@ -134,13 +138,17 @@ TEST_F(atomizer_raft_integration_test, error_inputs_spent) {
 
     ASSERT_TRUE(
         m_conn.send(cbdc::atomizer::request{cbdc::atomizer::tx_notify_request{
-            cbdc::test::simple_tx({'a'}, {{{'B'}}, {{'c'}}}, {{{'d'}}}),
+            cbdc::test::simple_tx({'a'},
+                                  {{'B'}, {'c'}},
+                                  {{{'d'}, {'e'}, {'f'}}}),
             {0, 1},
             0}}));
 
     ASSERT_TRUE(
         m_conn.send(cbdc::atomizer::request{cbdc::atomizer::tx_notify_request{
-            cbdc::test::simple_tx({'E'}, {{{'B'}}, {{'f'}}}, {{{'g'}}}),
+            cbdc::test::simple_tx({'E'},
+                                  {{'B'}, {'f'}},
+                                  {{{'g'}, {'h'}, {'i'}}}),
             {0, 1},
             0}}));
 
@@ -154,6 +162,6 @@ TEST_F(atomizer_raft_integration_test, error_inputs_spent) {
     cbdc::test::block want_block;
     want_block.m_height = 1;
     want_block.m_transactions.push_back(
-        cbdc::test::simple_tx({'a'}, {{'B'}, {'c'}}, {{'d'}}));
+        cbdc::test::simple_tx({'a'}, {{'B'}, {'c'}}, {{{'d'}, {'e'}, {'f'}}}));
     expect_block(want_block);
 }

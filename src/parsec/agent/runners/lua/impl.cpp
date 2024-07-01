@@ -14,11 +14,12 @@
 #include <secp256k1_schnorrsig.h>
 
 namespace cbdc::parsec::agent::runner {
-    static const auto secp_context
-        = std::unique_ptr<secp256k1_context,
-                          decltype(&secp256k1_context_destroy)>(
-            secp256k1_context_create(SECP256K1_CONTEXT_VERIFY),
-            &secp256k1_context_destroy);
+    using secp256k1_context_destroy_type = void (*)(secp256k1_context*);
+
+    std::unique_ptr<secp256k1_context,
+                    secp256k1_context_destroy_type>
+        secp_context{secp256k1_context_create(SECP256K1_CONTEXT_NONE),
+                     &secp256k1_context_destroy};
 
     lua_runner::lua_runner(std::shared_ptr<logging::log> logger,
                            const cbdc::parsec::config& cfg,
@@ -260,6 +261,7 @@ namespace cbdc::parsec::agent::runner {
         if(secp256k1_schnorrsig_verify(secp_context.get(),
                                        sig.data(),
                                        sighash.data(),
+                                       sighash.size(),
                                        &pubkey)
            != 1) {
             lua_pushliteral(L, "invalid signature");

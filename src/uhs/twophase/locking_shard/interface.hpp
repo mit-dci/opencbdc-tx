@@ -19,6 +19,8 @@ namespace cbdc::locking_shard {
         /// Compact TX.
         transaction::compact_tx m_tx;
 
+        uint64_t m_epoch{};
+
         auto operator==(const tx& rhs) const -> bool;
     };
 

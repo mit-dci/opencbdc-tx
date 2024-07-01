@@ -13,6 +13,7 @@
 #include "util/raft/node.hpp"
 #include "util/raft/rpc_server.hpp"
 #include "util/rpc/tcp_server.hpp"
+#include "util/serialization/format.hpp"
 
 namespace cbdc::locking_shard {
     /// Manages a replicated locking shard using Raft.
@@ -27,7 +28,7 @@ namespace cbdc::locking_shard {
                    size_t node_id,
                    config::options opts,
                    std::shared_ptr<logging::log> logger);
-        ~controller() = default;
+        ~controller();
 
         controller() = delete;
         controller(const controller&) = delete;
@@ -47,6 +48,8 @@ namespace cbdc::locking_shard {
                            nuraft::cb_func::Param* param)
             -> nuraft::cb_func::ReturnCode;
 
+        void audit();
+
         config::options m_opts;
         std::shared_ptr<logging::log> m_logger;
         size_t m_shard_id;
@@ -58,6 +61,11 @@ namespace cbdc::locking_shard {
         std::shared_ptr<raft::node> m_raft_serv;
         std::unique_ptr<rpc::status_server> m_status_server;
         std::unique_ptr<cbdc::rpc::tcp_server<raft::rpc::server>> m_server;
+
+        std::atomic_bool m_running{true};
+        uint64_t m_last_audit_epoch{};
+        std::ofstream m_audit_log;
+        std::thread m_audit_thread;
     };
 }
 
