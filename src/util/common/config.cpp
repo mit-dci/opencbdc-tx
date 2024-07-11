@@ -227,6 +227,13 @@ namespace cbdc::config {
         return ss.str();
     }
 
+    auto get_loadgen_loglevel_key(size_t loadgen_id) -> std::string {
+        std::stringstream ss;
+        ss << loadgen_prefix << loadgen_id << config_separator
+           << loglevel_postfix;
+        return ss.str();
+    }
+
     auto get_sentinel_private_key_key(size_t sentinel_id) -> std::string {
         auto ss = std::stringstream();
         get_sentinel_key_prefix(ss, sentinel_id);
@@ -614,6 +621,23 @@ namespace cbdc::config {
 
         opts.m_loadgen_count
             = cfg.get_ulong(loadgen_count_key).value_or(opts.m_loadgen_count);
+        opts.m_loadgen_tps_target = cfg.get_ulong(tps_target_key)
+                                        .value_or(opts.m_loadgen_tps_target);
+        opts.m_loadgen_tps_step_time
+            = cfg.get_decimal(tps_steptime_key)
+                  .value_or(opts.m_loadgen_tps_step_time);
+        opts.m_loadgen_tps_step_size
+            = cfg.get_decimal(tps_stepsize_key)
+                  .value_or(opts.m_loadgen_tps_step_size);
+        opts.m_loadgen_tps_initial = cfg.get_decimal(tps_initial_key)
+                                         .value_or(opts.m_loadgen_tps_initial);
+        for(size_t i{0}; i < opts.m_loadgen_count; ++i) {
+            const auto loadgen_loglevel_key = get_loadgen_loglevel_key(i);
+            const auto loadgen_loglevel
+                = cfg.get_loglevel(loadgen_loglevel_key)
+                      .value_or(defaults::log_level);
+            opts.m_loadgen_loglevels.push_back(loadgen_loglevel);
+        }
     }
 
     auto read_options(const std::string& config_file)

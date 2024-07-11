@@ -100,6 +100,11 @@ namespace cbdc::config {
     static constexpr auto output_count_key = "loadgen_sendtx_output_count";
     static constexpr auto invalid_rate_key = "loadgen_invalid_tx_rate";
     static constexpr auto fixed_tx_rate_key = "loadgen_fixed_tx_rate";
+    static constexpr auto loadgen_prefix = "loadgen";
+    static constexpr auto tps_target_key = "loadgen_tps_target";
+    static constexpr auto tps_steptime_key = "loadgen_tps_step_time";
+    static constexpr auto tps_stepsize_key = "loadgen_tps_step_percentage";
+    static constexpr auto tps_initial_key = "loadgen_tps_step_start";
     static constexpr auto archiver_count_key = "archiver_count";
     static constexpr auto watchtower_count_key = "watchtower_count";
     static constexpr auto watchtower_prefix = "watchtower";
@@ -249,6 +254,18 @@ namespace cbdc::config {
 
         /// Number of load generators over which to split pre-seeded UTXOs.
         size_t m_loadgen_count{0};
+
+        /// List of loadgen log levels, ordered by loadgen ID.
+        std::vector<logging::log_level> m_loadgen_loglevels;
+
+        /// Maximum Tx/s the loadgens should produce
+        size_t m_loadgen_tps_target{0};
+        /// Percent of target to send at test-start
+        double m_loadgen_tps_initial{0};
+        /// Percent (of target-initial) to increase on each step
+        double m_loadgen_tps_step_size{0};
+        /// Time (fractional seconds) to wait before the next step up
+        double m_loadgen_tps_step_time{0};
 
         /// Private keys for sentinels.
         std::unordered_map<size_t, privkey_t> m_sentinel_private_keys;
