@@ -18,6 +18,10 @@ namespace cbdc::parsec::agent::runner {
     /// function execution, signature checking and commiting execution results.
     /// Class cannot be re-used for different functions/transactions, manages
     /// the lifecycle of a single transaction.
+    /// NOTE: When writing contracts, to pass data between the Lua environment
+    /// and the C++ environment, use `coroutine.yield()`. To request a
+    /// read-lock use coroutine.yield(<data>, 0). To request a write-lock use
+    /// coroutine.yield(<data>, 1) or coroutine.yield(<data>).
     class lua_runner : public interface {
       public:
         /// \copydoc interface::interface()
@@ -46,6 +50,8 @@ namespace cbdc::parsec::agent::runner {
         void contract_epilogue(int n_results);
 
         auto get_stack_string(int index) -> std::optional<buffer>;
+
+        auto get_stack_integer(int index) -> std::optional<int64_t>;
 
         void schedule_contract();
 

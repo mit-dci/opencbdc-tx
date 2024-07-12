@@ -138,25 +138,56 @@ namespace cbdc::parsec::agent::runner {
         return buf;
     }
 
+    auto lua_runner::get_stack_integer(int index) -> std::optional<int64_t> {
+        if(lua_isinteger(m_state.get(), index) != 1) {
+            return std::nullopt;
+        }
+        return lua_tointeger(m_state.get(), index);
+    }
+
     void lua_runner::schedule_contract() {
         int n_results{};
         auto resume_ret = lua_resume(m_state.get(), nullptr, 1, &n_results);
         if(resume_ret == LUA_YIELD) {
-            if(n_results != 1) {
-                m_log->error("Contract yielded more than one key");
+            if(n_results > 2) {
+                m_log->error("Contract yielded more than two keys");
                 m_result_callback(error_code::yield_count);
                 return;
             }
+            if(n_results < 1) {
+                m_log->error("Contract yielded no keys");
+                m_result_callback(error_code::yield_count);
+                return;
+            }
+
+            auto lock_level = broker::lock_type::write;
+            if(n_results == 2) {
+                auto lock_type = get_stack_integer(-1);
+                if(!lock_type.has_value()) {
+                    m_log->error("Contract yielded two keys, but the second "
+                                 "is not an integer");
+                    m_result_callback(error_code::yield_type);
+                    return;
+                }
+                lua_pop(m_state.get(), 1);
+
+                lock_level = (lock_type.value() == 0)
+                               ? broker::lock_type::read
+                               : broker::lock_type::write;
+            }
+
             auto key_buf = get_stack_string(-1);
             if(!key_buf.has_value()) {
                 m_log->error("Contract did not yield a string");
                 m_result_callback(error_code::yield_type);
                 return;
             }
-            lua_pop(m_state.get(), n_results);
+
+            lua_pop(m_state.get(), 1);
+
             auto success
                 = m_try_lock_callback(std::move(key_buf.value()),
-                                      broker::lock_type::write,
+                                      lock_level,
                                       [&](auto res) {
                                           handle_try_lock(std::move(res));
                                       });
