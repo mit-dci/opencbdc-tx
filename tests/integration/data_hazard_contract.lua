@@ -18,14 +18,10 @@ function gen_bytecode()
         return updates
     end
     c = string.dump(pay_contract, true)
-    tot = ""
-    for i = 1, string.len(c) do
-        hex = string.format("%x", string.byte(c, i))
-        if string.len(hex) < 2 then
-            hex = "0" .. hex
-        end
-        tot = tot .. hex
+    t = {}
+    for i = 1, #c do
+        t[#t + 1] = string.format("%02x", string.byte(c, i))
     end
 
-    return tot
+    return table.concat(t)
 end

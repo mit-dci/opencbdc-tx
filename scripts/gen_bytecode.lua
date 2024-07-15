@@ -3,18 +3,14 @@ function gen_bytecode()
         from, to, value, sequence, sig = string.unpack("c32 c32 I8 I8 c64", param)
 
         function get_account_key(name)
-            account_prefix = "account_"
-            account_key = account_prefix .. name
-            return account_key
+            return "account_" .. name
         end
 
         function get_account(name)
             account_key = get_account_key(name)
             account_data = coroutine.yield(account_key)
-            if string.len(account_data) > 0 then
-                account_balance, account_sequence
-                = string.unpack("I8 I8", account_data)
-                return account_balance, account_sequence
+            if #account_data > 0 then
+                return string.unpack("I8 I8", account_data)
             end
             return 0, 0
         end
@@ -59,14 +55,10 @@ function gen_bytecode()
         return update_accounts(from, from_balance, from_seq, to, to_balance, to_seq)
     end
     c = string.dump(pay_contract, true)
-    tot = ""
-    for i = 1, string.len(c) do
-        hex = string.format("%x", string.byte(c, i))
-        if string.len(hex) < 2 then
-            hex = "0" .. hex
-        end
-        tot = tot .. hex
+    t = {}
+    for i = 1, #c do
+        t[#t + 1] = string.format("%02x", string.byte(c, i))
     end
 
-    return tot
+    return table.concat(t)
 end
