@@ -1,0 +1,5 @@
+setuptools
+eth-hash
+matplotlib
+numpy
+pylint

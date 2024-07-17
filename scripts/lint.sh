@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+# Usage: ./scripts/lint.sh
 echo "Linting..."
 
 check_files=$(git ls-files \
@@ -43,4 +44,8 @@ if [ -z ${BUILD_DIR+x} ]; then
     fi
 fi
 
-python3 /usr/local/bin/run-clang-tidy.py -p ${BUILD_DIR} "tests/.*/.*\.cpp|src/.*/.*\.cpp|tools/.*/.*\.cpp"
+# use python from the virtual environment for clang-tidy
+if source "./scripts/activate-venv.sh"; then
+    python /usr/local/bin/run-clang-tidy.py -p ${BUILD_DIR} "tests/.*/.*\.cpp|src/.*/.*\.cpp|tools/.*/.*\.cpp"
+    deactivate
+fi
