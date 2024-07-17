@@ -18,7 +18,7 @@ env:
 jobs:
   build-release:
     name: Build Release Candidate
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       BUILD_RELEASE: 1
     steps:
@@ -30,7 +30,7 @@ jobs:
       - name: Setup Local Dependencies
         run: ./scripts/setup-dependencies.sh
       - name: Build
-        run: scripts/build.sh
+        run: ./scripts/build.sh
   lint:
     name: Lint
     runs-on: ubuntu-20.04
@@ -43,12 +43,32 @@ jobs:
       - name: Setup Local Dependencies
         run: ./scripts/setup-dependencies.sh
       - name: Build
-        run: scripts/build.sh
+        run: ./scripts/build.sh
       - name: Lint
-        run: scripts/lint.sh
+        run: ./scripts/lint.sh
+  pylint:
+    name: Pylint
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Setup Build Env
+        run: sudo ./scripts/install-build-tools.sh
+      - name: Lint with Pylint
+        run: ./scripts/pylint.sh
   unit-and-integration-test:
     name: Unit and Integration Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v2
@@ -59,9 +79,9 @@ jobs:
       - name: Setup Local Dependencies
         run: ./scripts/setup-dependencies.sh
       - name: Build
-        run: scripts/build.sh
+        run: ./scripts/build.sh
       - name: Run Unit Tests
-        run: scripts/test.sh
+        run: ./scripts/test.sh
       - name: Shorten SHA
         id: vars
         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
@@ -76,7 +96,7 @@ jobs:
           retention-days: 7
   doxygen:
     name: doxygen
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -94,3 +114,4 @@ jobs:
           name: OpenCBDC Transaction Processor docs for ${{ steps.vars.outputs.sha_short }}
           path: ./doxygen_generated/html/*
           retention-days: 7
+
