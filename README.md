@@ -26,8 +26,11 @@ The design decisions we made to achieve these goals will help inform policy make
 If there are significant changes to the repository that may require manual downstream intervention (or other important updates), we will make a [NEWS post](NEWS.md).
 
 # Architecture
+
 We have explored several architectures under two broad categories as follows:
+
 ## UHS-Based Transaction Processor
+
 We explored two system architectures for transaction settlement based on an [unspent transaction output (UTXO)](https://en.wikipedia.org/wiki/Unspent_transaction_output) data model and transaction format.
 Both architectures implement the same schema representing an [unspent hash set (UHS)](https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-May/015967.html) abstraction.
 One architecture provides [linearizability](https://en.wikipedia.org/wiki/linearizability) of transactions, whereas the other only provides [serializability](https://en.wikipedia.org/wiki/Serializability).
@@ -35,6 +38,7 @@ By relaxing the ordering constraint, the peak transaction throughput supported b
 Both architectures handle multiple geo-distributed datacenter outages with a [recovery time objective (RTO)](https://en.wikipedia.org/wiki/Disaster_recovery#Recovery_Time_Objective) of under ten seconds and a [recovery point objective (RPO)](https://en.wikipedia.org/wiki/Disaster_recovery#Recovery_Point_Objective) of zero.
 
 There are two UHS-based architectures as follows:
+
 1. "Atomizer" architecture
     - Materializes a total ordering of all transactions settled by the system in a linear sequence of batches.
     - Requires vertical scaling as peak transaction throughput is limited by the performance of a single system component.
@@ -49,9 +53,11 @@ There are two UHS-based architectures as follows:
 Read the [2PC & Atomizer architecture guide](docs/uhs-architectures.md) for a detailed description of the system components and implementation of each architecture.
 
 ## Parallel Architecture for Scalably Executing smart Contracts ("PArSEC")
+
 We built a system with a generic virtual machine layer that is capable of performing parallel executions of smart contracts.
 
 The architecture is composed of two layers:
+
 1. A distributed key-value data store with [ACID](https://en.wikipedia.org/wiki/ACID) database properties
     - This back-end data store is not constrained to any type of data and is agnostic to the execution later.
 1. A generic virtual machine layer that executes programs (i.e. smart contracts) and uses the distributed key-value data store to record state
@@ -62,6 +68,7 @@ The architecture is composed of two layers:
 - Unmodified smart contracts from the Ethereum ecosystem can be deployed directly onto our EVM implementation.
 
 Read the [PArSEC Architecture Guide](docs/parsec_architecture.md) for more details.
+
 # Contributing and Discussion
 
 You can join the [OpenCBDC mailing list](https://dci.mit.edu/opencbdc-interest) to receive updates from technical working groups and learn more about our work.
@@ -80,9 +87,9 @@ If you would like to install OpenCBDC and run it on your local machine, follow t
 1. [Install Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 1. Clone the repository (including the submodules using: `--recurse-submodules`)
 
-    ```
-    git clone --recurse-submodules https://github.com/mit-dci/opencbdc-tx
-    ```
+   ```console
+   $ git clone --recurse-submodules https://github.com/mit-dci/opencbdc-tx
+   ```
 
 ## Setup the build environment
 
@@ -96,6 +103,11 @@ Alternatively, if you just want to run the system, skip to the [Run the Code](#r
    ```console
    # ./scripts/install-build-tools.sh
    ```
+   Note: Running Homebrew as root on mac via shell script is not supported, so run without sudo and when prompted, enter the root password.
+   ```console
+   $ ./scripts/install-build-tools.sh
+   ```
+
 1. Setup project dependencies
 
    This script builds and installs a local copy of several build-dependencies that are not widely packaged.
@@ -110,7 +122,8 @@ Alternatively, if you just want to run the system, skip to the [Run the Code](#r
    ```
 
 ### macOS
-Note: If you have not already installed the Xcode CLI tools, you will need to do so:
+
+Note that if you have not already installed the xcode cli tools you will need to:
 
 ```console
 # xcode-select --install
@@ -124,7 +137,9 @@ This reference is housed in [an external repository](https://github.com/mit-dci/
 ## Running the Code
 
 ### UHS-based Architectures (2PC & Atomizer)
+
 See the [2PC & Atomizer User Guide](docs/2pc_atomizer_user_guide.md)
+
 ### PArSEC Architecture
 See the [PArSEC User Guide](docs/parsec_user_guide.md)
 
@@ -149,7 +164,8 @@ Users can verify the setup by running both unit/integration and end-to-end tests
 
 ## E2E Testing with Kubernetes
 
-### Requirements:
+### Requirements
+
 - Go (go test library used to run tests)
 - Minikube
 - Helm
@@ -157,6 +173,53 @@ Users can verify the setup by running both unit/integration and end-to-end tests
 
 ### Running the tests:
 
-1. `./scripts/build-docker.sh`
-1. `./scripts/test-e2e-minikube.sh`
-1. Review results and logs at `testruns/<testrun-uuid>/`
+```console
+$ ./scripts/build-docker.sh
+```
+
+```console
+$ ./scripts/test-e2e-minikube.sh
+```
+
+Review results and logs at `testruns/<testrun-uuid>/`
+
+## Linting
+
+### General
+
+This script checks for newlines at the end of all tracked git files except images.
+Then it runs clang-format and clang-tidy on `.cpp` files in the following directories:
+ `src`, `tests`, `cmake-tests`, `tools`.
+
+```console
+$ ./scripts/lint.sh
+```
+
+### Python
+
+Lint all python files according to ruleset defined in `.pylintrc`.
+Optional code quality value >= 5.0 and <= 10.0 can be entered as a threshold of failure.
+
+```console
+$ ./scripts/pylint.sh 8.0
+```
+
+## Virtual Environment for Python
+
+`./scripts/install-build-tools.sh` creates a virtual environemnt.  
+Once run, follow these steps to run python code.
+
+1. Activate the virtual environment which has the required python version and packages installed.
+   ```console
+   $ source ./scripts/activate-venv.sh
+   ```
+
+2. Run python code
+   ```console
+   (.py_venv) $ python ./scripts/<script_name>.py
+   ```
+
+3. Exit the virtual environment
+   ```console
+   (.py_venv) $ deactivate
+   ```
