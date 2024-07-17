@@ -2,7 +2,6 @@
 //                    Federal Reserve Bank of Boston
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "broker/impl.hpp"
 #include "crypto/sha256.h"
 #include "directory/impl.hpp"
@@ -157,6 +156,9 @@ auto main(int argc, char** argv) -> int {
     std::signal(SIGINT, [](int /* signal */) {
         running = false;
     });
+
+    // bash script chroot here (?)
+    // places the agent in chroot and then continues so no dependencies will be needed?
 
     log->info("Agent running");
 

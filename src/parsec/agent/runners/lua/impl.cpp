@@ -29,7 +29,8 @@ namespace cbdc::parsec::agent::runner {
                            try_lock_callback_type try_lock_callback,
                            std::shared_ptr<secp256k1_context> secp,
                            std::shared_ptr<thread_pool> t_pool,
-                           ticket_number_type ticket_number)
+                           ticket_number_type ticket_number,
+                           bool is_chrooted)
         : interface(std::move(logger),
                     cfg,
                     std::move(function),
@@ -39,7 +40,7 @@ namespace cbdc::parsec::agent::runner {
                     std::move(try_lock_callback),
                     std::move(secp),
                     std::move(t_pool),
-                    ticket_number) {}
+                    ticket_number) {m_is_chrooted = is_chrooted;}
 
     auto lua_runner::run() -> bool {
         // TODO: use custom allocator to limit memory allocation
@@ -80,6 +81,26 @@ namespace cbdc::parsec::agent::runner {
             return true;
         }
 
+        // chroot
+        char path[1024];
+        ssize_t count = readlink("/proc/self/exe", path, sizeof(path));
+        std::cerr << "[TEST] current working directory is " << std::string(path, (count > 0) ? count : 0) << std::endl;
+
+        chdir("/var/tmp");
+        if(!m_is_chrooted) {
+            if(chroot(".")!=0) {
+                std::cerr << "[TEST] failed to chroot" << std::endl;
+            } else {
+                std::cerr << "[TEST] good chroot" << std::endl;
+            }
+            // test
+            std::ifstream inputFile("/etc/resolv.conf");
+            if (inputFile.is_open()) {
+                std::cerr << "[TEST] jail failed" << std::endl;
+            } else {
+                std::cerr << "[TEST] jail succeeded" << std::endl;
+            }
+        }
         schedule_contract();
 
         return true;

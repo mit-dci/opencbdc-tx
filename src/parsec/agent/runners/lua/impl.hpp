@@ -30,7 +30,8 @@ namespace cbdc::parsec::agent::runner {
                    try_lock_callback_type try_lock_callback,
                    std::shared_ptr<secp256k1_context> secp,
                    std::shared_ptr<thread_pool> t_pool,
-                   ticket_number_type ticket_number);
+                   ticket_number_type ticket_number,
+                   bool is_chrooted = false);
 
         /// Begins function execution. Retrieves the function bytecode using a
         /// read lock and executes it with the given parameter.
@@ -53,6 +54,8 @@ namespace cbdc::parsec::agent::runner {
         handle_try_lock(const broker::interface::try_lock_return_type& res);
 
         static auto check_sig(lua_State* L) -> int;
+
+        bool m_is_chrooted;
     };
 }
 

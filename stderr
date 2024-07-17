@@ -1,0 +1,55 @@
+[ERROR] The logger pointer in locking_shard::controller is null.
+[ERROR] The logger pointer in coordinator::controller is null.
+[TEST] current working directory is /home/nicoli/Desktop/opencbdc-tx/build/tests/unit/run_unit_tests
+[TEST] moved directory
+[TEST] good chroot
+[TEST] jail succeeded
+[TEST] current working directory is 
+[TEST] failed to move directory
+[TEST] good chroot
+[TEST] jail succeeded
+[TEST] current working directory is 
+[TEST] failed to move directory
+[TEST] good chroot
+[TEST] jail succeeded
+[TEST] current working directory is 
+[TEST] failed to move directory
+[TEST] good chroot
+[TEST] jail succeeded
+[TEST] current working directory is 
+[TEST] failed to move directory
+[TEST] good chroot
+[TEST] jail succeeded
+[TEST] current working directory is 
+[TEST] failed to move directory
+[TEST] good chroot
+[TEST] jail succeeded
+Subroutine read_intermediate_text redefined at /usr/bin/geninfo line 2637.
+Subroutine read_intermediate_json redefined at /usr/bin/geninfo line 2669.
+Subroutine intermediate_text_to_info redefined at /usr/bin/geninfo line 2717.
+Subroutine intermediate_json_to_info redefined at /usr/bin/geninfo line 2806.
+Subroutine get_output_fd redefined at /usr/bin/geninfo line 2886.
+Subroutine print_gcov_warnings redefined at /usr/bin/geninfo line 2914.
+Subroutine process_intermediate redefined at /usr/bin/geninfo line 2944.
+/home/nicoli/Desktop/opencbdc-tx/build/unit_tests_coverage/3rdparty/crypto/CMakeFiles/crypto.dir/sha256_avx2.gcno:no functions found
+geninfo: WARNING: GCOV did not produce any data for /home/nicoli/Desktop/opencbdc-tx/build/unit_tests_coverage/3rdparty/crypto/CMakeFiles/crypto.dir/sha256_avx2.gcno
+/home/nicoli/Desktop/opencbdc-tx/build/unit_tests_coverage/3rdparty/crypto/CMakeFiles/crypto.dir/sha256_sse41.gcno:no functions found
+geninfo: WARNING: GCOV did not produce any data for /home/nicoli/Desktop/opencbdc-tx/build/unit_tests_coverage/3rdparty/crypto/CMakeFiles/crypto.dir/sha256_sse41.gcno
+/home/nicoli/Desktop/opencbdc-tx/build/unit_tests_coverage/3rdparty/crypto/CMakeFiles/crypto.dir/sha256_shani.gcno:no functions found
+geninfo: WARNING: GCOV did not produce any data for /home/nicoli/Desktop/opencbdc-tx/build/unit_tests_coverage/3rdparty/crypto/CMakeFiles/crypto.dir/sha256_shani.gcno
+/home/nicoli/Desktop/opencbdc-tx/build/unit_tests_coverage/3rdparty/crypto/CMakeFiles/crypto.dir/sha256_sse4.gcno:no functions found
+geninfo: WARNING: GCOV did not produce any data for /home/nicoli/Desktop/opencbdc-tx/build/unit_tests_coverage/3rdparty/crypto/CMakeFiles/crypto.dir/sha256_sse4.gcno
+Subroutine read_intermediate_text redefined at /usr/bin/geninfo line 2637.
+Subroutine read_intermediate_json redefined at /usr/bin/geninfo line 2669.
+Subroutine intermediate_text_to_info redefined at /usr/bin/geninfo line 2717.
+Subroutine intermediate_json_to_info redefined at /usr/bin/geninfo line 2806.
+Subroutine get_output_fd redefined at /usr/bin/geninfo line 2886.
+Subroutine print_gcov_warnings redefined at /usr/bin/geninfo line 2914.
+Subroutine process_intermediate redefined at /usr/bin/geninfo line 2944.
+lcov: WARNING: negative counts found in tracefile test.info
+[TEST] current working directory is /home/nicoli/Desktop/opencbdc-tx/build/tests/integration/run_integration_tests
+[TEST] moved directory
+[TEST] good chroot
+[TEST] jail succeeded
+run_integration_tests: /home/nicoli/Desktop/opencbdc-tx/src/util/common/config.cpp:767: cbdc::config::parser::parser(const std::string&): Assertion `file.good()' failed.
+./scripts/test.sh: line 136: 11152 Aborted                 "$PWD"/"$1" "${GTEST_FLAGS[@]}"

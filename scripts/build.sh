@@ -62,3 +62,7 @@ echo "Building $CMAKE_BUILD_TYPE"
 eval "cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${CMAKE_FLAGS} .."
 make -j$CPUS
 
+# which build file would the executable for src/parsec/agent/runners/lua/impl.cpp lua_runner::run() actually exist?
+sudo setcap cap_sys_chroot=ep "/home/nicoli/Desktop/opencbdc-tx/build/tests/unit/run_unit_tests"
+sudo setcap cap_sys_chroot=ep "/home/nicoli/Desktop/opencbdc-tx/build/tests/integration/run_integration_tests"
+sudo setcap cap_sys_chroot=ep "/home/nicoli/Desktop/opencbdc-tx/build/src/parsec/agent/agentd"
