@@ -37,6 +37,7 @@ CMakeCache.txt
 *.o-*
 *.a
 *.log
+*.tgz
 
 leveldb*/
 NuRaft*/
@@ -53,7 +54,6 @@ plots/
 # Database
 blocks.dat
 test_db
-
 
 # System files
 .DS_Store
@@ -72,3 +72,6 @@ build/tests
 
 # E2E Test results
 testruns/
+
+# Virtualenv
+.py_venv/

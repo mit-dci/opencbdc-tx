@@ -187,7 +187,9 @@ on_int() {
 
     if [[ -z "$_failed" ]]; then
         printf 'Generating plots\n'
-        python "$RT"/scripts/plot.py "$TESTDIR"
+        source "${RT}/scripts/activate-venv.sh"
+        python "$RT"/scripts/plot-samples.py -d "$TESTDIR"
+        deactivate
     fi
 
     printf 'Terminating any remaining processes\n'

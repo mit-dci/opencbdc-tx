@@ -10,10 +10,9 @@ set -e
 
 # install in a custom prefix rather than /usr/local. by default, this
 # chooses "prefix" directory alongside "scripts" directory.
-
 PREFIX="$(cd "$(dirname "$0")"/.. && pwd)/prefix"
 echo "Will install local dependencies in the following prefix: $PREFIX"
-mkdir -p $PREFIX $PREFIX/lib $PREFIX/include
+mkdir -p "$PREFIX"/{lib,include}
 
 CMAKE_BUILD_TYPE="Debug"
 if [[ "$BUILD_RELEASE" == "1" ]]; then
