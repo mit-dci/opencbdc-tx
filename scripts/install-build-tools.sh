@@ -51,7 +51,8 @@ create_venv_install_python() {
         if rm -rf -- "${ENV_LOCATION}"; then
             echo "Removed existing virtual environment"
         else
-            echo "Failed to remove existing virtual environment"; exit 1
+            echo "Failed to remove existing virtual environment"
+            exit 1
         fi
     fi
     # install pip for linux
@@ -82,10 +83,14 @@ create_venv_install_python() {
     if "${PY_LOC}" -m venv "${ENV_NAME}"; then
         echo "Virtual environment '${ENV_NAME}' created"
     else
-        echo "Virtual environment creation failed"; exit 1
+        echo "Virtual environment creation failed"
+        exit 1
     fi
     # activate virtual environment
-    source "${ROOT}/scripts/activate-venv.sh"
+    if ! . "${ROOT}/scripts/activate-venv.sh"; then
+        echo "Failed to activate virtual environment"
+        exit 1
+    fi
     # install python packages
     if pip install -r "${ROOT}/requirements.txt"; then
         echo "Success installing python packages"

@@ -8,12 +8,14 @@ ARG BASE_IMAGE="ghcr.io/mit-dci/opencbdc-tx-base:latest"
 FROM $IMAGE_VERSION AS base
 
 # set non-interactive shell
-ENV DEBIAN_FRONTEND noninteractive
-ENV CMAKE_BUILD_TYPE Release
-ENV BUILD_RELEASE 1
+ENV DEBIAN_FRONTEND=noninteractive
+ENV CMAKE_BUILD_TYPE=Release
+ENV BUILD_RELEASE=1
 
 RUN mkdir -p /opt/tx-processor/scripts
 
+COPY requirements.txt /opt/tx-processor/requirements.txt
+COPY scripts/activate-venv.sh /opt/tx-processor/scripts/activate-venv.sh
 COPY scripts/install-build-tools.sh /opt/tx-processor/scripts/install-build-tools.sh
 COPY scripts/setup-dependencies.sh /opt/tx-processor/scripts/setup-dependencies.sh
 

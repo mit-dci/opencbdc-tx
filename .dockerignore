@@ -13,6 +13,7 @@ charts/
 # Prevent copying scripts that are unused in docker
 scripts/
 !scripts/test.sh
+!scripts/activate-venv.sh
 !scripts/install-build-tools.sh
 !scripts/setup-dependencies.sh
 !scripts/test-transaction.sh
