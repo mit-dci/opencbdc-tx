@@ -3,6 +3,7 @@ run
 plots
 .vscode
 .deps
+prefix
 
 # E2E test results
 testruns
