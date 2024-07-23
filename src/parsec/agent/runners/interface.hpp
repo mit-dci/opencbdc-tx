@@ -38,7 +38,7 @@ namespace cbdc::parsec::agent::runner {
             internal_error,
             /// Function yielded more than one key to lock.
             yield_count,
-            /// Function yielded a non-string key.
+            /// Function yielded a invalid datatype.
             yield_type,
             /// Error acquiring lock on key.
             lock_error,

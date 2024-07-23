@@ -1,5 +1,10 @@
 function gen_bytecode()
     pay_contract = function(param)
+        -- 0 is a read lock, 1 is a write lock in C++ scope
+        Locks = {
+            READ = 0,
+            WRITE = 1,
+        }
         from, to, value, sequence, sig = string.unpack("c32 c32 I8 I8 c64", param)
 
         function get_account_key(name)
@@ -10,7 +15,8 @@ function gen_bytecode()
 
         function get_account(name)
             account_key = get_account_key(name)
-            account_data = coroutine.yield(account_key)
+
+            account_data = coroutine.yield(account_key, Locks.WRITE)
             if string.len(account_data) > 0 then
                 account_balance, account_sequence
                 = string.unpack("I8 I8", account_data)
