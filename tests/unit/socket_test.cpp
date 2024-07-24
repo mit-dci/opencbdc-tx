@@ -16,7 +16,7 @@ class SocketTest : public ::testing::Test {};
 TEST_F(SocketTest, ListenConnectBasic) {
     auto listener = cbdc::network::tcp_listener();
 
-    static constexpr auto portno = 5555;
+    static constexpr auto portno = 29855;
     ASSERT_TRUE(listener.listen(cbdc::network::localhost, portno));
 
     auto conn_sock = cbdc::network::tcp_socket();
@@ -47,7 +47,7 @@ TEST_F(SocketTest, selector_connect) {
     ASSERT_TRUE(s.init());
 
     auto listener = cbdc::network::tcp_listener();
-    static constexpr auto portno = 5555;
+    static constexpr auto portno = 29855;
     ASSERT_TRUE(listener.listen(cbdc::network::localhost, portno));
 
     ASSERT_TRUE(s.add(listener));
@@ -74,7 +74,7 @@ TEST_F(SocketTest, selector_unblock) {
     t.join();
 
     auto listener = cbdc::network::tcp_listener();
-    static constexpr auto portno = 5555;
+    static constexpr auto portno = 29855;
     ASSERT_TRUE(listener.listen(cbdc::network::localhost, portno));
 
     ASSERT_TRUE(s.add(listener));

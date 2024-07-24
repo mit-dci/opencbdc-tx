@@ -95,9 +95,9 @@ class raft_test : public ::testing::Test {
         m_raft_params.heart_beat_interval_ = 1000;
         m_raft_params.snapshot_distance_ = 0;
         m_raft_params.max_append_size_ = 100000;
-        m_raft_endpoints.emplace_back("127.0.0.1", 5000);
-        m_raft_endpoints.emplace_back("127.0.0.1", 5001);
-        m_raft_endpoints.emplace_back("127.0.0.1", 5002);
+        m_raft_endpoints.emplace_back("127.0.0.1", 29800);
+        m_raft_endpoints.emplace_back("127.0.0.1", 29801);
+        m_raft_endpoints.emplace_back("127.0.0.1", 29802);
     }
 
     void TearDown() override {
@@ -226,7 +226,7 @@ class raft_test : public ::testing::Test {
         }
 
         // Test failure to init node raft by keeping port busy
-        auto ep = cbdc::network::endpoint_t{cbdc::network::localhost, 5001};
+        auto ep = cbdc::network::endpoint_t{cbdc::network::localhost, 29801};
         auto listener = cbdc::network::tcp_listener();
         listener.listen(ep.first, ep.second);
         ASSERT_FALSE(nodes[1]->init(m_raft_params));
