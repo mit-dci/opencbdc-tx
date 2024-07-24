@@ -18,9 +18,9 @@ class ArchiverTest : public ::testing::Test {
             cbdc::logging::log_level::fatal);
 
         cbdc::network::endpoint_t atomizer_endpoint
-            = {"non-existent-host", 5001};
+            = {"non-existent-host", 29801};
         m_config_opts.m_atomizer_endpoints.emplace_back(atomizer_endpoint);
-        cbdc::network::endpoint_t archiver_endpoint = {"127.0.0.1", 5000};
+        cbdc::network::endpoint_t archiver_endpoint = {"127.0.0.1", 29800};
         m_config_opts.m_archiver_endpoints.emplace_back(archiver_endpoint);
         m_config_opts.m_archiver_db_dirs.emplace_back("archiver0_db");
         m_archiver
