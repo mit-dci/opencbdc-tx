@@ -25,8 +25,24 @@ auto mint_command(cbdc::client& client, const std::vector<std::string>& args)
         return false;
     }
 
-    const auto n_outputs = std::stoull(args[5]);
-    const auto output_val = std::stoul(args[6]);
+    static constexpr auto n_outputs_arg_idx = 5;
+    const auto& n_outputs_arg = args[n_outputs_arg_idx];
+    auto idx_first_non_whitespace = n_outputs_arg.find_first_not_of(' ');
+    if(n_outputs_arg[idx_first_non_whitespace] == '-') {
+        std::cerr << "The requsted number of UTXOs cannot be negative."
+                  << std::endl;
+        return false;
+    }
+    const auto n_outputs = std::stoull(n_outputs_arg);
+
+    static constexpr auto output_val_arg_idx = 6;
+    const auto& output_val_arg = args[output_val_arg_idx];
+    idx_first_non_whitespace = output_val_arg.find_first_not_of(' ');
+    if(output_val_arg[idx_first_non_whitespace] == '-') {
+        std::cerr << "The UTXO values cannot be negative." << std::endl;
+        return false;
+    }
+    const auto output_val = std::stoul(output_val_arg);
 
     const auto mint_tx
         = client.mint(n_outputs, static_cast<uint32_t>(output_val));
@@ -70,11 +86,20 @@ auto send_command(cbdc::client& client, const std::vector<std::string>& args)
         return false;
     }
 
-    const auto value = std::stoul(args[5]);
+    static constexpr auto value_arg_idx = 5;
+    const auto& value_arg = args[value_arg_idx];
+    const auto idx_first_non_whitespace = value_arg.find_first_not_of(' ');
+    if(value_arg[idx_first_non_whitespace] == '-') {
+        std::cerr << "The amount of currency to send cannot be negative."
+                  << std::endl;
+        return false;
+    }
+    const auto value = std::stoul(value_arg);
+
     static constexpr auto address_arg_idx = 6;
     auto pubkey = cbdc::address::decode(args[address_arg_idx]);
     if(!pubkey.has_value()) {
-        std::cout << "Could not decode address" << std::endl;
+        std::cout << "Could not decode address." << std::endl;
         return false;
     }
 
@@ -97,8 +122,23 @@ auto fan_command(cbdc::client& client, const std::vector<std::string>& args)
         return false;
     }
 
-    const auto value = std::stoul(args[6]);
-    const auto count = std::stoul(args[5]);
+    static constexpr auto value_arg_idx = 6;
+    const auto& value_arg = args[value_arg_idx];
+    auto idx_first_non_whitespace = value_arg.find_first_not_of(' ');
+    if(value_arg[idx_first_non_whitespace] == '-') {
+        std::cerr << "The value cannot be negative." << std::endl;
+        return false;
+    }
+    const auto value = std::stoul(value_arg);
+
+    static constexpr auto count_arg_idx = 5;
+    const auto& count_arg = args[count_arg_idx];
+    idx_first_non_whitespace = count_arg.find_first_not_of(' ');
+    if(count_arg[idx_first_non_whitespace] == '-') {
+        std::cerr << "The count cannot be negative." << std::endl;
+        return false;
+    }
+    const auto count = std::stoul(count_arg);
 
     static constexpr auto address_arg_idx = 7;
     auto pubkey = cbdc::address::decode(args[address_arg_idx]);
