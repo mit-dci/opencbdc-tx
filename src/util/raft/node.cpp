@@ -58,8 +58,20 @@ namespace cbdc::raft {
 
         m_log->info("Waiting for raft initialization");
         static constexpr auto wait_time = std::chrono::milliseconds(100);
+        static constexpr auto timeout = std::chrono::seconds(30);
+
+        auto start_time = std::chrono::steady_clock::now();
+
         while(!m_raft_instance->is_initialized()) {
             std::this_thread::sleep_for(wait_time);
+            auto elapsed_time = std::chrono::steady_clock::now() - start_time;
+
+            if(elapsed_time > timeout) {
+                m_log->error("Raft initialization timed out");
+                m_raft_instance->shutdown();
+                m_raft_instance.reset();
+                return false;
+            }
         }
         m_log->info("Raft initialization complete");
 
