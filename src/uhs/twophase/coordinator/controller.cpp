@@ -689,6 +689,12 @@ namespace cbdc::coordinator {
             return false;
         }
 
+        auto recv_time = std::chrono::high_resolution_clock::now()
+                             .time_since_epoch()
+                             .count();
+        m_logger->trace("Received", to_string(tx.m_id), "at",
+                        recv_time);
+
         if(!transaction::validation::check_attestations(
                tx,
                m_opts.m_sentinel_public_keys,
@@ -719,6 +725,12 @@ namespace cbdc::coordinator {
             m_current_txs->emplace(
                 tx.m_id,
                 std::make_pair(std::move(result_callback), idx));
+
+            auto add_time = std::chrono::high_resolution_clock::now()
+                                .time_since_epoch()
+                                .count();
+            m_logger->trace("Added", to_string(tx.m_id), "to batch at",
+                            add_time);
             return true;
         }();
         if(added) {

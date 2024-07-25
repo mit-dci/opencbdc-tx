@@ -338,10 +338,17 @@ auto main(int argc, char** argv) -> int {
                                  .time_since_epoch()
                                  .count();
 
+            auto tx_id = cbdc::transaction::tx_id(tx.value());
+            logger->trace("Sent", cbdc::to_string(tx_id), "at", send_time);
+
             auto res_cb
-                = [&, txn = tx.value(), send_time = send_time](
+                = [&, txn = tx.value(), send_time = send_time, tx_id = tx_id](
                       cbdc::sentinel::rpc::client::execute_result_type res) {
-                      auto tx_id = cbdc::transaction::tx_id(txn);
+                      auto now = std::chrono::high_resolution_clock::now()
+                                     .time_since_epoch()
+                                     .count();
+                      logger->trace("Received response for",
+                                    cbdc::to_string(tx_id), "at", now);
                       if(!res.has_value()) {
                           logger->warn("Failure response from sentinel for",
                                        cbdc::to_string(tx_id));
@@ -353,9 +360,6 @@ auto main(int argc, char** argv) -> int {
                          == cbdc::sentinel::tx_status::confirmed) {
                           wallet.confirm_transaction(txn);
                           second_conf_queue.push(tx_id);
-                          auto now = std::chrono::high_resolution_clock::now()
-                                         .time_since_epoch()
-                                         .count();
                           const auto tx_delay = now - send_time;
                           latency_log << now << " " << tx_delay << "\n";
                           constexpr auto max_invalid = 100000;
