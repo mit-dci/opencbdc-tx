@@ -58,8 +58,9 @@ namespace cbdc::transaction {
         /// \param sign_tx true if the wallet should sign this transaction.
         /// \return the completed transaction.
         /// \see \ref export_send_inputs
-        auto send_to(uint32_t amount, const pubkey_t& payee, bool sign_tx)
-            -> std::optional<full_tx>;
+        auto send_to(uint32_t amount,
+                     const pubkey_t& payee,
+                     bool sign_tx) -> std::optional<full_tx>;
 
         /// \brief Generates a new send transaction with the specified number
         ///        of inputs and outputs.
@@ -113,9 +114,9 @@ namespace cbdc::transaction {
         /// \return inputs to transmit to the send transaction recipient, or
         ///         empty vector if there is no transaction output with the
         ///         corresponding payee information.
-        static auto export_send_inputs(const full_tx& send_tx,
-                                       const pubkey_t& payee)
-            -> std::vector<input>;
+        static auto
+        export_send_inputs(const full_tx& send_tx,
+                           const pubkey_t& payee) -> std::vector<input>;
 
         /// Generates a new public key at which this wallet can receive
         /// payments via \ref send_to.
@@ -203,8 +204,8 @@ namespace cbdc::transaction {
         /// \param seed_idx the index in the seed set for which to generate the
         ///                 transaction.
         /// \returns the generated transaction.
-        auto create_seeded_transaction(size_t seed_idx)
-            -> std::optional<full_tx>;
+        auto
+        create_seeded_transaction(size_t seed_idx) -> std::optional<full_tx>;
 
         /// Given a set of credit inputs, add the UTXOs and update the wallet's
         /// balance.

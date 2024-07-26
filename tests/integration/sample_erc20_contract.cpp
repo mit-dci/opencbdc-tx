@@ -190,8 +190,8 @@ namespace cbdc::test::evm_contracts {
         return buf.value();
     }
 
-    auto data_erc20_allowance(evmc::address owner, evmc::address spender)
-        -> cbdc::buffer {
+    auto data_erc20_allowance(evmc::address owner,
+                              evmc::address spender) -> cbdc::buffer {
         auto buf = cbdc::buffer();
         const auto selector_allowance
             = std::string("allowance(address,address)");
@@ -205,8 +205,8 @@ namespace cbdc::test::evm_contracts {
         return buf;
     }
 
-    auto data_erc20_approve(evmc::address spender, evmc::uint256be amount)
-        -> cbdc::buffer {
+    auto data_erc20_approve(evmc::address spender,
+                            evmc::uint256be amount) -> cbdc::buffer {
         auto buf = cbdc::buffer();
         const auto selector_approve = std::string("approve(address,uint256)");
         auto selector_hash = cbdc::keccak_data(selector_approve.data(),
@@ -297,8 +297,8 @@ namespace cbdc::test::evm_contracts {
         return buf;
     }
 
-    auto data_erc20_transfer(evmc::address to, evmc::uint256be amount)
-        -> cbdc::buffer {
+    auto data_erc20_transfer(evmc::address to,
+                             evmc::uint256be amount) -> cbdc::buffer {
         auto buf = cbdc::buffer();
         const auto selector_transfer
             = std::string("transfer(address,uint256)");

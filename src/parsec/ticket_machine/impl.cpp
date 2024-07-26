@@ -10,9 +10,8 @@ namespace cbdc::parsec::ticket_machine {
         : m_log(std::move(logger)),
           m_range(range) {}
 
-    auto
-    impl::get_ticket_number(get_ticket_number_callback_type result_callback)
-        -> bool {
+    auto impl::get_ticket_number(
+        get_ticket_number_callback_type result_callback) -> bool {
         auto ticket_number = m_next_ticket_number.fetch_add(m_range);
         result_callback(
             ticket_number_range_type{ticket_number, ticket_number + m_range});

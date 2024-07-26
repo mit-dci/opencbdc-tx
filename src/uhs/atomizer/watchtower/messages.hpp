@@ -27,9 +27,9 @@ namespace cbdc {
     auto operator>>(cbdc::serializer& packet,
                     cbdc::watchtower::best_block_height_response& bbh_res)
         -> cbdc::serializer&;
-    auto operator<<(cbdc::serializer& packet,
-                    const cbdc::watchtower::response& res)
-        -> cbdc::serializer&;
+    auto
+    operator<<(cbdc::serializer& packet,
+               const cbdc::watchtower::response& res) -> cbdc::serializer&;
     auto operator<<(cbdc::serializer& packet,
                     const cbdc::watchtower::request& req) -> cbdc::serializer&;
 }

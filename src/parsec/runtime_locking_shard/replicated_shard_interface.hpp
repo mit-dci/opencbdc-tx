@@ -75,24 +75,21 @@ namespace cbdc::parsec::runtime_locking_shard {
         virtual auto prepare(ticket_number_type ticket_number,
                              broker_id_type broker_id,
                              state_type state_update,
-                             callback_type result_callback) -> bool
-            = 0;
+                             callback_type result_callback) -> bool = 0;
 
         /// Stores a commit request in the state machine.
         /// \param ticket_number ticket to commit.
         /// \param result_callback function to call with commit result.
         /// \return true if operation was initiated successfully.
         virtual auto commit(ticket_number_type ticket_number,
-                            callback_type result_callback) -> bool
-            = 0;
+                            callback_type result_callback) -> bool = 0;
 
         /// Stores a finish request in the state machine.
         /// \param ticket_number ticket to finish.
         /// \param result_callback function to call with finish result.
         /// \return true if operation was initiated successfully.
         virtual auto finish(ticket_number_type ticket_number,
-                            callback_type result_callback) -> bool
-            = 0;
+                            callback_type result_callback) -> bool = 0;
 
         /// Return type from a get tickets operation. Either a map of ticket
         /// states or an error code.
@@ -107,7 +104,7 @@ namespace cbdc::parsec::runtime_locking_shard {
         /// \return true if operation was initiated successfully.
         [[nodiscard]] virtual auto
         get_tickets(get_tickets_callback_type result_callback) const -> bool
-            = 0;
+                                                                        = 0;
     };
 }
 

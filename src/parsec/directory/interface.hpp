@@ -30,10 +30,9 @@ namespace cbdc::parsec::directory {
         /// \param key key to locate.
         /// \param result_callback function to call with key location.
         /// \return true if the operation was initiated successfully.
-        virtual auto key_location(runtime_locking_shard::key_type key,
-                                  key_location_callback_type result_callback)
-            -> bool
-            = 0;
+        virtual auto
+        key_location(runtime_locking_shard::key_type key,
+                     key_location_callback_type result_callback) -> bool = 0;
     };
 }
 

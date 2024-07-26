@@ -131,9 +131,9 @@ namespace cbdc::coordinator {
         ///         false if the current batch already contained the
         ///         transaction or if the controller shut down before the
         ///         operation could finish.
-        auto execute_transaction(transaction::compact_tx tx,
-                                 callback_type result_callback)
-            -> bool override;
+        auto
+        execute_transaction(transaction::compact_tx tx,
+                            callback_type result_callback) -> bool override;
 
       private:
         size_t m_node_id;
@@ -186,13 +186,13 @@ namespace cbdc::coordinator {
                            nuraft::cb_func::Param* param)
             -> nuraft::cb_func::ReturnCode;
 
-        auto prepare_cb(const hash_t& dtx_id,
-                        const std::vector<transaction::compact_tx>& txs)
-            -> bool;
-        auto commit_cb(const hash_t& dtx_id,
-                       const std::vector<bool>& complete_txs,
-                       const std::vector<std::vector<uint64_t>>& tx_idxs)
-            -> bool;
+        auto
+        prepare_cb(const hash_t& dtx_id,
+                   const std::vector<transaction::compact_tx>& txs) -> bool;
+        auto
+        commit_cb(const hash_t& dtx_id,
+                  const std::vector<bool>& complete_txs,
+                  const std::vector<std::vector<uint64_t>>& tx_idxs) -> bool;
         auto discard_cb(const hash_t& dtx_id) -> bool;
         auto done_cb(const hash_t& dtx_id) -> bool;
 

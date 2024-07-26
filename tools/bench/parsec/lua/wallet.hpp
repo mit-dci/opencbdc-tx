@@ -80,8 +80,8 @@ namespace cbdc::parsec {
             m_secp{secp256k1_context_create(SECP256K1_CONTEXT_SIGN),
                    &secp256k1_context_destroy};
 
-        [[nodiscard]] auto make_pay_params(pubkey_t to, uint64_t amount) const
-            -> cbdc::buffer;
+        [[nodiscard]] auto
+        make_pay_params(pubkey_t to, uint64_t amount) const -> cbdc::buffer;
 
         auto execute_params(cbdc::buffer params,
                             bool dry_run,

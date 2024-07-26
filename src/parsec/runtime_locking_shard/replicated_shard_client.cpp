@@ -15,11 +15,11 @@ namespace cbdc::parsec::runtime_locking_shard {
         std::shared_ptr<raft::node> raft_node)
         : m_raft(std::move(raft_node)) {}
 
-    auto replicated_shard_client::prepare(ticket_number_type ticket_number,
-                                          broker_id_type broker_id,
-                                          state_type state_update,
-                                          callback_type result_callback)
-        -> bool {
+    auto
+    replicated_shard_client::prepare(ticket_number_type ticket_number,
+                                     broker_id_type broker_id,
+                                     state_type state_update,
+                                     callback_type result_callback) -> bool {
         auto req = rpc::replicated_prepare_request{ticket_number,
                                                    broker_id,
                                                    std::move(state_update)};
@@ -41,9 +41,9 @@ namespace cbdc::parsec::runtime_locking_shard {
         return success;
     }
 
-    auto replicated_shard_client::commit(ticket_number_type ticket_number,
-                                         callback_type result_callback)
-        -> bool {
+    auto
+    replicated_shard_client::commit(ticket_number_type ticket_number,
+                                    callback_type result_callback) -> bool {
         auto req = rpc::commit_request{ticket_number};
         auto success = replicate_request(
             req,
@@ -63,9 +63,9 @@ namespace cbdc::parsec::runtime_locking_shard {
         return success;
     }
 
-    auto replicated_shard_client::finish(ticket_number_type ticket_number,
-                                         callback_type result_callback)
-        -> bool {
+    auto
+    replicated_shard_client::finish(ticket_number_type ticket_number,
+                                    callback_type result_callback) -> bool {
         auto req = rpc::finish_request{ticket_number};
         auto success = replicate_request(
             req,

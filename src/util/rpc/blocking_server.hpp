@@ -27,8 +27,8 @@ namespace cbdc::rpc {
       public:
         blocking_server() = default;
         blocking_server(blocking_server&&) noexcept = default;
-        auto operator=(blocking_server&&) noexcept
-            -> blocking_server& = default;
+        auto
+        operator=(blocking_server&&) noexcept -> blocking_server& = default;
         blocking_server(const blocking_server&) = default;
         auto operator=(const blocking_server&) -> blocking_server& = default;
 

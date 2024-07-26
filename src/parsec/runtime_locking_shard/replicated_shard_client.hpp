@@ -53,9 +53,8 @@ namespace cbdc::parsec::runtime_locking_shard {
         /// \param result_callback function to call with the tickets held by
         ///                        the state machine.
         /// \return true if request replication was initiated successfully.
-        [[nodiscard]] auto
-        get_tickets(get_tickets_callback_type result_callback) const
-            -> bool override;
+        [[nodiscard]] auto get_tickets(
+            get_tickets_callback_type result_callback) const -> bool override;
 
       private:
         std::shared_ptr<raft::node> m_raft;

@@ -143,10 +143,9 @@ namespace cbdc::coordinator {
         return nuraft::cb_func::ReturnCode::Ok;
     }
 
-    auto
-    controller::prepare_cb(const hash_t& dtx_id,
-                           const std::vector<transaction::compact_tx>& txs)
-        -> bool {
+    auto controller::prepare_cb(
+        const hash_t& dtx_id,
+        const std::vector<transaction::compact_tx>& txs) -> bool {
         // Send the prepare status for this dtx ID and the txs contained within
         // to the coordinator RSM and ensure it replicated (or failed) before
         // returning.
@@ -154,11 +153,10 @@ namespace cbdc::coordinator {
         return replicate_sm_command(comm).has_value();
     }
 
-    auto
-    controller::commit_cb(const hash_t& dtx_id,
-                          const std::vector<bool>& complete_txs,
-                          const std::vector<std::vector<uint64_t>>& tx_idxs)
-        -> bool {
+    auto controller::commit_cb(
+        const hash_t& dtx_id,
+        const std::vector<bool>& complete_txs,
+        const std::vector<std::vector<uint64_t>>& tx_idxs) -> bool {
         // Send the commit status for this dtx ID and the result from prepare,
         // along with the mapping of which txs are relevant to each shard in
         // the prepare result to the RSM and check if it replicated.
@@ -681,9 +679,9 @@ namespace cbdc::coordinator {
                         rhs.m_discard_txs);
     }
 
-    auto controller::execute_transaction(transaction::compact_tx tx,
-                                         callback_type result_callback)
-        -> bool {
+    auto
+    controller::execute_transaction(transaction::compact_tx tx,
+                                    callback_type result_callback) -> bool {
         // If we're not the leader we can't process txs
         if(!m_raft_serv->is_leader()) {
             return false;

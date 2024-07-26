@@ -11,8 +11,8 @@ namespace cbdc::shard {
     shard::shard(config::shard_range_t prefix_range)
         : m_prefix_range(std::move(prefix_range)) {}
 
-    auto shard::open_db(const std::string& db_dir)
-        -> std::optional<std::string> {
+    auto
+    shard::open_db(const std::string& db_dir) -> std::optional<std::string> {
         leveldb::Options opt;
         opt.create_if_missing = true;
 

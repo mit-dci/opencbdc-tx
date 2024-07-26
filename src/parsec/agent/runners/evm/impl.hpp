@@ -98,14 +98,14 @@ namespace cbdc::parsec::agent::runner {
         [[nodiscard]] static auto check_base_gas(const evm_tx& tx,
                                                  bool is_readonly_run)
             -> std::pair<evmc::uint256be, bool>;
-        [[nodiscard]] static auto make_tx_context(const evmc::address& from,
-                                                  const evm_tx& tx,
-                                                  bool is_readonly_run)
-            -> evmc_tx_context;
-        static auto make_message(const evmc::address& from,
-                                 const evm_tx& tx,
-                                 bool is_readonly_run)
-            -> std::pair<evmc_message, bool>;
+        [[nodiscard]] static auto
+        make_tx_context(const evmc::address& from,
+                        const evm_tx& tx,
+                        bool is_readonly_run) -> evmc_tx_context;
+        static auto
+        make_message(const evmc::address& from,
+                     const evm_tx& tx,
+                     bool is_readonly_run) -> std::pair<evmc_message, bool>;
 
         void handle_lock_from_account(
             const broker::interface::try_lock_return_type& res);

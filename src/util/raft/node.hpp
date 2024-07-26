@@ -78,9 +78,9 @@ namespace cbdc::raft {
         /// \param result_fn callback function to call asynchronously with the
         ///                  state machine execution result.
         /// \return true if the log entry was accepted for replication.
-        [[nodiscard]] auto replicate(nuraft::ptr<nuraft::buffer> new_log,
-                                     const callback_type& result_fn) const
-            -> bool;
+        [[nodiscard]] auto
+        replicate(nuraft::ptr<nuraft::buffer> new_log,
+                  const callback_type& result_fn) const -> bool;
 
         /// Replicates the provided log entry and returns the results from the
         /// state machine if the replication was successful. The method will

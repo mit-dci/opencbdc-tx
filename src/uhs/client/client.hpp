@@ -15,8 +15,8 @@ namespace cbdc {
         static constexpr auto bits_per_byte = 8;
         static constexpr auto bech32_bits_per_symbol = 5;
 
-        auto decode(const std::string& addr_str)
-            -> std::optional<cbdc::hash_t>;
+        auto
+        decode(const std::string& addr_str) -> std::optional<cbdc::hash_t>;
     }
 
     /// External client for sending new transactions to the system.
@@ -66,8 +66,8 @@ namespace cbdc {
         /// \param n_outputs number of new spendable outputs to create.
         /// \param output_val value of the amount to associate with each output in the base unit of the currency.
         /// \return the completed transaction.
-        auto mint(size_t n_outputs, uint32_t output_val)
-            -> transaction::full_tx;
+        auto mint(size_t n_outputs,
+                  uint32_t output_val) -> transaction::full_tx;
 
         /// \brief Send a specified amount from this client's wallet to a
         ///        target address.
@@ -250,7 +250,7 @@ namespace cbdc {
         /// \param mint_tx invalid transaction that mints new coins.
         /// \return true if the transaction was sent successfully.
         virtual auto send_mint_tx(const transaction::full_tx& mint_tx) -> bool
-            = 0;
+                                                                          = 0;
 
         /// \brief Returns the set of transactions pending confirmation.
         ///

@@ -53,10 +53,8 @@ namespace cbdc::parsec::ticket_machine {
         /// to make this a very rare occurance.
         /// \param result_callback function to call with ticket number range.
         /// \return true if the request was initiated successfully.
-        virtual auto
-        get_ticket_number(get_ticket_number_callback_type result_callback)
-            -> bool
-            = 0;
+        virtual auto get_ticket_number(
+            get_ticket_number_callback_type result_callback) -> bool = 0;
     };
 }
 

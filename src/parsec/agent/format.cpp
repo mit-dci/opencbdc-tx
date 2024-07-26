@@ -8,13 +8,13 @@
 #include "util/serialization/format.hpp"
 
 namespace cbdc {
-    auto operator<<(serializer& ser, const parsec::agent::rpc::request& req)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const parsec::agent::rpc::request& req) -> serializer& {
         return ser << req.m_function << req.m_param << req.m_is_readonly_run;
     }
 
-    auto operator>>(serializer& deser, parsec::agent::rpc::request& req)
-        -> serializer& {
+    auto operator>>(serializer& deser,
+                    parsec::agent::rpc::request& req) -> serializer& {
         return deser >> req.m_function >> req.m_param >> req.m_is_readonly_run;
     }
 }

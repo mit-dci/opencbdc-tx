@@ -145,8 +145,8 @@ namespace cbdc::rpc {
         return MHD_YES;
     }
 
-    auto json_rpc_http_server::send_cors_response(request* request_info)
-        -> bool {
+    auto
+    json_rpc_http_server::send_cors_response(request* request_info) -> bool {
         std::string response = "";
         auto* result = MHD_create_response_from_buffer(
             response.size(),

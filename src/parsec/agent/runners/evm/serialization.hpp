@@ -84,8 +84,8 @@ namespace cbdc::parsec::agent::runner {
     ///             to be a string in 0x... format
     /// \return the evmc::address that was decoded or std::nullopt if no valid
     ///         value could be decoded
-    auto address_from_json(const Json::Value& addr)
-        -> std::optional<evmc::address>;
+    auto
+    address_from_json(const Json::Value& addr) -> std::optional<evmc::address>;
 
     /// Converts a given Json::Value to an evmc::uint256be
     /// \param val Json::Value containing the uint256be to decode. Is expected
@@ -101,8 +101,8 @@ namespace cbdc::parsec::agent::runner {
     ///            representation of the buffer
     /// \return the cbdc::buffer that was decoded or std::nullopt if no valid
     ///         value could be decoded
-    auto buffer_from_json(const Json::Value& val)
-        -> std::optional<cbdc::buffer>;
+    auto
+    buffer_from_json(const Json::Value& val) -> std::optional<cbdc::buffer>;
 
     /// Converts a given Json::Value to an evmc::uint256be, returning a default
     /// value if none could be decoded
@@ -113,8 +113,8 @@ namespace cbdc::parsec::agent::runner {
     ///            val
     /// \return the evmc::uint256be that was decoded or the value of def if no
     ///         value could be decoded
-    auto uint256be_or_default(const Json::Value& val, evmc::uint256be def)
-        -> evmc::uint256be;
+    auto uint256be_or_default(const Json::Value& val,
+                              evmc::uint256be def) -> evmc::uint256be;
 
     /// Encodes the given transaction into a eth-RPC compatible representation
     /// in JSON - as Json::Value
@@ -122,9 +122,9 @@ namespace cbdc::parsec::agent::runner {
     /// \param ctx The secp256k1 context to use for deriving the from address
     /// \return a Json::Value containing the json representation of the
     ///         transaction
-    auto tx_to_json(cbdc::parsec::agent::runner::evm_tx& tx,
-                    const std::shared_ptr<secp256k1_context>& ctx)
-        -> Json::Value;
+    auto
+    tx_to_json(cbdc::parsec::agent::runner::evm_tx& tx,
+               const std::shared_ptr<secp256k1_context>& ctx) -> Json::Value;
 
     /// Encodes the given transaction receipt into a eth-RPC compatible
     /// representation in JSON - as Json::Value

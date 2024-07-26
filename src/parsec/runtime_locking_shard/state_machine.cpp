@@ -92,8 +92,8 @@ namespace cbdc::parsec::runtime_locking_shard {
         return ret;
     }
 
-    auto state_machine::get_shard() const
-        -> std::shared_ptr<replicated_shard> {
+    auto
+    state_machine::get_shard() const -> std::shared_ptr<replicated_shard> {
         return m_shard;
     }
 }

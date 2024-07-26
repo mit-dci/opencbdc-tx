@@ -11,8 +11,8 @@
 // to access the data behind evmc::uint256be.
 // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
 namespace cbdc::parsec::agent::runner {
-    auto operator+(const evmc::uint256be& lhs, const evmc::uint256be& rhs)
-        -> evmc::uint256be {
+    auto operator+(const evmc::uint256be& lhs,
+                   const evmc::uint256be& rhs) -> evmc::uint256be {
         auto ret = evmc::uint256be{};
         auto tmp = uint64_t{};
         auto carry = uint8_t{};
@@ -25,8 +25,8 @@ namespace cbdc::parsec::agent::runner {
         return ret;
     }
 
-    auto operator-(const evmc::uint256be& lhs, const evmc::uint256be& rhs)
-        -> evmc::uint256be {
+    auto operator-(const evmc::uint256be& lhs,
+                   const evmc::uint256be& rhs) -> evmc::uint256be {
         auto ret = evmc::uint256be{};
         auto tmp1 = uint64_t{};
         auto tmp2 = uint64_t{};
@@ -43,8 +43,8 @@ namespace cbdc::parsec::agent::runner {
         return ret;
     }
 
-    auto operator*(const evmc::uint256be& lhs, const evmc::uint256be& rhs)
-        -> evmc::uint256be {
+    auto operator*(const evmc::uint256be& lhs,
+                   const evmc::uint256be& rhs) -> evmc::uint256be {
         auto ret = evmc::uint256be{};
         for(size_t i = 0; i < sizeof(lhs.bytes); i++) {
             auto row = evmc::uint256be{};
@@ -71,8 +71,8 @@ namespace cbdc::parsec::agent::runner {
         return ret;
     }
 
-    auto operator<<(const evmc::uint256be& lhs, size_t count)
-        -> evmc::uint256be {
+    auto operator<<(const evmc::uint256be& lhs,
+                    size_t count) -> evmc::uint256be {
         auto ret = evmc::uint256be{};
         if(count >= sizeof(lhs.bytes)) {
             return ret;

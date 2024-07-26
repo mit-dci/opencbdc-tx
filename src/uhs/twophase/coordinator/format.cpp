@@ -18,15 +18,15 @@ namespace cbdc {
         return ser << s.m_prepare_txs << s.m_commit_txs << s.m_discard_txs;
     }
 
-    auto operator>>(serializer& deser,
-                    coordinator::controller::coordinator_state& s)
-        -> serializer& {
+    auto
+    operator>>(serializer& deser,
+               coordinator::controller::coordinator_state& s) -> serializer& {
         return deser >> s.m_prepare_txs >> s.m_commit_txs >> s.m_discard_txs;
     }
 
-    auto operator<<(serializer& ser,
-                    const coordinator::controller::sm_command& c)
-        -> serializer& {
+    auto
+    operator<<(serializer& ser,
+               const coordinator::controller::sm_command& c) -> serializer& {
         ser << c.m_header;
         switch(c.m_header.m_comm) {
             case coordinator::state_machine::command::prepare: {
@@ -59,9 +59,9 @@ namespace cbdc {
         return ser << static_cast<uint8_t>(c.m_comm) << c.m_dtx_id;
     }
 
-    auto operator>>(serializer& deser,
-                    coordinator::controller::sm_command_header& c)
-        -> serializer& {
+    auto
+    operator>>(serializer& deser,
+               coordinator::controller::sm_command_header& c) -> serializer& {
         uint8_t comm{};
         deser >> comm;
         c.m_comm = static_cast<coordinator::state_machine::command>(comm);

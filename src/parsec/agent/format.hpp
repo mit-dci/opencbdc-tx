@@ -10,10 +10,10 @@
 #include "util/serialization/serializer.hpp"
 
 namespace cbdc {
-    auto operator<<(serializer& ser, const parsec::agent::rpc::request& req)
-        -> serializer&;
-    auto operator>>(serializer& deser, parsec::agent::rpc::request& req)
-        -> serializer&;
+    auto operator<<(serializer& ser,
+                    const parsec::agent::rpc::request& req) -> serializer&;
+    auto operator>>(serializer& deser,
+                    parsec::agent::rpc::request& req) -> serializer&;
 }
 
 #endif

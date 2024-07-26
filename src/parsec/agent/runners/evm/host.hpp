@@ -38,9 +38,8 @@ namespace cbdc::parsec::agent::runner {
                  bool is_readonly_run,
                  interface::ticket_number_type ticket_number);
 
-        [[nodiscard]] auto
-        account_exists(const evmc::address& addr) const noexcept
-            -> bool override;
+        [[nodiscard]] auto account_exists(
+            const evmc::address& addr) const noexcept -> bool override;
 
         [[nodiscard]] auto get_storage(const evmc::address& addr,
                                        const evmc::bytes32& key) const noexcept
@@ -51,33 +50,30 @@ namespace cbdc::parsec::agent::runner {
                          const evmc::bytes32& value) noexcept
             -> evmc_storage_status override final;
 
-        [[nodiscard]] auto
-        get_balance(const evmc::address& addr) const noexcept
-            -> evmc::uint256be override final;
+        [[nodiscard]] auto get_balance(const evmc::address& addr)
+            const noexcept -> evmc::uint256be override final;
 
-        [[nodiscard]] auto
-        get_code_size(const evmc::address& addr) const noexcept
-            -> size_t override final;
+        [[nodiscard]] auto get_code_size(
+            const evmc::address& addr) const noexcept -> size_t override final;
 
-        [[nodiscard]] auto
-        get_code_hash(const evmc::address& addr) const noexcept
-            -> evmc::bytes32 override final;
+        [[nodiscard]] auto get_code_hash(const evmc::address& addr)
+            const noexcept -> evmc::bytes32 override final;
 
-        auto copy_code(const evmc::address& addr,
-                       size_t code_offset,
-                       uint8_t* buffer_data,
-                       size_t buffer_size) const noexcept
-            -> size_t override final;
+        auto
+        copy_code(const evmc::address& addr,
+                  size_t code_offset,
+                  uint8_t* buffer_data,
+                  size_t buffer_size) const noexcept -> size_t override final;
 
         auto selfdestruct(const evmc::address& addr,
                           const evmc::address& beneficiary) noexcept
             -> bool override final;
 
-        auto call(const evmc_message& msg) noexcept
-            -> evmc::Result override final;
+        auto
+        call(const evmc_message& msg) noexcept -> evmc::Result override final;
 
-        [[nodiscard]] auto get_tx_context() const noexcept
-            -> evmc_tx_context override final;
+        [[nodiscard]] auto
+        get_tx_context() const noexcept -> evmc_tx_context override final;
 
         [[nodiscard]] auto get_block_hash(int64_t number) const noexcept
             -> evmc::bytes32 override final;
@@ -110,8 +106,8 @@ namespace cbdc::parsec::agent::runner {
         /// Return the changes to the state resulting from transaction
         /// execution.
         /// \return list of updates keys and values.
-        auto get_state_updates() const
-            -> runtime_locking_shard::state_update_type;
+        auto
+        get_state_updates() const -> runtime_locking_shard::state_update_type;
 
         /// Returns whether the transaction needs to be retried due to a
         /// transient error.
@@ -179,18 +175,18 @@ namespace cbdc::parsec::agent::runner {
 
         interface::ticket_number_type m_ticket_number;
 
-        [[nodiscard]] auto get_account(const evmc::address& addr,
-                                       bool write) const
-            -> std::optional<evm_account>;
+        [[nodiscard]] auto
+        get_account(const evmc::address& addr,
+                    bool write) const -> std::optional<evm_account>;
 
-        [[nodiscard]] auto get_account_storage(const evmc::address& addr,
-                                               const evmc::bytes32& key,
-                                               bool write) const
-            -> std::optional<evmc::bytes32>;
+        [[nodiscard]] auto
+        get_account_storage(const evmc::address& addr,
+                            const evmc::bytes32& key,
+                            bool write) const -> std::optional<evmc::bytes32>;
 
-        [[nodiscard]] auto get_account_code(const evmc::address& addr,
-                                            bool write) const
-            -> std::optional<evm_account_code>;
+        [[nodiscard]] auto
+        get_account_code(const evmc::address& addr,
+                         bool write) const -> std::optional<evm_account_code>;
 
         auto get_sorted_logs() const
             -> std::unordered_map<evmc::address, std::vector<evm_log>>;

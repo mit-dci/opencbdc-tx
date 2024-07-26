@@ -8,9 +8,9 @@
 namespace cbdc::parsec::directory {
     impl::impl(size_t n_shards) : m_n_shards(n_shards) {}
 
-    auto impl::key_location(runtime_locking_shard::key_type key,
-                            key_location_callback_type result_callback)
-        -> bool {
+    auto
+    impl::key_location(runtime_locking_shard::key_type key,
+                       key_location_callback_type result_callback) -> bool {
         auto key_hash = m_siphash(key);
         // NOTE: using modulo creates a small bias from a true
         // uniform distribution

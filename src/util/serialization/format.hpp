@@ -141,8 +141,8 @@ namespace cbdc {
     ///
     /// \see \ref cbdc::operator<<(serializer&, T)
     template<typename T>
-    auto operator<<(serializer& ser, const std::optional<T>& val)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const std::optional<T>& val) -> serializer& {
         auto has_value = val.has_value();
         ser << has_value;
         if(has_value) {
@@ -183,8 +183,8 @@ namespace cbdc {
     ///
     /// \see \ref cbdc::operator<<(serializer&, T)
     template<typename T>
-    auto operator<<(serializer& packet, const std::vector<T>& vec)
-        -> serializer& {
+    auto operator<<(serializer& packet,
+                    const std::vector<T>& vec) -> serializer& {
         const auto len = static_cast<uint64_t>(vec.size());
         packet << len;
         for(uint64_t i = 0; i < len; i++) {
@@ -236,9 +236,9 @@ namespace cbdc {
     /// statically-casted.
     /// \see \ref cbdc::operator<<(serializer&, T)
     template<typename K, typename V, typename... Ts>
-    auto operator<<(serializer& ser,
-                    const std::unordered_map<K, V, Ts...>& map)
-        -> serializer& {
+    auto
+    operator<<(serializer& ser,
+               const std::unordered_map<K, V, Ts...>& map) -> serializer& {
         auto len = static_cast<uint64_t>(map.size());
         ser << len;
         for(const auto& it : map) {
@@ -251,8 +251,8 @@ namespace cbdc {
     /// Deserializes an unordered map of key-value pairs.
     /// \see \ref cbdc::operator<<(serializer&, const std::unordered_map<K, V, Ts...>&)
     template<typename K, typename V, typename... Ts>
-    auto operator>>(serializer& deser, std::unordered_map<K, V, Ts...>& map)
-        -> serializer& {
+    auto operator>>(serializer& deser,
+                    std::unordered_map<K, V, Ts...>& map) -> serializer& {
         static_assert(sizeof(K) + sizeof(V) <= config::maximum_reservation,
                       "Unordered Map element size too large");
         auto len = uint64_t();
@@ -287,8 +287,8 @@ namespace cbdc {
     /// Serializes the count of items, and then each item statically-casted.
     /// \see \ref cbdc::operator<<(serializer&, T)
     template<typename K, typename... Ts>
-    auto operator<<(serializer& ser, const std::set<K, Ts...>& set)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const std::set<K, Ts...>& set) -> serializer& {
         auto len = static_cast<uint64_t>(set.size());
         ser << len;
         for(const auto& key : set) {
@@ -300,8 +300,8 @@ namespace cbdc {
     /// Deserializes a set of items.
     /// \see \ref cbdc::operator<<(serializer&, const std::set<K, Ts...>&)
     template<typename K, typename... Ts>
-    auto operator>>(serializer& deser, std::set<K, Ts...>& set)
-        -> serializer& {
+    auto operator>>(serializer& deser,
+                    std::set<K, Ts...>& set) -> serializer& {
         auto len = uint64_t();
         if(!(deser >> len)) {
             return deser;
@@ -320,8 +320,8 @@ namespace cbdc {
     /// Serializes the count of items, and then each item statically-casted.
     /// \see \ref cbdc::operator<<(serializer&, T)
     template<typename K, typename... Ts>
-    auto operator<<(serializer& ser, const std::unordered_set<K, Ts...>& set)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const std::unordered_set<K, Ts...>& set) -> serializer& {
         auto len = static_cast<uint64_t>(set.size());
         ser << len;
         for(const auto& key : set) {
@@ -333,8 +333,8 @@ namespace cbdc {
     /// Deserializes an unordered set of items.
     /// \see \ref cbdc::operator<<(serializer&, const std::unordered_set<K, Ts...>&)
     template<typename K, typename... Ts>
-    auto operator>>(serializer& deser, std::unordered_set<K, Ts...>& set)
-        -> serializer& {
+    auto operator>>(serializer& deser,
+                    std::unordered_set<K, Ts...>& set) -> serializer& {
         static_assert(sizeof(K) <= config::maximum_reservation,
                       "Unordered Set element size too large");
         auto len = uint64_t();
@@ -361,12 +361,12 @@ namespace cbdc {
     /// Serializes the variant index of the value, and then the value itself.
     /// \see \ref cbdc::operator<<(serializer&, T)
     template<typename... Ts>
-    auto operator<<(serializer& ser, const std::variant<Ts...>& var)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const std::variant<Ts...>& var) -> serializer& {
         using S = uint8_t;
         static_assert(
-            std::variant_size_v<std::remove_reference_t<decltype(var)>> < std::
-                numeric_limits<S>::max());
+            std::variant_size_v<std::remove_reference_t<decltype(var)>>
+            < std::numeric_limits<S>::max());
         auto idx = static_cast<S>(var.index());
         ser << idx;
         std::visit(
@@ -385,8 +385,8 @@ namespace cbdc {
                             serializer&> {
         using S = uint8_t;
         static_assert(
-            std::variant_size_v<std::remove_reference_t<decltype(var)>> < std::
-                numeric_limits<S>::max());
+            std::variant_size_v<std::remove_reference_t<decltype(var)>>
+            < std::numeric_limits<S>::max());
         S idx{};
         deser >> idx;
         auto var_idx = static_cast<size_t>(idx);

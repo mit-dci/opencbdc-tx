@@ -93,9 +93,8 @@ namespace cbdc::parsec::broker {
         /// Acquires a new ticket number to begin a transaction.
         /// \param result_callback function to call with begin result.
         /// \return true if the operation was initiated successfully.
-        [[nodiscard]] virtual auto begin(begin_callback_type result_callback)
-            -> bool
-            = 0;
+        [[nodiscard]] virtual auto
+        begin(begin_callback_type result_callback) -> bool = 0;
 
         /// Return type from a try lock operation. Either the value associated
         /// with the requested key, a broker error, or a shard error.
@@ -117,8 +116,7 @@ namespace cbdc::parsec::broker {
         try_lock(ticket_number_type ticket_number,
                  key_type key,
                  lock_type locktype,
-                 try_lock_callback_type result_callback) -> bool
-            = 0;
+                 try_lock_callback_type result_callback) -> bool = 0;
 
         /// Return type from a commit operation. Broker or shard error code, if
         /// applicable.
@@ -132,11 +130,10 @@ namespace cbdc::parsec::broker {
         /// \param state_updates state updates to commit.
         /// \param result_callback function to call with commit result.
         /// \return true if the operation was initiated successfully.
-        [[nodiscard]] virtual auto commit(ticket_number_type ticket_number,
-                                          state_update_type state_updates,
-                                          commit_callback_type result_callback)
-            -> bool
-            = 0;
+        [[nodiscard]] virtual auto
+        commit(ticket_number_type ticket_number,
+               state_update_type state_updates,
+               commit_callback_type result_callback) -> bool = 0;
 
         /// Return type from a finish operation. Broker error code, if
         /// applicable.
@@ -148,10 +145,9 @@ namespace cbdc::parsec::broker {
         /// \param ticket_number ticket number.
         /// \param result_callback function to call with finish result.
         /// \return true if the operation was initiated successfully.
-        [[nodiscard]] virtual auto finish(ticket_number_type ticket_number,
-                                          finish_callback_type result_callback)
-            -> bool
-            = 0;
+        [[nodiscard]] virtual auto
+        finish(ticket_number_type ticket_number,
+               finish_callback_type result_callback) -> bool = 0;
 
         /// Return type from a rollback operation. Broker or shard error code,
         /// if applicable.
@@ -167,8 +163,7 @@ namespace cbdc::parsec::broker {
         /// \return true if the operation was initiated successfully.
         [[nodiscard]] virtual auto
         rollback(ticket_number_type ticket_number,
-                 rollback_callback_type result_callback) -> bool
-            = 0;
+                 rollback_callback_type result_callback) -> bool = 0;
 
         /// Return type from a recover operation. Broker error code, if
         /// applicable.
@@ -182,8 +177,7 @@ namespace cbdc::parsec::broker {
         /// \param result_callback function to call with recovery result.
         /// \return true if the operation was initated successfully.
         [[nodiscard]] virtual auto
-        recover(recover_callback_type result_callback) -> bool
-            = 0;
+        recover(recover_callback_type result_callback) -> bool = 0;
 
         /// Get the highest ticket number that was used. This is not to be
         /// used for calculating a next ticket number, but is used to calculate

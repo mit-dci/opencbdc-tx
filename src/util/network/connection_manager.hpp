@@ -55,8 +55,8 @@ namespace cbdc::network {
         connection_manager() = default;
 
         connection_manager(const connection_manager&) = delete;
-        auto operator=(const connection_manager&)
-            -> connection_manager& = delete;
+        auto
+        operator=(const connection_manager&) -> connection_manager& = delete;
 
         connection_manager(connection_manager&&) = delete;
         auto operator=(connection_manager&&) -> connection_manager& = delete;
@@ -68,8 +68,8 @@ namespace cbdc::network {
         /// \param port port to use.
         /// \return true if creating the listener succeeded. False if port or IP is
         /// unavailable.
-        [[nodiscard]] auto listen(const ip_address& host, unsigned short port)
-            -> bool;
+        [[nodiscard]] auto listen(const ip_address& host,
+                                  unsigned short port) -> bool;
 
         /// Listens for and accepts inbound connections.
         /// \return true on a clean shutdown. False upon a socket accept failure.
@@ -117,10 +117,9 @@ namespace cbdc::network {
         /// \return the thread on which the handler will be called, or nullopt if any client connection fails. May be joined by callers.
         /// \note Calling this method and start_server on the same connection_manager
         ///       instance will result in two handler threads.
-        [[nodiscard]] auto
-        start_cluster_handler(const std::vector<endpoint_t>& endpoints,
-                              const packet_handler_t& handler)
-            -> std::optional<std::thread>;
+        [[nodiscard]] auto start_cluster_handler(
+            const std::vector<endpoint_t>& endpoints,
+            const packet_handler_t& handler) -> std::optional<std::thread>;
 
         /// Establishes a server at the specified endpoint which handles
         /// inbound traffic with the specified handler function.
@@ -143,8 +142,8 @@ namespace cbdc::network {
         /// using the specified handler function.
         /// \param handler function to handle packets from client connections.
         /// \return the thread on which the handler will be called.
-        [[nodiscard]] auto start_handler(const packet_handler_t& handler)
-            -> std::thread;
+        [[nodiscard]] auto
+        start_handler(const packet_handler_t& handler) -> std::thread;
 
         /// Shuts down the network listener and all existing peer connections.
         void close();
@@ -176,8 +175,8 @@ namespace cbdc::network {
         /// Send the provided data to an online peer managed by this network.
         /// \param data packet to send.
         /// \return flag to indicate whether the packet was sent to a peer.
-        [[nodiscard]] auto send_to_one(const std::shared_ptr<buffer>& data)
-            -> bool;
+        [[nodiscard]] auto
+        send_to_one(const std::shared_ptr<buffer>& data) -> bool;
 
         /// Serialize and send the provided data to an online peer managed by
         /// this network. Wraps connection_manager::send_to_one.

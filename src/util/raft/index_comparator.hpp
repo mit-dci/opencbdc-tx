@@ -17,9 +17,9 @@ namespace cbdc::raft {
         /// \param a first key.
         /// \param b second key.
         /// \return 0 if a == b. -1 if a < b. 1 if a > b.
-        [[nodiscard]] auto Compare(const leveldb::Slice& a,
-                                   const leveldb::Slice& b) const
-            -> int override;
+        [[nodiscard]] auto
+        Compare(const leveldb::Slice& a,
+                const leveldb::Slice& b) const -> int override;
 
         /// Return the comparator name.
         /// \return "IndexComparator".

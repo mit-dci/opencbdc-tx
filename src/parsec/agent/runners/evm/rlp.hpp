@@ -90,10 +90,11 @@ namespace cbdc {
         /// \tparam address or byte array type.
         /// \return byte array or address.
         template<typename T>
-        [[nodiscard]] auto value() const -> typename std::enable_if_t<
-            std::is_same<T, evmc::bytes32>::value
-                || std::is_same<T, evmc::address>::value,
-            T> {
+        [[nodiscard]] auto value() const ->
+            typename std::enable_if_t<
+                std::is_same<T, evmc::bytes32>::value
+                    || std::is_same<T, evmc::address>::value,
+                T> {
             auto res = T();
             auto buf = cbdc::buffer();
             buf.extend(sizeof(res.bytes));
@@ -123,8 +124,8 @@ namespace cbdc {
     /// before turning it into an rlp_value
     /// \return rlp_value of type buffer with the passed object as contents
     template<typename T>
-    auto make_rlp_value(const T& obj, bool trim_leading_zeroes = false)
-        -> rlp_value {
+    auto make_rlp_value(const T& obj,
+                        bool trim_leading_zeroes = false) -> rlp_value {
         auto pkt = make_buffer(obj);
         if(trim_leading_zeroes) {
             size_t start_idx = 0;
@@ -177,9 +178,8 @@ namespace cbdc {
     /// RLP encodes an access list
     /// \param access_list the access list to encode
     /// \return rlp_value of type rlp_value_array with the access list as contents
-    auto rlp_encode_access_list(
-        const parsec::agent::runner::evm_access_list& access_list)
-        -> rlp_value;
+    auto rlp_encode_access_list(const parsec::agent::runner::evm_access_list&
+                                    access_list) -> rlp_value;
 
     /// Decodes an access list from and rlp_value of type rlp_value_type::array
     /// \param rlp rlp_value to decode from

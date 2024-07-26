@@ -214,9 +214,9 @@ namespace cbdc::parsec::agent::runner {
         return n;
     }
 
-    auto evm_host::selfdestruct(const evmc::address& addr,
-                                const evmc::address& beneficiary) noexcept
-        -> bool {
+    auto
+    evm_host::selfdestruct(const evmc::address& addr,
+                           const evmc::address& beneficiary) noexcept -> bool {
         m_log->trace("EVM selfdestruct:", to_hex(addr), to_hex(beneficiary));
         // TODO: delete storage keys and code
         transfer(addr, beneficiary, evmc::uint256be{});
@@ -432,10 +432,9 @@ namespace cbdc::parsec::agent::runner {
         return make_buffer(tn_hash);
     }
 
-    auto evm_host::log_index_key(
-        evmc::address addr,
-        std::optional<interface::ticket_number_type> tn) const
-        -> cbdc::buffer {
+    auto evm_host::log_index_key(evmc::address addr,
+                                 std::optional<interface::ticket_number_type>
+                                     tn) const -> cbdc::buffer {
         if(!tn) {
             tn = m_ticket_number;
         }
@@ -640,9 +639,8 @@ namespace cbdc::parsec::agent::runner {
         return data;
     }
 
-    auto evm_host::get_account_code(const evmc::address& addr,
-                                    bool write) const
-        -> std::optional<evm_account_code> {
+    auto evm_host::get_account_code(const evmc::address& addr, bool write)
+        const -> std::optional<evm_account_code> {
         m_log->trace("EVM request account code:", to_hex(addr));
 
         if(is_precompile(addr)) {

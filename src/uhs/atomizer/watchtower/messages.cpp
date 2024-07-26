@@ -22,15 +22,15 @@ namespace cbdc {
         return packet >> bbh_res.m_height;
     }
 
-    auto operator<<(cbdc::serializer& packet,
-                    const cbdc::watchtower::request& req)
-        -> cbdc::serializer& {
+    auto
+    operator<<(cbdc::serializer& packet,
+               const cbdc::watchtower::request& req) -> cbdc::serializer& {
         return packet << req.m_req;
     }
 
-    auto operator<<(cbdc::serializer& packet,
-                    const cbdc::watchtower::response& res)
-        -> cbdc::serializer& {
+    auto
+    operator<<(cbdc::serializer& packet,
+               const cbdc::watchtower::response& res) -> cbdc::serializer& {
         return packet << res.m_resp;
     }
 }

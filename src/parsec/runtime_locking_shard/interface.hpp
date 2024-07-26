@@ -142,7 +142,7 @@ namespace cbdc::parsec::runtime_locking_shard {
                               lock_type locktype,
                               bool first_lock,
                               try_lock_callback_type result_callback) -> bool
-            = 0;
+                                                                         = 0;
 
         /// Return type from a prepare operation. An error, if applicable.
         using prepare_return_type = std::optional<shard_error>;
@@ -161,7 +161,7 @@ namespace cbdc::parsec::runtime_locking_shard {
                              broker_id_type broker_id,
                              state_update_type state_update,
                              prepare_callback_type result_callback) -> bool
-            = 0;
+                                                                       = 0;
 
         /// Return type from a commit operation. An error code, if applicable.
         using commit_return_type = std::optional<shard_error>;
@@ -175,8 +175,7 @@ namespace cbdc::parsec::runtime_locking_shard {
         /// \param result_callback function to call with the commit result.
         /// \return true if the operation was initiated successfully.
         virtual auto commit(ticket_number_type ticket_number,
-                            commit_callback_type result_callback) -> bool
-            = 0;
+                            commit_callback_type result_callback) -> bool = 0;
 
         /// Return type from a rollback operation. An error code, if
         /// applicable.
@@ -194,7 +193,7 @@ namespace cbdc::parsec::runtime_locking_shard {
         /// \return true if the operation was initiated successfully.
         virtual auto rollback(ticket_number_type ticket_number,
                               rollback_callback_type result_callback) -> bool
-            = 0;
+                                                                         = 0;
 
         /// Return type from a finish operation. An error code, if applicable.
         using finish_return_type = std::optional<shard_error>;
@@ -209,8 +208,7 @@ namespace cbdc::parsec::runtime_locking_shard {
         /// \param result_callback function to call with finish result.
         /// \return true if the operation was initiated successfully.
         virtual auto finish(ticket_number_type ticket_number,
-                            finish_callback_type result_callback) -> bool
-            = 0;
+                            finish_callback_type result_callback) -> bool = 0;
 
         /// Return type from a successful get tickets operation. A map of
         /// ticket numbers to their state.
@@ -228,10 +226,9 @@ namespace cbdc::parsec::runtime_locking_shard {
         /// \param broker_id broker ID.
         /// \param result_callback function to call with get tickets result.
         /// \return true if the operation was initiated successfully.
-        virtual auto get_tickets(broker_id_type broker_id,
-                                 get_tickets_callback_type result_callback)
-            -> bool
-            = 0;
+        virtual auto
+        get_tickets(broker_id_type broker_id,
+                    get_tickets_callback_type result_callback) -> bool = 0;
     };
 }
 

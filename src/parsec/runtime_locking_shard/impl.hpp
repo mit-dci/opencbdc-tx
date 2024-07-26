@@ -142,23 +142,22 @@ namespace cbdc::parsec::runtime_locking_shard {
             m_state;
         std::unordered_map<ticket_number_type, ticket_state_type> m_tickets;
 
-        auto
-        wound_tickets(key_type key,
-                      const std::vector<ticket_number_type>& blocking_tickets,
-                      ticket_number_type blocked_ticket)
-            -> pending_callbacks_list_type;
+        auto wound_tickets(
+            key_type key,
+            const std::vector<ticket_number_type>& blocking_tickets,
+            ticket_number_type blocked_ticket) -> pending_callbacks_list_type;
 
-        static auto get_waiting_on(ticket_number_type ticket_number,
-                                   lock_type locktype,
-                                   rw_lock_type& lock)
-            -> std::vector<ticket_number_type>;
+        static auto
+        get_waiting_on(ticket_number_type ticket_number,
+                       lock_type locktype,
+                       rw_lock_type& lock) -> std::vector<ticket_number_type>;
 
         auto release_locks(ticket_number_type ticket_number,
                            ticket_state_type& ticket)
             -> std::pair<pending_callbacks_list_type, key_set_type>;
 
-        auto acquire_locks(const key_set_type& keys)
-            -> pending_callbacks_list_type;
+        auto
+        acquire_locks(const key_set_type& keys) -> pending_callbacks_list_type;
 
         auto acquire_lock(const key_type& key,
                           pending_callbacks_list_type& callbacks) -> bool;

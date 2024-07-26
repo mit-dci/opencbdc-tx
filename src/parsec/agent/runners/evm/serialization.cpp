@@ -255,8 +255,8 @@ namespace cbdc::parsec::agent::runner {
         return std::nullopt;
     }
 
-    auto buffer_from_json(const Json::Value& val)
-        -> std::optional<cbdc::buffer> {
+    auto
+    buffer_from_json(const Json::Value& val) -> std::optional<cbdc::buffer> {
         if(!val.empty() && val.isString()) {
             auto val_str = val.asString();
             if(val_str.size() > 2) {
@@ -266,8 +266,8 @@ namespace cbdc::parsec::agent::runner {
         return std::nullopt;
     }
 
-    auto uint256be_or_default(const Json::Value& val, evmc::uint256be def)
-        -> evmc::uint256be {
+    auto uint256be_or_default(const Json::Value& val,
+                              evmc::uint256be def) -> evmc::uint256be {
         auto maybe_ui256 = uint256be_from_json(val);
         if(maybe_ui256) {
             return maybe_ui256.value();
@@ -275,8 +275,9 @@ namespace cbdc::parsec::agent::runner {
         return def;
     }
 
-    auto raw_tx_from_json(const Json::Value& param) -> std::optional<
-        std::shared_ptr<cbdc::parsec::agent::runner::evm_tx>> {
+    auto raw_tx_from_json(const Json::Value& param)
+        -> std::optional<
+            std::shared_ptr<cbdc::parsec::agent::runner::evm_tx>> {
         if(!param.isString()) {
             return std::nullopt;
         }
@@ -334,9 +335,9 @@ namespace cbdc::parsec::agent::runner {
         return tx;
     }
 
-    auto tx_to_json(cbdc::parsec::agent::runner::evm_tx& tx,
-                    const std::shared_ptr<secp256k1_context>& ctx)
-        -> Json::Value {
+    auto
+    tx_to_json(cbdc::parsec::agent::runner::evm_tx& tx,
+               const std::shared_ptr<secp256k1_context>& ctx) -> Json::Value {
         auto res = Json::Value();
         res["type"] = to_hex_trimmed(
             evmc::uint256be(static_cast<uint64_t>(tx.m_type)));

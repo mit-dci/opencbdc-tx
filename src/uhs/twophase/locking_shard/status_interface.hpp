@@ -28,16 +28,16 @@ namespace cbdc::locking_shard {
         /// \param uhs_id UHS ID to query.
         /// \return true if the UHS ID is unspent, or std::nullopt if the query
         ///         failed.
-        [[nodiscard]] virtual auto check_unspent(const hash_t& uhs_id)
-            -> std::optional<bool> = 0;
+        [[nodiscard]] virtual auto
+        check_unspent(const hash_t& uhs_id) -> std::optional<bool> = 0;
 
         /// Queries whether the given TX ID is confirmed in the cache of
         /// recently confirmed TX IDs.
         /// \param tx_id TX ID to query.
         /// \return true if the TX ID is present in the cache, or std::nullopt
         ///         if the query failed.
-        [[nodiscard]] virtual auto check_tx_id(const hash_t& tx_id)
-            -> std::optional<bool> = 0;
+        [[nodiscard]] virtual auto
+        check_tx_id(const hash_t& tx_id) -> std::optional<bool> = 0;
     };
 }
 

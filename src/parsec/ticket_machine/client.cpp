@@ -10,15 +10,14 @@
 namespace cbdc::parsec::ticket_machine::rpc {
     client::client(std::vector<network::endpoint_t> endpoints)
         : m_client(std::make_unique<decltype(m_client)::element_type>(
-            std::move(endpoints))) {}
+              std::move(endpoints))) {}
 
     auto client::init() -> bool {
         return m_client->init();
     }
 
-    auto
-    client::get_ticket_number(get_ticket_number_callback_type result_callback)
-        -> bool {
+    auto client::get_ticket_number(
+        get_ticket_number_callback_type result_callback) -> bool {
         auto num = ticket_number_type{};
         {
             std::unique_lock l(m_mut);

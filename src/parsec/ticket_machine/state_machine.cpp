@@ -53,8 +53,8 @@ namespace cbdc::parsec::ticket_machine {
         when_done(ret, except);
     }
 
-    auto state_machine::process_request(rpc::request /* req */)
-        -> rpc::response {
+    auto
+    state_machine::process_request(rpc::request /* req */) -> rpc::response {
         auto ret = rpc::response();
         [[maybe_unused]] auto success = m_ticket_machine->get_ticket_number(
             [&](interface::get_ticket_number_return_type tkts) {

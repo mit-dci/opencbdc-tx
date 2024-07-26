@@ -10,24 +10,24 @@
 #include "status_client.hpp"
 
 namespace cbdc {
-    auto operator<<(serializer& packet, const locking_shard::tx& tx)
-        -> serializer&;
+    auto operator<<(serializer& packet,
+                    const locking_shard::tx& tx) -> serializer&;
     auto operator>>(serializer& packet, locking_shard::tx& tx) -> serializer&;
 
-    auto operator<<(serializer& packet, const locking_shard::rpc::request& p)
-        -> serializer&;
-    auto operator>>(serializer& packet, locking_shard::rpc::request& p)
-        -> serializer&;
-
     auto operator<<(serializer& packet,
-                    const locking_shard::rpc::tx_status_request& p)
-        -> serializer&;
+                    const locking_shard::rpc::request& p) -> serializer&;
+    auto operator>>(serializer& packet,
+                    locking_shard::rpc::request& p) -> serializer&;
+
+    auto
+    operator<<(serializer& packet,
+               const locking_shard::rpc::tx_status_request& p) -> serializer&;
     auto operator>>(serializer& packet,
                     locking_shard::rpc::tx_status_request& p) -> serializer&;
 
-    auto operator<<(serializer& packet,
-                    const locking_shard::rpc::uhs_status_request& p)
-        -> serializer&;
+    auto
+    operator<<(serializer& packet,
+               const locking_shard::rpc::uhs_status_request& p) -> serializer&;
     auto operator>>(serializer& packet,
                     locking_shard::rpc::uhs_status_request& p) -> serializer&;
 }

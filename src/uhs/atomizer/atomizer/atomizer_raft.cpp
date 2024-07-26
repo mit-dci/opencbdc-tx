@@ -39,9 +39,9 @@ namespace cbdc::atomizer {
         return cls;
     }
 
-    auto atomizer_raft::make_request(const state_machine::request& r,
-                                     const raft::callback_type& result_fn)
-        -> bool {
+    auto
+    atomizer_raft::make_request(const state_machine::request& r,
+                                const raft::callback_type& result_fn) -> bool {
         auto new_log
             = make_buffer<state_machine::request, nuraft::ptr<nuraft::buffer>>(
                 r);

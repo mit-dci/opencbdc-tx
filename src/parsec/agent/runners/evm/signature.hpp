@@ -41,8 +41,8 @@ namespace cbdc::parsec::agent::runner {
     /// nullopt otherwise
     auto check_signature(const cbdc::parsec::agent::runner::evm_tx& tx,
                          const std::shared_ptr<secp256k1_context>& ctx,
-                         uint64_t chain_id = opencbdc_chain_id)
-        -> std::optional<evmc::address>;
+                         uint64_t chain_id
+                         = opencbdc_chain_id) -> std::optional<evmc::address>;
 
     /// Calculates the hash for creating / validating the signature
     /// \param tx transaction to calculate the sighash for

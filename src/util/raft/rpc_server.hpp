@@ -37,9 +37,9 @@ namespace cbdc::raft::rpc {
         using response_callback_type =
             typename cbdc::rpc::raw_async_server::response_callback_type;
 
-        auto request_handler(buffer request_buf,
-                             response_callback_type response_callback)
-            -> bool {
+        auto
+        request_handler(buffer request_buf,
+                        response_callback_type response_callback) -> bool {
             if(!m_impl->is_leader()) {
                 return false;
             }

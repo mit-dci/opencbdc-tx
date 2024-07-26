@@ -62,9 +62,9 @@ namespace cbdc {
     auto operator<<(serializer& ser,
                     const parsec::runtime_locking_shard::shard_error& err)
         -> serializer&;
-    auto operator>>(serializer& deser,
-                    parsec::runtime_locking_shard::shard_error& err)
-        -> serializer&;
+    auto
+    operator>>(serializer& deser,
+               parsec::runtime_locking_shard::shard_error& err) -> serializer&;
 
     auto operator<<(serializer& ser,
                     const parsec::runtime_locking_shard::wounded_details& det)
@@ -90,10 +90,10 @@ namespace cbdc {
         parsec::runtime_locking_shard::rpc::replicated_get_tickets_request&
             req) -> serializer&;
 
-    auto operator<<(serializer& ser,
-                    const parsec::runtime_locking_shard::
-                        replicated_shard_interface::ticket_type& t)
-        -> serializer&;
+    auto
+    operator<<(serializer& ser,
+               const parsec::runtime_locking_shard::
+                   replicated_shard_interface::ticket_type& t) -> serializer&;
     auto operator>>(
         serializer& deser,
         parsec::runtime_locking_shard::replicated_shard_interface::ticket_type&

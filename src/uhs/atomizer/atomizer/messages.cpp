@@ -6,8 +6,8 @@
 #include "messages.hpp"
 
 namespace cbdc::atomizer {
-    auto tx_notify_request::operator==(const tx_notify_request& rhs) const
-        -> bool {
+    auto
+    tx_notify_request::operator==(const tx_notify_request& rhs) const -> bool {
         return (rhs.m_tx == m_tx) && (rhs.m_attestations == m_attestations)
             && (rhs.m_block_height == m_block_height);
     }

@@ -40,7 +40,7 @@ namespace cbdc::coordinator {
         ///         transaction.
         virtual auto execute_transaction(transaction::compact_tx tx,
                                          callback_type result_callback) -> bool
-            = 0;
+                                                                           = 0;
     };
 }
 

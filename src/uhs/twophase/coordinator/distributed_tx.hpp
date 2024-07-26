@@ -147,8 +147,8 @@ namespace cbdc::coordinator {
       private:
         [[nodiscard]] auto prepare() -> std::optional<std::vector<bool>>;
 
-        [[nodiscard]] auto commit(const std::vector<bool>& complete_txs)
-            -> bool;
+        [[nodiscard]] auto
+        commit(const std::vector<bool>& complete_txs) -> bool;
 
         auto discard() -> bool;
 

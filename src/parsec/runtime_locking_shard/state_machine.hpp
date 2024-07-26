@@ -46,8 +46,8 @@ namespace cbdc::parsec::runtime_locking_shard {
         /// Returns the replicated shard implementation managed by the state
         /// machine.
         /// \return pointer to the shard implementation.
-        [[nodiscard]] auto get_shard() const
-            -> std::shared_ptr<replicated_shard>;
+        [[nodiscard]] auto
+        get_shard() const -> std::shared_ptr<replicated_shard>;
 
       private:
         auto process_request(const rpc::replicated_request& req)

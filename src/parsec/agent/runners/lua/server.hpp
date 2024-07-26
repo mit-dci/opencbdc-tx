@@ -44,9 +44,9 @@ namespace cbdc::parsec::agent::rpc {
       private:
         std::unique_ptr<server_type> m_srv;
 
-        auto request_handler(request req,
-                             server_type::response_callback_type callback)
-            -> bool;
+        auto
+        request_handler(request req,
+                        server_type::response_callback_type callback) -> bool;
     };
 }
 

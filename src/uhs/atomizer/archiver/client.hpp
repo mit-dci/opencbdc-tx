@@ -37,8 +37,8 @@ namespace cbdc::archiver {
         /// Retrieves the block at the given height from the archiver.
         /// \param height height of the block to retrieve.
         /// \return block at the given height or std::nullopt if not found.
-        auto get_block(uint64_t height)
-            -> std::optional<cbdc::atomizer::block>;
+        auto
+        get_block(uint64_t height) -> std::optional<cbdc::atomizer::block>;
 
       private:
         network::tcp_socket m_sock;

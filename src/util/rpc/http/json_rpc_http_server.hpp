@@ -43,8 +43,8 @@ namespace cbdc::rpc {
         auto operator=(const json_rpc_http_server&)
             -> json_rpc_http_server& = delete;
         json_rpc_http_server(json_rpc_http_server&&) = delete;
-        auto operator=(json_rpc_http_server&&)
-            -> json_rpc_http_server& = delete;
+        auto
+        operator=(json_rpc_http_server&&) -> json_rpc_http_server& = delete;
 
         /// Register the application request handler function with the server.
         void register_handler_callback(handler_callback_type handler_callback);
@@ -85,8 +85,8 @@ namespace cbdc::rpc {
                              void** con_cls) -> MHD_Result;
 
         static auto send_cors_response(request* request_info) -> bool;
-        static auto send_response(std::string response, request* request_info)
-            -> bool;
+        static auto send_response(std::string response,
+                                  request* request_info) -> bool;
 
         auto handle_request(request* request_info) -> bool;
 

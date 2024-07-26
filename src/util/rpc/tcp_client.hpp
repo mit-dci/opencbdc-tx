@@ -68,8 +68,8 @@ namespace cbdc::rpc {
         ///                    single endpoint.
         /// \return false if there is a fatal connection error, true if the
         /// client is connected and ready and the response handler is started.
-        [[nodiscard]] auto init(std::optional<bool> error_fatal = std::nullopt)
-            -> bool {
+        [[nodiscard]] auto init(std::optional<bool> error_fatal
+                                = std::nullopt) -> bool {
             if(!error_fatal) {
                 error_fatal = m_server_endpoints.size() <= 1;
             }
@@ -149,8 +149,8 @@ namespace cbdc::rpc {
             return response_future.get();
         }
 
-        auto response_handler(network::message_t&& msg)
-            -> std::optional<buffer> {
+        auto
+        response_handler(network::message_t&& msg) -> std::optional<buffer> {
             auto resp
                 = client<Request, Response>::deserialize_response(*msg.m_pkt);
             if(resp.has_value()) {

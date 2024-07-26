@@ -63,8 +63,8 @@ namespace cbdc {
         return success;
     }
 
-    auto twophase_client::check_tx_id(const hash_t& tx_id)
-        -> std::optional<bool> {
+    auto
+    twophase_client::check_tx_id(const hash_t& tx_id) -> std::optional<bool> {
         return m_shard_status_client.check_tx_id(tx_id);
     }
 

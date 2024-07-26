@@ -31,8 +31,8 @@ namespace cbdc::locking_shard::rpc {
             cbdc::rpc::blocking_server<status_request, status_response>>
             m_srv;
 
-        auto request_handler(status_request req)
-            -> std::optional<status_response>;
+        auto
+        request_handler(status_request req) -> std::optional<status_response>;
     };
 }
 

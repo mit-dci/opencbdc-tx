@@ -82,9 +82,8 @@ namespace cbdc {
         return vec;
     }
 
-    auto rlp_encode_access_list(
-        const parsec::agent::runner::evm_access_list& access_list)
-        -> rlp_value {
+    auto rlp_encode_access_list(const parsec::agent::runner::evm_access_list&
+                                    access_list) -> rlp_value {
         auto rlp_access_list
             = rlp_value(rlp_value_type::array); // empty by default
         if(!access_list.empty()) {

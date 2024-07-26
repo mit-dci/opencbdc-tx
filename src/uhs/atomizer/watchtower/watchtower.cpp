@@ -116,9 +116,8 @@ namespace cbdc::watchtower {
         return states;
     }
 
-    auto
-    watchtower::handle_status_update_request(const status_update_request& req)
-        -> std::unique_ptr<response> {
+    auto watchtower::handle_status_update_request(
+        const status_update_request& req) -> std::unique_ptr<response> {
         std::unordered_map<hash_t,
                            std::vector<status_update_state>,
                            hashing::const_sip_hash<hash_t>>
@@ -195,7 +194,7 @@ namespace cbdc::watchtower {
 
     request::request(serializer& pkt)
         : m_req(get_variant<status_update_request, best_block_height_request>(
-            pkt)) {}
+              pkt)) {}
 
     auto request::payload() const -> const request_t& {
         return m_req;

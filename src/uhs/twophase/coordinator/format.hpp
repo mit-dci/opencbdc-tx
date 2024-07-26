@@ -13,20 +13,20 @@ namespace cbdc {
     auto operator<<(serializer& ser,
                     const coordinator::state_machine::coordinator_state& s)
         -> serializer&;
-    auto operator>>(serializer& deser,
-                    coordinator::controller::coordinator_state& s)
-        -> serializer&;
+    auto
+    operator>>(serializer& deser,
+               coordinator::controller::coordinator_state& s) -> serializer&;
 
-    auto operator<<(serializer& ser,
-                    const coordinator::controller::sm_command& c)
-        -> serializer&;
+    auto
+    operator<<(serializer& ser,
+               const coordinator::controller::sm_command& c) -> serializer&;
 
     auto operator<<(serializer& ser,
                     const coordinator::controller::sm_command_header& c)
         -> serializer&;
-    auto operator>>(serializer& deser,
-                    coordinator::controller::sm_command_header& c)
-        -> serializer&;
+    auto
+    operator>>(serializer& deser,
+               coordinator::controller::sm_command_header& c) -> serializer&;
 }
 
 #endif // OPENCBDC_TX_SRC_COORDINATOR_FORMAT_H_

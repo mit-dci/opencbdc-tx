@@ -51,11 +51,11 @@ namespace cbdc {
     auto operator>>(cbdc::serializer& packet,
                     cbdc::watchtower::tx_error_inputs_spent& err)
         -> cbdc::serializer&;
-    auto operator<<(cbdc::serializer& packet,
-                    const cbdc::watchtower::tx_error& err)
-        -> cbdc::serializer&;
-    auto operator>>(cbdc::serializer& packet, cbdc::watchtower::tx_error& err)
-        -> cbdc::serializer&;
+    auto
+    operator<<(cbdc::serializer& packet,
+               const cbdc::watchtower::tx_error& err) -> cbdc::serializer&;
+    auto operator>>(cbdc::serializer& packet,
+                    cbdc::watchtower::tx_error& err) -> cbdc::serializer&;
 }
 
 namespace cbdc::watchtower {
@@ -79,10 +79,9 @@ namespace cbdc::watchtower {
         cbdc::operator<<(cbdc::serializer& packet,
                          const cbdc::watchtower::tx_error_inputs_dne& err)
             -> cbdc::serializer&;
-        friend auto
-        cbdc::operator>>(cbdc::serializer& packet,
-                         cbdc::watchtower::tx_error_inputs_dne& err)
-            -> cbdc::serializer&;
+        friend auto cbdc::operator>>(
+            cbdc::serializer& packet,
+            cbdc::watchtower::tx_error_inputs_dne& err) -> cbdc::serializer&;
 
         auto operator==(const tx_error_inputs_dne& rhs) const -> bool;
 
@@ -137,10 +136,9 @@ namespace cbdc::watchtower {
         cbdc::operator<<(cbdc::serializer& packet,
                          const cbdc::watchtower::tx_error_inputs_spent& err)
             -> cbdc::serializer&;
-        friend auto
-        cbdc::operator>>(cbdc::serializer& packet,
-                         cbdc::watchtower::tx_error_inputs_spent& err)
-            -> cbdc::serializer&;
+        friend auto cbdc::operator>>(
+            cbdc::serializer& packet,
+            cbdc::watchtower::tx_error_inputs_spent& err) -> cbdc::serializer&;
 
         auto operator==(const tx_error_inputs_spent& rhs) const -> bool;
 
@@ -157,8 +155,8 @@ namespace cbdc::watchtower {
 
         /// Returns the UHS IDs of the inputs that caused this error.
         /// \return input UHS ID set.
-        [[nodiscard]] auto input_uhs_ids() const
-            -> std::unordered_set<hash_t, hashing::null>;
+        [[nodiscard]] auto
+        input_uhs_ids() const -> std::unordered_set<hash_t, hashing::null>;
 
       private:
         std::unordered_set<hash_t, hashing::null> m_input_uhs_ids;
@@ -170,9 +168,9 @@ namespace cbdc::watchtower {
         friend auto cbdc::operator<<(cbdc::serializer& packet,
                                      const cbdc::watchtower::tx_error& err)
             -> cbdc::serializer&;
-        friend auto cbdc::operator>>(cbdc::serializer& packet,
-                                     cbdc::watchtower::tx_error& err)
-            -> cbdc::serializer&;
+        friend auto
+        cbdc::operator>>(cbdc::serializer& packet,
+                         cbdc::watchtower::tx_error& err) -> cbdc::serializer&;
 
         auto operator==(const tx_error& rhs) const -> bool;
 

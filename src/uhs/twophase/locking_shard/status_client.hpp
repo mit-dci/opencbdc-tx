@@ -51,16 +51,16 @@ namespace cbdc::locking_shard::rpc {
         /// \param uhs_id UHS ID to query.
         /// \return true if the UHS ID is unspent, or std::nullopt if the request
         ///         failed.
-        [[nodiscard]] auto check_unspent(const hash_t& uhs_id)
-            -> std::optional<bool> override;
+        [[nodiscard]] auto
+        check_unspent(const hash_t& uhs_id) -> std::optional<bool> override;
 
         /// Queries the shard cluster responsible for the given TX ID for
         /// whether it is in the confirmed TX IDs cache.
         /// \param tx_id TX ID to query.
         /// \return true if the cache contains the TX ID, or std::nullopt if
         ///         the request failed.
-        [[nodiscard]] auto check_tx_id(const hash_t& tx_id)
-            -> std::optional<bool> override;
+        [[nodiscard]] auto
+        check_tx_id(const hash_t& tx_id) -> std::optional<bool> override;
 
       private:
         std::vector<std::unique_ptr<

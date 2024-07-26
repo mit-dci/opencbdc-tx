@@ -55,8 +55,8 @@ namespace cbdc {
         /// Sends the given transaction directly to the atomizer cluster.
         /// \param mint_tx transaction to send.
         /// \return true if sending the transaction was successful.
-        auto send_mint_tx(const transaction::full_tx& mint_tx)
-            -> bool override;
+        auto
+        send_mint_tx(const transaction::full_tx& mint_tx) -> bool override;
 
       private:
         cbdc::network::connection_manager m_atomizer_network;

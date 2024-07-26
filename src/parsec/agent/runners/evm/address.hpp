@@ -41,17 +41,17 @@ namespace cbdc::parsec::agent::runner {
     /// \param key key to calculate the address for
     /// \param ctx secp256k1 context to use
     /// \return the address corresponding to the passed private key
-    auto eth_addr(const cbdc::privkey_t& key,
-                  const std::shared_ptr<secp256k1_context>& ctx)
-        -> evmc::address;
+    auto
+    eth_addr(const cbdc::privkey_t& key,
+             const std::shared_ptr<secp256k1_context>& ctx) -> evmc::address;
 
     /// Calculates an eth address from a public key
     /// \param pk key to calculate the address for
     /// \param ctx secp256k1 context to use
     /// \return the address corresponding to the passed public key
-    auto eth_addr(const std::unique_ptr<secp256k1_pubkey>& pk,
-                  const std::shared_ptr<secp256k1_context>& ctx)
-        -> evmc::address;
+    auto
+    eth_addr(const std::unique_ptr<secp256k1_pubkey>& pk,
+             const std::shared_ptr<secp256k1_context>& ctx) -> evmc::address;
 }
 
 #endif

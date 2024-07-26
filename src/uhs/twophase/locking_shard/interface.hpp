@@ -63,14 +63,13 @@ namespace cbdc::locking_shard {
         ///               operation.
         /// \return true if the apply operation succeeded.
         virtual auto apply_outputs(std::vector<bool>&& complete_txs,
-                                   const hash_t& dtx_id) -> bool
-            = 0;
+                                   const hash_t& dtx_id) -> bool = 0;
 
         /// Returns whether a given hash is within the shard's range.
         /// \param h hash to check.
         /// \return true if the hash is within the shard's range.
-        [[nodiscard]] virtual auto hash_in_shard_range(const hash_t& h) const
-            -> bool;
+        [[nodiscard]] virtual auto
+        hash_in_shard_range(const hash_t& h) const -> bool;
 
         /// Discards any cached information about a given distributed
         /// transaction.

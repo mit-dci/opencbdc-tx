@@ -121,7 +121,7 @@ namespace cbdc::parsec::agent::runner {
         /// Ticket number that ran this TX - needed to map
         /// to pretend blocks
         cbdc::parsec::agent::runner::interface::ticket_number_type
-            m_ticket_number {};
+            m_ticket_number{};
         /// Timestamp of the transaction - needed to provide
         /// a timestamp in pretend blocks
         uint64_t m_timestamp{};
@@ -134,7 +134,7 @@ namespace cbdc::parsec::agent::runner {
     /// the block" (executed by that ticket)
     struct evm_pretend_block {
         /// Ticket number
-        interface::ticket_number_type m_ticket_number {};
+        interface::ticket_number_type m_ticket_number{};
         /// Transactions executed by the ticket
         std::vector<evm_tx_receipt> m_transactions{};
     };
@@ -148,10 +148,10 @@ namespace cbdc::parsec::agent::runner {
         std::vector<evmc::bytes32> m_topics{};
         /// The start of the block range to query logs for
         cbdc::parsec::agent::runner::interface::ticket_number_type
-            m_from_block {};
+            m_from_block{};
         /// The end of the block range to query logs for
-        cbdc::parsec::agent::runner::interface::ticket_number_type m_to_block {
-        };
+        cbdc::parsec::agent::runner::interface::ticket_number_type
+            m_to_block{};
     };
 
     /// Index data for evm logs. This is the value stored under a key
@@ -162,7 +162,7 @@ namespace cbdc::parsec::agent::runner {
     /// related to a particular address
     struct evm_log_index {
         /// Ticket number that emitted the logs
-        interface::ticket_number_type m_ticket_number {};
+        interface::ticket_number_type m_ticket_number{};
         /// TXID that emitted the logs
         cbdc::hash_t m_txid{};
         /// The logs that were emitted

@@ -36,11 +36,11 @@ namespace cbdc::parsec::agent::rpc {
         /// \param is_readonly_run true if agent should skip writing any state changes.
         /// \param result_callback function to call with execution result.
         /// \return true if the request was sent successfully.
-        auto exec(runtime_locking_shard::key_type function,
-                  parameter_type param,
-                  bool is_readonly_run,
-                  const interface::exec_callback_type& result_callback)
-            -> bool;
+        auto
+        exec(runtime_locking_shard::key_type function,
+             parameter_type param,
+             bool is_readonly_run,
+             const interface::exec_callback_type& result_callback) -> bool;
 
       private:
         std::unique_ptr<cbdc::rpc::tcp_client<request, response>> m_client;

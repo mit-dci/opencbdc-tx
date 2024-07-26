@@ -285,8 +285,8 @@ namespace cbdc::config {
     /// \param range shard hash prefix range.
     /// \param val hash to check.
     /// \return true if the hash prefix is within the inclusive range.
-    auto hash_in_shard_range(const shard_range_t& range, const hash_t& val)
-        -> bool;
+    auto hash_in_shard_range(const shard_range_t& range,
+                             const hash_t& val) -> bool;
 
     /// Calculates the sub-range of total seeded outputs for a particular load
     /// generator ID.
@@ -294,8 +294,8 @@ namespace cbdc::config {
     /// \param gen_id ID of load generator for which to calculate the
     ///               sub-range. Must be less than the load generator count.
     /// \return pair representing start and end of the seed range.
-    auto loadgen_seed_range(const options& opts, size_t gen_id)
-        -> std::pair<size_t, size_t>;
+    auto loadgen_seed_range(const options& opts,
+                            size_t gen_id) -> std::pair<size_t, size_t>;
 
     /// Converts c-args from an executable's main function into a vector of
     /// strings.
@@ -334,15 +334,15 @@ namespace cbdc::config {
         /// \param key key to retrieve.
         /// \return value associated with the key or std::nullopt if the value
         ///         was not a string or does not exist.
-        [[nodiscard]] auto get_string(const std::string& key) const
-            -> std::optional<std::string>;
+        [[nodiscard]] auto
+        get_string(const std::string& key) const -> std::optional<std::string>;
 
         /// Return the value for the given key if its value is a long.
         /// \param key key to retrieve.
         /// \return value associated with the key, or std::nullopt if the value
         ///         was not a long or doesn't exist.
-        [[nodiscard]] auto get_ulong(const std::string& key) const
-            -> std::optional<size_t>;
+        [[nodiscard]] auto
+        get_ulong(const std::string& key) const -> std::optional<size_t>;
 
         /// Return the value for the given key if its value is an endpoint.
         /// \param key key to retrieve.
@@ -362,18 +362,18 @@ namespace cbdc::config {
         /// \param key key to retrieve.
         /// \return value associated with the key, or std::nullopt if the value
         ///         was not a double or does not exist.
-        [[nodiscard]] auto get_decimal(const std::string& key) const
-            -> std::optional<double>;
+        [[nodiscard]] auto
+        get_decimal(const std::string& key) const -> std::optional<double>;
 
       private:
         using value_t = std::variant<std::string, size_t, double>;
 
-        [[nodiscard]] auto find_or_env(const std::string& key) const
-            -> std::optional<value_t>;
+        [[nodiscard]] auto
+        find_or_env(const std::string& key) const -> std::optional<value_t>;
 
         template<typename T>
-        [[nodiscard]] auto get_val(const std::string& key) const
-            -> std::optional<T> {
+        [[nodiscard]] auto
+        get_val(const std::string& key) const -> std::optional<T> {
             const auto it = find_or_env(key);
             if(it) {
                 const auto* val = std::get_if<T>(&it.value());
@@ -387,8 +387,8 @@ namespace cbdc::config {
 
         void init(std::istream& stream);
 
-        [[nodiscard]] static auto parse_value(const std::string& val)
-            -> value_t;
+        [[nodiscard]] static auto
+        parse_value(const std::string& val) -> value_t;
 
         std::map<std::string, value_t> m_options;
     };

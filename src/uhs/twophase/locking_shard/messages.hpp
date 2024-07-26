@@ -17,8 +17,8 @@ namespace cbdc::locking_shard::rpc {
     using apply_params = std::vector<bool>;
     /// Empty type for discard command parameters
     struct discard_params {
-        constexpr auto operator==(const discard_params& /* rhs */) const
-            -> bool {
+        constexpr auto
+        operator==(const discard_params& /* rhs */) const -> bool {
             return true;
         };
     };
@@ -40,15 +40,15 @@ namespace cbdc::locking_shard::rpc {
     using lock_response = std::vector<bool>;
     /// Empty type for the apply response
     struct apply_response {
-        constexpr auto operator==(const apply_response& /* rhs */) const
-            -> bool {
+        constexpr auto
+        operator==(const apply_response& /* rhs */) const -> bool {
             return true;
         };
     };
     /// Empty type for the discard response
     struct discard_response {
-        constexpr auto operator==(const discard_response& /* rhs */) const
-            -> bool {
+        constexpr auto
+        operator==(const discard_response& /* rhs */) const -> bool {
             return true;
         };
     };

@@ -41,14 +41,14 @@ namespace cbdc::raft {
         /// Return the last log entry in the log store. Returns an empty log
         /// entry at index zero if the log store is empty.
         /// \return log entry.
-        [[nodiscard]] auto last_entry() const
-            -> nuraft::ptr<nuraft::log_entry> override;
+        [[nodiscard]] auto
+        last_entry() const -> nuraft::ptr<nuraft::log_entry> override;
 
         /// Append the given log entry to the end of the log.
         /// \param entry log entry to append.
         /// \return index of the appended log entry.
-        auto append(nuraft::ptr<nuraft::log_entry>& entry)
-            -> uint64_t override;
+        auto
+        append(nuraft::ptr<nuraft::log_entry>& entry) -> uint64_t override;
 
         /// Write a log entry at the given index.
         /// \param index log index at which to write the entry.
@@ -64,15 +64,15 @@ namespace cbdc::raft {
         /// \param start first log entry to retrieve.
         /// \param end last log entry to retrieve (exclusive).
         /// \return list of log entries.
-        [[nodiscard]] auto log_entries(uint64_t start, uint64_t end)
-            -> log_entries_t override;
+        [[nodiscard]] auto log_entries(uint64_t start,
+                                       uint64_t end) -> log_entries_t override;
 
         /// Return the log entry at the given index. Returns a null log entry
         /// if there is no log entry at the given index.
         /// \param index log index.
         /// \return log entry.
-        [[nodiscard]] auto entry_at(uint64_t index)
-            -> nuraft::ptr<nuraft::log_entry> override;
+        [[nodiscard]] auto
+        entry_at(uint64_t index) -> nuraft::ptr<nuraft::log_entry> override;
 
         /// Return the log term associated with the log entry at the given
         /// index.

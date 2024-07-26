@@ -49,8 +49,8 @@ namespace cbdc::rpc {
         auto operator=(const json_rpc_http_client&)
             -> json_rpc_http_client& = delete;
         json_rpc_http_client(json_rpc_http_client&&) = delete;
-        auto operator=(json_rpc_http_client&&)
-            -> json_rpc_http_client& = delete;
+        auto
+        operator=(json_rpc_http_client&&) -> json_rpc_http_client& = delete;
 
         /// Type alias for the response callback function.
         using callback_type = std::function<void(std::optional<Json::Value>)>;
@@ -95,9 +95,10 @@ namespace cbdc::rpc {
 
         // size_t m_requests_started{};
 
-        static auto
-        write_data(void* ptr, size_t size, size_t nmemb, struct transfer* t)
-            -> size_t;
+        static auto write_data(void* ptr,
+                               size_t size,
+                               size_t nmemb,
+                               struct transfer* t) -> size_t;
 
         static auto socket_callback(CURL* handle,
                                     curl_socket_t s,

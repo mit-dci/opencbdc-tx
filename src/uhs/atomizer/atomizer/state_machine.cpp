@@ -275,8 +275,8 @@ namespace cbdc::atomizer {
         return m_snapshot_dir + "/" + m_tmp_file;
     }
 
-    auto state_machine::read_snapshot(uint64_t idx)
-        -> std::optional<snapshot> {
+    auto
+    state_machine::read_snapshot(uint64_t idx) -> std::optional<snapshot> {
         std::shared_lock<std::shared_mutex> l(m_snp_mut);
         auto open_fail_fatal = false;
         if(idx == 0) {

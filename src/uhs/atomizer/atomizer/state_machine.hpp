@@ -89,13 +89,13 @@ namespace cbdc::atomizer {
         /// the snapshot referenced by the given snapshot metadata.
         /// \param s snapshot metadata.
         /// \return true if the operation successfully applied the snapshot.
-        [[nodiscard]] auto apply_snapshot(nuraft::snapshot& s)
-            -> bool override;
+        [[nodiscard]] auto
+        apply_snapshot(nuraft::snapshot& s) -> bool override;
 
         /// Returns the most recent snapshot metadata.
         /// \return snapshot metadata, or nullptr if there is no snapshot.
-        [[nodiscard]] auto last_snapshot()
-            -> nuraft::ptr<nuraft::snapshot> override;
+        [[nodiscard]] auto
+        last_snapshot() -> nuraft::ptr<nuraft::snapshot> override;
 
         /// Returns the index of the most recently committed log entry.
         /// \return log index.
@@ -130,13 +130,13 @@ namespace cbdc::atomizer {
         };
 
       private:
-        [[nodiscard]] auto get_snapshot_path(uint64_t idx) const
-            -> std::string;
+        [[nodiscard]] auto
+        get_snapshot_path(uint64_t idx) const -> std::string;
 
         [[nodiscard]] auto get_tmp_path() const -> std::string;
 
-        [[nodiscard]] auto read_snapshot(uint64_t idx)
-            -> std::optional<snapshot>;
+        [[nodiscard]] auto
+        read_snapshot(uint64_t idx) -> std::optional<snapshot>;
 
         static constexpr auto m_tmp_file = "tmp";
 

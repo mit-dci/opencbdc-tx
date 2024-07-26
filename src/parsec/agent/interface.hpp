@@ -66,8 +66,8 @@ namespace cbdc::parsec::agent {
 
         /// Return the key of the function bytecode managed by this agent.
         /// \return function bytecode key.
-        [[nodiscard]] auto get_function() const
-            -> runtime_locking_shard::key_type;
+        [[nodiscard]] auto
+        get_function() const -> runtime_locking_shard::key_type;
 
         /// Return the function parameter managed by this agent.
         /// \return function parameter.

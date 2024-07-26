@@ -11,7 +11,7 @@
 namespace cbdc::parsec::agent::rpc {
     client::client(std::vector<network::endpoint_t> endpoints)
         : m_client(std::make_unique<decltype(m_client)::element_type>(
-            std::move(endpoints))) {}
+              std::move(endpoints))) {}
 
     auto client::init() -> bool {
         return m_client->init();

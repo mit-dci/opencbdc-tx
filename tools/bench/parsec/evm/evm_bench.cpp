@@ -75,8 +75,8 @@ auto evm_bench::gen_tx(evmc::uint256be nonce,
     return tx_hex;
 }
 
-auto evm_bench::deploy_erc20(evmc::uint256be nonce, cbdc::privkey_t skey)
-    -> std::string {
+auto evm_bench::deploy_erc20(evmc::uint256be nonce,
+                             cbdc::privkey_t skey) -> std::string {
     auto tx = cbdc::parsec::agent::runner::evm_tx();
     tx.m_gas_limit = evmc::uint256be(0xffffffff);
     tx.m_gas_price = evmc::uint256be(0);

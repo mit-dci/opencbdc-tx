@@ -122,16 +122,17 @@ namespace cbdc::transaction::validation {
     auto check_tx(const transaction::full_tx& tx) -> std::optional<tx_error>;
     auto check_tx_structure(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
-    auto check_input_structure(const transaction::input& inp) -> std::optional<
-        std::pair<input_error_code, std::optional<output_error_code>>>;
+    auto check_input_structure(const transaction::input& inp)
+        -> std::optional<
+            std::pair<input_error_code, std::optional<output_error_code>>>;
     auto check_in_out_set(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
     // TODO: check input assumptions with flags for whether preconditions have
     //       already been checked.
-    auto check_witness(const transaction::full_tx& tx, size_t idx)
-        -> std::optional<witness_error_code>;
-    auto check_p2pk_witness(const transaction::full_tx& tx, size_t idx)
-        -> std::optional<witness_error_code>;
+    auto check_witness(const transaction::full_tx& tx,
+                       size_t idx) -> std::optional<witness_error_code>;
+    auto check_p2pk_witness(const transaction::full_tx& tx,
+                            size_t idx) -> std::optional<witness_error_code>;
     auto check_p2pk_witness_len(const transaction::full_tx& tx, size_t idx)
         -> std::optional<witness_error_code>;
     auto check_p2pk_witness_commitment(const transaction::full_tx& tx,
@@ -146,8 +147,8 @@ namespace cbdc::transaction::validation {
         -> std::optional<tx_error>;
     auto check_witness_count(const transaction::full_tx& tx)
         -> std::optional<tx_error>;
-    auto check_input_set(const transaction::full_tx& tx)
-        -> std::optional<tx_error>;
+    auto
+    check_input_set(const transaction::full_tx& tx) -> std::optional<tx_error>;
     auto check_output_value(const transaction::output& out)
         -> std::optional<output_error_code>;
     auto get_p2pk_witness_commitment(const pubkey_t& payee) -> hash_t;

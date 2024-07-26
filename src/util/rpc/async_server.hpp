@@ -127,9 +127,8 @@ namespace cbdc::rpc {
 
         using server_type = server<Request, Response, InBuffer, OutBuffer>;
 
-        static constexpr auto raw_mode
-            = std::is_same_v<Request,
-                             buffer> && std::is_same_v<Response, buffer>;
+        static constexpr auto raw_mode = std::is_same_v<Request, buffer>
+                                      && std::is_same_v<Response, buffer>;
     };
 
     /// \brief Asynchronous pass-through RPC server.

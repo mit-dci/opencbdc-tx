@@ -13,8 +13,8 @@ namespace cbdc::watchtower {
         pkt >> *this;
     }
 
-    auto tx_error_sync::operator==(const tx_error_sync& /* rhs */) const
-        -> bool {
+    auto
+    tx_error_sync::operator==(const tx_error_sync& /* rhs */) const -> bool {
         return true;
     }
 
@@ -38,9 +38,8 @@ namespace cbdc::watchtower {
         pkt >> *this;
     }
 
-    auto
-    tx_error_stxo_range::operator==(const tx_error_stxo_range& /* rhs */) const
-        -> bool {
+    auto tx_error_stxo_range::operator==(
+        const tx_error_stxo_range& /* rhs */) const -> bool {
         return true;
     }
 
@@ -48,9 +47,8 @@ namespace cbdc::watchtower {
         pkt >> *this;
     }
 
-    auto
-    tx_error_incomplete::operator==(const tx_error_incomplete& /* rhs */) const
-        -> bool {
+    auto tx_error_incomplete::operator==(
+        const tx_error_incomplete& /* rhs */) const -> bool {
         return true;
     }
 
@@ -67,9 +65,8 @@ namespace cbdc::watchtower {
         std::unordered_set<hash_t, hashing::null> input_uhs_ids)
         : m_input_uhs_ids(std::move(input_uhs_ids)) {}
 
-    auto
-    tx_error_inputs_spent::operator==(const tx_error_inputs_spent& rhs) const
-        -> bool {
+    auto tx_error_inputs_spent::operator==(
+        const tx_error_inputs_spent& rhs) const -> bool {
         return rhs.m_input_uhs_ids == m_input_uhs_ids;
     }
 
@@ -164,14 +161,14 @@ namespace cbdc {
         return packet;
     }
 
-    auto operator<<(cbdc::serializer& packet,
-                    const cbdc::watchtower::tx_error& err)
-        -> cbdc::serializer& {
+    auto
+    operator<<(cbdc::serializer& packet,
+               const cbdc::watchtower::tx_error& err) -> cbdc::serializer& {
         return packet << err.m_tx_id << *err.m_info;
     }
 
-    auto operator>>(cbdc::serializer& packet, cbdc::watchtower::tx_error& err)
-        -> cbdc::serializer& {
+    auto operator>>(cbdc::serializer& packet,
+                    cbdc::watchtower::tx_error& err) -> cbdc::serializer& {
         packet >> err.m_tx_id;
         err.m_info = std::make_shared<decltype(err.m_info)::element_type>(
             get_variant<watchtower::tx_error_sync,

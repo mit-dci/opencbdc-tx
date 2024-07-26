@@ -8,19 +8,19 @@
 #include "util/serialization/format.hpp"
 
 namespace cbdc {
-    auto operator<<(serializer& ser,
-                    const parsec::agent::runner::evm_account& acc)
-        -> serializer& {
+    auto
+    operator<<(serializer& ser,
+               const parsec::agent::runner::evm_account& acc) -> serializer& {
         return ser << acc.m_balance << acc.m_nonce;
     }
 
-    auto operator>>(serializer& deser, parsec::agent::runner::evm_account& acc)
-        -> serializer& {
+    auto operator>>(serializer& deser,
+                    parsec::agent::runner::evm_account& acc) -> serializer& {
         return deser >> acc.m_balance >> acc.m_nonce;
     }
 
-    auto operator<<(serializer& ser, const evmc::address& addr)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const evmc::address& addr) -> serializer& {
         ser.write(addr.bytes, sizeof(addr.bytes));
         return ser;
     }
@@ -40,12 +40,12 @@ namespace cbdc {
         return deser;
     }
 
-    auto operator<<(serializer& ser, const parsec::agent::runner::evm_sig& s)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const parsec::agent::runner::evm_sig& s) -> serializer& {
         return ser << s.m_v << s.m_r << s.m_s;
     }
-    auto operator>>(serializer& deser, parsec::agent::runner::evm_sig& s)
-        -> serializer& {
+    auto operator>>(serializer& deser,
+                    parsec::agent::runner::evm_sig& s) -> serializer& {
         return deser >> s.m_v >> s.m_r >> s.m_s;
     }
 
@@ -55,30 +55,30 @@ namespace cbdc {
         return ser << at.m_address << at.m_storage_keys;
     }
 
-    auto operator>>(serializer& deser,
-                    parsec::agent::runner::evm_access_tuple& at)
-        -> serializer& {
+    auto
+    operator>>(serializer& deser,
+               parsec::agent::runner::evm_access_tuple& at) -> serializer& {
         return deser >> at.m_address >> at.m_storage_keys;
     }
 
-    auto operator<<(serializer& ser, const parsec::agent::runner::evm_tx& tx)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const parsec::agent::runner::evm_tx& tx) -> serializer& {
         return ser << tx.m_type << tx.m_to << tx.m_value << tx.m_nonce
                    << tx.m_gas_price << tx.m_gas_limit << tx.m_gas_tip_cap
                    << tx.m_gas_fee_cap << tx.m_input << tx.m_access_list
                    << tx.m_sig;
     }
 
-    auto operator>>(serializer& deser, parsec::agent::runner::evm_tx& tx)
-        -> serializer& {
+    auto operator>>(serializer& deser,
+                    parsec::agent::runner::evm_tx& tx) -> serializer& {
         return deser >> tx.m_type >> tx.m_to >> tx.m_value >> tx.m_nonce
             >> tx.m_gas_price >> tx.m_gas_limit >> tx.m_gas_tip_cap
             >> tx.m_gas_fee_cap >> tx.m_input >> tx.m_access_list >> tx.m_sig;
     }
 
-    auto operator<<(serializer& ser,
-                    const parsec::agent::runner::evm_dryrun_tx& tx)
-        -> serializer& {
+    auto
+    operator<<(serializer& ser,
+               const parsec::agent::runner::evm_dryrun_tx& tx) -> serializer& {
         return ser << tx.m_from << tx.m_tx;
     }
 
@@ -87,19 +87,19 @@ namespace cbdc {
         return deser >> tx.m_from >> tx.m_tx;
     }
 
-    auto operator<<(serializer& ser, const parsec::agent::runner::evm_log& l)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const parsec::agent::runner::evm_log& l) -> serializer& {
         return ser << l.m_addr << l.m_data << l.m_topics;
     }
 
-    auto operator>>(serializer& deser, parsec::agent::runner::evm_log& l)
-        -> serializer& {
+    auto operator>>(serializer& deser,
+                    parsec::agent::runner::evm_log& l) -> serializer& {
         return deser >> l.m_addr >> l.m_data >> l.m_topics;
     }
 
-    auto operator<<(serializer& ser,
-                    const parsec::agent::runner::evm_tx_receipt& r)
-        -> serializer& {
+    auto
+    operator<<(serializer& ser,
+               const parsec::agent::runner::evm_tx_receipt& r) -> serializer& {
         return ser << r.m_tx << r.m_create_address << r.m_gas_used << r.m_logs
                    << r.m_output_data << r.m_ticket_number << r.m_timestamp
                    << r.m_success;
@@ -112,30 +112,30 @@ namespace cbdc {
             >> r.m_timestamp >> r.m_success;
     }
 
-    auto operator<<(serializer& ser, const parsec::agent::runner::code_key& k)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const parsec::agent::runner::code_key& k) -> serializer& {
         return ser << k.m_addr << uint8_t{};
     }
 
-    auto operator>>(serializer& deser, parsec::agent::runner::code_key& k)
-        -> serializer& {
+    auto operator>>(serializer& deser,
+                    parsec::agent::runner::code_key& k) -> serializer& {
         uint8_t b{};
         return deser >> k.m_addr >> b;
     }
 
-    auto operator<<(serializer& ser,
-                    const parsec::agent::runner::storage_key& k)
-        -> serializer& {
+    auto
+    operator<<(serializer& ser,
+               const parsec::agent::runner::storage_key& k) -> serializer& {
         return ser << k.m_addr << k.m_key;
     }
-    auto operator>>(serializer& deser, parsec::agent::runner::storage_key& k)
-        -> serializer& {
+    auto operator>>(serializer& deser,
+                    parsec::agent::runner::storage_key& k) -> serializer& {
         return deser >> k.m_addr >> k.m_key;
     }
 
-    auto operator>>(serializer& deser,
-                    parsec::agent::runner::evm_pretend_block& b)
-        -> serializer& {
+    auto
+    operator>>(serializer& deser,
+               parsec::agent::runner::evm_pretend_block& b) -> serializer& {
         return deser >> b.m_ticket_number >> b.m_transactions;
     }
     auto operator<<(serializer& ser,
@@ -149,9 +149,9 @@ namespace cbdc {
         return deser >> lq.m_addresses >> lq.m_from_block >> lq.m_to_block
             >> lq.m_topics;
     }
-    auto operator<<(serializer& ser,
-                    const parsec::agent::runner::evm_log_query& lq)
-        -> serializer& {
+    auto
+    operator<<(serializer& ser,
+               const parsec::agent::runner::evm_log_query& lq) -> serializer& {
         return ser << lq.m_addresses << lq.m_from_block << lq.m_to_block
                    << lq.m_topics;
     }

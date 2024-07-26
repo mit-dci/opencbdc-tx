@@ -61,10 +61,9 @@ namespace cbdc::sentinel_2pc {
         /// \param result_callback function to call with the attestation or
         ///                        std::nullopt if the transaction was invalid.
         /// \return true.
-        auto
-        validate_transaction(transaction::full_tx tx,
-                             validate_result_callback_type result_callback)
-            -> bool override;
+        auto validate_transaction(
+            transaction::full_tx tx,
+            validate_result_callback_type result_callback) -> bool override;
 
       private:
         static void result_handler(std::optional<bool> res,

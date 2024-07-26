@@ -66,8 +66,8 @@ namespace cbdc::shard {
         [[nodiscard]] auto best_block_height() const -> uint64_t;
 
       private:
-        [[nodiscard]] auto is_output_on_shard(const hash_t& uhs_hash) const
-            -> bool;
+        [[nodiscard]] auto
+        is_output_on_shard(const hash_t& uhs_hash) const -> bool;
 
         void update_snapshot();
 

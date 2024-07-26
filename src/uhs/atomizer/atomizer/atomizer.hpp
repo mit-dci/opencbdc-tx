@@ -91,9 +91,9 @@ namespace cbdc::atomizer {
         /// if there are no such errors.
         /// \return a pair containing the resultant block and errors to forward
         ///         to the watchtower if necessary.
-        [[nodiscard]] auto make_block()
-            -> std::pair<cbdc::atomizer::block,
-                         std::vector<watchtower::tx_error>>;
+        [[nodiscard]] auto
+        make_block() -> std::pair<cbdc::atomizer::block,
+                                  std::vector<watchtower::tx_error>>;
 
         /// Returns the number of complete transactions waiting to be
         /// included in the next block.
@@ -130,8 +130,8 @@ namespace cbdc::atomizer {
         uint64_t m_best_height{};
         size_t m_spent_cache_depth;
 
-        [[nodiscard]] auto get_notification_offset(uint64_t block_height) const
-            -> uint64_t;
+        [[nodiscard]] auto
+        get_notification_offset(uint64_t block_height) const -> uint64_t;
 
         [[nodiscard]] auto
         check_notification_offset(uint64_t height_offset,

@@ -166,9 +166,8 @@ namespace cbdc::watchtower {
         /// Composes a response to a status update best block height request.
         /// \param req a best block height request from a client.
         /// \return the response to send to the client or nullopt if request is invalid.
-        auto
-        handle_best_block_height_request(const best_block_height_request& req)
-            -> std::unique_ptr<response>;
+        auto handle_best_block_height_request(
+            const best_block_height_request& req) -> std::unique_ptr<response>;
 
       private:
         block_cache m_bc;

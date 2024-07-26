@@ -74,8 +74,8 @@ namespace cbdc {
         return ret.str();
     }
 
-    auto buffer::to_hex_prefixed(const std::string& prefix) const
-        -> std::string {
+    auto
+    buffer::to_hex_prefixed(const std::string& prefix) const -> std::string {
         auto res = std::string();
         res.append(prefix);
         res.append(to_hex());

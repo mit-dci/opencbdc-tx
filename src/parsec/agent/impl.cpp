@@ -188,11 +188,10 @@ namespace cbdc::parsec::agent {
         res_cb(std::move(res));
     }
 
-    auto
-    impl::do_try_lock_request(broker::key_type key,
-                              broker::lock_type locktype,
-                              broker::interface::try_lock_callback_type res_cb)
-        -> bool {
+    auto impl::do_try_lock_request(
+        broker::key_type key,
+        broker::lock_type locktype,
+        broker::interface::try_lock_callback_type res_cb) -> bool {
         // TODO: permissions for keys
         std::unique_lock l(m_mut);
         assert(m_ticket_number.has_value());

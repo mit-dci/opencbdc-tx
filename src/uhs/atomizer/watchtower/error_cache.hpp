@@ -44,8 +44,8 @@ namespace cbdc::watchtower {
         /// Checks the cache for an error associated with the given UHS ID.
         /// \param uhs_id the UHS ID to check.
         /// \return error information, or nullopt if not found.
-        auto check_uhs_id(const hash_t& uhs_id) const
-            -> std::optional<tx_error>;
+        auto
+        check_uhs_id(const hash_t& uhs_id) const -> std::optional<tx_error>;
 
       private:
         size_t m_k_errs;

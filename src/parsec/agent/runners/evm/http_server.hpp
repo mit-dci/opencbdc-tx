@@ -88,43 +88,38 @@ namespace cbdc::parsec::agent::rpc {
             Json::Value params,
             const server_type::result_callback_type& callback) -> bool;
 
-        static auto
-        handle_chain_id(const Json::Value& params,
-                        const server_type::result_callback_type& callback)
-            -> bool;
+        static auto handle_chain_id(
+            const Json::Value& params,
+            const server_type::result_callback_type& callback) -> bool;
 
-        auto handle_call(Json::Value params,
-                         const server_type::result_callback_type& callback)
-            -> bool;
+        auto
+        handle_call(Json::Value params,
+                    const server_type::result_callback_type& callback) -> bool;
 
         auto handle_send_transaction(
             Json::Value params,
             const server_type::result_callback_type& callback) -> bool;
 
-        static auto
-        handle_estimate_gas(const Json::Value& params,
-                            const server_type::result_callback_type& callback)
-            -> bool;
+        static auto handle_estimate_gas(
+            const Json::Value& params,
+            const server_type::result_callback_type& callback) -> bool;
 
         static auto handle_client_version(
             const Json::Value& params,
             const server_type::result_callback_type& callback) -> bool;
-        static auto
-        handle_gas_price(const Json::Value& params,
-                         const server_type::result_callback_type& callback)
-            -> bool;
+        static auto handle_gas_price(
+            const Json::Value& params,
+            const server_type::result_callback_type& callback) -> bool;
 
         auto handle_get_code(Json::Value params,
                              const server_type::result_callback_type& callback)
             -> bool;
-        auto
-        handle_get_balance(Json::Value params,
-                           const server_type::result_callback_type& callback)
-            -> bool;
-        static auto
-        handle_accounts(const Json::Value& params,
-                        const server_type::result_callback_type& callback)
-            -> bool;
+        auto handle_get_balance(
+            Json::Value params,
+            const server_type::result_callback_type& callback) -> bool;
+        static auto handle_accounts(
+            const Json::Value& params,
+            const server_type::result_callback_type& callback) -> bool;
 
         auto handle_get_transaction_by_hash(
             Json::Value params,
@@ -134,30 +129,25 @@ namespace cbdc::parsec::agent::rpc {
             Json::Value params,
             const server_type::result_callback_type& callback) -> bool;
 
-        auto
-        handle_not_supported(Json::Value params,
-                             const server_type::result_callback_type& callback)
-            -> bool;
+        auto handle_not_supported(
+            Json::Value params,
+            const server_type::result_callback_type& callback) -> bool;
 
-        auto
-        handle_block_number(const Json::Value& params,
-                            const server_type::result_callback_type& callback)
-            -> bool;
-        auto
-        handle_get_block(Json::Value params,
-                         const server_type::result_callback_type& callback)
-            -> bool;
+        auto handle_block_number(
+            const Json::Value& params,
+            const server_type::result_callback_type& callback) -> bool;
+        auto handle_get_block(
+            Json::Value params,
+            const server_type::result_callback_type& callback) -> bool;
         auto handle_get_block_txcount(
             Json::Value params,
             const server_type::result_callback_type& callback) -> bool;
-        auto
-        handle_get_block_tx(Json::Value params,
-                            const server_type::result_callback_type& callback)
-            -> bool;
-        auto
-        handle_fee_history(Json::Value params,
-                           const server_type::result_callback_type& callback)
-            -> bool;
+        auto handle_get_block_tx(
+            Json::Value params,
+            const server_type::result_callback_type& callback) -> bool;
+        auto handle_fee_history(
+            Json::Value params,
+            const server_type::result_callback_type& callback) -> bool;
         auto handle_get_logs(Json::Value params,
                              const server_type::result_callback_type& callback)
             -> bool;
@@ -165,9 +155,9 @@ namespace cbdc::parsec::agent::rpc {
             Json::Value params,
             const server_type::result_callback_type& callback) -> bool;
 
-        auto handle_sha3(Json::Value params,
-                         const server_type::result_callback_type& callback)
-            -> bool;
+        auto
+        handle_sha3(Json::Value params,
+                    const server_type::result_callback_type& callback) -> bool;
 
         static auto
         handle_error(const Json::Value& params,
@@ -194,11 +184,11 @@ namespace cbdc::parsec::agent::rpc {
                             const server_type::result_callback_type& callback)
             -> std::optional<parsec::agent::runner::evm_log_query>;
 
-        auto fetch_block(Json::Value params,
-                         const server_type::result_callback_type& callback,
-                         const std::function<void(interface::exec_return_type,
-                                                  cbdc::buffer)>& res_cb)
-            -> bool;
+        auto
+        fetch_block(Json::Value params,
+                    const server_type::result_callback_type& callback,
+                    const std::function<void(interface::exec_return_type,
+                                             cbdc::buffer)>& res_cb) -> bool;
 
         auto
         exec_tx(const server_type::result_callback_type& json_ret_callback,
@@ -208,11 +198,10 @@ namespace cbdc::parsec::agent::rpc {
                 const std::function<void(interface::exec_return_type)>&
                     res_success_cb) -> bool;
 
-        auto
-        handle_unsupported(const std::string& method,
-                           const Json::Value& params,
-                           const server_type::result_callback_type& callback)
-            -> bool;
+        auto handle_unsupported(
+            const std::string& method,
+            const Json::Value& params,
+            const server_type::result_callback_type& callback) -> bool;
 
         auto
         handle_supported(const std::string& method,

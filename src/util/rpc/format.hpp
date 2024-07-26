@@ -14,8 +14,8 @@ namespace cbdc {
     auto operator>>(serializer& deser, rpc::header& header) -> serializer&;
 
     template<typename T>
-    auto operator<<(serializer& ser, const rpc::request<T>& req)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const rpc::request<T>& req) -> serializer& {
         return ser << req.m_header << req.m_payload;
     }
 
@@ -25,8 +25,8 @@ namespace cbdc {
     }
 
     template<typename T>
-    auto operator<<(serializer& ser, const rpc::response<T>& resp)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const rpc::response<T>& resp) -> serializer& {
         return ser << resp.m_header << resp.m_payload;
     }
 

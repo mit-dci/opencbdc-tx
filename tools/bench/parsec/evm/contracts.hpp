@@ -19,11 +19,11 @@ namespace cbdc::parsec::evm_contracts {
         = 12; // in ABIs addresses are also 32 bytes
     auto data_erc20_deploy() -> cbdc::buffer;
 
-    auto data_erc20_allowance(evmc::address owner, evmc::address spender)
-        -> cbdc::buffer;
+    auto data_erc20_allowance(evmc::address owner,
+                              evmc::address spender) -> cbdc::buffer;
 
-    auto data_erc20_approve(evmc::address spender, evmc::uint256be amount)
-        -> cbdc::buffer;
+    auto data_erc20_approve(evmc::address spender,
+                            evmc::uint256be amount) -> cbdc::buffer;
 
     auto data_erc20_balance_of(evmc::address account) -> cbdc::buffer;
 
@@ -33,9 +33,9 @@ namespace cbdc::parsec::evm_contracts {
                                        evmc::uint256be subtracted_value)
         -> cbdc::buffer;
 
-    auto data_erc20_increase_allowance(evmc::address spender,
-                                       evmc::uint256be added_value)
-        -> cbdc::buffer;
+    auto
+    data_erc20_increase_allowance(evmc::address spender,
+                                  evmc::uint256be added_value) -> cbdc::buffer;
 
     auto data_erc20_name() -> cbdc::buffer;
 
@@ -43,8 +43,8 @@ namespace cbdc::parsec::evm_contracts {
 
     auto data_erc20_total_supply() -> cbdc::buffer;
 
-    auto data_erc20_transfer(evmc::address to, evmc::uint256be amount)
-        -> cbdc::buffer;
+    auto data_erc20_transfer(evmc::address to,
+                             evmc::uint256be amount) -> cbdc::buffer;
 
     auto data_erc20_transfer_from(evmc::address from,
                                   evmc::address to,

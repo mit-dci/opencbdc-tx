@@ -79,8 +79,8 @@ namespace cbdc::atomizer {
         };
 
         struct attestation_cmp {
-            auto operator()(const attestation& a, const attestation& b) const
-                -> bool;
+            auto operator()(const attestation& a,
+                            const attestation& b) const -> bool;
         };
 
         using attestation_set = std::

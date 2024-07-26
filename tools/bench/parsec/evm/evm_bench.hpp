@@ -102,8 +102,8 @@ class evm_bench {
                 cbdc::privkey_t skey,
                 evmc::uint256be value) -> std::string;
 
-    auto deploy_erc20(evmc::uint256be nonce, cbdc::privkey_t skey)
-        -> std::string;
+    auto deploy_erc20(evmc::uint256be nonce,
+                      cbdc::privkey_t skey) -> std::string;
 
     auto send_erc20(evmc::address erc20_addr,
                     evmc::uint256be nonce,

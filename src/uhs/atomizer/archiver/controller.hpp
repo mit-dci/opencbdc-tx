@@ -108,8 +108,8 @@ namespace cbdc::archiver {
         /// \param height the height of the block to retrieve.
         /// \return the block at the specified height, or std::nullopt if the
         ///         database does not contain a block at that height.
-        auto get_block(uint64_t height)
-            -> std::optional<cbdc::atomizer::block>;
+        auto
+        get_block(uint64_t height) -> std::optional<cbdc::atomizer::block>;
 
         /// \brief Returns true if this archiver is receiving blocks
         /// from the atomizer.

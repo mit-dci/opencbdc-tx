@@ -38,9 +38,9 @@ namespace cbdc::coordinator::rpc {
         ///                        available.
         /// \return true if the RPC request was sent to the cluster
         ///         successfully.
-        auto execute_transaction(transaction::compact_tx tx,
-                                 callback_type result_callback)
-            -> bool override;
+        auto
+        execute_transaction(transaction::compact_tx tx,
+                            callback_type result_callback) -> bool override;
 
       private:
         std::unique_ptr<cbdc::rpc::tcp_client<request, response>> m_client;

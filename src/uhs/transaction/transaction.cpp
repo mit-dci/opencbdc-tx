@@ -84,8 +84,9 @@ namespace cbdc::transaction {
         return ret;
     }
 
-    auto input_from_output(const full_tx& tx, size_t i, const hash_t& txid)
-        -> std::optional<input> {
+    auto input_from_output(const full_tx& tx,
+                           size_t i,
+                           const hash_t& txid) -> std::optional<input> {
         input ret;
         if(i >= tx.m_outputs.size()) {
             return std::nullopt;
@@ -96,8 +97,8 @@ namespace cbdc::transaction {
         return ret;
     }
 
-    auto input_from_output(const full_tx& tx, size_t i)
-        -> std::optional<input> {
+    auto input_from_output(const full_tx& tx,
+                           size_t i) -> std::optional<input> {
         const auto id = tx_id(tx);
         return input_from_output(tx, i, id);
     }
@@ -134,8 +135,8 @@ namespace cbdc::transaction {
         }
     }
 
-    auto compact_tx::sign(secp256k1_context* ctx, const privkey_t& key) const
-        -> sentinel_attestation {
+    auto compact_tx::sign(secp256k1_context* ctx,
+                          const privkey_t& key) const -> sentinel_attestation {
         auto payload = hash();
         auto pubkey = pubkey_from_privkey(key, ctx);
         secp256k1_keypair keypair{};

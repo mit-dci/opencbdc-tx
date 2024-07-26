@@ -16,8 +16,8 @@
 #include <future>
 #include <iostream>
 
-auto mint_command(cbdc::client& client, const std::vector<std::string>& args)
-    -> bool {
+auto mint_command(cbdc::client& client,
+                  const std::vector<std::string>& args) -> bool {
     static constexpr auto min_mint_arg_count = 7;
     if(args.size() < min_mint_arg_count) {
         std::cerr << "Mint requires args <n outputs> <output value>"
@@ -62,8 +62,8 @@ void print_tx_result(
     }
 }
 
-auto send_command(cbdc::client& client, const std::vector<std::string>& args)
-    -> bool {
+auto send_command(cbdc::client& client,
+                  const std::vector<std::string>& args) -> bool {
     static constexpr auto min_send_arg_count = 7;
     if(args.size() < min_send_arg_count) {
         std::cerr << "Send requires args <value> <pubkey>" << std::endl;
@@ -89,8 +89,8 @@ auto send_command(cbdc::client& client, const std::vector<std::string>& args)
     return true;
 }
 
-auto fan_command(cbdc::client& client, const std::vector<std::string>& args)
-    -> bool {
+auto fan_command(cbdc::client& client,
+                 const std::vector<std::string>& args) -> bool {
     static constexpr auto min_fan_arg_count = 8;
     if(args.size() < min_fan_arg_count) {
         std::cerr << "Fan requires args <count> <value> <pubkey>" << std::endl;

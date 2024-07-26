@@ -35,8 +35,8 @@ namespace cbdc::parsec::runtime_locking_shard::rpc {
 
         using callback_type = std::function<void(std::optional<response>)>;
 
-        auto handler_callback(const request& req, callback_type callback)
-            -> bool;
+        auto handler_callback(const request& req,
+                              callback_type callback) -> bool;
 
         void handle_prepare(interface::prepare_return_type ret,
                             const rpc::prepare_request& msg,

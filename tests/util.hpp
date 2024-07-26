@@ -30,15 +30,15 @@ namespace cbdc::test {
     /// Allows hashing \ref compact_transaction s (e.g., for storing them
     /// in a std::unordered_set
     struct compact_transaction_hasher {
-        auto operator()(const compact_transaction& tx) const noexcept
-            -> size_t;
+        auto
+        operator()(const compact_transaction& tx) const noexcept -> size_t;
     };
 
     /// Specialization of Block to allow transactions to be compared as
     /// cbdc::test::compact_transactions.
     struct block : cbdc::atomizer::block {
-        auto operator==(const cbdc::atomizer::block& tx) const noexcept
-            -> bool;
+        auto
+        operator==(const cbdc::atomizer::block& tx) const noexcept -> bool;
     };
 
     /// Maintains a connection to the specified set of endpoints and provides a
@@ -60,8 +60,8 @@ namespace cbdc::test {
         /// Connect to the specified endpoints.
         /// \param endpoints to which to connect.
         /// \return false if any connections failed.
-        auto connect(const std::vector<network::endpoint_t>& endpoints)
-            -> bool {
+        auto
+        connect(const std::vector<network::endpoint_t>& endpoints) -> bool {
             if constexpr(std::is_same_v<std::decay_t<T>, std::nullopt_t>) {
                 return m_client_net.cluster_connect(endpoints, true);
             } else {

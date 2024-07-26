@@ -64,11 +64,10 @@ namespace cbdc::parsec::agent::rpc {
         return handle_unsupported(method, params, callback);
     }
 
-    auto http_server::handle_supported(
-        const std::string& method,
-        const Json::Value& params,
-        const server_type::result_callback_type& callback)
-        -> std::optional<bool> {
+    auto http_server::handle_supported(const std::string& method,
+                                       const Json::Value& params,
+                                       const server_type::result_callback_type&
+                                           callback) -> std::optional<bool> {
         if(method == "eth_sendRawTransaction") {
             return handle_send_raw_transaction(params, callback);
         }
@@ -143,11 +142,10 @@ namespace cbdc::parsec::agent::rpc {
         return std::nullopt;
     }
 
-    auto http_server::handle_static(
-        const std::string& method,
-        const Json::Value& params,
-        const server_type::result_callback_type& callback)
-        -> std::optional<bool> {
+    auto http_server::handle_static(const std::string& method,
+                                    const Json::Value& params,
+                                    const server_type::result_callback_type&
+                                        callback) -> std::optional<bool> {
         if(method == "eth_chainId" || method == "net_version") {
             return handle_chain_id(params, callback);
         }
@@ -1106,10 +1104,9 @@ namespace cbdc::parsec::agent::rpc {
             });
     }
 
-    auto
-    http_server::handle_sha3(Json::Value params,
-                             const server_type::result_callback_type& callback)
-        -> bool {
+    auto http_server::handle_sha3(
+        Json::Value params,
+        const server_type::result_callback_type& callback) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isString()) {
             m_log->warn("Invalid parameters to sha3");
             return false;
@@ -1278,10 +1275,9 @@ namespace cbdc::parsec::agent::rpc {
         return true;
     }
 
-    auto
-    http_server::handle_call(Json::Value params,
-                             const server_type::result_callback_type& callback)
-        -> bool {
+    auto http_server::handle_call(
+        Json::Value params,
+        const server_type::result_callback_type& callback) -> bool {
         if(!params.isArray() || params.empty() || !params[0].isObject()) {
             m_log->warn("Parameter to call is invalid");
             auto ret = Json::Value();

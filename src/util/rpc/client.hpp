@@ -50,10 +50,10 @@ namespace cbdc::rpc {
         ///                call should not timeout.
         /// \return response from the RPC, or std::nullopt if the call timed out
         ///         or produced an error.
-        [[nodiscard]] auto call(Request request_payload,
-                                std::chrono::milliseconds timeout
-                                = std::chrono::milliseconds::zero())
-            -> std::optional<Response> {
+        [[nodiscard]] auto
+        call(Request request_payload,
+             std::chrono::milliseconds timeout
+             = std::chrono::milliseconds::zero()) -> std::optional<Response> {
             auto [request_buf, request_id]
                 = make_request(std::move(request_payload));
             auto resp = call_raw(std::move(request_buf), request_id, timeout);
@@ -119,8 +119,7 @@ namespace cbdc::rpc {
 
         virtual auto call_raw(cbdc::buffer request_buf,
                               request_id_type request_id,
-                              raw_callback_type response_callback) -> bool
-            = 0;
+                              raw_callback_type response_callback) -> bool = 0;
 
         auto make_request(Request request_payload)
             -> std::pair<cbdc::buffer, request_id_type> {

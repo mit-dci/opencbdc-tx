@@ -53,8 +53,8 @@ namespace cbdc::locking_shard {
         }
     }
 
-    auto locking_shard::read_preseed_file(const std::string& preseed_file)
-        -> bool {
+    auto
+    locking_shard::read_preseed_file(const std::string& preseed_file) -> bool {
         if(std::filesystem::exists(preseed_file)) {
             auto in = std::ifstream(preseed_file, std::ios::binary);
             in.seekg(0, std::ios::end);
@@ -185,15 +185,15 @@ namespace cbdc::locking_shard {
         m_running = false;
     }
 
-    auto locking_shard::check_unspent(const hash_t& uhs_id)
-        -> std::optional<bool> {
+    auto
+    locking_shard::check_unspent(const hash_t& uhs_id) -> std::optional<bool> {
         std::shared_lock<std::shared_mutex> l(m_mut);
         return m_uhs.find(uhs_id) != m_uhs.end()
             || m_locked.find(uhs_id) != m_locked.end();
     }
 
-    auto locking_shard::check_tx_id(const hash_t& tx_id)
-        -> std::optional<bool> {
+    auto
+    locking_shard::check_tx_id(const hash_t& tx_id) -> std::optional<bool> {
         return m_completed_txs.contains(tx_id);
     }
 }

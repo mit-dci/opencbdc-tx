@@ -24,8 +24,8 @@
 namespace cbdc {
 
     namespace address {
-        auto decode(const std::string& addr_str)
-            -> std::optional<cbdc::hash_t> {
+        auto
+        decode(const std::string& addr_str) -> std::optional<cbdc::hash_t> {
             // TODO: if/when bech32m is merged into Bitcoin Core, switch to
             // that.
             //       see: https://github.com/bitcoin/bitcoin/pull/20861
@@ -92,8 +92,8 @@ namespace cbdc {
         return ss.str();
     }
 
-    auto client::mint(size_t n_outputs, uint32_t output_val)
-        -> transaction::full_tx {
+    auto client::mint(size_t n_outputs,
+                      uint32_t output_val) -> transaction::full_tx {
         auto mint_tx = m_wallet.mint_new_coins(n_outputs, output_val);
         import_transaction(mint_tx);
 

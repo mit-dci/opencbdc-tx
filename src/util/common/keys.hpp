@@ -32,8 +32,8 @@ namespace cbdc {
     /// \param privkey private key for which to generate the public key.
     /// \param ctx the secp context to use.
     /// \return the public key.
-    auto pubkey_from_privkey(const privkey_t& privkey, secp256k1_context* ctx)
-        -> pubkey_t;
+    auto pubkey_from_privkey(const privkey_t& privkey,
+                             secp256k1_context* ctx) -> pubkey_t;
 
     /// Converts an std::array into an std::vector of the same size via copy.
     /// \param arr the array to convert.

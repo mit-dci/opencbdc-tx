@@ -39,11 +39,9 @@ namespace cbdc::sentinel {
         /// \param result_callback function to call with execution result.
         /// \return false if the implementation could not start processing the
         ///         transaction.
-        virtual auto
-        execute_transaction(transaction::full_tx tx,
-                            execute_result_callback_type result_callback)
-            -> bool
-            = 0;
+        virtual auto execute_transaction(
+            transaction::full_tx tx,
+            execute_result_callback_type result_callback) -> bool = 0;
 
         /// Result of a validation operation. Sentinel attestation for the
         /// given transaction or std::nullopt if the transaction was invalid.
@@ -59,11 +57,9 @@ namespace cbdc::sentinel {
         /// \param result_callback function to call with the validation result.
         /// \return false if the implementation could not start validating the
         ///         transaction.
-        virtual auto
-        validate_transaction(transaction::full_tx tx,
-                             validate_result_callback_type result_callback)
-            -> bool
-            = 0;
+        virtual auto validate_transaction(
+            transaction::full_tx tx,
+            validate_result_callback_type result_callback) -> bool = 0;
     };
 }
 

@@ -73,8 +73,8 @@ namespace cbdc {
         /// Sends the given mint transaction directly to a coordinator cluster.
         /// \param mint_tx transaction to send.
         /// \return true if the transaction was sent successfully.
-        auto send_mint_tx(const transaction::full_tx& mint_tx)
-            -> bool override;
+        auto
+        send_mint_tx(const transaction::full_tx& mint_tx) -> bool override;
 
       private:
         coordinator::rpc::client m_coordinator_client;

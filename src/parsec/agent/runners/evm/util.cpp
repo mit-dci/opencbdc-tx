@@ -32,8 +32,8 @@ namespace cbdc::parsec::agent::runner {
         return evmc::hex(evmc::bytes(b.bytes, sizeof(b.bytes)));
     }
 
-    auto to_hex_trimmed(const evmc::bytes32& b, const std::string& prefix)
-        -> std::string {
+    auto to_hex_trimmed(const evmc::bytes32& b,
+                        const std::string& prefix) -> std::string {
         auto b_vec = std::vector<uint8_t>();
         b_vec.resize(sizeof(b.bytes));
         std::memcpy(b_vec.data(), &b.bytes[0], sizeof(b.bytes));

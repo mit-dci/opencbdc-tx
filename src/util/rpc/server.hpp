@@ -66,9 +66,9 @@ namespace cbdc::rpc {
         ///                         std::nullopt if the request failed.
         /// \return serialized response buffer.
         template<typename R = Response>
-        auto serialize_response(header request_header,
-                                std::optional<R> response_payload)
-            -> OutBuffer {
+        auto
+        serialize_response(header request_header,
+                           std::optional<R> response_payload) -> OutBuffer {
             return make_buffer<response<R>, OutBuffer>(
                 {request_header, response_payload});
         }

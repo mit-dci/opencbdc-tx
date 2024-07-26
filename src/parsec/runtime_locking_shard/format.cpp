@@ -122,23 +122,23 @@ namespace cbdc {
             >> req.m_state_update;
     }
 
-    auto operator<<(serializer& ser,
-                    const parsec::runtime_locking_shard::rpc::
-                        replicated_get_tickets_request& /* req */)
-        -> serializer& {
+    auto
+    operator<<(serializer& ser,
+               const parsec::runtime_locking_shard::rpc::
+                   replicated_get_tickets_request& /* req */) -> serializer& {
         return ser;
     }
-    auto operator>>(serializer& deser,
-                    parsec::runtime_locking_shard::rpc::
-                        replicated_get_tickets_request& /* req */)
-        -> serializer& {
+    auto
+    operator>>(serializer& deser,
+               parsec::runtime_locking_shard::rpc::
+                   replicated_get_tickets_request& /* req */) -> serializer& {
         return deser;
     }
 
-    auto operator<<(serializer& ser,
-                    const parsec::runtime_locking_shard::
-                        replicated_shard_interface::ticket_type& t)
-        -> serializer& {
+    auto
+    operator<<(serializer& ser,
+               const parsec::runtime_locking_shard::
+                   replicated_shard_interface::ticket_type& t) -> serializer& {
         return ser << t.m_state << t.m_broker_id << t.m_state_update;
     }
     auto operator>>(

@@ -113,16 +113,16 @@ namespace cbdc::locking_shard {
         /// \param uhs_id UHS ID to query.
         /// \return true if the UHS ID is unspent, false if not. std::nullopt
         ///         if the query failed.
-        [[nodiscard]] auto check_unspent(const hash_t& uhs_id)
-            -> std::optional<bool> final;
+        [[nodiscard]] auto
+        check_unspent(const hash_t& uhs_id) -> std::optional<bool> final;
 
         /// Queries whether the given TX ID is confirmed in the cache of
         /// recently confirmed TX IDs.
         /// \param tx_id TX ID to query.
         /// \return true if cache contains TX ID, or false if not. std::nullopt
         ///         if the query failed.
-        [[nodiscard]] auto check_tx_id(const hash_t& tx_id)
-            -> std::optional<bool> final;
+        [[nodiscard]] auto
+        check_tx_id(const hash_t& tx_id) -> std::optional<bool> final;
 
       private:
         auto read_preseed_file(const std::string& preseed_file) -> bool;

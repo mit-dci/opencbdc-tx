@@ -26,8 +26,8 @@ namespace cbdc::network {
         /// \param local_address the address of the interface to listen on
         /// \param local_port the port number to listen on
         /// \return true if the listener started listening successfully.
-        auto listen(const ip_address& local_address, port_number_t local_port)
-            -> bool;
+        auto listen(const ip_address& local_address,
+                    port_number_t local_port) -> bool;
 
         /// Blocks until an incoming connection is ready and
         /// populates the given socket.

@@ -52,10 +52,9 @@ namespace cbdc::sentinel::rpc {
         /// \param tx transaction to send to the sentinel.
         /// \param result_callback callback function to call with the result.
         /// \return true if the request was sent successfully.
-        auto execute_transaction(
-            transaction::full_tx tx,
-            std::function<void(execute_result_type)> result_callback)
-            -> bool override;
+        auto execute_transaction(transaction::full_tx tx,
+                                 std::function<void(execute_result_type)>
+                                     result_callback) -> bool override;
 
         /// Return type from transaction validation.
         using validate_result_type = std::optional<validate_response>;
@@ -73,10 +72,9 @@ namespace cbdc::sentinel::rpc {
         /// \param tx transaction to validate and attest to.
         /// \param result_callback callback function to call with the result.
         /// \return true if the request was sent successfully.
-        auto validate_transaction(
-            transaction::full_tx tx,
-            std::function<void(validate_result_type)> result_callback)
-            -> bool override;
+        auto validate_transaction(transaction::full_tx tx,
+                                  std::function<void(validate_result_type)>
+                                      result_callback) -> bool override;
 
       private:
         cbdc::config::options m_opts;

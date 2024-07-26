@@ -17,39 +17,39 @@ namespace cbdc {
     /// identified output in that transaction's output vector.
     /// \see \ref cbdc::operator<<(serializer&, const std::array<T, len>&)
     /// \see \ref cbdc::operator<<(serializer&, T)
-    auto operator<<(serializer& packet, const transaction::out_point& op)
-        -> serializer&;
+    auto operator<<(serializer& packet,
+                    const transaction::out_point& op) -> serializer&;
 
     /// Deserializes an out_point.
     /// \see \ref cbdc::operator<<(serializer&, const transaction::out_point&)
-    auto operator>>(serializer& packet, transaction::out_point& op)
-        -> serializer&;
+    auto operator>>(serializer& packet,
+                    transaction::out_point& op) -> serializer&;
 
     /// \brief Serializes an output.
     ///
     /// Serializes the witness program commitment, and then the value.
     /// \see \ref cbdc::operator<<(serializer&, const std::array<T, len>&)
     /// \see \ref cbdc::operator<<(serializer&, T)
-    auto operator<<(serializer& packet, const transaction::output& out)
-        -> serializer&;
+    auto operator<<(serializer& packet,
+                    const transaction::output& out) -> serializer&;
 
     /// Deserializes an output.
     /// \see \ref cbdc::operator<<(serializer&, const transaction::output&)
-    auto operator>>(serializer& packet, transaction::output& out)
-        -> serializer&;
+    auto operator>>(serializer& packet,
+                    transaction::output& out) -> serializer&;
 
     /// \brief Serializes an input.
     ///
     /// Serializes the out_point and then the output.
     /// \see \ref cbdc::operator<<(serializer&, const transaction::out_point&)
     /// \see \ref cbdc::operator<<(serializer&, const transaction::output&)
-    auto operator<<(serializer& packet, const transaction::input& inp)
-        -> serializer&;
+    auto operator<<(serializer& packet,
+                    const transaction::input& inp) -> serializer&;
 
     /// Deserializes an input.
     /// \see \ref cbdc::operator<<(serializer&, const transaction::input&)
-    auto operator>>(serializer& packet, transaction::input& inp)
-        -> serializer&;
+    auto operator>>(serializer& packet,
+                    transaction::input& inp) -> serializer&;
 
     /// \brief Serializes a full transaction.
     ///
@@ -58,13 +58,13 @@ namespace cbdc {
     /// \see \ref cbdc::operator<<(serializer&, const transaction::input&)
     /// \see \ref cbdc::operator<<(serializer&, const transaction::output&)
     /// \see \ref cbdc::operator<<(serializer&, const std::byte)
-    auto operator<<(serializer& packet, const transaction::full_tx& tx)
-        -> serializer&;
+    auto operator<<(serializer& packet,
+                    const transaction::full_tx& tx) -> serializer&;
 
     /// Deserializes a full transaction.
     /// \see \ref cbdc::operator<<(serializer&, const transaction::full_tx&)
-    auto operator>>(serializer& packet, transaction::full_tx& tx)
-        -> serializer&;
+    auto operator>>(serializer& packet,
+                    transaction::full_tx& tx) -> serializer&;
 
     /// \brief Serializes a compact transaction.
     ///
@@ -72,13 +72,13 @@ namespace cbdc {
     /// and then the output hashes.
     /// \see \ref cbdc::operator<<(serializer&, const std::array<T, len>&)
     /// \see \ref cbdc::operator<<(serializer&, const std::vector<T>&)
-    auto operator<<(serializer& packet, const transaction::compact_tx& tx)
-        -> serializer&;
+    auto operator<<(serializer& packet,
+                    const transaction::compact_tx& tx) -> serializer&;
 
     /// Deserializes a compact transaction.
     /// \see \ref cbdc::operator<<(serializer&, const transaction::compact_tx&)
-    auto operator>>(serializer& packet, transaction::compact_tx& tx)
-        -> serializer&;
+    auto operator>>(serializer& packet,
+                    transaction::compact_tx& tx) -> serializer&;
 
     /// Deserializes an input error.
     /// \see \ref cbdc::operator<<(serializer&,
@@ -92,9 +92,9 @@ namespace cbdc {
     /// input's index.
     /// \see \ref cbdc::operator<<(serializer&, T)
     /// \see \ref cbdc::operator<<(serializer&, const std::optional<T>&)
-    auto operator<<(serializer& packet,
-                    const transaction::validation::input_error& e)
-        -> serializer&;
+    auto
+    operator<<(serializer& packet,
+               const transaction::validation::input_error& e) -> serializer&;
 
     /// Deserializes an output error.
     /// \see \ref cbdc::operator<<(serializer&,
@@ -106,9 +106,9 @@ namespace cbdc {
     ///
     /// Serializes the error code and then the output's index.
     /// \see \ref cbdc::operator<<(serializer&, T)
-    auto operator<<(serializer& packet,
-                    const transaction::validation::output_error& e)
-        -> serializer&;
+    auto
+    operator<<(serializer& packet,
+               const transaction::validation::output_error& e) -> serializer&;
 
     /// Deserializes a witness error.
     /// \see \ref cbdc::operator<<(serializer&,
@@ -120,9 +120,9 @@ namespace cbdc {
     ///
     /// Serializes the error code and then the witness's index.
     /// \see \ref cbdc::operator<<(serializer&, T)
-    auto operator<<(serializer& packet,
-                    const transaction::validation::witness_error& e)
-        -> serializer&;
+    auto
+    operator<<(serializer& packet,
+               const transaction::validation::witness_error& e) -> serializer&;
 }
 
 #endif // OPENCBDC_TX_SRC_TRANSACTION_MESSAGES_H_

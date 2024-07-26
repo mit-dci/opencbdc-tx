@@ -30,10 +30,10 @@ namespace cbdc::parsec::agent::runner {
         return new_addr;
     }
 
-    auto contract_address2(const evmc::address& sender,
-                           const evmc::bytes32& salt,
-                           const cbdc::hash_t& bytecode_hash)
-        -> evmc::address {
+    auto
+    contract_address2(const evmc::address& sender,
+                      const evmc::bytes32& salt,
+                      const cbdc::hash_t& bytecode_hash) -> evmc::address {
         // Specs: https://eips.ethereum.org/EIPS/eip-1014
 
         auto new_addr = evmc::address();
@@ -53,9 +53,9 @@ namespace cbdc::parsec::agent::runner {
         return new_addr;
     }
 
-    auto eth_addr(const std::unique_ptr<secp256k1_pubkey>& pk,
-                  const std::shared_ptr<secp256k1_context>& ctx)
-        -> evmc::address {
+    auto
+    eth_addr(const std::unique_ptr<secp256k1_pubkey>& pk,
+             const std::shared_ptr<secp256k1_context>& ctx) -> evmc::address {
         static constexpr int uncompressed_pubkey_len = 65;
         auto pubkey_serialized
             = std::array<unsigned char, uncompressed_pubkey_len>();
@@ -84,9 +84,9 @@ namespace cbdc::parsec::agent::runner {
         return addr;
     }
 
-    auto eth_addr(const cbdc::privkey_t& key,
-                  const std::shared_ptr<secp256k1_context>& ctx)
-        -> evmc::address {
+    auto
+    eth_addr(const cbdc::privkey_t& key,
+             const std::shared_ptr<secp256k1_context>& ctx) -> evmc::address {
         auto pk = std::make_unique<secp256k1_pubkey>();
         [[maybe_unused]] const auto pub_ret
             = ::secp256k1_ec_pubkey_create(ctx.get(), pk.get(), key.data());

@@ -143,9 +143,9 @@ namespace cbdc::transaction {
         /// \param key private key with which to sign the transaction.
         /// \return sentinel attestation containing the signature and
         ///         associated public key.
-        [[nodiscard]] auto sign(secp256k1_context* ctx,
-                                const privkey_t& key) const
-            -> sentinel_attestation;
+        [[nodiscard]] auto
+        sign(secp256k1_context* ctx,
+             const privkey_t& key) const -> sentinel_attestation;
 
         /// Verify the given attestation contains a valid signature that
         /// matches the compact transaction.
@@ -154,9 +154,9 @@ namespace cbdc::transaction {
         ///            signature.
         /// \return true if the given attestation is valid for this compact
         ///         transaction.
-        [[nodiscard]] auto verify(secp256k1_context* ctx,
-                                  const sentinel_attestation& att) const
-            -> bool;
+        [[nodiscard]] auto
+        verify(secp256k1_context* ctx,
+               const sentinel_attestation& att) const -> bool;
 
         /// Return the hash of the compact transaction, without the sentinel
         /// attestations included. Used as the message which is signed in
@@ -185,15 +185,16 @@ namespace cbdc::transaction {
     /// \param i index of the target output
     /// \param txid the txid of the transaction
     /// \return resultant input, or std::nullopt if i is invalid.
-    auto input_from_output(const full_tx& tx, size_t i, const hash_t& txid)
-        -> std::optional<input>;
+    auto input_from_output(const full_tx& tx,
+                           size_t i,
+                           const hash_t& txid) -> std::optional<input>;
 
     /// Calls input_from_output after calculating the TXID
     /// \param tx the transaction from which to read outputs
     /// \param i index of the target output
     /// \return result of input_from_output(tx, i, tx_id(tx))
-    auto input_from_output(const full_tx& tx, size_t i)
-        -> std::optional<input>;
+    auto input_from_output(const full_tx& tx,
+                           size_t i) -> std::optional<input>;
 
     auto uhs_id_from_output(const hash_t& entropy,
                             uint64_t i,

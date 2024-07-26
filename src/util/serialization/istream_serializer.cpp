@@ -32,8 +32,8 @@ namespace cbdc {
         m_str.seekg(0);
     }
 
-    auto istream_serializer::write(const void* /* data */, size_t /* len */)
-        -> bool {
+    auto istream_serializer::write(const void* /* data */,
+                                   size_t /* len */) -> bool {
         m_str.setstate(std::ios::failbit);
         return false;
     }

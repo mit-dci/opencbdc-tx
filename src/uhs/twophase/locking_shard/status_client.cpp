@@ -34,13 +34,13 @@ namespace cbdc::locking_shard::rpc {
         return true;
     }
 
-    auto status_client::check_tx_id(const hash_t& tx_id)
-        -> std::optional<bool> {
+    auto
+    status_client::check_tx_id(const hash_t& tx_id) -> std::optional<bool> {
         return make_request<tx_status_request>(tx_id);
     }
 
-    auto status_client::check_unspent(const hash_t& uhs_id)
-        -> std::optional<bool> {
+    auto
+    status_client::check_unspent(const hash_t& uhs_id) -> std::optional<bool> {
         return make_request<uhs_status_request>(uhs_id);
     }
 }

@@ -9,8 +9,8 @@
 #include "util/serialization/format.hpp"
 
 namespace cbdc {
-    auto operator<<(serializer& packet, const locking_shard::tx& tx)
-        -> serializer& {
+    auto operator<<(serializer& packet,
+                    const locking_shard::tx& tx) -> serializer& {
         return packet << tx.m_tx;
     }
 
@@ -18,19 +18,19 @@ namespace cbdc {
         return packet >> tx.m_tx;
     }
 
-    auto operator<<(serializer& packet, const locking_shard::rpc::request& p)
-        -> serializer& {
+    auto operator<<(serializer& packet,
+                    const locking_shard::rpc::request& p) -> serializer& {
         return packet << p.m_dtx_id << p.m_params;
     }
 
-    auto operator>>(serializer& packet, locking_shard::rpc::request& p)
-        -> serializer& {
+    auto operator>>(serializer& packet,
+                    locking_shard::rpc::request& p) -> serializer& {
         return packet >> p.m_dtx_id >> p.m_params;
     }
 
-    auto operator<<(serializer& packet,
-                    const locking_shard::rpc::tx_status_request& p)
-        -> serializer& {
+    auto
+    operator<<(serializer& packet,
+               const locking_shard::rpc::tx_status_request& p) -> serializer& {
         return packet << p.m_tx_id;
     }
 

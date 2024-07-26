@@ -14,9 +14,8 @@ namespace cbdc::watchtower {
         return m_uhs_ids;
     }
 
-    auto
-    status_update_request::operator==(const status_update_request& rhs) const
-        -> bool {
+    auto status_update_request::operator==(
+        const status_update_request& rhs) const -> bool {
         return rhs.m_uhs_ids == m_uhs_ids;
     }
 

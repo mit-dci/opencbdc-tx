@@ -33,8 +33,8 @@ namespace cbdc::transaction::validation {
         return std::tie(m_code, m_idx) == std::tie(rhs.m_code, rhs.m_idx);
     }
 
-    auto check_tx(const cbdc::transaction::full_tx& tx)
-        -> std::optional<tx_error> {
+    auto
+    check_tx(const cbdc::transaction::full_tx& tx) -> std::optional<tx_error> {
         const auto structure_err = check_tx_structure(tx);
         if(structure_err) {
             return structure_err;
@@ -135,8 +135,8 @@ namespace cbdc::transaction::validation {
 
     // TODO: check input assumptions with flags for whether preconditions have
     //       already been checked.
-    auto check_witness(const cbdc::transaction::full_tx& tx, size_t idx)
-        -> std::optional<witness_error_code> {
+    auto check_witness(const cbdc::transaction::full_tx& tx,
+                       size_t idx) -> std::optional<witness_error_code> {
         const auto& witness_program = tx.m_witness[idx];
         if(witness_program.empty()) {
             return witness_error_code::missing_witness_program_type;
@@ -155,8 +155,8 @@ namespace cbdc::transaction::validation {
         }
     }
 
-    auto check_p2pk_witness(const cbdc::transaction::full_tx& tx, size_t idx)
-        -> std::optional<witness_error_code> {
+    auto check_p2pk_witness(const cbdc::transaction::full_tx& tx,
+                            size_t idx) -> std::optional<witness_error_code> {
         const auto witness_len_err = check_p2pk_witness_len(tx, idx);
         if(witness_len_err) {
             return witness_len_err;
@@ -176,9 +176,9 @@ namespace cbdc::transaction::validation {
         return std::nullopt;
     }
 
-    auto check_p2pk_witness_len(const cbdc::transaction::full_tx& tx,
-                                size_t idx)
-        -> std::optional<witness_error_code> {
+    auto
+    check_p2pk_witness_len(const cbdc::transaction::full_tx& tx,
+                           size_t idx) -> std::optional<witness_error_code> {
         const auto& wit = tx.m_witness[idx];
         if(wit.size() != p2pk_witness_len) {
             return witness_error_code::malformed;

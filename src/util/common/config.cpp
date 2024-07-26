@@ -137,16 +137,16 @@ namespace cbdc::config {
         ss << watchtower_prefix << watchtower_id << config_separator;
     }
 
-    auto get_watchtower_client_endpoint_key(size_t watchtower_id)
-        -> std::string {
+    auto
+    get_watchtower_client_endpoint_key(size_t watchtower_id) -> std::string {
         std::stringstream ss;
         get_watchtower_key_prefix(ss, watchtower_id);
         ss << watchtower_client_ep_postfix;
         return ss.str();
     }
 
-    auto get_watchtower_internal_endpoint_key(size_t watchtower_id)
-        -> std::string {
+    auto
+    get_watchtower_internal_endpoint_key(size_t watchtower_id) -> std::string {
         std::stringstream ss;
         get_watchtower_key_prefix(ss, watchtower_id);
         ss << watchtower_internal_ep_postfix;
@@ -167,24 +167,24 @@ namespace cbdc::config {
         return ss.str();
     }
 
-    auto get_shard_raft_endpoint_key(size_t shard_id, size_t node_id)
-        -> std::string {
+    auto get_shard_raft_endpoint_key(size_t shard_id,
+                                     size_t node_id) -> std::string {
         std::stringstream ss;
         get_shard_key_prefix(ss, shard_id);
         ss << node_id << config_separator << raft_endpoint_postfix;
         return ss.str();
     }
 
-    auto get_shard_endpoint_key(size_t shard_id, size_t node_id)
-        -> std::string {
+    auto get_shard_endpoint_key(size_t shard_id,
+                                size_t node_id) -> std::string {
         std::stringstream ss;
         get_shard_key_prefix(ss, shard_id);
         ss << node_id << config_separator << endpoint_postfix;
         return ss.str();
     }
 
-    auto get_shard_readonly_endpoint_key(size_t shard_id, size_t node_id)
-        -> std::string {
+    auto get_shard_readonly_endpoint_key(size_t shard_id,
+                                         size_t node_id) -> std::string {
         std::stringstream ss;
         get_shard_key_prefix(ss, shard_id);
         ss << node_id << config_separator << readonly << config_separator
@@ -197,8 +197,8 @@ namespace cbdc::config {
         ss << coordinator_prefix << coordinator_id << config_separator;
     }
 
-    auto get_coordinator_endpoint_key(size_t coordinator_id, size_t node_id)
-        -> std::string {
+    auto get_coordinator_endpoint_key(size_t coordinator_id,
+                                      size_t node_id) -> std::string {
         std::stringstream ss;
         get_coordinator_key_prefix(ss, coordinator_id);
         ss << node_id << config_separator << endpoint_postfix;
@@ -292,8 +292,8 @@ namespace cbdc::config {
         return std::nullopt;
     }
 
-    auto read_shard_options(options& opts, const parser& cfg)
-        -> std::optional<std::string> {
+    auto read_shard_options(options& opts,
+                            const parser& cfg) -> std::optional<std::string> {
         const auto shard_count = cfg.get_ulong(shard_count_key).value_or(0);
         for(size_t i{0}; i < shard_count; i++) {
             if(!opts.m_twophase_mode) {
@@ -733,13 +733,13 @@ namespace cbdc::config {
         return std::nullopt;
     }
 
-    auto hash_in_shard_range(const shard_range_t& range, const hash_t& val)
-        -> bool {
+    auto hash_in_shard_range(const shard_range_t& range,
+                             const hash_t& val) -> bool {
         return val[0] >= range.first && val[0] <= range.second;
     }
 
-    auto loadgen_seed_range(const options& opts, size_t gen_id)
-        -> std::pair<size_t, size_t> {
+    auto loadgen_seed_range(const options& opts,
+                            size_t gen_id) -> std::pair<size_t, size_t> {
         assert(gen_id < opts.m_loadgen_count);
         auto total_seed_range = opts.m_seed_to - opts.m_seed_from;
         auto seed_range_sz = total_seed_range / opts.m_loadgen_count;
@@ -792,8 +792,8 @@ namespace cbdc::config {
         return get_val<std::string>(key);
     }
 
-    auto parser::get_ulong(const std::string& key) const
-        -> std::optional<size_t> {
+    auto
+    parser::get_ulong(const std::string& key) const -> std::optional<size_t> {
         return get_val<size_t>(key);
     }
 

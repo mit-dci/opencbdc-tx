@@ -21,8 +21,8 @@ namespace cbdc::rpc {
         auto operator=(const epoll_event_handler&)
             -> epoll_event_handler& = default;
         epoll_event_handler(epoll_event_handler&&) = default;
-        auto operator=(epoll_event_handler&&)
-            -> epoll_event_handler& = default;
+        auto
+        operator=(epoll_event_handler&&) -> epoll_event_handler& = default;
 
         /// \copydoc event_handler::init
         auto init() -> bool override;

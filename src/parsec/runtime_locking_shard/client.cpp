@@ -11,7 +11,7 @@
 namespace cbdc::parsec::runtime_locking_shard::rpc {
     client::client(std::vector<network::endpoint_t> endpoints)
         : m_client(std::make_unique<decltype(m_client)::element_type>(
-            std::move(endpoints))) {}
+              std::move(endpoints))) {}
 
     auto client::init() -> bool {
         return m_client->init();
@@ -92,9 +92,9 @@ namespace cbdc::parsec::runtime_locking_shard::rpc {
             });
     }
 
-    auto client::get_tickets(broker_id_type broker_id,
-                             get_tickets_callback_type result_callback)
-        -> bool {
+    auto
+    client::get_tickets(broker_id_type broker_id,
+                        get_tickets_callback_type result_callback) -> bool {
         auto req = get_tickets_request{broker_id};
         return m_client->call(
             req,

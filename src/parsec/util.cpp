@@ -9,8 +9,8 @@
 #include <unordered_map>
 
 namespace cbdc::parsec {
-    auto split(const std::string& s, const std::string& delim)
-        -> std::vector<std::string> {
+    auto split(const std::string& s,
+               const std::string& delim) -> std::vector<std::string> {
         size_t pos_start{};
         size_t pos_end{};
         std::vector<std::string> ret;

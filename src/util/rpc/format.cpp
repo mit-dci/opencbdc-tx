@@ -8,8 +8,8 @@
 #include "util/serialization/format.hpp"
 
 namespace cbdc {
-    auto operator<<(serializer& ser, const rpc::header& header)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const rpc::header& header) -> serializer& {
         return ser << header.m_request_id;
     }
 

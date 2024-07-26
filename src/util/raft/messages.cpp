@@ -6,8 +6,8 @@
 #include "messages.hpp"
 
 namespace cbdc {
-    auto operator<<(serializer& ser, const nuraft::ptr<nuraft::buffer>& buf)
-        -> serializer& {
+    auto operator<<(serializer& ser,
+                    const nuraft::ptr<nuraft::buffer>& buf) -> serializer& {
         ser.write(buf->data_begin(), buf->size());
         return ser;
     }

@@ -69,8 +69,8 @@ namespace cbdc::coordinator {
         return ret;
     }
 
-    auto distributed_tx::commit(const std::vector<bool>& complete_txs)
-        -> bool {
+    auto
+    distributed_tx::commit(const std::vector<bool>& complete_txs) -> bool {
         if(m_commit_cb) {
             auto res = m_commit_cb(m_dtx_id, complete_txs, m_tx_idxs);
             if(!res) {

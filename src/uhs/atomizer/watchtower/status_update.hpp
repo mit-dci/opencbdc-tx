@@ -54,9 +54,9 @@ namespace cbdc::watchtower {
         cbdc::operator<<(cbdc::serializer& packet,
                          const cbdc::watchtower::status_update_request& su_req)
             -> cbdc::serializer&;
-        friend auto cbdc::operator>>(cbdc::serializer& packet,
-                                     status_update_request& su_req)
-            -> cbdc::serializer&;
+        friend auto
+        cbdc::operator>>(cbdc::serializer& packet,
+                         status_update_request& su_req) -> cbdc::serializer&;
 
         auto operator==(const status_update_request& rhs) const -> bool;
 
@@ -87,10 +87,9 @@ namespace cbdc::watchtower {
         cbdc::operator<<(cbdc::serializer& packet,
                          const cbdc::watchtower::status_update_state& state)
             -> cbdc::serializer&;
-        friend auto
-        cbdc::operator>>(cbdc::serializer& packet,
-                         cbdc::watchtower::status_update_state& state)
-            -> cbdc::serializer&;
+        friend auto cbdc::operator>>(
+            cbdc::serializer& packet,
+            cbdc::watchtower::status_update_state& state) -> cbdc::serializer&;
         friend class status_request_check_success;
 
         auto operator==(const status_update_state& rhs) const -> bool;

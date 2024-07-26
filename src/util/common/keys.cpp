@@ -9,8 +9,8 @@
 #include <secp256k1_schnorrsig.h>
 
 namespace cbdc {
-    auto pubkey_from_privkey(const privkey_t& privkey, secp256k1_context* ctx)
-        -> pubkey_t {
+    auto pubkey_from_privkey(const privkey_t& privkey,
+                             secp256k1_context* ctx) -> pubkey_t {
         secp256k1_keypair keypair{};
         [[maybe_unused]] const auto create_ret
             = ::secp256k1_keypair_create(ctx, &keypair, privkey.data());

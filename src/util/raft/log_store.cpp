@@ -160,8 +160,8 @@ namespace cbdc::raft {
         }
     }
 
-    auto log_store::log_entries(uint64_t start, uint64_t end)
-        -> log_entries_t {
+    auto log_store::log_entries(uint64_t start,
+                                uint64_t end) -> log_entries_t {
         const auto first_key = get_key_slice(start);
         auto ret = nuraft::cs_new<log_entries_t::element_type>(end - start);
 
@@ -187,8 +187,8 @@ namespace cbdc::raft {
         return ret;
     }
 
-    auto log_store::entry_at(uint64_t index)
-        -> nuraft::ptr<nuraft::log_entry> {
+    auto
+    log_store::entry_at(uint64_t index) -> nuraft::ptr<nuraft::log_entry> {
         const auto key = get_key_slice(index);
         std::string val;
 
@@ -213,8 +213,8 @@ namespace cbdc::raft {
         return entry->get_term();
     }
 
-    auto log_store::pack(uint64_t index, int32_t cnt)
-        -> nuraft::ptr<nuraft::buffer> {
+    auto log_store::pack(uint64_t index,
+                         int32_t cnt) -> nuraft::ptr<nuraft::buffer> {
         assert(cnt >= 0);
         const auto entries
             = log_entries(index, index + static_cast<uint64_t>(cnt));
