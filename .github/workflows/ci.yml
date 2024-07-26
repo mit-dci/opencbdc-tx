@@ -22,7 +22,7 @@ jobs:
     env:
       BUILD_RELEASE: 1
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Setup Build Env
@@ -35,7 +35,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Setup Build Env
@@ -55,11 +55,11 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Setup Build Env
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Setup Build Env
@@ -85,7 +85,7 @@ jobs:
       - name: Shorten SHA
         id: vars
         run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: ${{ !env.ACT }}
         name: Archive Test Results
         with:
@@ -98,7 +98,7 @@ jobs:
     name: doxygen
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Install Doxygen
@@ -109,7 +109,7 @@ jobs:
         run: doxygen Doxyfile
       - name: Upload Docs artifacts
         if: ${{ !env.ACT }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: OpenCBDC Transaction Processor docs for ${{ steps.vars.outputs.sha_short }}
           path: ./doxygen_generated/html/*

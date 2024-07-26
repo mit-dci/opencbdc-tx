@@ -7,7 +7,7 @@ name: docker push
 on:
   push:
     branches-ignore:
-      - 'trunk'
+      - trunk
 
 jobs:
   docker-build:
@@ -17,7 +17,7 @@ jobs:
       # CI Setup             #
       ########################
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       ########################
       # Build Base           #
