@@ -1,0 +1,42 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - name: "The OpenCBDC Development Team"
+    website: https://github.com/mit-dci/opencbdc-tx
+type: software
+repository-code: https://github.com/mit-dci/opencbdc-tx
+license: "MIT"
+license-url: https://github.com/mit-dci/opencbdc-tx/blob/trunk/COPYING
+preferred-citation:
+  type: conference-paper
+  authors:
+    - given-names: "James"
+      family-names: "Lovejoy"
+      affiliation: Federal Reserve Bank of Boston
+    - given-names: "Cory"
+      family-names: "Fields"
+      affiliation: MIT Media Lab
+    - given-names: "Madars"
+      family-names: "Virza"
+      affiliation: MIT Media Lab
+    - given-names: "Kevin"
+      family-names: "Karwaski"
+      affiliation: Federal Reserve Bank of Boston
+    - given-names: "Anders"
+      family-names: "Brownworth"
+      affiliation: Federal Reserve Bank of Boston
+    - given-names: "Neha"
+      family-names: "Narula"
+      affiliation: MIT Media Lab
+  title: "Hamilton: A High-Performance Transaction Processor for Central Bank Digital Currencies"
+  year: 2023
+  conference:
+    name: "20th USENIX Symposium on Networked System Design and Implementation (NSDI 23)"
+    year: 2023
+    city: "Boston, MA"
+    country: "US"
+  start: 901
+  end: 915
+  publisher:
+    name: "USENIX Association"
+  url: "https://www.usenix.org/system/files/nsdi23-lovejoy.pdf"
