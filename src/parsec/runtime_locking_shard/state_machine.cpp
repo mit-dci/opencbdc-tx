@@ -83,7 +83,8 @@ namespace cbdc::parsec::runtime_locking_shard {
                 },
                 [&](rpc::replicated_get_tickets_request /* msg */) {
                     return m_shard->get_tickets(
-                        [&](replicated_shard::get_tickets_return_type res) {
+                        [&](const replicated_shard::get_tickets_return_type&
+                                res) {
                             ret = res;
                         });
                 }},

@@ -15,14 +15,14 @@ jobs:
       # CI Setup             #
       ########################
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: "2"
 
       # For PRs, this action compares between the commit and trunk
       - name: Get specific changed files
         id: changed-files-specific
-        uses: tj-actions/changed-files@v32
+        uses: tj-actions/changed-files@v44
         with:
           files: |
             Dockerfile
