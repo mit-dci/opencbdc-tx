@@ -105,7 +105,7 @@ cd ../..
 
 # NOTE: evmc v10.0.0 requires evmone v0.9.0
 #       evmc v10.1.1 requires evmone v0.10.0 (which requires c++20)
-EVMC_VER=10.0.0
+EVMC_VER=11.0.1
 wget https://github.com/ethereum/evmc/archive/refs/tags/v${EVMC_VER}.zip
 rm -rf evmc-${EVMC_VER}
 unzip v${EVMC_VER}.zip
@@ -119,7 +119,7 @@ make install
 cd ../..
 
 # NOTE: updating evmone to v0.10.0 requires c++20
-EVMONE_VER=0.9.1
+EVMONE_VER=0.11.0
 wget https://github.com/ethereum/evmone/archive/refs/tags/v${EVMONE_VER}.zip
 rm -rf evmone-${EVMONE_VER}
 unzip v${EVMONE_VER}.zip

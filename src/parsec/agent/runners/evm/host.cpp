@@ -36,6 +36,17 @@ namespace cbdc::parsec::agent::runner {
         m_receipt.m_ticket_number = m_ticket_number;
     }
 
+    // implementation for the get_transient_storage method
+    evmc::bytes32 evm_host::get_transient_storage([[maybe_unused]] const evmc::address& addr,
+                [[maybe_unused]] const evmc::bytes32& key) const noexcept {
+        return evmc::bytes32{};
+    }
+
+    // implementation for the set_trainsient_storage method
+    void evm_host::set_transient_storage([[maybe_unused]] const evmc::address& addr, [[maybe_unused]] const evmc::bytes32& key, [[maybe_unused]]  const evmc::bytes32& value) noexcept {
+        
+    }
+
     auto evm_host::get_account(const evmc::address& addr, bool write) const
         -> std::optional<evm_account> {
         m_log->trace(this,
