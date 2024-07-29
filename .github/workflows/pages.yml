@@ -12,10 +12,10 @@ defaults:
 jobs:
   gh-pages-deploy:
     name: Github Pages Deploy
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: true
           fetch-depth: 0
