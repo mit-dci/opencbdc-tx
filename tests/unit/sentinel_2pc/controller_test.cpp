@@ -99,6 +99,10 @@ class sentinel_2pc_test : public ::testing::Test {
     std::unique_ptr<cbdc::sentinel_2pc::controller> m_ctl;
     cbdc::transaction::full_tx m_valid_tx{};
     std::shared_ptr<cbdc::logging::log> m_logger;
+    std::unique_ptr<secp256k1_context, decltype(&secp256k1_context_destroy)>
+        m_secp{secp256k1_context_create(SECP256K1_CONTEXT_SIGN
+                                        | SECP256K1_CONTEXT_VERIFY),
+               &secp256k1_context_destroy};
 };
 
 TEST_F(sentinel_2pc_test, test_init) {
@@ -170,17 +174,14 @@ TEST_F(sentinel_2pc_test, digest_valid_transaction_network) {
 TEST_F(sentinel_2pc_test, tx_validation_test) {
     ASSERT_TRUE(m_ctl->init());
     auto ctx = cbdc::transaction::compact_tx(m_valid_tx);
-    auto secp = std::unique_ptr<secp256k1_context,
-                                decltype(&secp256k1_context_destroy)>{
-        secp256k1_context_create(SECP256K1_CONTEXT_SIGN
-                                 | SECP256K1_CONTEXT_VERIFY),
-        &secp256k1_context_destroy};
     auto res
         = m_ctl->validate_transaction(m_valid_tx, [&](auto validation_res) {
               ASSERT_TRUE(validation_res.has_value());
-              ASSERT_TRUE(ctx.verify(secp.get(), validation_res.value()));
+              ASSERT_TRUE(ctx.verify(m_secp.get(), validation_res.value()));
           });
     ASSERT_TRUE(res);
+    // ensures the validation callback has completed before we go out-of-scope
+    m_ctl->stop();
 }
 
 TEST_F(sentinel_2pc_test, bad_coordinator_endpoint) {

@@ -54,7 +54,7 @@ if(DEFINED CMAKE_PREFIX_PATH)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(-fprofile-arcs -ftest-coverage)
+    add_compile_options(-fprofile-arcs -ftest-coverage -Og -ggdb3)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

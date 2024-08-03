@@ -13,6 +13,7 @@
 #include "uhs/sentinel/format.hpp"
 #include "uhs/transaction/messages.hpp"
 #include "uhs/twophase/coordinator/client.hpp"
+#include "util/common/blocking_queue.hpp"
 #include "util/common/config.hpp"
 #include "util/common/hashmap.hpp"
 #include "util/network/connection_manager.hpp"
@@ -37,7 +38,7 @@ namespace cbdc::sentinel_2pc {
                    const config::options& opts,
                    std::shared_ptr<logging::log> logger);
 
-        ~controller() override = default;
+        ~controller() override;
 
         /// Initializes the controller. Connects to the shard coordinator
         /// network and launches a server thread for external clients.
@@ -66,7 +67,22 @@ namespace cbdc::sentinel_2pc {
                              validate_result_callback_type result_callback)
             -> bool override;
 
+        /// Cleanly stop the controller
+        void stop();
+
       private:
+        using validation_callback = std::function<void(
+            const transaction::full_tx&,
+            std::optional<cbdc::transaction::validation::tx_error>)>;
+        using queued_validation
+            = std::pair<transaction::full_tx, validation_callback>;
+
+        using attestation_callback = std::function<void(
+            const transaction::full_tx&,
+            std::optional<cbdc::sentinel::validate_response>)>;
+        using queued_attestation
+            = std::pair<transaction::full_tx, attestation_callback>;
+
         static void result_handler(std::optional<bool> res,
                                    const execute_result_callback_type& res_cb);
 
@@ -85,9 +101,23 @@ namespace cbdc::sentinel_2pc {
         void send_compact_tx(const transaction::compact_tx& ctx,
                              execute_result_callback_type result_callback);
 
+        auto validate_tx(const transaction::full_tx& tx,
+                         validation_callback cb) -> bool;
+        void validation_worker();
+
+        auto attest_tx(const transaction::full_tx& tx, attestation_callback cb)
+            -> bool;
+        void attestation_worker();
+
         uint32_t m_sentinel_id;
         cbdc::config::options m_opts;
         std::shared_ptr<logging::log> m_logger;
+
+        blocking_queue<queued_validation> m_validation_queue{};
+        std::vector<std::thread> m_validation_threads{};
+
+        blocking_queue<queued_attestation> m_attestation_queue{};
+        std::vector<std::thread> m_attestation_threads{};
 
         std::unique_ptr<cbdc::sentinel::rpc::async_server> m_rpc_server;
 
@@ -106,6 +136,8 @@ namespace cbdc::sentinel_2pc {
         std::uniform_int_distribution<size_t> m_dist{};
 
         privkey_t m_privkey{};
+
+        std::atomic<bool> m_running{true};
     };
 }
 
