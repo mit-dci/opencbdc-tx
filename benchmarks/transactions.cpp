@@ -41,21 +41,21 @@ void reset_wallets(cbdc::transaction::wallet& w1,
 /// @brief Time an N-in, 1-out transaction.
 /// @brief Note: handles benchmark timing, do not time outside function.
 /// @param sender
-/// @param reciever
+/// @param receiver
 /// @param n_in
 /// @param state
 /// @return
 inline bool generate_Nto1_tx(cbdc::transaction::wallet& sender,
-                             cbdc::transaction::wallet& reciever,
+                             cbdc::transaction::wallet& receiver,
                              uint32_t n_in,
                              benchmark::State& state) {
     std::optional<cbdc::transaction::full_tx> maybe_tx{};
     state.ResumeTiming();
-    maybe_tx = sender.send_to(n_in * 2, reciever.generate_key(), true).value();
+    maybe_tx = sender.send_to(n_in * 2, receiver.generate_key(), true).value();
     state.PauseTiming();
     if(maybe_tx.has_value()) {
         sender.confirm_transaction(*maybe_tx);
-        reciever.confirm_transaction(*maybe_tx);
+        receiver.confirm_transaction(*maybe_tx);
         return true;
     }
     return false;
@@ -64,22 +64,22 @@ inline bool generate_Nto1_tx(cbdc::transaction::wallet& sender,
 /// @brief Time an N-in, 2-out transaction.
 /// @brief Note: handles benchmark timing, do not time outside function.
 /// @param sender
-/// @param reciever
+/// @param receiver
 /// @param n_in
 /// @param state
 /// @return
 inline bool generate_Nto2_tx(cbdc::transaction::wallet& sender,
-                             cbdc::transaction::wallet& reciever,
+                             cbdc::transaction::wallet& receiver,
                              uint32_t n_in,
                              benchmark::State& state) {
     std::optional<cbdc::transaction::full_tx> maybe_tx{};
     state.ResumeTiming();
     maybe_tx
-        = sender.send_to(n_in * 2 - 1, reciever.generate_key(), true).value();
+        = sender.send_to(n_in * 2 - 1, receiver.generate_key(), true).value();
     state.PauseTiming();
     if(maybe_tx.has_value()) {
         sender.confirm_transaction(*maybe_tx);
-        reciever.confirm_transaction(*maybe_tx);
+        receiver.confirm_transaction(*maybe_tx);
         return true;
     }
     return false;
