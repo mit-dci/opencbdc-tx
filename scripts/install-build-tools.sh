@@ -17,7 +17,7 @@ fi
 
 # Supporting these versions for buildflow
 PYTHON_VERSIONS=("3.10" "3.11" "3.12")
-echo "Python3 versions supported: ${PYTHON_VERSIONS[@]}"
+echo "Python3 versions supported: ${PYTHON_VERSIONS[*]}"
 
 # check if supported version of python3 is already installed, and save the version
 PY_INSTALLED=''
@@ -60,7 +60,7 @@ create_venv_install_python() {
         if ! $SUDO apt install -y python3-pip; then
             echo "Failed to install python3-pip"
             wget https://bootstrap.pypa.io/get-pip.py
-            $SUDO python${PY_VERSION} get-pip.py
+            $SUDO python"$PY_VERSION" get-pip.py
             rm get-pip.py
         fi
         # add deadsnakes to download the python venv module
@@ -112,7 +112,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         exit 1
     fi
 
-    CPUS=$(sysctl -n hw.ncpu)
     # ensure development environment is set correctly for clang
     $SUDO xcode-select -switch /Library/Developer/CommandLineTools
 
@@ -121,7 +120,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         exit 1
     fi
 
-    brew install llvm@14 googletest google-benchmark lcov make wget cmake bash bc
+    CPUS=$(sysctl -n hw.ncpu)
+    echo llvm@14 googletest google-benchmark lcov make wget cmake bash bc | xargs -n 1 -P "$CPUS" brew install
     brew upgrade bash
 
     BREW_ROOT=$(brew --prefix)
@@ -132,7 +132,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     fi
     GMAKE=/usr/local/bin/gmake
     if [[ ! -L "$GMAKE" ]]; then
-        $SUDO ln -s $(xcode-select -p)/usr/bin/gnumake /usr/local/bin/gmake
+        $SUDO ln -s "$(xcode-select -p)"/usr/bin/gnumake /usr/local/bin/gmake
     fi
 
     # install valid python version if not installed yet
@@ -172,8 +172,8 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
 
     $SUDO apt update -y
     $SUDO apt install -y clang-format-14 clang-tidy-14
-    $SUDO ln -sf $(which clang-format-14) /usr/local/bin/clang-format
-    $SUDO ln -sf $(which clang-tidy-14) /usr/local/bin/clang-tidy
+    $SUDO ln -sf "$(which clang-format-14)" /usr/local/bin/clang-format
+    $SUDO ln -sf "$(which clang-tidy-14)" /usr/local/bin/clang-tidy
 
     # install valid python version if not installed yet
     if [[ -z "$PY_INSTALLED" ]]; then
@@ -194,9 +194,9 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
         MAX_RETRIES=2
         while [[ $MAX_RETRIES -gt 0 ]]; do
             # install python3 valid version and venv module
-            if $SUDO apt install -y ${FULL_PY}; then
+            if $SUDO apt install -y "$FULL_PY"; then
                 echo "${FULL_PY} installed successfully"
-                PY_INSTALLED=${PY_VERS}
+                PY_INSTALLED="$PY_VERS"
                 break
             fi
             MAX_RETRIES=$((MAX_RETRIES - 1))
@@ -215,8 +215,8 @@ if ! which "python${PY_INSTALLED}" &> /dev/null; then
     exit 1
 else
     # create virtual environment and install python packages for the valid python version
-    PYTHON_PATH=$(which "python${PY_INSTALLED}")
-    create_venv_install_python "${PYTHON_PATH}" ${PY_INSTALLED}
+    PYTHON_PATH=$(which python"$PY_INSTALLED")
+    create_venv_install_python "$PYTHON_PATH" "$PY_INSTALLED"
 fi
 echo "To activate the virtual env to run python, run 'source ./scripts/activate-venv.sh'"
 

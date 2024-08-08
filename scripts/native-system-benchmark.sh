@@ -107,7 +107,8 @@ case "$DURATION" in
 esac
 
 if [[ -n "$_help" ]]; then
-    printf "$usage" "$(basename $0)"
+    # shellcheck disable=SC2059
+    printf "$usage" "$(basename "$0")"
     exit "$_err"
 fi
 
@@ -151,7 +152,7 @@ on_int() {
     printf 'Interrupting all components\n'
     trap '' SIGINT # avoid interrupting ourself
     for i in $PIDS; do # intentionally unquoted
-        if [[ -n "RECORD" ]]; then
+        if [[ -n "$RECORD" ]]; then
             kill -SIGINT -- "-$i"
         else
             kill -SIGINT -- "$i"
@@ -178,7 +179,7 @@ on_int() {
     if [[ -x "$(which flamegraph.pl)" && -x "$(which stackcollapse-perf.pl)" && -n "$(find "$TESTDIR" -maxdepth 1 -name '*.perf' -print -quit)" ]]; then
         printf 'Generating Flamegraphs\n'
         for i in "$TESTDIR"/*.perf; do
-            waitpid -t 5 -e $(lsof -Qt "$i") &>/dev/null
+            waitpid -t 5 -e "$(lsof -Qt "$i")" &>/dev/null
             perf script -i "$i" | stackcollapse-perf.pl > "${i/.perf/.folded}"
             flamegraph.pl "${i/.perf/.folded}" > "${i/.perf/.svg}"
             rm -- "${i/.perf/.folded}"
@@ -194,7 +195,7 @@ on_int() {
 
     printf 'Terminating any remaining processes\n'
     for i in $PIDS; do # intentionally unquoted
-        if [[ -n "RECORD" ]]; then
+        if [[ -n "$RECORD" ]]; then
             kill -SIGTERM -- "-$i"
         else
             kill -SIGTERM -- "$i"
@@ -253,7 +254,7 @@ run() {
     COMP=
     case "$RECORD" in
         perf)
-            $@ &> "$PROC_LOG" &
+            "$@" &> "$PROC_LOG" &
             COMP="$!"
             perf record -F 99 -a -g -o "$PNAME".perf -p "$COMP" &> "$PERF_LOG" &
             PERFS="$PERFS $!";;
@@ -261,7 +262,7 @@ run() {
             ${DBG} "$@" &> "$PROC_LOG" &
             COMP="$!";;
         *)
-            $@ &> "$PROC_LOG" &
+            "$@" &> "$PROC_LOG" &
             COMP="$!";;
     esac
 
@@ -287,9 +288,9 @@ seed() {
     if test ! -e "$SEEDDIR"/"$preseed_id"; then
         printf 'Creating %s\n' "$preseed_id"
         mkdir -p -- "$SEEDDIR"/"$preseed_id"
-        pushd "$SEEDDIR"/"$preseed_id" &> /dev/null
+        pushd "$SEEDDIR"/"$preseed_id" &> /dev/null || exit
         PID=$(PNAME=seeder BLOCK=1 run "$(getpath seeder)" "$CFG")
-        popd &> /dev/null
+        popd &> /dev/null || exit
     fi
 
     printf 'Using %s as seed\n' "$preseed_id"
@@ -320,12 +321,13 @@ launch() {
                 for node in $(seq 0 $(( "$raft" - 1 )) ); do
                     export PNAME="$1${id}_$node"
                     PID=$(run "$(getpath "$1")" "$CFG" "$id" "$node")
+                    # shellcheck disable=SC2013
                     for ep in $(awk -F'[":]' "/$PNAME.*endpoint/ { print \$3 }" "$CFG"); do
                         "$RT"/scripts/wait-for-it.sh -q -t 5 -h localhost -p "$ep"
                     done
                     printf 'Launched logical %s %d, replica %d [PID: %d]\n' "$1" "$id" "$node" "$PID"
-                    if [[ -n "RECORD" ]]; then
-                        PIDS="$PIDS $(getpgid $PID)"
+                    if [[ -n "$RECORD" ]]; then
+                        PIDS="$PIDS $(getpgid "$PID")"
                     else
                         PIDS="$PIDS $PID"
                     fi
@@ -333,12 +335,13 @@ launch() {
             else
                 export PNAME="$1${id}"
                 PID=$(run "$(getpath "$1")" "$CFG" "$id")
+                # shellcheck disable=SC2013
                 for ep in $(awk -F'[":]' "/$PNAME.*endpoint/ { print \$3 }" "$CFG"); do
                     "$RT"/scripts/wait-for-it.sh -q -t 5 -h localhost -p "$ep"
                 done
                 printf 'Launched %s %d [PID: %d]\n' "$1" "$id" "$PID"
-                if [[ -n "RECORD" ]]; then
-                    PIDS="$PIDS $(getpgid $PID)"
+                if [[ -n "$RECORD" ]]; then
+                    PIDS="$PIDS $(getpgid "$PID")"
                 else
                     PIDS="$PIDS $PID"
                 fi
