@@ -225,7 +225,15 @@ namespace cbdc::parsec::agent::runner {
 
     auto evm_host::create(const evmc_message& msg) noexcept -> evmc::Result {
         auto maybe_sender_acc = get_account(msg.sender, false);
-        assert(maybe_sender_acc.has_value());
+        if(!maybe_sender_acc.has_value()) {
+            m_log->warn("EVM CREATE: sender account not found");
+            return evmc::Result(
+                evmc::make_result(evmc_status_code::EVMC_REVERT,
+                                  0,
+                                  0,
+                                  nullptr,
+                                  0));
+        }
         auto& sender_acc = maybe_sender_acc.value();
 
         auto new_addr = evmc::address();
