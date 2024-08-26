@@ -98,9 +98,14 @@ namespace cbdc::sentinel_2pc {
     auto controller::execute_transaction(
         transaction::full_tx tx,
         execute_result_callback_type result_callback) -> bool {
+        auto tx_id = transaction::tx_id(tx);
+        auto recv_time = std::chrono::high_resolution_clock::now()
+                             .time_since_epoch()
+                             .count();
+        m_logger->trace("Began execution of", to_string(tx_id), "at",
+                        recv_time);
         const auto validation_err = transaction::validation::check_tx(tx);
         if(validation_err.has_value()) {
-            auto tx_id = transaction::tx_id(tx);
             m_logger->debug(
                 "Rejected (",
                 transaction::validation::to_string(validation_err.value()),
@@ -118,6 +123,13 @@ namespace cbdc::sentinel_2pc {
             auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
             compact_tx.m_attestations.insert(attestation);
         }
+
+        auto fwd_time = std::chrono::high_resolution_clock::now()
+                            .time_since_epoch()
+                            .count();
+
+        m_logger->trace("Accumulating attestations for", to_string(tx_id), "at",
+                        fwd_time);
 
         gather_attestations(tx, std::move(result_callback), compact_tx, {});
 
@@ -143,6 +155,11 @@ namespace cbdc::sentinel_2pc {
     auto controller::validate_transaction(
         transaction::full_tx tx,
         validate_result_callback_type result_callback) -> bool {
+        auto recv_time = std::chrono::high_resolution_clock::now()
+                             .time_since_epoch()
+                             .count();
+        m_logger->trace("Began validation of",
+                        to_string(transaction::tx_id(tx)), "at", recv_time);
         const auto validation_err = transaction::validation::check_tx(tx);
         if(validation_err.has_value()) {
             result_callback(std::nullopt);
@@ -150,6 +167,11 @@ namespace cbdc::sentinel_2pc {
         }
         auto compact_tx = cbdc::transaction::compact_tx(tx);
         auto attestation = compact_tx.sign(m_secp.get(), m_privkey);
+        auto resp_time = std::chrono::high_resolution_clock::now()
+                             .time_since_epoch()
+                             .count();
+        m_logger->trace("Validated", to_string(transaction::tx_id(tx)), "at",
+                        resp_time);
         result_callback(std::move(attestation));
         return true;
     }
@@ -201,7 +223,10 @@ namespace cbdc::sentinel_2pc {
             return;
         }
 
-        m_logger->debug("Accepted", to_string(ctx.m_id));
+        auto acc_time = std::chrono::high_resolution_clock::now()
+                             .time_since_epoch()
+                             .count();
+        m_logger->debug("Accepted", to_string(ctx.m_id), "at", acc_time);
 
         send_compact_tx(ctx, std::move(result_callback));
     }

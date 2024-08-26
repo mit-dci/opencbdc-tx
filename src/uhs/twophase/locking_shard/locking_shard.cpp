@@ -103,6 +103,11 @@ namespace cbdc::locking_shard {
 
     auto locking_shard::check_and_lock_tx(const tx& t) -> bool {
         bool success{true};
+        auto recv_time = std::chrono::high_resolution_clock::now()
+                             .time_since_epoch()
+                             .count();
+        m_logger->trace("Began check-and-lock of",
+                        to_string(t.m_tx.m_id), "at", recv_time);
         if(!transaction::validation::check_attestations(
                t.m_tx,
                m_opts.m_sentinel_public_keys,
@@ -129,6 +134,11 @@ namespace cbdc::locking_shard {
                 }
             }
         }
+        auto resp_time = std::chrono::high_resolution_clock::now()
+                             .time_since_epoch()
+                             .count();
+        m_logger->trace("Completed check-and-lock of",
+                        to_string(t.m_tx.m_id), "at", resp_time);
         return success;
     }
 

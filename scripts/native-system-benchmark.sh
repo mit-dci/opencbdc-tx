@@ -14,7 +14,8 @@ TL=$(git rev-parse --show-toplevel)
 RT="${TL:-$CWD}"
 BLD="$RT"/build
 SEEDDIR="$BLD"/preseeds
-TESTDIR="$BLD"/test-$(date +"%s")
+TESTID=$(date +"%s")
+TESTDIR="$BLD"/test-"$TESTID"
 
 IFS='' read -r -d '' usage <<'EOF'
 Usage: %s [options]
@@ -24,6 +25,8 @@ Options:
   -c, --config=PATH       use PATH as the test configuration
   -s, --samples=TIME      run test for TIME seconds (defaults to 30)
                           (or indefinitely if set to inf, or infinity)
+  -t, --test-dir=PATH     use PATH for conducting the test instead of
+                          generating one based on the current time
 
 Cleanup:
   --clean                 delete all previous test and preseed artifacts
@@ -51,6 +54,11 @@ fi
 
 _err=0
 while [[ $# -gt 0 ]]; do
+    if [[ "$1" = '--' ]]; then
+        shift 1
+        break
+    fi
+
     optarg=
     shft_cnt=1
     if [[ "$1" =~ [=] ]]; then
@@ -86,6 +94,13 @@ while [[ $# -gt 0 ]]; do
                 *)   DBG="$optarg";;
             esac
             shift "$shft_cnt";;
+        -t*|--test-dir*)
+            if [[ "${optarg:0:1}" == '/' ]]; then
+                TESTDIR="$optarg"
+            else
+                TESTDIR="$CWD/$optarg"
+            fi
+            shift "$shft_cnt";;
         -c*|--config*)
             if [[ "$optarg" = /* ]]; then
                 ORIG_CFG="${optarg}"
@@ -111,7 +126,7 @@ if [[ -n "$_help" ]]; then
     exit "$_err"
 fi
 
-if [[ -z "$ORIG_CFG" ]]; then
+if [[ -z "$ORIG_CFG" && "$TESTDIR" = "$BLD"/test-"$TESTID" ]]; then
     printf '%s\n' 'No config specified; exiting'
     exit 0
 fi
@@ -136,7 +151,20 @@ BEGIN {
 EOF
 
 CFG="$TESTDIR"/config
-awk "$normalize" "$ORIG_CFG" > "$CFG"
+if [[ -f "$CFG" ]]; then
+    printf 'WARNING: Running from a pre-existing test directory\n'
+    if grep -q 'seed' "$CFG"; then
+        # loadgens don't currently serialize their wallet state to-disk
+        # so effectively all funds are orphaned in this case; disabling
+        # seeding means the new loadgens will mint and be able to send
+        # new transactions
+        printf 'Disabling seeding in-favor of minting\n'
+        grep -v 'seed' "$CFG" > "$TESTDIR"/config."$TESTID"
+        CFG="$TESTDIR"/config."$TESTID"
+    fi
+else
+    awk "$normalize" "$ORIG_CFG" > "$CFG"
+fi
 
 twophase=$(grep -q '2pc=1' "$CFG" && printf '1\n' || printf '0\n')
 arch=
@@ -151,7 +179,7 @@ on_int() {
     printf 'Interrupting all components\n'
     trap '' SIGINT # avoid interrupting ourself
     for i in $PIDS; do # intentionally unquoted
-        if [[ -n "RECORD" ]]; then
+        if [[ -n "$RECORD" ]]; then
             kill -SIGINT -- "-$i"
         else
             kill -SIGINT -- "$i"
@@ -194,7 +222,7 @@ on_int() {
 
     printf 'Terminating any remaining processes\n'
     for i in $PIDS; do # intentionally unquoted
-        if [[ -n "RECORD" ]]; then
+        if [[ -n "$RECORD" ]]; then
             kill -SIGTERM -- "-$i"
         else
             kill -SIGTERM -- "$i"
@@ -324,7 +352,7 @@ launch() {
                         "$RT"/scripts/wait-for-it.sh -q -t 5 -h localhost -p "$ep"
                     done
                     printf 'Launched logical %s %d, replica %d [PID: %d]\n' "$1" "$id" "$node" "$PID"
-                    if [[ -n "RECORD" ]]; then
+                    if [[ -n "$RECORD" ]]; then
                         PIDS="$PIDS $(getpgid $PID)"
                     else
                         PIDS="$PIDS $PID"
@@ -337,7 +365,7 @@ launch() {
                     "$RT"/scripts/wait-for-it.sh -q -t 5 -h localhost -p "$ep"
                 done
                 printf 'Launched %s %d [PID: %d]\n' "$1" "$id" "$PID"
-                if [[ -n "RECORD" ]]; then
+                if [[ -n "$RECORD" ]]; then
                     PIDS="$PIDS $(getpgid $PID)"
                 else
                     PIDS="$PIDS $PID"

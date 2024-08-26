@@ -34,8 +34,14 @@ auto main(int argc, char** argv) -> int {
     auto cfg = std::get<cbdc::config::options>(cfg_or_err);
 
     auto gen_id = std::stoull(args[2]);
-    auto logger
-        = std::make_shared<cbdc::logging::log>(cbdc::logging::log_level::info);
+    if(gen_id >= cfg.m_loadgen_count) {
+        std::cerr << "Attempted to run more loadgens than configured"
+                  << std::endl;
+        return -1;
+    }
+
+    auto logger = std::make_shared<cbdc::logging::log>(
+        cfg.m_loadgen_loglevels[gen_id]);
 
     auto sha2_impl = SHA256AutoDetect();
     logger->info("using sha2: ", sha2_impl);
@@ -115,6 +121,26 @@ auto main(int argc, char** argv) -> int {
         logger->info("Mint confirmed");
     }
 
+    size_t per_gen_send_limit = 0;
+    size_t per_gen_step_size = 0;
+    if(cfg.m_loadgen_tps_target != 0) {
+        per_gen_send_limit = static_cast<size_t>(
+            cfg.m_loadgen_tps_initial
+            * static_cast<double>(cfg.m_loadgen_tps_target));
+        double per_gen_range = static_cast<double>(cfg.m_loadgen_tps_target)
+                             - static_cast<double>(per_gen_send_limit);
+        // clamp step (s) such that 1 <= s <= (target - initial)
+        per_gen_step_size = std::max(
+            std::min(static_cast<size_t>(per_gen_range
+                                         * cfg.m_loadgen_tps_step_size),
+                     static_cast<size_t>(per_gen_range)),
+            size_t{1});
+    }
+
+    if(cfg.m_loadgen_tps_step_time == 0) {
+        per_gen_send_limit = cfg.m_loadgen_tps_target;
+    }
+
     static constexpr auto lookup_timeout = std::chrono::milliseconds(5000);
     auto status_client = cbdc::locking_shard::rpc::status_client(
         cfg.m_locking_shard_readonly_endpoints,
@@ -161,7 +187,17 @@ auto main(int argc, char** argv) -> int {
 
     constexpr auto send_amt = 5;
 
+    uint64_t send_gap{};
     uint64_t gen_avg{};
+    auto ramp_secs = std::chrono::duration<double, std::ratio<1, 1>>(
+        cfg.m_loadgen_tps_step_time);
+    auto ramp_timer_full
+        = std::chrono::duration_cast<std::chrono::nanoseconds>(ramp_secs);
+
+    auto ramp_timer = ramp_timer_full;
+    auto ramping = ramp_timer.count() != 0
+                && per_gen_send_limit != cfg.m_loadgen_tps_target
+                && cfg.m_loadgen_tps_target != 0;
     auto gen_thread = std::thread([&]() {
         while(running) {
             // Determine if we should attempt to send a double-spending
@@ -219,8 +255,52 @@ auto main(int argc, char** argv) -> int {
                 gen_avg = static_cast<uint64_t>(
                     (static_cast<double>(gen_t.count()) * average_factor)
                     + (static_cast<double>(gen_avg) * (1.0 - average_factor)));
+                if(ramping) {
+                    if(gen_t >= ramp_timer) {
+                        logger->debug(
+                            "Ramp Timer Exhausted (gen_t). Resetting");
+                        ramp_timer = ramp_timer_full;
+                        per_gen_send_limit
+                            = std::min(cfg.m_loadgen_tps_target,
+                                       per_gen_send_limit + per_gen_step_size);
+                        logger->debug("New Send Limit:", per_gen_send_limit);
+                        if(per_gen_send_limit == cfg.m_loadgen_tps_target) {
+                            ramping = false;
+                            logger->info("Reached Target Throughput");
+                        }
+                    } else {
+                        ramp_timer -= gen_t;
+                    }
+                    auto total_send_time
+                        = std::chrono::nanoseconds(gen_avg * per_gen_send_limit);
+                    if(total_send_time < std::chrono::seconds(1)
+                        && per_gen_send_limit != 0) {
+                        send_gap
+                            = (std::chrono::seconds(1) - total_send_time).count()
+                            / per_gen_send_limit;
+                        logger->trace("New send-gap:", send_gap);
+                    }
+                }
             } else {
                 std::this_thread::sleep_for(std::chrono::nanoseconds(gen_avg));
+                if(ramping) {
+                    auto avg = std::chrono::nanoseconds(gen_avg);
+                    if(avg >= ramp_timer) {
+                        logger->debug("Ramp Timer Exhausted (dbl-spend "
+                                      "gen_avg). Resetting");
+                        ramp_timer = ramp_timer_full;
+                        per_gen_send_limit
+                            = std::min(cfg.m_loadgen_tps_target,
+                                       per_gen_send_limit + per_gen_step_size);
+                        logger->debug("New Send Limit:", per_gen_send_limit);
+                        if(per_gen_send_limit == cfg.m_loadgen_tps_target) {
+                            ramping = false;
+                            logger->info("Reached Target Throughput");
+                        }
+                    } else {
+                        ramp_timer -= avg;
+                    }
+                }
             }
 
             // We couldn't send a double-spend or a newly generated valid
@@ -234,6 +314,23 @@ auto main(int argc, char** argv) -> int {
                 // instead.
                 static constexpr auto send_delay = std::chrono::seconds(1);
                 std::this_thread::sleep_for(send_delay);
+                if(ramping) {
+                    if(send_delay >= ramp_timer) {
+                        logger->debug(
+                            "Ramp Timer Exhausted (send_delay). Resetting");
+                        ramp_timer = ramp_timer_full;
+                        per_gen_send_limit
+                            = std::min(cfg.m_loadgen_tps_target,
+                                       per_gen_send_limit + per_gen_step_size);
+                        logger->debug("New Send Limit:", per_gen_send_limit);
+                        if(per_gen_send_limit == cfg.m_loadgen_tps_target) {
+                            ramping = false;
+                            logger->info("Reached Target Throughput");
+                        }
+                    } else {
+                        ramp_timer -= send_delay;
+                    }
+                }
                 continue;
             }
 
@@ -241,10 +338,17 @@ auto main(int argc, char** argv) -> int {
                                  .time_since_epoch()
                                  .count();
 
+            auto tx_id = cbdc::transaction::tx_id(tx.value());
+            logger->trace("Sent", cbdc::to_string(tx_id), "at", send_time);
+
             auto res_cb
-                = [&, txn = tx.value(), send_time = send_time](
+                = [&, txn = tx.value(), send_time = send_time, tx_id = tx_id](
                       cbdc::sentinel::rpc::client::execute_result_type res) {
-                      auto tx_id = cbdc::transaction::tx_id(txn);
+                      auto now = std::chrono::high_resolution_clock::now()
+                                     .time_since_epoch()
+                                     .count();
+                      logger->trace("Received response for",
+                                    cbdc::to_string(tx_id), "at", now);
                       if(!res.has_value()) {
                           logger->warn("Failure response from sentinel for",
                                        cbdc::to_string(tx_id));
@@ -256,9 +360,6 @@ auto main(int argc, char** argv) -> int {
                          == cbdc::sentinel::tx_status::confirmed) {
                           wallet.confirm_transaction(txn);
                           second_conf_queue.push(tx_id);
-                          auto now = std::chrono::high_resolution_clock::now()
-                                         .time_since_epoch()
-                                         .count();
                           const auto tx_delay = now - send_time;
                           latency_log << now << " " << tx_delay << "\n";
                           constexpr auto max_invalid = 100000;
@@ -279,6 +380,27 @@ auto main(int argc, char** argv) -> int {
                                                     std::move(res_cb))) {
                 logger->error("Failure sending transaction to sentinel");
                 wallet.confirm_inputs(tx.value().m_inputs);
+            }
+
+            auto gap = std::chrono::nanoseconds(send_gap);
+            if(gap < std::chrono::seconds(1)) {
+                std::this_thread::sleep_for(gap);
+                if(ramping) {
+                    if(gap >= ramp_timer) {
+                        logger->debug("Ramp Timer Exhausted (gap). Resetting");
+                        ramp_timer = ramp_timer_full;
+                        per_gen_send_limit
+                            = std::min(cfg.m_loadgen_tps_target,
+                                       per_gen_send_limit + per_gen_step_size);
+                        logger->debug("New Send Limit:", per_gen_send_limit);
+                        if(per_gen_send_limit == cfg.m_loadgen_tps_target) {
+                            ramping = false;
+                            logger->info("Reached Target Throughput");
+                        }
+                    } else {
+                        ramp_timer -= gap;
+                    }
+                }
             }
         }
     });
