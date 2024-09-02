@@ -19,10 +19,10 @@ namespace cbdc::parsec::agent {
         enum class state {
             /// Initial state.
             init,
-            /// Begin request sent to broker.
-            begin_sent,
-            /// Begin request failed.
-            begin_failed,
+            /// Request for new ticket number sent to broker.
+            ticket_number_request_sent,
+            /// Request for new ticket number failed.
+            ticket_number_request_failed,
             /// Function bytecode lock sent to broker.
             function_get_sent,
             /// Function bytecode lock request failed.
@@ -124,16 +124,17 @@ namespace cbdc::parsec::agent {
         broker::held_locks_set_type m_requested_locks{};
         bool m_restarted{false};
 
-        void handle_begin(broker::interface::ticketnum_or_errcode_type res);
+        void handle_new_ticket_number(
+            broker::interface::ticketnum_or_errcode_type res);
 
         void
         handle_function(const broker::interface::try_lock_return_type& res);
 
-        void handle_run(const runner::interface::run_return_type& res);
+        void handle_run_result(const runner::interface::run_return_type& res);
 
         void handle_commit(broker::interface::commit_return_type res);
 
-        void do_start();
+        void do_start_function();
 
         void do_result();
 

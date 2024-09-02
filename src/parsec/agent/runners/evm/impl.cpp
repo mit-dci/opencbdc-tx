@@ -428,7 +428,7 @@ namespace cbdc::parsec::agent::runner {
             return true;
         }
         auto from = maybe_from.value();
-        return run_execute_transaction(from, false);
+        return start_execute_transaction(from, false);
     }
 
     auto evm_runner::run_execute_dryrun_transaction() -> bool {
@@ -441,7 +441,7 @@ namespace cbdc::parsec::agent::runner {
         auto& dryrun_tx = maybe_tx.value();
         m_tx = std::move(dryrun_tx.m_tx);
 
-        return run_execute_transaction(dryrun_tx.m_from, true);
+        return start_execute_transaction(dryrun_tx.m_from, true);
     }
 
     auto evm_runner::check_base_gas(const evm_tx& evmtx, bool is_readonly_run)
@@ -519,8 +519,8 @@ namespace cbdc::parsec::agent::runner {
         return tx_ctx;
     }
 
-    auto evm_runner::run_execute_transaction(const evmc::address& from,
-                                             bool is_readonly_run) -> bool {
+    auto evm_runner::start_execute_transaction(const evmc::address& from,
+                                               bool is_readonly_run) -> bool {
         auto tx_ctx = make_tx_context(from, m_tx, is_readonly_run);
 
         m_host = std::make_unique<evm_host>(m_log,
@@ -549,7 +549,7 @@ namespace cbdc::parsec::agent::runner {
                 broker::lock_type::write,
                 [this](const broker::interface::try_lock_return_type& res) {
                     m_log->trace(m_ticket_number, "read from account");
-                    handle_lock_from_account(res);
+                    handle_lockfromaccount_and_continue_exec(res);
                 });
             if(!r) {
                 m_log->error(
@@ -585,31 +585,39 @@ namespace cbdc::parsec::agent::runner {
             m_log->trace("EVM output data:", out_buf.to_hex());
 
             m_log->trace("Result status: ", result.status_code);
-            auto fn = [this, gas_left = result.gas_left]() {
+
+            // finalize_fn() makes the final set of state updates and invokes
+            // the main result callback with the full set of accumulated state
+            // updates
+            auto finalize_fn = [this, gas_left = result.gas_left]() {
                 auto gas_used = m_msg.gas - gas_left;
                 m_host->finalize(gas_left, gas_used);
                 auto state_updates = m_host->get_state_updates();
                 m_result_callback(state_updates);
             };
-            lock_index_keys(fn);
+
+            const auto log_index_keys = m_host->get_log_index_keys();
+            if(log_index_keys.empty()) {
+                finalize_fn();
+            } else {
+                lock_index_keys_and_finalize(log_index_keys, finalize_fn);
+            }
         }
     }
 
-    void evm_runner::lock_index_keys(const std::function<void()>& callback) {
-        auto keys = m_host->get_log_index_keys();
-        if(keys.empty()) {
-            callback();
-            return;
-        }
+    void evm_runner::lock_index_keys_and_finalize(
+        const std::vector<cbdc::buffer>& keys,
+        const std::function<void()>& finalize_fn) {
         auto acquired = std::make_shared<std::atomic<size_t>>();
-        for(auto& key : keys) {
+        for(const auto& key : keys) {
             auto success = m_try_lock_callback(
                 key,
                 broker::lock_type::write,
-                [acquired, callback, key_count = keys.size()](
+                [acquired, finalize_fn, key_count = keys.size()](
                     const broker::interface::try_lock_return_type&) {
-                    if(++(*acquired) == key_count) {
-                        callback();
+                    const bool is_last_key = ++(*acquired) == key_count;
+                    if(is_last_key) {
+                        finalize_fn();
                     }
                 });
             if(!success) {
@@ -620,7 +628,7 @@ namespace cbdc::parsec::agent::runner {
         }
     }
 
-    void evm_runner::handle_lock_from_account(
+    void evm_runner::handle_lockfromaccount_and_continue_exec(
         const broker::interface::try_lock_return_type& res) {
         if(!std::holds_alternative<broker::value_type>(res)) {
             m_log->debug("Failed to read account from shards");
@@ -684,7 +692,7 @@ namespace cbdc::parsec::agent::runner {
                     return;
                 }
                 m_log->trace(m_ticket_number, "locked TXID key");
-                lock_ticket_number_key();
+                lock_ticket_number_key_and_continue_exec();
             });
         if(!maybe_sent) {
             m_log->error("Failed to send try_lock request for TX receipt");
@@ -693,7 +701,7 @@ namespace cbdc::parsec::agent::runner {
         }
     }
 
-    void evm_runner::lock_ticket_number_key() {
+    void evm_runner::lock_ticket_number_key_and_continue_exec() {
         auto maybe_sent = m_try_lock_callback(
             m_host->ticket_number_key(),
             broker::lock_type::write,
