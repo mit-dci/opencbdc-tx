@@ -20,7 +20,10 @@ copyright_license = [
 # that returns the m_input data for deploying the contract, and
 # data_<shortname>_<methodname> for generating the input data necessary to
 # call the given method on the contract
-contracts_dict = {'artifacts/contracts/ERC20.sol/Token.json':'erc20'}
+contracts_dict =  [
+    {'artifacts/contracts/ERC20.sol/Token.json': 'erc20'},
+    {'artifacts/contracts/MyEscrow.sol/MyEscrow.json': 'myescrow'}
+]
 
 # helper functions
 def create_loaded_contracts(contracts: dict) -> dict:
@@ -30,17 +33,18 @@ def create_loaded_contracts(contracts: dict) -> dict:
     '''
     loaded_contracts = {}
     contracts_read = 0
-    for k, v in contracts.items():
-        try:
-            with open(k, 'r', encoding='utf-8') as file:
-                loaded_contracts[v] = json.load(file)
-                contracts_read += 1
-        except FileNotFoundError:
-            print(f'File {k} not found, skipping')
-            continue
-        except IOError:
-            print(f'Error reading {k}, skipping')
-            continue
+    for contract in contracts:
+        for k, v in contract.items():
+            try:
+                with open(k, 'r', encoding='utf-8') as file:
+                    loaded_contracts[v] = json.load(file)
+                    contracts_read += 1
+            except FileNotFoundError:
+                print(f'File {k} not found, skipping')
+                continue
+            except IOError:
+                print(f'Error reading {k}, skipping')
+                continue
 
     if contracts_read == 0:
         print('No contracts loaded, exiting')
@@ -101,6 +105,7 @@ def write_header_file(loaded_contracts: dict) -> None:
 
             # Loop over the functions in the ABI
             for abi in v['abi']:
+                print(f" Abi Type is : {abi['type']}")
                 # Only make methods for functions, ignore events (for now)
                 if abi['type'] == 'function':
                     # Write the method name data_<shortname>_<methodname>

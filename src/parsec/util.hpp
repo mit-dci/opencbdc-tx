@@ -16,7 +16,9 @@ namespace cbdc::parsec {
         /// Base token transfer
         transfer,
         /// ERC20 token transfer
-        erc20
+        erc20,
+        /// Escrow token transfer
+        escrow
     };
 
     /// Execution/transaction model

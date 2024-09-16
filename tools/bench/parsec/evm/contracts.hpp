@@ -9,46 +9,518 @@
 #include "parsec/agent/runners/evm/hash.hpp"
 #include "util/common/buffer.hpp"
 
-#include <evmc/evmc.hpp>
-
 namespace cbdc::parsec::evm_contracts {
     static constexpr size_t selector_size = 4;
     static constexpr size_t param_size = 32;
 
     static constexpr size_t address_param_offset
         = 12; // in ABIs addresses are also 32 bytes
-    auto data_erc20_deploy() -> cbdc::buffer;
+    auto data_erc20_deploy() -> cbdc::buffer {
+        auto buf = cbdc::buffer::from_hex(
+            "60806040523480156200001157600080fd5b50604051806040016040528060068"
+            "1526020017f546f6b656e73000000000000000000000000000000000000000000"
+            "00000000008152506040518060400160405280600381526020017f544f4b00000"
+            "00000000000000000000000000000000000000000000000000000815250816003"
+            "90816200008f9190620004b7565b508060049081620000a19190620004b7565b5"
+            "05050620000c03369d3c21bcecceda1000000620000c660201b60201c565b6200"
+            "06b9565b600073ffffffffffffffffffffffffffffffffffffffff168273fffff"
+            "fffffffffffffffffffffffffffffffffff160362000138576040517f08c379a0"
+            "00000000000000000000000000000000000000000000000000000000815260040"
+            "16200012f90620005ff565b60405180910390fd5b6200014c6000838362000233"
+            "60201b60201c565b806002600082825462000160919062000650565b925050819"
+            "05550806000808473ffffffffffffffffffffffffffffffffffffffff1673ffff"
+            "ffffffffffffffffffffffffffffffffffff16815260200190815260200160002"
+            "0600082825401925050819055508173ffffffffffffffffffffffffffffffffff"
+            "ffffff16600073ffffffffffffffffffffffffffffffffffffffff167fddf252a"
+            "d1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef83604051"
+            "6200021391906200069c565b60405180910390a36200022f60008383620002386"
+            "0201b60201c565b5050565b505050565b505050565b600081519050919050565b"
+            "7f4e487b710000000000000000000000000000000000000000000000000000000"
+            "0600052604160045260246000fd5b7f4e487b7100000000000000000000000000"
+            "000000000000000000000000000000600052602260045260246000fd5b6000600"
+            "2820490506001821680620002bf57607f821691505b602082108103620002d557"
+            "620002d462000277565b5b50919050565b6000819050816000526020600020905"
+            "0919050565b60006020601f8301049050919050565b600082821b905092915050"
+            "565b6000600883026200033f7ffffffffffffffffffffffffffffffffffffffff"
+            "fffffffffffffffffffffffff8262000300565b6200034b868362000300565b95"
+            "508019841693508086168417925050509392505050565b6000819050919050565"
+            "b6000819050919050565b600062000398620003926200038c8462000363565b62"
+            "00036d565b62000363565b9050919050565b6000819050919050565b620003b48"
+            "362000377565b620003cc620003c3826200039f565b8484546200030d565b8255"
+            "50505050565b600090565b620003e3620003d4565b620003f0818484620003a95"
+            "65b505050565b5b8181101562000418576200040c600082620003d9565b600181"
+            "019050620003f6565b5050565b601f82111562000467576200043181620002db5"
+            "65b6200043c84620002f0565b810160208510156200044c578190505b62000464"
+            "6200045b85620002f0565b830182620003f5565b50505b505050565b600082821"
+            "c905092915050565b60006200048c600019846008026200046c565b1980831691"
+            "505092915050565b6000620004a7838362000479565b915082600202821790509"
+            "2915050565b620004c2826200023d565b67ffffffffffffffff811115620004de"
+            "57620004dd62000248565b5b620004ea8254620002a6565b620004f7828285620"
+            "0041c565b600060209050601f8311600181146200052f57600084156200051a57"
+            "8287015190505b62000526858262000499565b86555062000596565b601f19841"
+            "66200053f86620002db565b60005b828110156200056957848901518255600182"
+            "01915060208501945060208101905062000542565b86831015620005895784890"
+            "15162000585601f89168262000479565b8355505b600160028802018855505050"
+            "5b505050505050565b600082825260208201905092915050565b7f45524332303"
+            "a206d696e7420746f20746865207a65726f206164647265737300600082015250"
+            "565b6000620005e7601f836200059e565b9150620005f482620005af565b60208"
+            "2019050919050565b600060208201905081810360008301526200061a81620005"
+            "d8565b9050919050565b7f4e487b7100000000000000000000000000000000000"
+            "000000000000000000000600052601160045260246000fd5b60006200065d8262"
+            "000363565b91506200066a8362000363565b92508282019050808211156200068"
+            "5576200068462000621565b5b92915050565b620006968162000363565b825250"
+            "50565b6000602082019050620006b360008301846200068b565b92915050565b6"
+            "1122f80620006c96000396000f3fe608060405234801561001057600080fd5b50"
+            "600436106100a95760003560e01c8063395093511161007157806339509351146"
+            "1016857806370a082311461019857806395d89b41146101c8578063a457c2d714"
+            "6101e6578063a9059cbb14610216578063dd62ed3e14610246576100a9565b806"
+            "306fdde03146100ae578063095ea7b3146100cc57806318160ddd146100fc5780"
+            "6323b872dd1461011a578063313ce5671461014a575b600080fd5b6100b661027"
+            "6565b6040516100c39190610b0c565b60405180910390f35b6100e66004803603"
+            "8101906100e19190610bc7565b610308565b6040516100f39190610c22565b604"
+            "05180910390f35b61010461032b565b6040516101119190610c4c565b60405180"
+            "910390f35b610134600480360381019061012f9190610c67565b610335565b604"
+            "0516101419190610c22565b60405180910390f35b610152610364565b60405161"
+            "015f9190610cd6565b60405180910390f35b610182600480360381019061017d9"
+            "190610bc7565b61036d565b60405161018f9190610c22565b60405180910390f3"
+            "5b6101b260048036038101906101ad9190610cf1565b6103a4565b6040516101b"
+            "f9190610c4c565b60405180910390f35b6101d06103ec565b6040516101dd9190"
+            "610b0c565b60405180910390f35b61020060048036038101906101fb9190610bc"
+            "7565b61047e565b60405161020d9190610c22565b60405180910390f35b610230"
+            "600480360381019061022b9190610bc7565b6104f5565b60405161023d9190610"
+            "c22565b60405180910390f35b610260600480360381019061025b9190610d1e56"
+            "5b610518565b60405161026d9190610c4c565b60405180910390f35b606060038"
+            "05461028590610d8d565b80601f01602080910402602001604051908101604052"
+            "809291908181526020018280546102b190610d8d565b80156102fe5780601f106"
+            "102d3576101008083540402835291602001916102fe565b820191906000526020"
+            "600020905b8154815290600101906020018083116102e157829003601f1682019"
+            "15b5050505050905090565b60008061031361059f565b90506103208185856105"
+            "a7565b600191505092915050565b6000600254905090565b60008061034061059"
+            "f565b905061034d858285610770565b6103588585856107fc565b600191505093"
+            "92505050565b60006012905090565b60008061037861059f565b9050610399818"
+            "58561038a8589610518565b6103949190610ded565b6105a7565b600191505092"
+            "915050565b60008060008373ffffffffffffffffffffffffffffffffffffffff1"
+            "673ffffffffffffffffffffffffffffffffffffffff1681526020019081526020"
+            "01600020549050919050565b6060600480546103fb90610d8d565b80601f01602"
+            "08091040260200160405190810160405280929190818152602001828054610427"
+            "90610d8d565b80156104745780601f10610449576101008083540402835291602"
+            "00191610474565b820191906000526020600020905b8154815290600101906020"
+            "0180831161045757829003601f168201915b5050505050905090565b600080610"
+            "48961059f565b905060006104978286610518565b9050838110156104dc576040"
+            "517f08c379a000000000000000000000000000000000000000000000000000000"
+            "00081526004016104d390610e93565b60405180910390fd5b6104e98286868403"
+            "6105a7565b60019250505092915050565b60008061050061059f565b905061050"
+            "d8185856107fc565b600191505092915050565b6000600160008473ffffffffff"
+            "ffffffffffffffffffffffffffffff1673fffffffffffffffffffffffffffffff"
+            "fffffffff16815260200190815260200160002060008373ffffffffffffffffff"
+            "ffffffffffffffffffffff1673fffffffffffffffffffffffffffffffffffffff"
+            "f16815260200190815260200160002054905092915050565b600033905090565b"
+            "600073ffffffffffffffffffffffffffffffffffffffff168373fffffffffffff"
+            "fffffffffffffffffffffffffff1603610616576040517f08c379a00000000000"
+            "0000000000000000000000000000000000000000000000815260040161060d906"
+            "10f25565b60405180910390fd5b600073ffffffffffffffffffffffffffffffff"
+            "ffffffff168273ffffffffffffffffffffffffffffffffffffffff16036106855"
+            "76040517f08c379a0000000000000000000000000000000000000000000000000"
+            "00000000815260040161067c90610fb7565b60405180910390fd5b80600160008"
+            "573ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffff"
+            "ffffffffffffffffffffff16815260200190815260200160002060008473fffff"
+            "fffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffff"
+            "ffffffffffffff168152602001908152602001600020819055508173fffffffff"
+            "fffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffff"
+            "ffffffffffff167f8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5"
+            "b200ac8c7c3b925836040516107639190610c4c565b60405180910390a3505050"
+            "565b600061077c8484610518565b90507ffffffffffffffffffffffffffffffff"
+            "fffffffffffffffffffffffffffffffff81146107f657818110156107e8576040"
+            "517f08c379a000000000000000000000000000000000000000000000000000000"
+            "00081526004016107df90611023565b60405180910390fd5b6107f58484848403"
+            "6105a7565b5b50505050565b600073fffffffffffffffffffffffffffffffffff"
+            "fffff168373ffffffffffffffffffffffffffffffffffffffff160361086b5760"
+            "40517f08c379a0000000000000000000000000000000000000000000000000000"
+            "000008152600401610862906110b5565b60405180910390fd5b600073ffffffff"
+            "ffffffffffffffffffffffffffffffff168273fffffffffffffffffffffffffff"
+            "fffffffffffff16036108da576040517f08c379a0000000000000000000000000"
+            "0000000000000000000000000000000081526004016108d190611147565b60405"
+            "180910390fd5b6108e5838383610a72565b60008060008573ffffffffffffffff"
+            "ffffffffffffffffffffffff1673fffffffffffffffffffffffffffffffffffff"
+            "fff1681526020019081526020016000205490508181101561096b576040517f08"
+            "c379a000000000000000000000000000000000000000000000000000000000815"
+            "2600401610962906111d9565b60405180910390fd5b8181036000808673ffffff"
+            "ffffffffffffffffffffffffffffffffff1673fffffffffffffffffffffffffff"
+            "fffffffffffff16815260200190815260200160002081905550816000808573ff"
+            "ffffffffffffffffffffffffffffffffffffff1673fffffffffffffffffffffff"
+            "fffffffffffffffff168152602001908152602001600020600082825401925050"
+            "819055508273ffffffffffffffffffffffffffffffffffffffff168473fffffff"
+            "fffffffffffffffffffffffffffffffff167fddf252ad1be2c89b69c2b068fc37"
+            "8daa952ba7f163c4a11628f55a4df523b3ef84604051610a599190610c4c565b6"
+            "0405180910390a3610a6c848484610a77565b50505050565b505050565b505050"
+            "565b600081519050919050565b600082825260208201905092915050565b60005"
+            "b83811015610ab6578082015181840152602081019050610a9b565b6000848401"
+            "5250505050565b6000601f19601f8301169050919050565b6000610ade82610a7"
+            "c565b610ae88185610a87565b9350610af8818560208601610a98565b610b0181"
+            "610ac2565b840191505092915050565b600060208201905081810360008301526"
+            "10b268184610ad3565b905092915050565b600080fd5b600073ffffffffffffff"
+            "ffffffffffffffffffffffffff82169050919050565b6000610b5e82610b33565"
+            "b9050919050565b610b6e81610b53565b8114610b7957600080fd5b50565b6000"
+            "81359050610b8b81610b65565b92915050565b6000819050919050565b610ba48"
+            "1610b91565b8114610baf57600080fd5b50565b600081359050610bc181610b9b"
+            "565b92915050565b60008060408385031215610bde57610bdd610b2e565b5b600"
+            "0610bec85828601610b7c565b9250506020610bfd85828601610bb2565b915050"
+            "9250929050565b60008115159050919050565b610c1c81610c07565b825250505"
+            "65b6000602082019050610c376000830184610c13565b92915050565b610c4681"
+            "610b91565b82525050565b6000602082019050610c616000830184610c3d565b9"
+            "2915050565b600080600060608486031215610c8057610c7f610b2e565b5b6000"
+            "610c8e86828701610b7c565b9350506020610c9f86828701610b7c565b9250506"
+            "040610cb086828701610bb2565b9150509250925092565b600060ff8216905091"
+            "9050565b610cd081610cba565b82525050565b6000602082019050610ceb60008"
+            "30184610cc7565b92915050565b600060208284031215610d0757610d06610b2e"
+            "565b5b6000610d1584828501610b7c565b91505092915050565b6000806040838"
+            "5031215610d3557610d34610b2e565b5b6000610d4385828601610b7c565b9250"
+            "506020610d5485828601610b7c565b9150509250929050565b7f4e487b7100000"
+            "00000000000000000000000000000000000000000000000000060005260226004"
+            "5260246000fd5b60006002820490506001821680610da557607f821691505b602"
+            "082108103610db857610db7610d5e565b5b50919050565b7f4e487b7100000000"
+            "00000000000000000000000000000000000000000000000060005260116004526"
+            "0246000fd5b6000610df882610b91565b9150610e0383610b91565b9250828201"
+            "905080821115610e1b57610e1a610dbe565b5b92915050565b7f45524332303a2"
+            "064656372656173656420616c6c6f77616e63652062656c6f7760008201527f20"
+            "7a65726f000000000000000000000000000000000000000000000000000000602"
+            "082015250565b6000610e7d602583610a87565b9150610e8882610e21565b6040"
+            "82019050919050565b60006020820190508181036000830152610eac81610e705"
+            "65b9050919050565b7f45524332303a20617070726f76652066726f6d20746865"
+            "207a65726f2061646460008201527f72657373000000000000000000000000000"
+            "00000000000000000000000000000602082015250565b6000610f0f602483610a"
+            "87565b9150610f1a82610eb3565b604082019050919050565b600060208201905"
+            "08181036000830152610f3e81610f02565b9050919050565b7f45524332303a20"
+            "617070726f766520746f20746865207a65726f20616464726560008201527f737"
+            "30000000000000000000000000000000000000000000000000000000000006020"
+            "82015250565b6000610fa1602283610a87565b9150610fac82610f45565b60408"
+            "2019050919050565b60006020820190508181036000830152610fd081610f9456"
+            "5b9050919050565b7f45524332303a20696e73756666696369656e7420616c6c6"
+            "f77616e6365000000600082015250565b600061100d601d83610a87565b915061"
+            "101882610fd7565b602082019050919050565b600060208201905081810360008"
+            "3015261103c81611000565b9050919050565b7f45524332303a207472616e7366"
+            "65722066726f6d20746865207a65726f20616460008201527f647265737300000"
+            "0000000000000000000000000000000000000000000000000602082015250565b"
+            "600061109f602583610a87565b91506110aa82611043565b60408201905091905"
+            "0565b600060208201905081810360008301526110ce81611092565b9050919050"
+            "565b7f45524332303a207472616e7366657220746f20746865207a65726f20616"
+            "4647260008201527f657373000000000000000000000000000000000000000000"
+            "0000000000000000602082015250565b6000611131602383610a87565b9150611"
+            "13c826110d5565b604082019050919050565b6000602082019050818103600083"
+            "015261116081611124565b9050919050565b7f45524332303a207472616e73666"
+            "57220616d6f756e742065786365656473206260008201527f616c616e63650000"
+            "000000000000000000000000000000000000000000000000602082015250565b6"
+            "0006111c3602683610a87565b91506111ce82611167565b604082019050919050"
+            "565b600060208201905081810360008301526111f2816111b6565b90509190505"
+            "6fea26469706673582212207120ef50381cf7b0b78ebcb6ca8846121940ce2c87"
+            "298e5508dedeb917f964bb64736f6c63430008180033");
+        return buf.value();
+    }
 
     auto data_erc20_allowance(evmc::address owner, evmc::address spender)
-        -> cbdc::buffer;
+        -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_allowance
+            = std::string("allowance(address,address)");
+        auto selector_hash = cbdc::keccak_data(selector_allowance.data(),
+                                               selector_allowance.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.extend(address_param_offset);
+        buf.append(owner.bytes, sizeof(owner.bytes));
+        buf.extend(address_param_offset);
+        buf.append(spender.bytes, sizeof(spender.bytes));
+        return buf;
+    }
 
     auto data_erc20_approve(evmc::address spender, evmc::uint256be amount)
-        -> cbdc::buffer;
+        -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_approve = std::string("approve(address,uint256)");
+        auto selector_hash = cbdc::keccak_data(selector_approve.data(),
+                                               selector_approve.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.extend(address_param_offset);
+        buf.append(spender.bytes, sizeof(spender.bytes));
+        buf.append(amount.bytes, sizeof(amount.bytes));
+        return buf;
+    }
 
-    auto data_erc20_balance_of(evmc::address account) -> cbdc::buffer;
+    auto data_erc20_balance_of(evmc::address account) -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_balance_of = std::string("balanceOf(address)");
+        auto selector_hash = cbdc::keccak_data(selector_balance_of.data(),
+                                               selector_balance_of.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.extend(address_param_offset);
+        buf.append(account.bytes, sizeof(account.bytes));
+        return buf;
+    }
 
-    auto data_erc20_decimals() -> cbdc::buffer;
+    auto data_erc20_decimals() -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_decimals = std::string("decimals()");
+        auto selector_hash = cbdc::keccak_data(selector_decimals.data(),
+                                               selector_decimals.size());
+        buf.append(selector_hash.data(), selector_size);
+        return buf;
+    }
 
     auto data_erc20_decrease_allowance(evmc::address spender,
                                        evmc::uint256be subtracted_value)
-        -> cbdc::buffer;
+        -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_decrease_allowance
+            = std::string("decreaseAllowance(address,uint256)");
+        auto selector_hash
+            = cbdc::keccak_data(selector_decrease_allowance.data(),
+                                selector_decrease_allowance.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.extend(address_param_offset);
+        buf.append(spender.bytes, sizeof(spender.bytes));
+        buf.append(subtracted_value.bytes, sizeof(subtracted_value.bytes));
+        return buf;
+    }
 
     auto data_erc20_increase_allowance(evmc::address spender,
                                        evmc::uint256be added_value)
-        -> cbdc::buffer;
+        -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_increase_allowance
+            = std::string("increaseAllowance(address,uint256)");
+        auto selector_hash
+            = cbdc::keccak_data(selector_increase_allowance.data(),
+                                selector_increase_allowance.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.extend(address_param_offset);
+        buf.append(spender.bytes, sizeof(spender.bytes));
+        buf.append(added_value.bytes, sizeof(added_value.bytes));
+        return buf;
+    }
 
-    auto data_erc20_name() -> cbdc::buffer;
+    auto data_erc20_name() -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_name = std::string("name()");
+        auto selector_hash
+            = cbdc::keccak_data(selector_name.data(), selector_name.size());
+        buf.append(selector_hash.data(), selector_size);
+        return buf;
+    }
 
-    auto data_erc20_symbol() -> cbdc::buffer;
+    auto data_erc20_symbol() -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_symbol = std::string("symbol()");
+        auto selector_hash = cbdc::keccak_data(selector_symbol.data(),
+                                               selector_symbol.size());
+        buf.append(selector_hash.data(), selector_size);
+        return buf;
+    }
 
-    auto data_erc20_total_supply() -> cbdc::buffer;
+    auto data_erc20_total_supply() -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_total_supply = std::string("totalSupply()");
+        auto selector_hash = cbdc::keccak_data(selector_total_supply.data(),
+                                               selector_total_supply.size());
+        buf.append(selector_hash.data(), selector_size);
+        return buf;
+    }
 
     auto data_erc20_transfer(evmc::address to, evmc::uint256be amount)
-        -> cbdc::buffer;
+        -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_transfer
+            = std::string("transfer(address,uint256)");
+        auto selector_hash = cbdc::keccak_data(selector_transfer.data(),
+                                               selector_transfer.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.extend(address_param_offset);
+        buf.append(to.bytes, sizeof(to.bytes));
+        buf.append(amount.bytes, sizeof(amount.bytes));
+        return buf;
+    }
 
     auto data_erc20_transfer_from(evmc::address from,
                                   evmc::address to,
-                                  evmc::uint256be amount) -> cbdc::buffer;
+                                  evmc::uint256be amount) -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_transfer_from
+            = std::string("transferFrom(address,address,uint256)");
+        auto selector_hash = cbdc::keccak_data(selector_transfer_from.data(),
+                                               selector_transfer_from.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.extend(address_param_offset);
+        buf.append(from.bytes, sizeof(from.bytes));
+        buf.extend(address_param_offset);
+        buf.append(to.bytes, sizeof(to.bytes));
+        buf.append(amount.bytes, sizeof(amount.bytes));
+        return buf;
+    }
+
+    auto data_myescrow_deploy() -> cbdc::buffer {
+        auto buf = cbdc::buffer::from_hex(
+            "608060405234801561001057600080fd5b50610d9c806100206000396000f3fe6"
+            "0806040526004361061004a5760003560e01c80631f2e11931461004f57806321"
+            "7328b614610091578063278ecde1146100bc57806337bdc99b146100e5578063f"
+            "9609f081461010e575b600080fd5b34801561005b57600080fd5b506100766004"
+            "8036038101906100719190610962565b61013e565b60405161008896959493929"
+            "1906109fa565b60405180910390f35b34801561009d57600080fd5b506100a661"
+            "01f4565b6040516100b39190610a5b565b60405180910390f35b3480156100c85"
+            "7600080fd5b506100e360048036038101906100de9190610962565b6101fa565b"
+            "005b3480156100f157600080fd5b5061010c60048036038101906101079190610"
+            "962565b61045f565b005b61012860048036038101906101239190610aa2565b61"
+            "06c4565b6040516101359190610a5b565b60405180910390f35b6000602052806"
+            "0005260406000206000915090508060000160009054906101000a900473ffffff"
+            "ffffffffffffffffffffffffffffffffff16908060010160009054906101000a9"
+            "00473ffffffffffffffffffffffffffffffffffffffff16908060020160009054"
+            "906101000a900473ffffffffffffffffffffffffffffffffffffffff169080600"
+            "30154908060040160009054906101000a900460ff169080600401600190549061"
+            "01000a900460ff16905086565b60015481565b806000808281526020019081526"
+            "0200160002060020160009054906101000a900473ffffffffffffffffffffffff"
+            "ffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16337"
+            "3ffffffffffffffffffffffffffffffffffffffff161461029e576040517f08c3"
+            "79a00000000000000000000000000000000000000000000000000000000081526"
+            "0040161029590610b65565b60405180910390fd5b600080600084815260200190"
+            "815260200160002090508060040160009054906101000a900460ff16610305576"
+            "040517f08c379a000000000000000000000000000000000000000000000000000"
+            "00000081526004016102fc90610bd1565b60405180910390fd5b8060040160019"
+            "054906101000a900460ff1615610357576040517f08c379a00000000000000000"
+            "0000000000000000000000000000000000000000815260040161034e90610c3d5"
+            "65b60405180910390fd5b60008160040160006101000a81548160ff0219169083"
+            "151502179055508060000160009054906101000a900473fffffffffffffffffff"
+            "fffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff"
+            "166108fc82600301549081150290604051600060405180830381858888f193505"
+            "050501580156103e2573d6000803e3d6000fd5b50806000016000905490610100"
+            "0a900473ffffffffffffffffffffffffffffffffffffffff1673fffffffffffff"
+            "fffffffffffffffffffffffffff16837f7ca5472b7ea78c2c0141c5a12ee6d170"
+            "cf4ce8ed06be3d22c8252ddfc7a6a2c483600301546040516104529190610a5b5"
+            "65b60405180910390a3505050565b806000808281526020019081526020016000"
+            "2060020160009054906101000a900473fffffffffffffffffffffffffffffffff"
+            "fffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffff"
+            "ffffffffffffffffffffffffffffffff1614610503576040517f08c379a000000"
+            "00000000000000000000000000000000000000000000000000081526004016104"
+            "fa90610b65565b60405180910390fd5b600080600084815260200190815260200"
+            "160002090508060040160009054906101000a900460ff1661056a576040517f08"
+            "c379a000000000000000000000000000000000000000000000000000000000815"
+            "260040161056190610bd1565b60405180910390fd5b8060040160019054906101"
+            "000a900460ff16156105bc576040517f08c379a00000000000000000000000000"
+            "000000000000000000000000000000081526004016105b390610c3d565b604051"
+            "80910390fd5b60018160040160016101000a81548160ff0219169083151502179"
+            "055508060010160009054906101000a900473ffffffffffffffffffffffffffff"
+            "ffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166108fc8"
+            "2600301549081150290604051600060405180830381858888f193505050501580"
+            "15610647573d6000803e3d6000fd5b508060010160009054906101000a900473f"
+            "fffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffff"
+            "ffffffffffffffffff16837f3bfce8de0db7450cc169b94323c210e69a36c6a4a"
+            "58c9f5d96bec4973adce39283600301546040516106b79190610a5b565b604051"
+            "80910390a3505050565b6000803411610708576040517f08c379a000000000000"
+            "00000000000000000000000000000000000000000000081526004016106ff9061"
+            "0ccf565b60405180910390fd5b6001600081548092919061071b90610d1e565b9"
+            "1905055506040518060c001604052803373ffffffffffffffffffffffffffffff"
+            "ffffffffff1681526020018473fffffffffffffffffffffffffffffffffffffff"
+            "f1681526020018373ffffffffffffffffffffffffffffffffffffffff16815260"
+            "20013481526020016001151581526020016000151581525060008060015481526"
+            "0200190815260200160002060008201518160000160006101000a81548173ffff"
+            "ffffffffffffffffffffffffffffffffffff021916908373fffffffffffffffff"
+            "fffffffffffffffffffffff16021790555060208201518160010160006101000a"
+            "81548173ffffffffffffffffffffffffffffffffffffffff021916908373fffff"
+            "fffffffffffffffffffffffffffffffffff160217905550604082015181600201"
+            "60006101000a81548173ffffffffffffffffffffffffffffffffffffffff02191"
+            "6908373ffffffffffffffffffffffffffffffffffffffff160217905550606082"
+            "0151816003015560808201518160040160006101000a81548160ff02191690831"
+            "515021790555060a08201518160040160016101000a81548160ff021916908315"
+            "1502179055509050503373ffffffffffffffffffffffffffffffffffffffff166"
+            "001547f1599c0fcf897af5babc2bfcf707f5dc050f841b044d97c3251ecec35b9"
+            "abf80b346040516109149190610a5b565b60405180910390a3600154905092915"
+            "050565b600080fd5b6000819050919050565b61093f8161092c565b811461094a"
+            "57600080fd5b50565b60008135905061095c81610936565b92915050565b60006"
+            "020828403121561097857610977610927565b5b60006109868482850161094d56"
+            "5b91505092915050565b600073fffffffffffffffffffffffffffffffffffffff"
+            "f82169050919050565b60006109ba8261098f565b9050919050565b6109ca8161"
+            "09af565b82525050565b6109d98161092c565b82525050565b600081151590509"
+            "19050565b6109f4816109df565b82525050565b600060c082019050610a0f6000"
+            "8301896109c1565b610a1c60208301886109c1565b610a2960408301876109c15"
+            "65b610a3660608301866109d0565b610a4360808301856109eb565b610a5060a0"
+            "8301846109eb565b979650505050505050565b6000602082019050610a7060008"
+            "301846109d0565b92915050565b610a7f816109af565b8114610a8a57600080fd"
+            "5b50565b600081359050610a9c81610a76565b92915050565b600080604083850"
+            "31215610ab957610ab8610927565b5b6000610ac785828601610a8d565b925050"
+            "6020610ad885828601610a8d565b9150509250929050565b60008282526020820"
+            "1905092915050565b7f4f6e6c7920617262697465722063616e2063616c6c2074"
+            "6869732066756e637460008201527f696f6e2e000000000000000000000000000"
+            "00000000000000000000000000000602082015250565b6000610b4f602483610a"
+            "e2565b9150610b5a82610af3565b604082019050919050565b600060208201905"
+            "08181036000830152610b7e81610b42565b9050919050565b7f4465616c206973"
+            "206e6f742066756e6465642e00000000000000000000000000600082015250565"
+            "b6000610bbb601383610ae2565b9150610bc682610b85565b6020820190509190"
+            "50565b60006020820190508181036000830152610bea81610bae565b905091905"
+            "0565b7f4465616c2068617320616c7265616479206265656e2072656c65617365"
+            "642e00600082015250565b6000610c27601f83610ae2565b9150610c3282610bf"
+            "1565b602082019050919050565b60006020820190508181036000830152610c56"
+            "81610c1a565b9050919050565b7f4465706f73697420616d6f756e74206d75737"
+            "42062652067726561746572207460008201527f68616e207a65726f2e00000000"
+            "00000000000000000000000000000000000000602082015250565b6000610cb96"
+            "02983610ae2565b9150610cc482610c5d565b604082019050919050565b600060"
+            "20820190508181036000830152610ce881610cac565b9050919050565b7f4e487"
+            "b7100000000000000000000000000000000000000000000000000000000600052"
+            "601160045260246000fd5b6000610d298261092c565b91507ffffffffffffffff"
+            "fffffffffffffffffffffffffffffffffffffffffffffffff8203610d5b57610d"
+            "5a610cef565b5b60018201905091905056fea2646970667358221220a6cc9885f"
+            "436ee0bcb9cfb9ee9cc76bfda0cd88a98ef7328fb62b156eab366e764736f6c63"
+            "430008180033");
+        return buf.value();
+    }
+
+    auto data_myescrow_deal_counter() -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_deal_counter = std::string("dealCounter()");
+        auto selector_hash = cbdc::keccak_data(selector_deal_counter.data(),
+                                               selector_deal_counter.size());
+        buf.append(selector_hash.data(), selector_size);
+        return buf;
+    }
+
+    auto data_myescrow_deposit(evmc::address _seller, evmc::address _arbiter)
+        -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_deposit = std::string("deposit(address,address)");
+        auto selector_hash = cbdc::keccak_data(selector_deposit.data(),
+                                               selector_deposit.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.extend(address_param_offset);
+        buf.append(_seller.bytes, sizeof(_seller.bytes));
+        buf.extend(address_param_offset);
+        buf.append(_arbiter.bytes, sizeof(_arbiter.bytes));
+        return buf;
+    }
+
+    auto data_myescrow_escrow_deals(evmc::uint256be deal_id) -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_escrow_deals = std::string("escrowDeals(uint256)");
+        auto selector_hash = cbdc::keccak_data(selector_escrow_deals.data(),
+                                               selector_escrow_deals.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.append(deal_id.bytes, sizeof(deal_id.bytes));
+        return buf;
+    }
+
+    auto data_myescrow_refund(evmc::uint256be deal_id) -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_refund = std::string("refund(uint256)");
+        auto selector_hash = cbdc::keccak_data(selector_refund.data(),
+                                               selector_refund.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.append(deal_id.bytes, sizeof(deal_id.bytes));
+        return buf;
+    }
+
+    auto data_myescrow_release(evmc::uint256be deal_id) -> cbdc::buffer {
+        auto buf = cbdc::buffer();
+        const auto selector_release = std::string("release(uint256)");
+        auto selector_hash = cbdc::keccak_data(selector_release.data(),
+                                               selector_release.size());
+        buf.append(selector_hash.data(), selector_size);
+        buf.append(deal_id.bytes, sizeof(deal_id.bytes));
+        return buf;
+    }
 
 }
 

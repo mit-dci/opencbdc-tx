@@ -41,6 +41,12 @@ class evm_bench {
     /// \param to ID to send transaction to
     void schedule_tx(size_t from, size_t to);
 
+    /// Schedule a execution of escrow contract
+    /// from `from` to `to`.
+    /// \param from ID to send transaction from
+    /// \param to ID to send transaction to
+    void schedule_escrow(size_t buyer, size_t seller, size_t arbiter);
+
     /// Set m_running to false.
     void stop();
 
@@ -75,6 +81,7 @@ class evm_bench {
     std::unordered_map<evmc::address, evmc::uint256be> m_sent_to_zero;
 
     evmc::address m_erc20_addr;
+    evmc::address m_escrow_addr;
 
     size_t m_in_flight{};
     bool m_success{false};
@@ -104,6 +111,22 @@ class evm_bench {
 
     auto deploy_erc20(evmc::uint256be nonce, cbdc::privkey_t skey)
         -> std::string;
+
+    auto deploy_escrow(evmc::uint256be nonce, cbdc::privkey_t skey)
+        -> std::string;
+
+    auto deposit_escrow(evmc::address contract_addr,
+                           evmc::uint256be nonce,
+                           evmc::address to_addr,
+                           evmc::address seller_addr,
+                           cbdc::privkey_t skey,
+                           evmc::uint256be value) -> std::string; 
+
+    auto release_escrow(evmc::address contract_addr,
+                          evmc::uint256be deal_id,
+                          evmc::uint256be nonce,
+                           cbdc::privkey_t skey) -> std::string; 
+    void schedule_escrow_release(size_t from /*arbiter*/, evmc::uint256be deal_id, size_t seller, evmc::uint256be amount);
 
     auto send_erc20(evmc::address erc20_addr,
                     evmc::uint256be nonce,

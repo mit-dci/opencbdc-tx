@@ -9,8 +9,8 @@
   "author": "MIT Digital Currency Initiative, Federal Reserve Bank of Boston",
   "license": "MIT",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.6.0",
-    "hardhat": "^2.9.5",
-    "chai": "^4.2.0"
+    "@openzeppelin/contracts": "^4.9.6",
+    "chai": "^4.5.0",
+    "hardhat": "^2.22.9"
   }
 }
