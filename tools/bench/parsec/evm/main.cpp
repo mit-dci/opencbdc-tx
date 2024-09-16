@@ -63,10 +63,16 @@ auto main(int argc, char** argv) -> int {
     }
 
     log->info("Minted", bench.account_count(), "new accounts");
-
-    for(size_t i = 1; i < bench.account_count() - 1; i += 2) {
-        bench.schedule_tx(i, i + 1);
+    if (cfg->m_load_type != cbdc::parsec::load_type::escrow) {
+        for(size_t i = 1; i < bench.account_count() - 1; i += 2) {
+            bench.schedule_tx(i, i + 1);
+        }
+    } else {
+        for(size_t i = 1; i < bench.account_count() - 2; i += 3) {
+            bench.schedule_escrow(i, i + 2, i + 1);
+        }
     }
+    
     log->flush();
 
     success = std::optional<bool>();

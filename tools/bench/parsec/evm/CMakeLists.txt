@@ -1,6 +1,6 @@
 add_executable(evm_bench evm_bench.cpp
                          rpc_client.cpp
-                         contracts.cpp
+                         contracts.hpp # contracts.cpp
                          main.cpp)
 target_link_libraries(evm_bench evm_runner
                                 parsec

@@ -19,7 +19,7 @@ void geth_client::send_transaction(
     params.append(tx);
     call("eth_sendRawTransaction",
          std::move(params),
-         [c{std::move(cb)}](std::optional<Json::Value> res) {
+         [this, c{std::move(cb)}](std::optional<Json::Value> res) {
              if(!res.has_value()) {
                  c(std::nullopt);
                  return;
@@ -27,12 +27,61 @@ void geth_client::send_transaction(
 
              auto& v = res.value();
              if(v.isMember(error_key)) {
+                if (res->isObject()) {
+                    m_log->trace("send_transaction Returns ", res->toStyledString());
+                } else if (res->isString()) {
+                    m_log->trace("send_transaction Returns: ", res->asString());
+                } else {
+                    m_log->trace("send_transaction Returns: Unexpected type");
+                }
+
                  c(std::nullopt);
                  return;
              }
 
              if(v.isMember(result_key)) {
                  c(v[result_key].asString());
+                 return;
+             }
+
+             c(std::nullopt);
+         });
+}
+
+
+void geth_client::get_transaction_receipt(
+    const std::string& tx,
+    std::function<void(std::optional<std::string>)> cb) {
+    auto params = Json::Value();
+    //m_log->trace("Sending eth_getTransactionReceipt with param -> ", tx);
+    params.append(tx);
+    call("eth_getTransactionReceipt",
+         std::move(params),
+         [this, c{std::move(cb)}](std::optional<Json::Value> res) {
+             if(!res.has_value()) {
+                 c(std::nullopt);
+                 return;
+             }
+            
+             auto& v = res.value();
+             if(v.isMember(error_key)) {
+                 if(res->isObject()) {
+                     m_log->trace("get_transaction_receipt Returns ",
+                                  res->toStyledString());
+                 } else if(res->isString()) {
+                     m_log->trace("get_transaction_receipt Returns: ",
+                                  res->asString());
+                 } else {
+                     m_log->trace(
+                         "get_transaction_receipt Returns: Unexpected type");
+                 }
+
+                 c(std::nullopt);
+                 return;
+             }
+
+             if(v.isMember(result_key)) {
+                 c(v[result_key][output_data_key].asString());
                  return;
              }
 
@@ -47,6 +96,40 @@ void geth_client::get_transaction_count(
     params.append("0x" + addr);
     params.append("latest");
     call("eth_getTransactionCount",
+         std::move(params),
+         [c{std::move(cb)}](std::optional<Json::Value> res) {
+             if(!res.has_value()) {
+                 c(std::nullopt);
+                 return;
+             }
+
+             auto& v = res.value();
+             if(v.isMember(error_key)) {
+                 c(std::nullopt);
+                 return;
+             }
+
+             if(v.isMember(result_key)) {
+                 auto res_str = v[result_key].asString();
+                 c(cbdc::parsec::agent::runner::uint256be_from_hex(res_str));
+                 return;
+             }
+
+             c(std::nullopt);
+         });
+}
+
+// Calls eth_getBalance for the given address, with
+/// the given callback function.
+/// \param addr the address to find the count of transactions from
+/// \param cb callback function passed to call()
+void geth_client::get_balance(
+    const std::string& addr,
+    std::function<void(std::optional<evmc::uint256be>)> cb) {
+    auto params = Json::Value();
+    params.append("0x" + addr);
+    params.append("latest");
+    call("eth_getBalance",
          std::move(params),
          [c{std::move(cb)}](std::optional<Json::Value> res) {
              if(!res.has_value()) {

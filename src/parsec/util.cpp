@@ -156,6 +156,8 @@ namespace cbdc::parsec {
                 cfg.m_load_type = load_type::transfer;
             } else if(val == "erc20") {
                 cfg.m_load_type = load_type::erc20;
+            } else if(val == "escrow") {
+                cfg.m_load_type = load_type::escrow;
             } else {
                 return std::nullopt;
             }
