@@ -316,7 +316,15 @@ namespace cbdc::parsec::agent::runner {
             is_native_value_transfer = true;
             // TODO: do DELETEGATECALL and CALLCODE transfer value as
             // well?
-            transfer(msg.sender, msg.recipient, msg.value);
+            bool completed = transfer(msg.sender, msg.recipient, msg.value);
+            if(!completed) {
+                m_retry = true;
+                return evmc::Result(evmc::make_result(evmc_status_code::EVMC_REVERT,
+                                         0,
+                                         0,
+                                         nullptr,
+                                         0));
+            }
         }
 
         auto code_addr
@@ -545,13 +553,16 @@ namespace cbdc::parsec::agent::runner {
         m_init_state = m_accounts;
     }
 
-    void evm_host::transfer(const evmc::address& from,
+    bool evm_host::transfer(const evmc::address& from,
                             const evmc::address& to,
                             const evmc::uint256be& value) {
         const auto* log_str = "evm_transfer";
         m_log->trace(log_str, to_hex(from), to_hex(to));
         auto maybe_acc = get_account(from, !m_is_readonly_run);
-        assert(maybe_acc.has_value());
+        if(!maybe_acc.has_value()) {
+            m_log->error(log_str, "get account returned null for account:", to_hex(from));
+            return false;
+        }
         auto& acc = maybe_acc.value();
         auto val = value;
         if(evmc::is_zero(value)) {
@@ -571,6 +582,7 @@ namespace cbdc::parsec::agent::runner {
         auto& to_acc = maybe_to_acc.value();
         to_acc.m_balance = to_acc.m_balance + val;
         m_accounts[to] = {to_acc, !m_is_readonly_run};
+        return true;
     }
 
     void evm_host::finalize(int64_t gas_left, int64_t gas_used) {
@@ -764,7 +776,6 @@ namespace cbdc::parsec::agent::runner {
                                  msg,
                                  code,
                                  code_size);
-
         return res;
     }
 }

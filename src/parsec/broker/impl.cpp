@@ -133,6 +133,7 @@ namespace cbdc::parsec::broker {
                         key_type key,
                         lock_type locktype,
                         try_lock_callback_type result_callback) -> bool {
+        m_log->trace(this, "Broker trying to lock key", key.to_hex(), "with type", locktype == lock_type::write);
         auto maybe_error = [&]() -> std::optional<error_code> {
             std::unique_lock l(m_mut);
             auto it = m_tickets.find(ticket_number);
