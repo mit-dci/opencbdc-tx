@@ -195,7 +195,7 @@ namespace cbdc::parsec::agent::runner {
         auto get_sorted_logs() const
             -> std::unordered_map<evmc::address, std::vector<evm_log>>;
 
-        void transfer(const evmc::address& from,
+        bool transfer(const evmc::address& from,
                       const evmc::address& to,
                       const evmc::uint256be& value);
 

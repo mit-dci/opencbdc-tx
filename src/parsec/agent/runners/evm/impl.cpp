@@ -148,7 +148,6 @@ namespace cbdc::parsec::agent::runner {
         // m_param contains the raw serialized block number - need to decrypt
         // that first and then hash it to get to the key the
         // block(ticket)number to txid mapping is stored under in the shard.
-
         auto maybe_tn = cbdc::from_buffer<evmc::uint256be>(m_param);
         if(!maybe_tn) {
             return false;
@@ -572,7 +571,7 @@ namespace cbdc::parsec::agent::runner {
                          evmc::to_string(result.status_code));
             m_result_callback(error_code::internal_error);
         } else if(m_host->should_retry()) {
-            m_log->trace("Contract was wounded");
+            m_log->trace("Contract was wounded, retrying");
             m_result_callback(error_code::wounded);
         } else {
             if(result.status_code == EVMC_REVERT) {
