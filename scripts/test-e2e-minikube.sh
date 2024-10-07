@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR="$( cd -- "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT="$( "$SCRIPT_DIR"/get-root.sh )"
 MINIKUBE_PROFILE=${MINIKUBE_PROFILE:-opencbdc}
 BUILD_DOCKER=${TESTRUN_BUILD_DOCKER:-1}
 
@@ -36,13 +37,13 @@ if [[ $BUILD_DOCKER -eq 1 ]]; then
 fi
 
 # Change to the test directory and fetch dependencies
-cd $SCRIPT_DIR/../charts/tests
+cd "$ROOT"/charts/tests
 echo "🔄 Downloading Go dependencies for testing..."
 go mod download -x
 
 # Set testrun_id and path to store logs from testrun and containers
 TESTRUN_ID=${TESTRUN_ID:-$(uuidgen)}
-TESTRUN_PATH=$SCRIPT_DIR/../testruns/$TESTRUN_ID
+TESTRUN_PATH="$ROOT"/testruns/$TESTRUN_ID
 TESTRUN_LOG_PATH="$TESTRUN_PATH/testrun.log"
 mkdir -p $TESTRUN_PATH
 

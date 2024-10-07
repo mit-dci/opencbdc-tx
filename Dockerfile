@@ -16,6 +16,7 @@ RUN mkdir -p /opt/tx-processor/scripts
 
 COPY requirements.txt /opt/tx-processor/requirements.txt
 COPY scripts/activate-venv.sh /opt/tx-processor/scripts/activate-venv.sh
+COPY scripts/get-root.sh /opt/tx-processor/scripts/get-root.sh
 COPY scripts/install-build-tools.sh /opt/tx-processor/scripts/install-build-tools.sh
 COPY scripts/setup-dependencies.sh /opt/tx-processor/scripts/setup-dependencies.sh
 

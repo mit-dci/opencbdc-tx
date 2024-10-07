@@ -30,7 +30,8 @@ for PY_VERS in "${PYTHON_VERSIONS[@]}"; do
     fi
 done
 
-ROOT="$(cd "$(dirname "$0")"/.. && pwd)"
+SCRIPT_DIR="$( cd -- "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT="$( "$SCRIPT_DIR"/get-root.sh )"
 ENV_NAME=".py_venv"
 
 # make a virtual environement to install python packages
