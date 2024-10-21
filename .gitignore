@@ -51,6 +51,11 @@ plots/
 .deps/
 .libs/
 
+runtime_locking_shard*_raft*
+runtime_locking_shard*_raft*/
+ticket_machine_raft_*
+ticket_machine_raft_*/
+
 # Database
 blocks.dat
 test_db
