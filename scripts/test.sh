@@ -129,7 +129,8 @@ fi
 # If the build folder is a relative path, convert it to an absolute path
 # to avoid potential relative path errors and to improve readability
 # if the path is written to stdout.
-export BUILD_DIR=$(cd "$BUILD_DIR"; pwd)
+BUILD_DIR=$(cd "$BUILD_DIR"; pwd)
+export BUILD_DIR
 echo "Build folder: '${BUILD_DIR}'"
 echo
 

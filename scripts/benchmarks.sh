@@ -64,6 +64,7 @@ done
 # to the location of this script, the user can run this script from any folder.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 REPO_TOP_DIR="${SCRIPT_DIR}/.."
+BUILD_DIR=
 if [[ -z "${BUILD_DIR+x}" ]]
 then
     BUILD_DIR="${REPO_TOP_DIR}/build"
@@ -78,7 +79,8 @@ fi
 # If the build folder is a relative path, convert it to an absolute path
 # to avoid potential relative path errors and to improve readability
 # if the path is written to stdout.
-export BUILD_DIR=$(cd "$BUILD_DIR"; pwd)
+BUILD_DIR=$(cd "$BUILD_DIR"; pwd)
+export BUILD_DIR
 echo "Build folder: '${BUILD_DIR}'"
 echo
 
