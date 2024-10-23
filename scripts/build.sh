@@ -33,8 +33,10 @@ fi
 
 echo "Building..."
 
+SCRIPT_DIR="$( cd -- "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT="$( "$SCRIPT_DIR"/get-root.sh )"
 # see PREFIX in ./scripts/setup-dependencies.sh
-PREFIX="$(cd "$(dirname "$0")"/.. && pwd)/prefix"
+PREFIX=""$ROOT"/prefix"
 
 if [ -z ${BUILD_DIR+x} ]; then
     export BUILD_DIR=build

@@ -10,7 +10,9 @@ set -e
 
 # install in a custom prefix rather than /usr/local. by default, this
 # chooses "prefix" directory alongside "scripts" directory.
-PREFIX="$(cd "$(dirname "$0")"/.. && pwd)/prefix"
+SCRIPT_DIR="$( cd -- "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+ROOT="$( "$SCRIPT_DIR"/get-root.sh )"
+PREFIX="$ROOT"/prefix
 echo "Will install local dependencies in the following prefix: $PREFIX"
 mkdir -p "$PREFIX"/{lib,include}
 
