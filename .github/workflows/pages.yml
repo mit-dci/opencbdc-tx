@@ -20,14 +20,14 @@ jobs:
           submodules: true
           fetch-depth: 0
       - name: Run Doxygen
-        uses: mattnotmitt/doxygen-action@edge
+        uses: mattnotmitt/doxygen-action@b84fe17600245bb5db3d6c247cc274ea98c15a3b
         with:
           working-directory: .
           doxyfile-path: ./Doxyfile
           enable-latex: false
           additional-packages: graphviz
       - name: Deploy GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e
         with:
           deploy_key: ${{ secrets.TX_PAGES_DEPLOY_KEY }}
           external_repository: mit-dci/opencbdc-tx-pages

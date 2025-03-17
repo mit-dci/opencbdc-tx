@@ -1,3 +1,32 @@
+# 2025-03-19: Pinning all 3rd-party GH action versions to specific commits
+
+<details>
+<summary>Mitigating the Risk of Action Repository Compromise</summary>
+
+## Motivation
+
+As discovered and reported by [StepSecurity](https://www.stepsecurity.io/blog/harden-runner-detection-tj-actions-changed-files-action-is-compromised), between 2025-03-14 and 2025-03-15, [a widely-used GitHub action](https://github.com/tj-actions/changed-files) was compromised.
+We, **and by extension all our forks**, use this action in our CI/CD workflow to test docker image builds when the ``Dockerfile`` itself changes.
+
+This exploit relied upon the ability to update a repository's tags (which are typically the default mechanism to pin an action to a specific version).
+
+**N.B.:** Our affected repositories had no CI runs during the compromised period, and so none of our PATs are expected to have been compromised.
+Out of an abundance of caution, we have rotated all relevant secrets regardless;
+you may wish to do the same.
+
+## Correction
+
+Following [GitHub's recommendations](https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions#using-third-party-actions), pinning all third-party actions to specific commits dramatically reduces the practicality of this attack.
+There are resources to take this mitigation [further](https://michaelheap.com/pin-your-github-actions/), but to minimize maintenance burden and workflow churn, we have taken a more minimal mitigation step.
+**Note,** this posture is partly due to the fact that this work is research-grade and **is not production-ready**!
+
+## Action You Should Take
+
+You should not need to take any actions to handle this change to our workflows, but you should carefully review StepSecurity's [documented recovery steps](https://www.stepsecurity.io/blog/harden-runner-detection-tj-actions-changed-files-action-is-compromised#recovery-steps) and determine if you should take further action for your own repositories!
+
+</details>
+
+
 # 2022-04-05: Force-push against `trunk`
 
 <details>

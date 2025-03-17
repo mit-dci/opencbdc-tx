@@ -22,7 +22,7 @@ jobs:
       # For PRs, this action compares between the commit and trunk
       - name: Get specific changed files
         id: changed-files-specific
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32
         with:
           files: |
             Dockerfile
