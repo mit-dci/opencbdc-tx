@@ -43,7 +43,8 @@ function gen_bytecode()
         from_balance, from_seq = get_account(from)
         payload = sig_payload(to, value, sequence)
         check_sig(from, sig, payload)
-        if sequence < from_seq then
+
+	if sequence < from_seq then
             error("sequence number too low")
         end
 
