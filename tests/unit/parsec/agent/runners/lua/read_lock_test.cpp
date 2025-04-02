@@ -51,7 +51,7 @@ TEST(lua_runner_test, lua_write_lock_test) {
               /* res_cb */) -> bool {
         // Cannot use ASSERT here because it does not satisfy return
         // requirements so we use expect
-        if(std::string("W").compare(key.c_str()) == 0) {
+        if(std::string("W") == key.c_str()) {
             EXPECT_TRUE(locktype == cbdc::parsec::broker::lock_type::write);
             write_lock_promise.set_value();
         } else {
@@ -107,7 +107,7 @@ TEST(lua_runner_test, lua_read_lock_test) {
               /* res_cb */) -> bool {
         // Cannot use ASSERT here because it does not satisfy return
         // requirements so we use expect
-        if(std::string("R").compare(key.c_str()) == 0) {
+        if(std::string("R") == key.c_str()) {
             EXPECT_TRUE(locktype == cbdc::parsec::broker::lock_type::read);
             read_lock_promise.set_value();
         } else {
