@@ -14,6 +14,7 @@ if [ -n "$whitespace_files" ]; then
     printf '%s\n' "${whitespace_files[@]}"
 fi
 
+# shellcheck disable=SC2016
 newline_files=$(printf '%s' "${check_files[@]}" | xargs -r -I {} bash -c 'test "$(tail -c 1 "{}" | wc -l)" -eq 0 && echo {}' | cat)
 
 if [ -n "$newline_files" ] ; then
@@ -25,9 +26,12 @@ if [ -n "$whitespace_files" ] || [ -n "$newline_files" ] ; then
     exit 1
 fi
 
-check_format_files=$(git ls-files | grep -E "tools|tests|src|cmake-tests" \
-                     | grep -E "\..*pp")
-clang-format --style=file --Werror --dry-run ${check_format_files[@]}
+check_format_files=$(git ls-files | \
+                     grep -E "tools|tests|src|cmake-tests" | \
+                     grep -E "\..*pp")
+
+echo "${check_format_files}" | \
+    xargs -n1 -I{} clang-format --style=file --Werror --dry-run {}
 
 if ! command -v clang-tidy &>/dev/null; then
     echo "clang-tidy does not appear to be installed"
@@ -46,6 +50,6 @@ fi
 
 # use python from the virtual environment for clang-tidy
 if source "./scripts/activate-venv.sh"; then
-    python /usr/local/bin/run-clang-tidy.py -p ${BUILD_DIR} "tests/.*/.*\.cpp|src/.*/.*\.cpp|tools/.*/.*\.cpp"
+    python /usr/local/bin/run-clang-tidy.py -p "$BUILD_DIR" "tests/.*/.*\.cpp|src/.*/.*\.cpp|tools/.*/.*\.cpp"
     deactivate
 fi

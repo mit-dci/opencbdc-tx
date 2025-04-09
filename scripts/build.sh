@@ -27,7 +27,7 @@ if [ $# -gt 0 ]; then
         Profiling|--profiling|-p) CMAKE_BUILD_TYPE="Profiling";;
         Debug|--debug|-d) CMAKE_BUILD_TYPE="Debug";;
         --help|-h) help;;
-        *) help $1;;
+        *) help "$1";;
     esac
 fi
 
@@ -37,11 +37,12 @@ echo "Building..."
 PREFIX="$(cd "$(dirname "$0")"/.. && pwd)/prefix"
 
 if [ -z ${BUILD_DIR+x} ]; then
-    export BUILD_DIR=build
+    BUILD_DIR=build
+    export BUILD_DIR
 fi
 
-mkdir -p $BUILD_DIR
-cd $BUILD_DIR
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
 
 CMAKE_FLAGS=-DCMAKE_PREFIX_PATH="${PREFIX}"
 CPUS=1
@@ -60,5 +61,4 @@ fi
 
 echo "Building $CMAKE_BUILD_TYPE"
 eval "cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${CMAKE_FLAGS} .."
-make -j$CPUS
-
+make -j"$CPUS"
