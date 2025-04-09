@@ -3,3 +3,4 @@ eth-hash
 matplotlib
 numpy
 pylint
+asyncio

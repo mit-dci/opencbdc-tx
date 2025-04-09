@@ -38,6 +38,7 @@ CMakeCache.txt
 *.a
 *.log
 *.tgz
+*.dat
 
 leveldb*/
 NuRaft*/
@@ -50,6 +51,10 @@ CMakeFiles/
 plots/
 .deps/
 .libs/
+.cache/
+*_raft_log_*/
+parsec_logs/
+logs/
 
 runtime_locking_shard*_raft*
 runtime_locking_shard*_raft*/
@@ -66,6 +71,7 @@ test_db
 
 # IDE support
 .vscode/
+*.code-workspace
 .idea/
 cmake-build-*/
 
