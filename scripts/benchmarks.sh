@@ -62,8 +62,8 @@ done
 # environment variable, assume it's named 'build' and is located in the
 # top-level directory of the repo.  By defining the top-level directory relative
 # to the location of this script, the user can run this script from any folder.
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-REPO_TOP_DIR="${SCRIPT_DIR}/.."
+SCRIPT_DIR="$( cd -- "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+REPO_TOP_DIR="$( "$SCRIPT_DIR"/get-root.sh )"
 if [[ -z "${BUILD_DIR+x}" ]]
 then
     BUILD_DIR="${REPO_TOP_DIR}/build"
