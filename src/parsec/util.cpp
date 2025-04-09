@@ -60,7 +60,13 @@ namespace cbdc::parsec {
         auto count = std::stoull(it->second);
 
         for(size_t i = 0; i < count; i++) {
-            auto ep_key = component_name + std::to_string(i) + "_endpoint";
+            auto ep_key = component_name;
+            // shard(\d)_count -> shard(\d)_(\d)_endpoint
+            const std::string shard_ep = "shard";
+            if(component_name.find(shard_ep) == 0) {
+                ep_key += "_";
+            }
+            ep_key += std::to_string(i) + "_endpoint";
             it = opts.find(ep_key);
             if(it == opts.end()) {
                 return std::nullopt;
