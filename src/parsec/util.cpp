@@ -9,8 +9,8 @@
 #include <unordered_map>
 
 namespace cbdc::parsec {
-    auto split(const std::string& s, const std::string& delim)
-        -> std::vector<std::string> {
+    auto split(const std::string& s,
+               const std::string& delim) -> std::vector<std::string> {
         size_t pos_start{};
         size_t pos_end{};
         std::vector<std::string> ret;
@@ -188,6 +188,42 @@ namespace cbdc::parsec {
                 return std::nullopt;
             }
         }
+
+        return cfg;
+    }
+
+    auto read_shard_info(int argc, char** argv) -> std::optional<config> {
+        auto opts = parse_args(argc, argv);
+        if(!opts.has_value()) {
+            return std::nullopt;
+        }
+
+        auto cfg = config{};
+
+        auto shard_endpoints = read_cluster_endpoints(opts.value(), "shard");
+        if(!shard_endpoints.has_value()) {
+            return std::nullopt;
+        }
+        cfg.m_shard_endpoints = shard_endpoints.value();
+
+        return cfg;
+    }
+
+    auto read_ticket_machine_info(int argc,
+                                  char** argv) -> std::optional<config> {
+        auto opts = parse_args(argc, argv);
+        if(!opts.has_value()) {
+            return std::nullopt;
+        }
+
+        auto cfg = config{};
+
+        auto ticket_machine_endpoints
+            = read_endpoints(opts.value(), "ticket_machine");
+        if(!ticket_machine_endpoints.has_value()) {
+            return std::nullopt;
+        }
+        cfg.m_ticket_machine_endpoints = ticket_machine_endpoints.value();
 
         return cfg;
     }
