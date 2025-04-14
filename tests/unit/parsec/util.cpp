@@ -11,7 +11,7 @@ namespace cbdc::test {
     void add_to_shard(std::shared_ptr<cbdc::parsec::broker::interface> broker,
                       cbdc::buffer key,
                       cbdc::buffer value) {
-        auto begin_res = broker->begin([&](auto begin_ret) {
+        auto begin_res = broker->get_new_ticket_number([&](auto begin_ret) {
             ASSERT_TRUE(std::holds_alternative<
                         cbdc::parsec::ticket_machine::ticket_number_type>(
                 begin_ret));

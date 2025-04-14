@@ -34,7 +34,9 @@ namespace cbdc::parsec::broker {
         /// \param result_callback function to call with the begin result.
         /// \return true if the request to the ticket machine was initiated
         ///         successfully.
-        auto begin(begin_callback_type result_callback) -> bool override;
+        auto get_new_ticket_number(
+            std::function<void(ticketnum_or_errcode_type)> result_callback)
+            -> bool override;
 
         /// Determines the shard responsible for the given key and issues a try
         /// lock request for the key.
@@ -173,7 +175,7 @@ namespace cbdc::parsec::broker {
                              try_lock_return_type& res);
 
         void handle_ticket_number(
-            begin_callback_type result_callback,
+            std::function<void(ticketnum_or_errcode_type)> result_callback,
             std::optional<parsec::ticket_machine::interface::
                               get_ticket_number_return_type> res);
 

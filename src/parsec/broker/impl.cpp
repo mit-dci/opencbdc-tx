@@ -22,7 +22,9 @@ namespace cbdc::parsec::broker {
           m_directory(std::move(directory)),
           m_log(std::move(logger)) {}
 
-    auto impl::begin(begin_callback_type result_callback) -> bool {
+    auto impl::get_new_ticket_number(
+        std::function<void(ticketnum_or_errcode_type)> result_callback)
+        -> bool {
         if(!m_ticketer->get_ticket_number(
                [this, result_callback](
                    std::optional<parsec::ticket_machine::interface::
@@ -37,7 +39,7 @@ namespace cbdc::parsec::broker {
     }
 
     void impl::handle_ticket_number(
-        begin_callback_type result_callback,
+        std::function<void(ticketnum_or_errcode_type)> result_callback,
         std::optional<
             parsec::ticket_machine::interface::get_ticket_number_return_type>
             res) {

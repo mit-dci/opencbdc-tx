@@ -89,8 +89,8 @@ namespace cbdc::parsec::agent::runner {
         auto run_get_account_code() -> bool;
         auto run_get_transaction() -> bool;
         auto run_get_transaction_receipt() -> bool;
-        auto run_execute_transaction(const evmc::address& from,
-                                     bool is_readonly_run) -> bool;
+        auto start_execute_transaction(const evmc::address& from,
+                                       bool is_readonly_run) -> bool;
         auto run_get_account() -> bool;
         auto run_get_block() -> bool;
         auto run_get_logs() -> bool;
@@ -107,11 +107,13 @@ namespace cbdc::parsec::agent::runner {
                                  bool is_readonly_run)
             -> std::pair<evmc_message, bool>;
 
-        void handle_lock_from_account(
+        void handle_lockfromaccount_and_continue_exec(
             const broker::interface::try_lock_return_type& res);
 
-        void lock_ticket_number_key();
-        void lock_index_keys(const std::function<void()>& callback);
+        void lock_ticket_number_key_and_continue_exec();
+        void
+        lock_index_keys_and_finalize(const std::vector<cbdc::buffer>& keys,
+                                     const std::function<void()>& finalize_fn);
         void schedule_exec();
 
         void schedule(const std::function<void()>& fn);
