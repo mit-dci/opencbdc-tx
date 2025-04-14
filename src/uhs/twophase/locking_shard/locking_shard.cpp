@@ -103,21 +103,11 @@ namespace cbdc::locking_shard {
 
     auto locking_shard::check_and_lock_tx(const tx& t) -> bool {
         bool success{true};
-        if(!transaction::validation::check_attestations(
-               t.m_tx,
-               m_opts.m_sentinel_public_keys,
-               m_opts.m_attestation_threshold)) {
-            m_logger->warn("Received invalid compact transaction",
-                           to_string(t.m_tx.m_id));
-            success = false;
-        }
-        if(success) {
-            for(const auto& uhs_id : t.m_tx.m_inputs) {
-                if(hash_in_shard_range(uhs_id)
-                   && m_uhs.find(uhs_id) == m_uhs.end()) {
-                    success = false;
-                    break;
-                }
+        for(const auto& uhs_id : t.m_tx.m_inputs) {
+            if(hash_in_shard_range(uhs_id)
+               && m_uhs.find(uhs_id) == m_uhs.end()) {
+                success = false;
+                break;
             }
         }
         if(success) {

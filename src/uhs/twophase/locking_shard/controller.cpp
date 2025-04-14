@@ -8,6 +8,7 @@
 #include "format.hpp"
 #include "state_machine.hpp"
 #include "status_client.hpp"
+#include "uhs/transaction/validation.hpp"
 #include "util/rpc/tcp_server.hpp"
 #include "util/serialization/format.hpp"
 
@@ -16,7 +17,7 @@
 namespace cbdc::locking_shard {
     controller::controller(size_t shard_id,
                            size_t node_id,
-                           config::options opts,
+                           cbdc::config::options opts,
                            std::shared_ptr<logging::log> logger)
         : m_opts(std::move(opts)),
           m_logger(std::move(logger)),
@@ -111,11 +112,31 @@ namespace cbdc::locking_shard {
         return true;
     }
 
+    controller::~controller() {
+        m_running = false;
+        m_validation_queue.clear();
+        for(auto& t : m_validation_threads) {
+            if(t.joinable()) {
+                t.join();
+            }
+        }
+        m_validation_threads.clear();
+        m_server.reset();
+    }
+
     auto controller::raft_callback(nuraft::cb_func::Type type,
                                    nuraft::cb_func::Param* /* param */)
         -> nuraft::cb_func::ReturnCode {
         if(type == nuraft::cb_func::Type::BecomeFollower) {
             m_logger->warn("Became follower, stopping listener");
+
+            m_running = false;
+            for(auto& t : m_validation_threads) {
+                if(t.joinable()) {
+                    t.join();
+                }
+            }
+            m_validation_threads.clear();
             m_server.reset();
             return nuraft::cb_func::ReturnCode::Ok;
         }
@@ -123,11 +144,83 @@ namespace cbdc::locking_shard {
             m_logger->warn("Became leader, starting listener");
             m_server = std::make_unique<decltype(m_server)::element_type>(
                 m_opts.m_locking_shard_endpoints[m_shard_id][m_node_id]);
-            m_server->register_raft_node(m_raft_serv);
+            m_server->register_raft_node(
+                m_raft_serv,
+                [&, this](cbdc::buffer buf,
+                          cbdc::raft::rpc::validation_callback cb) {
+                    return enqueue_validation(std::move(buf), std::move(cb));
+                });
+
+            auto n_threads = std::thread::hardware_concurrency();
+            for(size_t i = 0; i < n_threads; i++) {
+                m_validation_threads.emplace_back([&, this]() {
+                    validation_worker();
+                });
+            }
+
             if(!m_server->init()) {
                 m_logger->fatal("Couldn't start message handler server");
             }
         }
         return nuraft::cb_func::ReturnCode::Ok;
+    }
+
+    void controller::validation_worker() {
+        while(m_running) {
+            auto v = validation_request();
+            if(m_validation_queue.pop(v)) {
+                auto [req, cb] = v;
+                validate_request(std::move(req), cb);
+            }
+        }
+    }
+
+    auto
+    controller::enqueue_validation(cbdc::buffer request,
+                                   cbdc::raft::rpc::validation_callback cb)
+        -> bool {
+        m_validation_queue.push({std::move(request), std::move(cb)});
+        return true;
+    }
+
+    auto controller::validate_request(
+        cbdc::buffer request,
+        const cbdc::raft::rpc::validation_callback& cb) -> bool {
+        auto maybe_req
+            = cbdc::from_buffer<cbdc::rpc::request<rpc::request>>(request);
+        auto valid = true;
+        if(maybe_req) {
+            valid = std::visit(
+                overloaded{
+                    [&](rpc::lock_params&& params) -> bool {
+                        auto result = true;
+                        for(auto&& t : params) {
+                            if(!transaction::validation::check_attestations(
+                                   t.m_tx,
+                                   m_opts.m_sentinel_public_keys,
+                                   m_opts.m_attestation_threshold)) {
+                                m_logger->warn(
+                                    "Received invalid compact transaction",
+                                    to_string(t.m_tx.m_id));
+                                result = false;
+                                break;
+                            }
+                        }
+
+                        return result;
+                    },
+                    [&](rpc::apply_params&&) -> bool {
+                        return true;
+                    },
+                    [&](rpc::discard_params&&) -> bool {
+                        return true;
+                    }},
+                std::move(maybe_req->m_payload.m_params));
+        } else {
+            valid = false;
+        }
+
+        cb(std::move(request), valid);
+        return true;
     }
 }
