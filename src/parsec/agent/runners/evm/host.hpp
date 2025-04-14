@@ -97,6 +97,14 @@ namespace cbdc::parsec::agent::runner {
                             const evmc::bytes32& key) noexcept
             -> evmc_access_status override final;
 
+        // method signature for get_transient_storage
+        [[nodiscard]] auto get_transient_storage(const evmc::address& address,
+            const evmc::bytes32& key) const noexcept -> evmc::bytes32 override final;
+
+        // method signature for the set_transient_storage
+        void set_transient_storage(const evmc::address& address, const evmc::bytes32& key,
+            const evmc::bytes32& value) noexcept override final;
+
         using indexed_logs_type
             = std::unordered_map<evmc::address, std::vector<evm_log>>;
 
